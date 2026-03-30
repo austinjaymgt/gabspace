@@ -1,0 +1,22 @@
+* {
+  box-sizing: border-box;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F8F7F4;
+  color-scheme: light;
+}
+
+input, select, textarea {
+  color-scheme: light;
+  background-color: #ffffff !important;
+  color: #1A1A1A !important;
+}
+
+#root {
+  background-color: #F8F7F4;
+  min-height: 100vh;
+}
