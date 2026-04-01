@@ -11,6 +11,8 @@ import Invoices from './pages/Invoices'
 import Tasks from './pages/Tasks'
 import ClientPortal from './pages/ClientPortal'
 import Expenses from './pages/Expenses'
+import Revenue from './pages/Revenue'
+import FinanceOverview from './pages/FinanceOverview'
 import Campaigns from './pages/Campaigns'
 import ContentCalendar from './pages/ContentCalendar'
 import Assets from './pages/Assets'
@@ -86,6 +88,8 @@ export default function App() {
       case 'tasks': return <Tasks />
       case 'invoices': return <Invoices />
       case 'expenses': return <Expenses />
+      case 'revenue': return <Revenue />
+      case 'finance-overview': return <FinanceOverview onNavigate={setCurrentPage} />
       case 'campaigns': return <Campaigns />
       case 'campaign-tracking': return <ContentCalendar />
       case 'assets': return <Assets />

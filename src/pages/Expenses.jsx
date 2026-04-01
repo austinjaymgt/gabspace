@@ -21,12 +21,25 @@ export default function Expenses() {
   const [error, setError] = useState(null)
 
   const categories = [
-    'Vendor payment',
-    'Software & subscriptions',
-    'Travel',
-    'Equipment & supplies',
-    'Other',
-  ]
+  'Vendor payment',
+  'Software & subscriptions',
+  'Travel',
+  'Equipment & supplies',
+  'Other',
+]
+
+const taxCategories = [
+  'Equipment & gear',
+  'Software & subscriptions',
+  'Marketing & advertising',
+  'Travel & transportation',
+  'Education & training',
+  'Studio & workspace',
+  'Professional services',
+  'Cost of goods',
+  'Meals & entertainment',
+  'Other',
+]
 
   useEffect(() => {
     fetchExpenses()
@@ -67,6 +80,7 @@ export default function Expenses() {
       date: form.date || null,
       notes: form.notes || null,
       recurrence: form.recurrence || null,
+      tax_category: form.tax_category || null,
       user_id: user.id,
     })
     if (error) setError(error.message)
@@ -126,6 +140,17 @@ export default function Expenses() {
           <h3 style={styles.formTitle}>New Expense</h3>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
+            <div style={styles.field}>
+  <label style={styles.label}>Tax category</label>
+  <select
+    style={styles.input}
+    value={form.tax_category || ''}
+    onChange={e => setForm({ ...form, tax_category: e.target.value })}
+  >
+    <option value="">Select tax category</option>
+    {taxCategories.map(c => <option key={c} value={c}>{c}</option>)}
+  </select>
+</div>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Title *</label>
               <input

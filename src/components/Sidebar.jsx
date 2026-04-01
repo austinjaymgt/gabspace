@@ -14,11 +14,12 @@ const navItems = [
   { label: 'Tasks', path: 'tasks' },
 ]},
   {
-    label: 'Finance', icon: '💵', path: 'finance', children: [
-      { label: 'Invoices', path: 'invoices' },
-      { label: 'Expenses', path: 'expenses' },
-    ]
-  },
+  label: 'Finance', icon: '💵', path: 'finance', children: [
+    { label: 'Overview', path: 'finance-overview' },
+    { label: 'Revenue', path: 'revenue' },
+    { label: 'Expenses', path: 'expenses' },
+  ]
+},
   { label: 'Marketing', icon: '📣', path: 'marketing', children: [
   { label: 'Campaigns', path: 'campaigns' },
   { label: 'Content Calendar', path: 'campaign-tracking' },
