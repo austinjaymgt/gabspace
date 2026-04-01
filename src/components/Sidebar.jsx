@@ -9,26 +9,23 @@ const navItems = [
       { label: 'Client Portal', path: 'client-portal' },
     ]
   },
-  {
-    label: 'Operations', icon: '⚙️', path: 'operations', children: [
-      { label: 'Projects', path: 'projects' },
-      { label: 'Events', path: 'events' },
-      { label: 'Tasks', path: 'tasks' },
-    ]
-  },
+  { label: 'Operations', icon: '⚙️', path: 'operations', children: [
+  { label: 'Projects', path: 'projects' },
+  { label: 'Tasks', path: 'tasks' },
+]},
   {
     label: 'Finance', icon: '💵', path: 'finance', children: [
       { label: 'Invoices', path: 'invoices' },
       { label: 'Expenses', path: 'expenses' },
     ]
   },
-  {
-    label: 'Marketing', icon: '📣', path: 'marketing', children: [
-      { label: 'Campaigns', path: 'campaigns' },
-      { label: 'Content Calendar', path: 'campaign-tracking' },
-      { label: 'Assets', path: 'assets' },
-    ]
-  },
+  { label: 'Marketing', icon: '📣', path: 'marketing', children: [
+  { label: 'Campaigns', path: 'campaigns' },
+  { label: 'Content Calendar', path: 'campaign-tracking' },
+  { label: 'Business Events', path: 'business-events' },
+  { label: 'Assets', path: 'assets' },
+]},
+
   { label: 'Vendors', icon: '🏪', path: 'vendors' },
 ]
 

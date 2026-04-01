@@ -14,6 +14,7 @@ import Expenses from './pages/Expenses'
 import Campaigns from './pages/Campaigns'
 import ContentCalendar from './pages/ContentCalendar'
 import Assets from './pages/Assets'
+import BusinessEvents from './pages/BusinessEvents'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
@@ -88,6 +89,7 @@ export default function App() {
       case 'campaigns': return <Campaigns />
       case 'campaign-tracking': return <ContentCalendar />
       case 'assets': return <Assets />
+      case 'business-events': return <BusinessEvents />
       case 'vendors': return <Vendors />
       case 'settings': return <Settings session={session} />
       default: return (
