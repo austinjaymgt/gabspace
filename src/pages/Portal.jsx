@@ -7,7 +7,8 @@ export default function Portal() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [client, setClient] = useState(null)
-  const [updates, setUpdates] = useState([3])
+ const [updates, setUpdates] = useState([])
+const [visibleCount, setVisibleCount] = useState(3)
   const [projects, setProjects] = useState([])
 
   useEffect(() => {
