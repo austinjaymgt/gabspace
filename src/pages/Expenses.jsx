@@ -15,7 +15,7 @@ export default function Expenses() {
     event_id: '',
     date: '',
     notes: '',
-    recurrence: '',
+    recurrence: '',tax_category: ''
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
