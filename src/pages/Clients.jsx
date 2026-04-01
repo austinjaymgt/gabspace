@@ -6,88 +6,23 @@ export default function Clients() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedClient, setSelectedClient] = useState(null)
+  const [editMode, setEditMode] = useState(false)
+  const [editForm, setEditForm] = useState({})
   const [form, setForm] = useState({
     name: '', company: '', email: '', phone: '', status: 'active'
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [portalToken, setPortalToken] = useState(null)
-const [portalUpdates, setPortalUpdates] = useState([])
-const [showUpdateForm, setShowUpdateForm] = useState(false)
-const [updateForm, setUpdateForm] = useState({ title: '', message: '' })
-const [copied, setCopied] = useState(false)
+  const [portalUpdates, setPortalUpdates] = useState([])
+  const [showUpdateForm, setShowUpdateForm] = useState(false)
+  const [updateForm, setUpdateForm] = useState({ title: '', message: '' })
+  const [copied, setCopied] = useState(false)
+  const [editingUpdate, setEditingUpdate] = useState(null)
+const [editUpdateForm, setEditUpdateForm] = useState({ title: '', message: '' })
 
   useEffect(() => { fetchClients() }, [])
-async function fetchPortalData(clientId) {
-  const { data: tokenData, error: tokenError } = await supabase
-    .from('portal_tokens')
-    .select('*')
-    .eq('client_id', clientId)
-    .maybeSingle()
-  setPortalToken(tokenData)
 
-  const { data: updates } = await supabase
-    .from('portal_updates')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('created_at', { ascending: false })
-  setPortalUpdates(updates || [])
-}
-
-async function generatePortalLink(clientId) {
-  const { data: existing } = await supabase
-    .from('portal_tokens')
-    .select('*')
-    .eq('client_id', clientId)
-    .single()
-
-  if (existing) {
-    setPortalToken(existing)
-    return
-  }
-
-  const { data: { user } } = await supabase.auth.getUser()
-  const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)
-  const { data } = await supabase
-    .from('portal_tokens')
-    .insert({ client_id: clientId, user_id: user.id, token })
-    .select()
-    .single()
-  setPortalToken(data)
-}
-
-async function postUpdate(clientId) {
-  const { data: { user } } = await supabase.auth.getUser()
-  const { error } = await supabase.from('portal_updates').insert({
-    client_id: clientId,
-    user_id: user.id,
-    title: updateForm.title || null,
-    message: updateForm.message,
-    is_visible: true,
-  })
-  if (!error) {
-    setUpdateForm({ title: '', message: '' })
-    setShowUpdateForm(false)
-    fetchPortalData(clientId)
-  }
-}
-
-async function deleteUpdate(updateId, clientId) {
-  await supabase.from('portal_updates').delete().eq('id', updateId)
-  fetchPortalData(clientId)
-}
-async function regeneratePortalLink(clientId) {
-  if (!confirm('This will invalidate the old link. Are you sure?')) return
-  await supabase.from('portal_tokens').delete().eq('client_id', clientId)
-  setPortalToken(null)
-  await generatePortalLink(clientId)
-}
-function copyPortalLink(token) {
-  const url = `${window.location.origin}/portal/${token}`
-  navigator.clipboard.writeText(url)
-  setCopied(true)
-  setTimeout(() => setCopied(false), 2000)
-}
   async function fetchClients() {
     setLoading(true)
     const { data, error } = await supabase
@@ -96,6 +31,89 @@ function copyPortalLink(token) {
       .order('created_at', { ascending: false })
     if (!error) setClients(data)
     setLoading(false)
+  }
+
+  async function fetchPortalData(clientId) {
+    const { data: tokenData } = await supabase
+      .from('portal_tokens')
+      .select('*')
+      .eq('client_id', clientId)
+      .maybeSingle()
+    setPortalToken(tokenData)
+
+    const { data: updates } = await supabase
+      .from('portal_updates')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false })
+    setPortalUpdates(updates || [])
+  }
+
+  async function generatePortalLink(clientId) {
+    const { data: existing } = await supabase
+      .from('portal_tokens')
+      .select('*')
+      .eq('client_id', clientId)
+      .maybeSingle()
+
+    if (existing) {
+      setPortalToken(existing)
+      return
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)
+    const { data } = await supabase
+      .from('portal_tokens')
+      .insert({ client_id: clientId, user_id: user.id, token })
+      .select()
+      .single()
+    setPortalToken(data)
+  }
+
+  async function regeneratePortalLink(clientId) {
+    if (!confirm('This will invalidate the old link. Are you sure?')) return
+    await supabase.from('portal_tokens').delete().eq('client_id', clientId)
+    setPortalToken(null)
+    await generatePortalLink(clientId)
+  }
+
+  async function postUpdate(clientId) {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('portal_updates').insert({
+      client_id: clientId,
+      user_id: user.id,
+      title: updateForm.title || null,
+      message: updateForm.message,
+      is_visible: true,
+    })
+    if (!error) {
+      setUpdateForm({ title: '', message: '' })
+      setShowUpdateForm(false)
+      fetchPortalData(clientId)
+    }
+  }
+async function handleEditUpdate(updateId, clientId) {
+  await supabase
+    .from('portal_updates')
+    .update({
+      title: editUpdateForm.title || null,
+      message: editUpdateForm.message,
+    })
+    .eq('id', updateId)
+  setEditingUpdate(null)
+  fetchPortalData(clientId)
+}
+  async function deleteUpdate(updateId, clientId) {
+    await supabase.from('portal_updates').delete().eq('id', updateId)
+    fetchPortalData(clientId)
+  }
+
+  function copyPortalLink(token) {
+    const url = `${window.location.origin}/portal/${token}`
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   async function handleSave() {
@@ -115,6 +133,24 @@ function copyPortalLink(token) {
     setSaving(false)
   }
 
+  async function handleEditSave() {
+    const { error } = await supabase
+      .from('clients')
+      .update({
+        name: editForm.name,
+        company: editForm.company || null,
+        email: editForm.email || null,
+        phone: editForm.phone || null,
+        status: editForm.status,
+      })
+      .eq('id', selectedClient.id)
+    if (!error) {
+      setSelectedClient(prev => ({ ...prev, ...editForm }))
+      setEditMode(false)
+      fetchClients()
+    }
+  }
+
   async function handleDelete(id) {
     if (!confirm('Delete this client?')) return
     await supabase.from('clients').delete().eq('id', id)
@@ -122,169 +158,273 @@ function copyPortalLink(token) {
     if (selectedClient?.id === id) setSelectedClient(null)
   }
 
+  function handleBack() {
+    setSelectedClient(null)
+    setPortalToken(null)
+    setPortalUpdates([])
+    setEditMode(false)
+  }
+
   if (selectedClient) {
     return (
       <div style={styles.page}>
         <div style={styles.detailHeader}>
-          <button onClick={() => { setSelectedClient(client); fetchPortalData(client.id) }} style={styles.backBtn}>
+          <button onClick={handleBack} style={styles.backBtn}>
             ← Back to clients
           </button>
-          <button onClick={() => handleDelete(selectedClient.id)} style={styles.deleteBtn}>
-            Delete client
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {!editMode && (
+              <button
+                onClick={() => { setEditMode(true); setEditForm({ ...selectedClient }) }}
+                style={styles.editBtn}
+              >
+                Edit
+              </button>
+            )}
+            <button onClick={() => handleDelete(selectedClient.id)} style={styles.deleteBtn}>
+              Delete client
+            </button>
+          </div>
         </div>
+
         <div style={styles.detailCard}>
-          <div style={styles.detailAvatar}>
-            {selectedClient.name.charAt(0).toUpperCase()}
-          </div>
-          <h2 style={styles.detailName}>{selectedClient.name}</h2>
-          {selectedClient.company && (
-            <p style={styles.detailCompany}>{selectedClient.company}</p>
-          )}
-          <div style={styles.detailGrid}>
-            {selectedClient.email && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Email</div>
-                <div style={styles.detailFieldValue}>{selectedClient.email}</div>
-              </div>
-            )}
-            {selectedClient.phone && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Phone</div>
-                <div style={styles.detailFieldValue}>{selectedClient.phone}</div>
-              </div>
-            )}
-            <div style={styles.detailField}>
-              <div style={styles.detailFieldLabel}>Status</div>
-              <div style={{
-                ...styles.statusBadge,
-                backgroundColor: selectedClient.status === 'active' ? '#f0faf6' : '#f5f5f0',
-                color: selectedClient.status === 'active' ? '#1D9E75' : '#999',
-              }}>
-                {selectedClient.status}
-              </div>
-            </div>
-            <div style={styles.detailField}>
-              <div style={styles.detailFieldLabel}>Added</div>
-              <div style={styles.detailFieldValue}>
-                {new Date(selectedClient.created_at).toLocaleDateString()}
-              </div>
-            </div>
-          </div>
-          <div style={styles.portalSection}>
-            <div style={styles.portalHeader}>
-              <h3 style={styles.portalTitle}>Client Portal</h3>
-              {!portalToken ? (
-                <button
-                  onClick={() => generatePortalLink(selectedClient.id)}
-                  style={styles.portalGenerateBtn}
-                >
-                  Generate portal link
-                </button>
-              ) : (
-                <button
-                  onClick={() => copyPortalLink(portalToken.token)}
-                  style={styles.portalCopyBtn}
-                >
-                  <div style={{ display: 'flex', gap: '8px' }}>
-  <button
-    onClick={() => copyPortalLink(portalToken.token)}
-    style={styles.portalCopyBtn}
-  >
-    {copied ? '✓ Copied!' : 'Copy link'}
-  </button>
-  <button
-    onClick={() => regeneratePortalLink(portalToken.client_id)}
-    style={styles.portalRegenerateBtn}
-  >
-    Regenerate
-  </button>
-</div>
-                </button>
-              )}
-            </div>
-
-            {portalToken && (
-              <div style={styles.portalLinkBox}>
-                <span style={styles.portalLinkText}>
-                  {window.location.origin}/portal/{portalToken.token}
-                </span>
-              </div>
-            )}
-
-            <div style={styles.portalFeed}>
-              <div style={styles.portalFeedHeader}>
-                <span style={styles.portalFeedTitle}>Updates</span>
-                <button
-                  onClick={() => setShowUpdateForm(!showUpdateForm)}
-                  style={styles.postUpdateBtn}
-                >
-                  + Post update
-                </button>
-              </div>
-
-              {showUpdateForm && (
-                <div style={styles.updateForm}>
+          {editMode ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>Edit Client</h3>
+              <div style={styles.formGrid}>
+                <div style={styles.field}>
+                  <label style={styles.label}>Name *</label>
                   <input
-                    style={styles.updateInput}
-                    placeholder="Update title (optional)"
-                    value={updateForm.title}
-                    onChange={e => setUpdateForm({ ...updateForm, title: e.target.value })}
+                    style={styles.input}
+                    value={editForm.name || ''}
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                   />
-                  <textarea
-                    style={styles.updateTextarea}
-                    placeholder="Write your update..."
-                    rows={3}
-                    value={updateForm.message}
-                    onChange={e => setUpdateForm({ ...updateForm, message: e.target.value })}
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Company</label>
+                  <input
+                    style={styles.input}
+                    value={editForm.company || ''}
+                    onChange={e => setEditForm({ ...editForm, company: e.target.value })}
                   />
-                  <div style={styles.updateFormActions}>
-                    <button
-                      onClick={() => setShowUpdateForm(false)}
-                      style={styles.cancelBtn}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => postUpdate(selectedClient.id)}
-                      style={styles.saveBtn}
-                      disabled={!updateForm.message}
-                    >
-                      Post
-                    </button>
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Email</label>
+                  <input
+                    style={styles.input}
+                    value={editForm.email || ''}
+                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                  />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Phone</label>
+                  <input
+                    style={styles.input}
+                    value={editForm.phone || ''}
+                    onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                  />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Status</label>
+                  <select
+                    style={styles.input}
+                    value={editForm.status || 'active'}
+                    onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setEditMode(false)} style={styles.cancelBtn}>Cancel</button>
+                <button onClick={handleEditSave} style={styles.saveBtn}>Save changes</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={styles.detailAvatar}>
+                {selectedClient.name.charAt(0).toUpperCase()}
+              </div>
+              <h2 style={styles.detailName}>{selectedClient.name}</h2>
+              {selectedClient.company && (
+                <p style={styles.detailCompany}>{selectedClient.company}</p>
+              )}
+              <div style={styles.detailGrid}>
+                {selectedClient.email && (
+                  <div style={styles.detailField}>
+                    <div style={styles.detailFieldLabel}>Email</div>
+                    <div style={styles.detailFieldValue}>{selectedClient.email}</div>
+                  </div>
+                )}
+                {selectedClient.phone && (
+                  <div style={styles.detailField}>
+                    <div style={styles.detailFieldLabel}>Phone</div>
+                    <div style={styles.detailFieldValue}>{selectedClient.phone}</div>
+                  </div>
+                )}
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Status</div>
+                  <div style={{
+                    ...styles.statusBadge,
+                    backgroundColor: selectedClient.status === 'active' ? '#f0faf6' : '#f5f5f0',
+                    color: selectedClient.status === 'active' ? '#1D9E75' : '#999',
+                  }}>
+                    {selectedClient.status}
                   </div>
                 </div>
-              )}
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Added</div>
+                  <div style={styles.detailFieldValue}>
+                    {new Date(selectedClient.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
 
-              {portalUpdates.length === 0 ? (
-                <p style={styles.noUpdates}>No updates posted yet</p>
-              ) : (
-                portalUpdates.map(update => (
-                  <div key={update.id} style={styles.updateCard}>
-                    <div style={styles.updateCardHeader}>
-                      <div>
-                        {update.title && (
-                          <div style={styles.updateCardTitle}>{update.title}</div>
-                        )}
-                        <div style={styles.updateCardDate}>
-                          {new Date(update.created_at).toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', year: 'numeric'
-                          })}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => deleteUpdate(update.id, selectedClient.id)}
-                        style={styles.deleteUpdateBtn}
-                      >
-                        ✕
+              <div style={styles.portalSection}>
+                <div style={styles.portalHeader}>
+                  <h3 style={styles.portalTitle}>Client Portal</h3>
+                  {!portalToken ? (
+                    <button
+                      onClick={() => generatePortalLink(selectedClient.id)}
+                      style={styles.portalGenerateBtn}
+                    >
+                      Generate portal link
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => copyPortalLink(portalToken.token)} style={styles.portalCopyBtn}>
+                        {copied ? '✓ Copied!' : 'Copy link'}
+                      </button>
+                      <button onClick={() => regeneratePortalLink(portalToken.client_id)} style={styles.portalRegenerateBtn}>
+                        Regenerate
                       </button>
                     </div>
-                    <p style={styles.updateCardMessage}>{update.message}</p>
+                  )}
+                </div>
+
+                {portalToken && (
+                  <div style={styles.portalLinkBox}>
+                    <span style={styles.portalLinkText}>
+                      {window.location.origin}/portal/{portalToken.token}
+                    </span>
                   </div>
-                ))
-              )}
+                )}
+
+                <div style={styles.portalFeed}>
+                  <div style={styles.portalFeedHeader}>
+                    <span style={styles.portalFeedTitle}>Updates</span>
+                    <button
+                      onClick={() => setShowUpdateForm(!showUpdateForm)}
+                      style={styles.postUpdateBtn}
+                    >
+                      + Post update
+                    </button>
+                  </div>
+
+                  {showUpdateForm && (
+                    <div style={styles.updateForm}>
+                      <input
+                        style={styles.updateInput}
+                        placeholder="Update title (optional)"
+                        value={updateForm.title}
+                        onChange={e => setUpdateForm({ ...updateForm, title: e.target.value })}
+                      />
+                      <textarea
+                        style={styles.updateTextarea}
+                        placeholder="Write your update..."
+                        rows={3}
+                        value={updateForm.message}
+                        onChange={e => setUpdateForm({ ...updateForm, message: e.target.value })}
+                      />
+                      <div style={styles.updateFormActions}>
+                        <button onClick={() => setShowUpdateForm(false)} style={styles.cancelBtn}>
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => postUpdate(selectedClient.id)}
+                          style={styles.saveBtn}
+                          disabled={!updateForm.message}
+                        >
+                          Post
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {portalUpdates.length === 0 ? (
+                    <p style={styles.noUpdates}>No updates posted yet</p>
+                  ) : (
+                    portalUpdates.map(update => (
+  <div key={update.id} style={styles.updateCard}>
+    {editingUpdate === update.id ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <input
+          style={styles.updateInput}
+          placeholder="Update title (optional)"
+          value={editUpdateForm.title}
+          onChange={e => setEditUpdateForm({ ...editUpdateForm, title: e.target.value })}
+        />
+        <textarea
+          style={styles.updateTextarea}
+          rows={3}
+          value={editUpdateForm.message}
+          onChange={e => setEditUpdateForm({ ...editUpdateForm, message: e.target.value })}
+        />
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button onClick={() => setEditingUpdate(null)} style={styles.cancelBtn}>
+            Cancel
+          </button>
+          <button
+            onClick={() => handleEditUpdate(update.id, selectedClient.id)}
+            style={styles.saveBtn}
+            disabled={!editUpdateForm.message}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    ) : (
+      <>
+        <div style={styles.updateCardHeader}>
+          <div>
+            {update.title && (
+              <div style={styles.updateCardTitle}>{update.title}</div>
+            )}
+            <div style={styles.updateCardDate}>
+              {new Date(update.created_at).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+              })}
             </div>
           </div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              onClick={() => {
+                setEditingUpdate(update.id)
+                setEditUpdateForm({ title: update.title || '', message: update.message })
+              }}
+              style={{ ...styles.deleteUpdateBtn, color: '#aaa' }}
+            >
+              ✏️
+            </button>
+            <button
+              onClick={() => deleteUpdate(update.id, selectedClient.id)}
+              style={styles.deleteUpdateBtn}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        <p style={styles.updateCardMessage}>{update.message}</p>
+      </>
+    )}
+  </div>
+))
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     )
@@ -345,17 +485,10 @@ function copyPortalLink(token) {
             </div>
           </div>
           <div style={styles.formActions}>
-            <button
-              onClick={() => { setShowForm(false); setError(null) }}
-              style={styles.cancelBtn}
-            >
+            <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>
               Cancel
             </button>
-            <button
-              onClick={handleSave}
-              style={styles.saveBtn}
-              disabled={saving || !form.name}
-            >
+            <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.name}>
               {saving ? 'Saving...' : 'Save Client'}
             </button>
           </div>
@@ -511,7 +644,6 @@ const styles = {
     borderBottom: '1px solid #f9f9f7',
     alignItems: 'center',
     cursor: 'pointer',
-    transition: 'background 0.1s',
   },
   clientName: {
     display: 'flex',
@@ -562,6 +694,15 @@ const styles = {
     marginBottom: '24px',
   },
   backBtn: {
+    padding: '8px 14px',
+    borderRadius: '8px',
+    border: '1px solid #e0e0e0',
+    backgroundColor: '#fff',
+    color: '#555',
+    fontSize: '13px',
+    cursor: 'pointer',
+  },
+  editBtn: {
     padding: '8px 14px',
     borderRadius: '8px',
     border: '1px solid #e0e0e0',
@@ -621,6 +762,7 @@ const styles = {
     marginTop: '28px',
     borderTop: '1px solid #f0f0eb',
     paddingTop: '28px',
+    width: '100%',
   },
   portalHeader: {
     display: 'flex',
@@ -655,14 +797,14 @@ const styles = {
     cursor: 'pointer',
   },
   portalRegenerateBtn: {
-  padding: '7px 14px',
-  borderRadius: '8px',
-  border: '1px solid #e0e0e0',
-  backgroundColor: '#fff',
-  color: '#999',
-  fontSize: '12px',
-  cursor: 'pointer',
-},
+    padding: '7px 14px',
+    borderRadius: '8px',
+    border: '1px solid #e0e0e0',
+    backgroundColor: '#fff',
+    color: '#999',
+    fontSize: '12px',
+    cursor: 'pointer',
+  },
   portalLinkBox: {
     backgroundColor: '#f5f5f0',
     borderRadius: '8px',

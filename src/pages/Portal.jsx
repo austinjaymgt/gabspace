@@ -7,7 +7,7 @@ export default function Portal() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [client, setClient] = useState(null)
-  const [updates, setUpdates] = useState([])
+  const [updates, setUpdates] = useState([3])
   const [projects, setProjects] = useState([])
 
   useEffect(() => {
@@ -150,27 +150,44 @@ export default function Portal() {
             </div>
           ) : (
             <div style={styles.updateFeed}>
-              {updates.map(update => (
-                <div key={update.id} style={styles.updateCard}>
-                  <div style={styles.updateMeta}>
-                    <div style={styles.updateAvatar}>G</div>
-                    <div>
-                      <div style={styles.updateAuthor}>Gabspace Team</div>
-                      <div style={styles.updateDate}>
-                        {new Date(update.created_at).toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                  {update.title && (
-                    <h3 style={styles.updateTitle}>{update.title}</h3>
-                  )}
-                  <p style={styles.updateMessage}>{update.message}</p>
-                </div>
-              ))}
+              {updates.slice(0, visibleCount).map(update => (
+  <div key={update.id} style={styles.updateCard}>
+    <div style={styles.updateMeta}>
+      <div style={styles.updateAvatar}>G</div>
+      <div>
+        <div style={styles.updateAuthor}>Gabspace Team</div>
+        <div style={styles.updateDate}>
+          {new Date(update.created_at).toLocaleDateString('en-US', {
+            month: 'long', day: 'numeric', year: 'numeric'
+          })}
+        </div>
+      </div>
+    </div>
+    {update.title && (
+      <h3 style={styles.updateTitle}>{update.title}</h3>
+    )}
+    <p style={styles.updateMessage}>{update.message}</p>
+  </div>
+))}
+{updates.length > visibleCount && (
+  <button
+    onClick={() => setVisibleCount(prev => prev + 3)}
+    style={{
+      width: '100%',
+      padding: '12px',
+      borderRadius: '10px',
+      border: '1px solid #f0f0eb',
+      backgroundColor: '#fff',
+      color: '#888',
+      fontSize: '13px',
+      cursor: 'pointer',
+      fontFamily: 'sans-serif',
+      marginTop: '8px',
+    }}
+  >
+    Load more ({updates.length - visibleCount} remaining)
+  </button>
+)}
             </div>
           )}
         </div>
