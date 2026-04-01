@@ -17,6 +17,7 @@ import Assets from './pages/Assets'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
+import OnboardingModal from './components/OnboardingModal' // NEW
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -26,11 +27,27 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false) // NEW
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
   }, [])
+
+  // NEW — whenever session changes, check the onboarding flag
+  useEffect(() => {
+    if (!session) return
+    supabase
+      .from('user_settings')
+      .select('onboarding_completed')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && !data.onboarding_completed) {
+          setShowOnboarding(true)
+        }
+      })
+  }, [session])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -59,7 +76,7 @@ export default function App() {
 
   function renderPage() {
     switch (currentPage) {
-      case 'dashboard': return <Dashboard session={session} />
+      case 'dashboard': return <Dashboard session={session} onNavigate={setCurrentPage} />
       case 'clients':
       case 'all-clients': return <Clients />
       case 'client-portal': return <ClientPortal />
@@ -73,7 +90,6 @@ export default function App() {
       case 'assets': return <Assets />
       case 'vendors': return <Vendors />
       case 'settings': return <Settings session={session} />
-
       default: return (
         <div style={{
           display: 'flex',
@@ -227,6 +243,15 @@ export default function App() {
       backgroundColor: t.colors.bg,
       fontFamily: t.fonts.sans,
     }}>
+      {/* NEW — render the modal on top of everything if needed */}
+      {showOnboarding && (
+  <OnboardingModal
+    userId={session.user.id}
+    onComplete={() => setShowOnboarding(false)}
+    onSkip={() => setShowOnboarding(false)}
+    onNavigate={setCurrentPage}
+  />
+)}
       <Sidebar
         currentPage={currentPage}
         onNavigate={setCurrentPage}
@@ -239,17 +264,17 @@ export default function App() {
         minHeight: '100vh',
       }}>
         <TopBar
-  session={session}
-  onLogout={handleLogout}
-  currentPage={currentPage}
-  onMenuClick={() => setSidebarOpen(true)}
-  onNavigate={setCurrentPage}
-/>
+          session={session}
+          onLogout={handleLogout}
+          currentPage={currentPage}
+          onMenuClick={() => setSidebarOpen(true)}
+          onNavigate={setCurrentPage}
+        />
         <SubHeader
-  currentPage={currentPage}
-  onNavigate={setCurrentPage}
-  session={session}
-/>
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          session={session}
+        />
         <div style={{ flex: 1 }}>
           {renderPage()}
         </div>
