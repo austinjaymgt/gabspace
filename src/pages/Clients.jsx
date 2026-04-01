@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 
 export default function Clients() {
@@ -15,11 +15,7 @@ export default function Clients() {
   const [error, setError] = useState(null)
   const [portalToken, setPortalToken] = useState(null)
   const [portalUpdates, setPortalUpdates] = useState([])
-  const [showUpdateForm, setShowUpdateForm] = useState(false)
-  const [updateForm, setUpdateForm] = useState({ title: '', message: '' })
   const [copied, setCopied] = useState(false)
-  const [editingUpdate, setEditingUpdate] = useState(null)
-const [editUpdateForm, setEditUpdateForm] = useState({ title: '', message: '' })
 
   useEffect(() => { fetchClients() }, [])
 
@@ -76,37 +72,6 @@ const [editUpdateForm, setEditUpdateForm] = useState({ title: '', message: '' })
     await supabase.from('portal_tokens').delete().eq('client_id', clientId)
     setPortalToken(null)
     await generatePortalLink(clientId)
-  }
-
-  async function postUpdate(clientId) {
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('portal_updates').insert({
-      client_id: clientId,
-      user_id: user.id,
-      title: updateForm.title || null,
-      message: updateForm.message,
-      is_visible: true,
-    })
-    if (!error) {
-      setUpdateForm({ title: '', message: '' })
-      setShowUpdateForm(false)
-      fetchPortalData(clientId)
-    }
-  }
-async function handleEditUpdate(updateId, clientId) {
-  await supabase
-    .from('portal_updates')
-    .update({
-      title: editUpdateForm.title || null,
-      message: editUpdateForm.message,
-    })
-    .eq('id', updateId)
-  setEditingUpdate(null)
-  fetchPortalData(clientId)
-}
-  async function deleteUpdate(updateId, clientId) {
-    await supabase.from('portal_updates').delete().eq('id', updateId)
-    fetchPortalData(clientId)
   }
 
   function copyPortalLink(token) {
@@ -189,48 +154,28 @@ async function handleEditUpdate(updateId, clientId) {
 
         <div style={styles.detailCard}>
           {editMode ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>Edit Client</h3>
               <div style={styles.formGrid}>
                 <div style={styles.field}>
                   <label style={styles.label}>Name *</label>
-                  <input
-                    style={styles.input}
-                    value={editForm.name || ''}
-                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                  />
+                  <input style={styles.input} value={editForm.name || ''} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Company</label>
-                  <input
-                    style={styles.input}
-                    value={editForm.company || ''}
-                    onChange={e => setEditForm({ ...editForm, company: e.target.value })}
-                  />
+                  <input style={styles.input} value={editForm.company || ''} onChange={e => setEditForm({ ...editForm, company: e.target.value })} />
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Email</label>
-                  <input
-                    style={styles.input}
-                    value={editForm.email || ''}
-                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                  />
+                  <input style={styles.input} value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Phone</label>
-                  <input
-                    style={styles.input}
-                    value={editForm.phone || ''}
-                    onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
-                  />
+                  <input style={styles.input} value={editForm.phone || ''} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Status</label>
-                  <select
-                    style={styles.input}
-                    value={editForm.status || 'active'}
-                    onChange={e => setEditForm({ ...editForm, status: e.target.value })}
-                  >
+                  <select style={styles.input} value={editForm.status || 'active'} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
@@ -281,14 +226,12 @@ async function handleEditUpdate(updateId, clientId) {
                 </div>
               </div>
 
+              {/* Portal Summary */}
               <div style={styles.portalSection}>
                 <div style={styles.portalHeader}>
                   <h3 style={styles.portalTitle}>Client Portal</h3>
                   {!portalToken ? (
-                    <button
-                      onClick={() => generatePortalLink(selectedClient.id)}
-                      style={styles.portalGenerateBtn}
-                    >
+                    <button onClick={() => generatePortalLink(selectedClient.id)} style={styles.portalGenerateBtn}>
                       Generate portal link
                     </button>
                   ) : (
@@ -304,124 +247,31 @@ async function handleEditUpdate(updateId, clientId) {
                 </div>
 
                 {portalToken && (
-                  <div style={styles.portalLinkBox}>
-                    <span style={styles.portalLinkText}>
-                      {window.location.origin}/portal/{portalToken.token}
-                    </span>
-                  </div>
-                )}
-
-                <div style={styles.portalFeed}>
-                  <div style={styles.portalFeedHeader}>
-                    <span style={styles.portalFeedTitle}>Updates</span>
-                    <button
-                      onClick={() => setShowUpdateForm(!showUpdateForm)}
-                      style={styles.postUpdateBtn}
-                    >
-                      + Post update
-                    </button>
-                  </div>
-
-                  {showUpdateForm && (
-                    <div style={styles.updateForm}>
-                      <input
-                        style={styles.updateInput}
-                        placeholder="Update title (optional)"
-                        value={updateForm.title}
-                        onChange={e => setUpdateForm({ ...updateForm, title: e.target.value })}
-                      />
-                      <textarea
-                        style={styles.updateTextarea}
-                        placeholder="Write your update..."
-                        rows={3}
-                        value={updateForm.message}
-                        onChange={e => setUpdateForm({ ...updateForm, message: e.target.value })}
-                      />
-                      <div style={styles.updateFormActions}>
-                        <button onClick={() => setShowUpdateForm(false)} style={styles.cancelBtn}>
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => postUpdate(selectedClient.id)}
-                          style={styles.saveBtn}
-                          disabled={!updateForm.message}
-                        >
-                          Post
-                        </button>
+                  <>
+                    <div style={styles.portalLinkBox}>
+                      <span style={styles.portalLinkText}>
+                        {window.location.origin}/portal/{portalToken.token}
+                      </span>
+                    </div>
+                    <div style={styles.portalMetaRow}>
+                      <div style={styles.portalMetaItem}>
+                        <div style={styles.portalMetaLabel}>Last viewed</div>
+                        <div style={styles.portalMetaValue}>
+                          {portalToken.last_viewed_at
+                            ? new Date(portalToken.last_viewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            : 'Not yet viewed'}
+                        </div>
+                      </div>
+                      <div style={styles.portalMetaItem}>
+                        <div style={styles.portalMetaLabel}>Updates posted</div>
+                        <div style={styles.portalMetaValue}>{portalUpdates.length}</div>
                       </div>
                     </div>
-                  )}
-
-                  {portalUpdates.length === 0 ? (
-                    <p style={styles.noUpdates}>No updates posted yet</p>
-                  ) : (
-                    portalUpdates.map(update => (
-  <div key={update.id} style={styles.updateCard}>
-    {editingUpdate === update.id ? (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <input
-          style={styles.updateInput}
-          placeholder="Update title (optional)"
-          value={editUpdateForm.title}
-          onChange={e => setEditUpdateForm({ ...editUpdateForm, title: e.target.value })}
-        />
-        <textarea
-          style={styles.updateTextarea}
-          rows={3}
-          value={editUpdateForm.message}
-          onChange={e => setEditUpdateForm({ ...editUpdateForm, message: e.target.value })}
-        />
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button onClick={() => setEditingUpdate(null)} style={styles.cancelBtn}>
-            Cancel
-          </button>
-          <button
-            onClick={() => handleEditUpdate(update.id, selectedClient.id)}
-            style={styles.saveBtn}
-            disabled={!editUpdateForm.message}
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    ) : (
-      <>
-        <div style={styles.updateCardHeader}>
-          <div>
-            {update.title && (
-              <div style={styles.updateCardTitle}>{update.title}</div>
-            )}
-            <div style={styles.updateCardDate}>
-              {new Date(update.created_at).toLocaleDateString('en-US', {
-                month: 'short', day: 'numeric', year: 'numeric'
-              })}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              onClick={() => {
-                setEditingUpdate(update.id)
-                setEditUpdateForm({ title: update.title || '', message: update.message })
-              }}
-              style={{ ...styles.deleteUpdateBtn, color: '#aaa' }}
-            >
-              ✏️
-            </button>
-            <button
-              onClick={() => deleteUpdate(update.id, selectedClient.id)}
-              style={styles.deleteUpdateBtn}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-        <p style={styles.updateCardMessage}>{update.message}</p>
-      </>
-    )}
-  </div>
-))
-                  )}
-                </div>
+                    <p style={{ fontSize: '12px', color: '#aaa', margin: '8px 0 0', textAlign: 'center' }}>
+                      Manage updates and view comments in the <strong>Client Portal</strong> section
+                    </p>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -449,45 +299,23 @@ async function handleEditUpdate(updateId, clientId) {
           <div style={styles.formGrid}>
             <div style={styles.field}>
               <label style={styles.label}>Name *</label>
-              <input
-                style={styles.input}
-                placeholder="Full name"
-                value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })}
-              />
+              <input style={styles.input} placeholder="Full name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Company</label>
-              <input
-                style={styles.input}
-                placeholder="Company name"
-                value={form.company}
-                onChange={e => setForm({ ...form, company: e.target.value })}
-              />
+              <input style={styles.input} placeholder="Company name" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Email</label>
-              <input
-                style={styles.input}
-                placeholder="email@example.com"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-              />
+              <input style={styles.input} placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Phone</label>
-              <input
-                style={styles.input}
-                placeholder="(555) 000-0000"
-                value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })}
-              />
+              <input style={styles.input} placeholder="(555) 000-0000" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
             </div>
           </div>
           <div style={styles.formActions}>
-            <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>
-              Cancel
-            </button>
+            <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
             <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.name}>
               {saving ? 'Saving...' : 'Save Client'}
             </button>
@@ -502,9 +330,7 @@ async function handleEditUpdate(updateId, clientId) {
           <div style={styles.emptyIcon}>👥</div>
           <h3 style={styles.emptyTitle}>No clients yet</h3>
           <p style={styles.emptyText}>Add your first client to get started</p>
-          <button onClick={() => setShowForm(true)} style={styles.addBtn}>
-            + Add Client
-          </button>
+          <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Client</button>
         </div>
       ) : (
         <div style={styles.table}>
@@ -522,9 +348,7 @@ async function handleEditUpdate(updateId, clientId) {
               onClick={() => { setSelectedClient(client); fetchPortalData(client.id) }}
             >
               <span style={styles.clientName}>
-                <div style={styles.avatar}>
-                  {client.name.charAt(0).toUpperCase()}
-                </div>
+                <div style={styles.avatar}>{client.name.charAt(0).toUpperCase()}</div>
                 {client.name}
               </span>
               <span style={styles.tableCell}>{client.company || '—'}</span>
@@ -549,369 +373,54 @@ async function handleEditUpdate(updateId, clientId) {
 
 const styles = {
   page: { padding: '32px' },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '24px',
-  },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' },
   title: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: 0 },
   subtitle: { fontSize: '13px', color: '#999', margin: '4px 0 0' },
-  addBtn: {
-    padding: '10px 18px',
-    borderRadius: '8px',
-    border: 'none',
-    backgroundColor: '#1D9E75',
-    color: '#fff',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  formCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '24px',
-    border: '1px solid #f0f0eb',
-    marginBottom: '24px',
-  },
+  addBtn: { padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
+  formCard: { backgroundColor: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '24px' },
   formTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 20px' },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '16px',
-    marginBottom: '20px',
-  },
+  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: {
-    padding: '9px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    fontSize: '13px',
-    color: '#1a1a1a',
-    outline: 'none',
-  },
+  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1a1a1a', outline: 'none' },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: {
-    padding: '9px 16px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#666',
-    fontSize: '13px',
-    cursor: 'pointer',
-  },
-  saveBtn: {
-    padding: '9px 16px',
-    borderRadius: '8px',
-    border: 'none',
-    backgroundColor: '#1D9E75',
-    color: '#fff',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  error: {
-    padding: '10px 14px',
-    borderRadius: '8px',
-    backgroundColor: '#fff0f0',
-    color: '#cc3333',
-    fontSize: '13px',
-    marginBottom: '16px',
-  },
-  table: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #f0f0eb',
-    overflow: 'hidden',
-  },
-  tableHeader: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.5fr 2fr 1fr 0.3fr',
-    padding: '12px 20px',
-    backgroundColor: '#fafaf8',
-    borderBottom: '1px solid #f0f0eb',
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#999',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  },
-  tableRow: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.5fr 2fr 1fr 0.3fr',
-    padding: '14px 20px',
-    borderBottom: '1px solid #f9f9f7',
-    alignItems: 'center',
-    cursor: 'pointer',
-  },
-  clientName: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#1a1a1a',
-  },
-  avatar: {
-    width: '30px',
-    height: '30px',
-    borderRadius: '50%',
-    backgroundColor: '#1D9E75',
-    color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '12px',
-    fontWeight: '600',
-    flexShrink: 0,
-  },
+  cancelBtn: { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+  saveBtn: { padding: '9px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
+  error: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' },
+  table: { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' },
+  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 0.3fr', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
+  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 0.3fr', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center', cursor: 'pointer' },
+  clientName: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '500', color: '#1a1a1a' },
+  avatar: { width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#1D9E75', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '600', flexShrink: 0 },
   tableCell: { fontSize: '13px', color: '#666' },
-  statusBadge: {
-    display: 'inline-block',
-    padding: '3px 10px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: '500',
-  },
-  emptyState: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '80px 20px',
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #f0f0eb',
-  },
+  statusBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' },
+  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' },
   emptyIcon: { fontSize: '40px', marginBottom: '16px' },
   emptyTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 8px' },
   emptyText: { fontSize: '13px', color: '#999', margin: '0 0 24px' },
   empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
-  detailHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '24px',
-  },
-  backBtn: {
-    padding: '8px 14px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#555',
-    fontSize: '13px',
-    cursor: 'pointer',
-  },
-  editBtn: {
-    padding: '8px 14px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#555',
-    fontSize: '13px',
-    cursor: 'pointer',
-  },
-  deleteBtn: {
-    padding: '8px 14px',
-    borderRadius: '8px',
-    border: 'none',
-    backgroundColor: '#fff0f0',
-    color: '#cc3333',
-    fontSize: '13px',
-    cursor: 'pointer',
-  },
-  detailCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '40px',
-    border: '1px solid #f0f0eb',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  detailAvatar: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '50%',
-    backgroundColor: '#1D9E75',
-    color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '24px',
-    fontWeight: '700',
-    marginBottom: '16px',
-  },
+  detailHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '24px' },
+  backBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
+  editBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
+  deleteBtn: { padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', cursor: 'pointer' },
+  detailCard: { backgroundColor: '#fff', borderRadius: '12px', padding: '40px', border: '1px solid #f0f0eb', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+  detailAvatar: { width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#1D9E75', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '700', marginBottom: '16px' },
   detailName: { fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 4px' },
   detailCompany: { fontSize: '14px', color: '#999', margin: '0 0 32px' },
-  detailGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '20px',
-    width: '100%',
-    maxWidth: '500px',
-  },
-  detailField: {
-    backgroundColor: '#fafaf8',
-    borderRadius: '8px',
-    padding: '14px 16px',
-  },
+  detailGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', width: '100%', maxWidth: '500px' },
+  detailField: { backgroundColor: '#fafaf8', borderRadius: '8px', padding: '14px 16px' },
   detailFieldLabel: { fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px' },
   detailFieldValue: { fontSize: '14px', color: '#1a1a1a' },
-  portalSection: {
-    marginTop: '28px',
-    borderTop: '1px solid #f0f0eb',
-    paddingTop: '28px',
-    width: '100%',
-  },
-  portalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '12px',
-  },
-  portalTitle: {
-    fontSize: '15px',
-    fontWeight: '600',
-    color: '#1a1a1a',
-    margin: 0,
-  },
-  portalGenerateBtn: {
-    padding: '7px 14px',
-    borderRadius: '8px',
-    border: 'none',
-    backgroundColor: '#1D9E75',
-    color: '#fff',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  portalCopyBtn: {
-    padding: '7px 14px',
-    borderRadius: '8px',
-    border: '1px solid #1D9E75',
-    backgroundColor: '#fff',
-    color: '#1D9E75',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  portalRegenerateBtn: {
-    padding: '7px 14px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#999',
-    fontSize: '12px',
-    cursor: 'pointer',
-  },
-  portalLinkBox: {
-    backgroundColor: '#f5f5f0',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    marginBottom: '20px',
-  },
-  portalLinkText: {
-    fontSize: '12px',
-    color: '#666',
-    fontFamily: 'monospace',
-  },
-  portalFeed: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  portalFeedHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  portalFeedTitle: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#666',
-  },
-  postUpdateBtn: {
-    padding: '6px 12px',
-    borderRadius: '8px',
-    border: 'none',
-    backgroundColor: '#f0faf6',
-    color: '#1D9E75',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  updateForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    backgroundColor: '#fafaf8',
-    borderRadius: '10px',
-    padding: '16px',
-  },
-  updateInput: {
-    padding: '8px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    fontSize: '13px',
-    outline: 'none',
-    backgroundColor: '#fff',
-  },
-  updateTextarea: {
-    padding: '8px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    fontSize: '13px',
-    outline: 'none',
-    resize: 'vertical',
-    fontFamily: 'sans-serif',
-    backgroundColor: '#fff',
-  },
-  updateFormActions: {
-    display: 'flex',
-    gap: '8px',
-    justifyContent: 'flex-end',
-  },
-  noUpdates: {
-    fontSize: '13px',
-    color: '#bbb',
-    textAlign: 'center',
-    padding: '20px 0',
-  },
-  updateCard: {
-    backgroundColor: '#fafaf8',
-    borderRadius: '10px',
-    padding: '14px 16px',
-    border: '1px solid #f0f0eb',
-  },
-  updateCardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '8px',
-  },
-  updateCardTitle: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: '2px',
-  },
-  updateCardDate: {
-    fontSize: '11px',
-    color: '#bbb',
-  },
-  updateCardMessage: {
-    fontSize: '13px',
-    color: '#555',
-    margin: 0,
-    lineHeight: '1.5',
-  },
-  deleteUpdateBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#ddd',
-    fontSize: '12px',
-    cursor: 'pointer',
-    padding: '2px',
-  },
+  portalSection: { marginTop: '28px', borderTop: '1px solid #f0f0eb', paddingTop: '28px', width: '100%' },
+  portalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
+  portalTitle: { fontSize: '15px', fontWeight: '600', color: '#1a1a1a', margin: 0 },
+  portalGenerateBtn: { padding: '7px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
+  portalCopyBtn: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #1D9E75', backgroundColor: '#fff', color: '#1D9E75', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
+  portalRegenerateBtn: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#999', fontSize: '12px', cursor: 'pointer' },
+  portalLinkBox: { backgroundColor: '#f5f5f0', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' },
+  portalLinkText: { fontSize: '12px', color: '#666', fontFamily: 'monospace' },
+  portalMetaRow: { display: 'flex', gap: '24px', padding: '12px 16px', backgroundColor: '#fafaf8', borderRadius: '8px' },
+  portalMetaItem: { display: 'flex', flexDirection: 'column', gap: '2px' },
+  portalMetaLabel: { fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase' },
+  portalMetaValue: { fontSize: '13px', color: '#1a1a1a', fontWeight: '500' },
 }
