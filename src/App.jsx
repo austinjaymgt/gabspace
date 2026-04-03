@@ -22,7 +22,7 @@ import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
 import OnboardingModal from './components/OnboardingModal' // NEW
 
-export default function App() {}
+export default function App() {
   const [session, setSession] = useState(null)
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [email, setEmail] = useState('')
@@ -243,7 +243,6 @@ export default function App() {}
     )
   }
 
-  const isDesktop = window.innerWidth >= 1024
 
 return (
   <div style={{
@@ -282,4 +281,4 @@ return (
       </div>
     </div>
   </div>
-)
+)}

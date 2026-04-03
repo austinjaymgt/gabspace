@@ -1,19 +1,14 @@
+import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 
-export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate }) {  const pageNames = {
-    dashboard: 'Dashboard',
-    clients: 'Clients',
-    'client-portal': 'Client Portal',
-    projects: 'Projects',
-    events: 'Events',
-    tasks: 'Tasks',
-    invoices: 'Invoices',
-    expenses: 'Expenses',
-    campaigns: 'Campaigns',
-    'campaign-tracking': 'Content Calendar',
-    assets: 'Brand Assets',
-    vendors: 'Vendors',
-  }
+export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate }) {
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
+
+  useEffect(() => {
+    function handle() { setIsDesktop(window.innerWidth >= 1024) }
+    window.addEventListener('resize', handle)
+    return () => window.removeEventListener('resize', handle)
+  }, [])
 
   const initials = session?.user?.email?.charAt(0).toUpperCase() || 'U'
 
@@ -30,44 +25,44 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       flexShrink: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {window.innerWidth < 1024 && (
-      <button
-       onClick={onMenuClick}
-      style={{
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '20px',
-      color: t.colors.textSecondary,
-      padding: '4px 6px',
-      borderRadius: t.radius.md,
-      lineHeight: 1,
-      display: 'flex',
-      alignItems: 'center',
-    }}
-  >
-    ☰
-  </button>
-)}
+        {!isDesktop && (
+          <button
+            onClick={onMenuClick}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '20px',
+              color: t.colors.textSecondary,
+              padding: '4px 6px',
+              borderRadius: t.radius.md,
+              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            ☰
+          </button>
+        )}
         <div>
-  <div style={{
-    fontSize: '17px',
-    fontWeight: '700',
-    color: t.colors.textPrimary,
-    letterSpacing: '-0.4px',
-    lineHeight: 1.2,
-    fontFamily: t.fonts.sans,
-  }}>
-    gabspace
-  </div>
-  <div style={{
-    fontSize: t.fontSizes.xs,
-    color: t.colors.textTertiary,
-    fontFamily: t.fonts.sans,
-  }}>
-    Clarity meets creativity
-  </div>
-</div>
+          <div style={{
+            fontSize: '17px',
+            fontWeight: '700',
+            color: t.colors.textPrimary,
+            letterSpacing: '-0.4px',
+            lineHeight: 1.2,
+            fontFamily: t.fonts.sans,
+          }}>
+            gabspace
+          </div>
+          <div style={{
+            fontSize: t.fontSizes.xs,
+            color: t.colors.textTertiary,
+            fontFamily: t.fonts.sans,
+          }}>
+            Clarity meets creativity
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -96,8 +91,8 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
         </div>
 
         <div
-          title="Settings"
-onClick={() => onNavigate('settings')}
+          onClick={() => onNavigate('settings')}
+          title={session?.user?.email}
           style={{
             width: '36px',
             height: '36px',
