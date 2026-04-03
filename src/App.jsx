@@ -243,48 +243,43 @@ export default function App() {
     )
   }
 
-  return (
+  const isDesktop = window.innerWidth >= 1024
+
+return (
+  <div style={{
+    minHeight: '100vh',
+    backgroundColor: t.colors.bg,
+    fontFamily: t.fonts.sans,
+    display: 'flex',
+  }}>
+    <Sidebar
+      currentPage={currentPage}
+      onNavigate={setCurrentPage}
+      isOpen={sidebarOpen}
+      onClose={() => setSidebarOpen(false)}
+    />
     <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
       minHeight: '100vh',
-      backgroundColor: t.colors.bg,
-      fontFamily: t.fonts.sans,
+      minWidth: 0,
     }}>
-      {/* NEW — render the modal on top of everything if needed */}
-      {showOnboarding && (
-  <OnboardingModal
-    userId={session.user.id}
-    onComplete={() => setShowOnboarding(false)}
-    onSkip={() => setShowOnboarding(false)}
-    onNavigate={setCurrentPage}
-  />
-)}
-      <Sidebar
+      <TopBar
+        session={session}
+        onLogout={handleLogout}
+        currentPage={currentPage}
+        onMenuClick={() => setSidebarOpen(true)}
+        onNavigate={setCurrentPage}
+      />
+      <SubHeader
         currentPage={currentPage}
         onNavigate={setCurrentPage}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        session={session}
       />
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-      }}>
-        <TopBar
-          session={session}
-          onLogout={handleLogout}
-          currentPage={currentPage}
-          onMenuClick={() => setSidebarOpen(true)}
-          onNavigate={setCurrentPage}
-        />
-        <SubHeader
-          currentPage={currentPage}
-          onNavigate={setCurrentPage}
-          session={session}
-        />
-        <div style={{ flex: 1 }}>
-          {renderPage()}
-        </div>
+      <div style={{ flex: 1 }}>
+        {renderPage()}
       </div>
     </div>
-  )
-}
+  </div>
+)

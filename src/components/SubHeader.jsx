@@ -7,14 +7,15 @@ const allPages = [
   { path: 'clients', label: 'Clients', icon: '👥' },
   { path: 'client-portal', label: 'Client Portal', icon: '🔗' },
   { path: 'projects', label: 'Projects', icon: '📋' },
-  { path: 'events', label: 'Events', icon: '📅' },
   { path: 'tasks', label: 'Tasks', icon: '✅' },
-  { path: 'invoices', label: 'Invoices', icon: '💵' },
+  { path: 'vendors', label: 'Vendors', icon: '🏪' },
+  { path: 'finance-overview', label: 'Finance Overview', icon: '📊' },
+  { path: 'revenue', label: 'Revenue', icon: '💵' },
   { path: 'expenses', label: 'Expenses', icon: '💸' },
   { path: 'campaigns', label: 'Campaigns', icon: '📣' },
   { path: 'campaign-tracking', label: 'Content Calendar', icon: '🗓' },
+  { path: 'business-events', label: 'Business Events', icon: '🎯' },
   { path: 'assets', label: 'Brand Assets', icon: '🎨' },
-  { path: 'vendors', label: 'Vendors', icon: '🏪' },
 ]
 
 export default function SubHeader({ currentPage, onNavigate, session }) {
