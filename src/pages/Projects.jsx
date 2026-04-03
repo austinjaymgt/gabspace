@@ -183,10 +183,7 @@ export default function Projects() {
                 ))}
               </select>
             </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Type</label>
-              <input style={styles.input} placeholder="e.g. Wedding, Corporate" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} />
-            </div>
+            
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
@@ -324,6 +321,8 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
   const [editingBudgetItem, setEditingBudgetItem] = useState(null)
   const [editBudgetForm, setEditBudgetForm] = useState({ category: '', projected_amount: '', actual_amount: '', notes: '' })
   const [contingency, setContingency] = useState(0)
+  const [editingBudget, setEditingBudget] = useState(false)
+  const [budgetInput, setBudgetInput] = useState(data.budget || '')
 
   useEffect(() => {
     fetchAll()
@@ -409,6 +408,11 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
     await supabase.from('tasks').delete().eq('id', id)
     setTasks(prev => prev.filter(t => t.id !== id))
   }
+  async function saveBudget() {
+  await supabase.from('projects').update({ budget: parseFloat(budgetInput) || null }).eq('id', project.id)
+  setData(prev => ({ ...prev, budget: budgetInput }))
+  setEditingBudget(false)
+}
 async function addBudgetItem() {
   const { data } = await supabase.from('project_budget_items').insert({
     project_id: project.id,
@@ -651,7 +655,39 @@ async function deleteBudgetItem(id) {
       </button>
     </div>
   </div>
-
+{/* Overall budget line */}
+<div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', padding: '12px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
+  <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontWeight: '500' }}>Overall budget:</span>
+  {editingBudget ? (
+    <>
+      <input
+        style={{ padding: '5px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', width: '120px', backgroundColor: '#fff' }}
+        type="number"
+        value={budgetInput}
+        onChange={e => setBudgetInput(e.target.value)}
+        autoFocus
+      />
+      <button onClick={saveBudget} style={{ padding: '5px 10px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: '600', cursor: 'pointer' }}>
+        Save
+      </button>
+      <button onClick={() => setEditingBudget(false)} style={{ padding: '5px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, backgroundColor: '#fff', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, cursor: 'pointer' }}>
+        Cancel
+      </button>
+    </>
+  ) : (
+    <>
+      <span style={{ fontSize: t.fontSizes.base, fontWeight: '700', color: t.colors.textPrimary }}>
+        {data.budget ? `$${parseFloat(data.budget).toLocaleString()}` : 'Not set'}
+      </span>
+      <button
+        onClick={() => setEditingBudget(true)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: t.fontSizes.xs, color: t.colors.primary, fontWeight: '600', padding: 0 }}
+      >
+        edit
+      </button>
+    </>
+  )}
+</div>
   {showBudgetForm && (
     <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '16px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px' }}>
