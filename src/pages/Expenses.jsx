@@ -1,26 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { theme as t } from '../theme'
 
-export default function Expenses() {
-  const [expenses, setExpenses] = useState([])
-  const [projects, setProjects] = useState([])
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({
-    title: '',
-    amount: '',
-    category: '',
-    project_id: '',
-    event_id: '',
-    date: '',
-    notes: '',
-    recurrence: '',tax_category: ''
-  })
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
-
-  const categories = [
+const categories = [
   'Vendor payment',
   'Software & subscriptions',
   'Travel',
@@ -41,30 +23,37 @@ const taxCategories = [
   'Other',
 ]
 
-  useEffect(() => {
-    fetchExpenses()
-    fetchProjects()
-    fetchEvents()
-  }, [])
+const recurrenceOptions = [
+  'One-time',
+  'Weekly',
+  'Monthly',
+  'Quarterly',
+  'Annually',
+]
+
+export default function Expenses() {
+  const [expenses, setExpenses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [filterRecurrence, setFilterRecurrence] = useState('all')
+  const [form, setForm] = useState({
+    title: '', amount: '', date: '', category: '',
+    tax_category: '', recurrence: 'One-time', notes: '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => { fetchExpenses() }, [])
 
   async function fetchExpenses() {
     setLoading(true)
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('expenses')
-      .select('*, projects(title), events(name)')
-      .order('created_at', { ascending: false })
-    if (!error) setExpenses(data)
+      .select('*')
+      .order('date', { ascending: false })
+    if (data) setExpenses(data)
     setLoading(false)
-  }
-
-  async function fetchProjects() {
-    const { data } = await supabase.from('projects').select('id, title')
-    if (data) setProjects(data)
-  }
-
-  async function fetchEvents() {
-    const { data } = await supabase.from('events').select('id, name')
-    if (data) setEvents(data)
   }
 
   async function handleSave() {
@@ -74,19 +63,17 @@ const taxCategories = [
     const { error } = await supabase.from('expenses').insert({
       title: form.title,
       amount: parseFloat(form.amount),
-      category: form.category || null,
-      project_id: form.project_id || null,
-      event_id: form.event_id || null,
       date: form.date || null,
-      notes: form.notes || null,
-      recurrence: form.recurrence || null,
+      category: form.category || null,
       tax_category: form.tax_category || null,
+      recurrence: form.recurrence || 'One-time',
+      notes: form.notes || null,
       user_id: user.id,
     })
     if (error) setError(error.message)
     else {
       setShowForm(false)
-      setForm({ title: '', amount: '', category: '', project_id: '', event_id: '', date: '', notes: '' })
+      setForm({ title: '', amount: '', date: '', category: '', tax_category: '', recurrence: 'One-time', notes: '' })
       fetchExpenses()
     }
     setSaving(false)
@@ -98,162 +85,129 @@ const taxCategories = [
     fetchExpenses()
   }
 
+  const filtered = expenses
+    .filter(e => filterCategory === 'all' || e.category === filterCategory)
+    .filter(e => filterRecurrence === 'all' || e.recurrence === filterRecurrence)
+
   const totalExpenses = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
-  const byCategory = categories.map(cat => ({
-    name: cat,
-    total: expenses
-      .filter(e => e.category === cat)
-      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
-  })).filter(c => c.total > 0)
+  const recurringTotal = expenses
+    .filter(e => e.recurrence && e.recurrence !== 'One-time')
+    .reduce((sum, e) => {
+      const amount = parseFloat(e.amount) || 0
+      if (e.recurrence === 'Weekly') return sum + (amount * 4)
+      if (e.recurrence === 'Monthly') return sum + amount
+      if (e.recurrence === 'Quarterly') return sum + (amount / 3)
+      if (e.recurrence === 'Annually') return sum + (amount / 12)
+      return sum
+    }, 0)
 
   return (
-    <div style={styles.page}>
-      <div style={styles.header}>
+    <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <h2 style={styles.title}>Expenses</h2>
-          <p style={styles.subtitle}>{expenses.length} total expenses</p>
+          <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: 0 }}>
+            Expenses
+          </h2>
+          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' }}>
+            Business overhead and operating costs
+          </p>
         </div>
         <button onClick={() => setShowForm(true)} style={styles.addBtn}>
           + Add Expense
         </button>
       </div>
 
-      <div style={styles.summaryRow}>
-        <div style={styles.summaryCard}>
-          <div style={styles.summaryLabel}>Total expenses</div>
-          <div style={{ ...styles.summaryValue, color: '#cc3333' }}>
-            ${totalExpenses.toLocaleString()}
+      {/* Summary */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        {[
+          { label: 'Total expenses', value: `$${totalExpenses.toLocaleString()}`, color: '#cc3333' },
+          { label: 'Recurring/mo equivalent', value: `$${Math.round(recurringTotal).toLocaleString()}`, color: '#F59E0B' },
+          { label: 'One-time expenses', value: `$${expenses.filter(e => e.recurrence === 'One-time' || !e.recurrence).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0).toLocaleString()}`, color: t.colors.textPrimary },
+        ].map(card => (
+          <div key={card.label} style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
+            <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '8px' }}>{card.label}</div>
+            <div style={{ fontSize: '26px', fontWeight: '700', color: card.color, letterSpacing: '-0.5px' }}>{card.value}</div>
           </div>
-        </div>
-        {byCategory.map(cat => (
-          <div key={cat.name} style={styles.summaryCard}>
-            <div style={styles.summaryLabel}>{cat.name}</div>
-            <div style={styles.summaryValue}>
-              ${cat.total.toLocaleString()}
-            </div>
-          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        {['all', ...categories].map(cat => (
+          <button key={cat} onClick={() => setFilterCategory(cat)} style={{
+            padding: '6px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm,
+            border: `1px solid ${filterCategory === cat ? t.colors.primary : t.colors.borderLight}`,
+            backgroundColor: filterCategory === cat ? t.colors.primaryLight : '#fff',
+            color: filterCategory === cat ? t.colors.primary : t.colors.textSecondary,
+            fontWeight: filterCategory === cat ? '600' : '400', cursor: 'pointer', fontFamily: t.fonts.sans,
+          }}>
+            {cat === 'all' ? 'All' : cat}
+          </button>
+        ))}
+        <div style={{ width: '1px', backgroundColor: t.colors.borderLight, margin: '0 4px' }} />
+        {['all', 'One-time', 'Monthly', 'Annually'].map(rec => (
+          <button key={rec} onClick={() => setFilterRecurrence(rec)} style={{
+            padding: '6px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm,
+            border: `1px solid ${filterRecurrence === rec ? '#F59E0B' : t.colors.borderLight}`,
+            backgroundColor: filterRecurrence === rec ? '#FEF3C7' : '#fff',
+            color: filterRecurrence === rec ? '#92400E' : t.colors.textSecondary,
+            fontWeight: filterRecurrence === rec ? '600' : '400', cursor: 'pointer', fontFamily: t.fonts.sans,
+          }}>
+            {rec === 'all' ? 'All frequency' : rec}
+          </button>
         ))}
       </div>
 
       {showForm && (
         <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Expense</h3>
+          <h3 style={styles.formTitle}>New Business Expense</h3>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
-            <div style={styles.field}>
-  <label style={styles.label}>Tax category</label>
-  <select
-    style={styles.input}
-    value={form.tax_category || ''}
-    onChange={e => setForm({ ...form, tax_category: e.target.value })}
-  >
-    <option value="">Select tax category</option>
-    {taxCategories.map(c => <option key={c} value={c}>{c}</option>)}
-  </select>
-</div>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
-              <label style={styles.label}>Title *</label>
+              <label style={styles.label}>Description *</label>
               <input
                 style={styles.input}
-                placeholder="e.g. Adobe Creative Cloud"
+                placeholder="e.g. Adobe Creative Cloud, Camera lens, Studio rent"
                 value={form.title}
                 onChange={e => setForm({ ...form, title: e.target.value })}
               />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Amount ($) *</label>
-              <input
-                style={styles.input}
-                type="number"
-                placeholder="0.00"
-                value={form.amount}
-                onChange={e => setForm({ ...form, amount: e.target.value })}
-              />
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Category</label>
-              <select
-                style={styles.input}
-                value={form.category}
-                onChange={e => setForm({ ...form, category: e.target.value })}
-              >
-                <option value="">Select category</option>
-                {categories.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              <input style={styles.input} type="number" placeholder="0.00" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Date</label>
-              <input
-                style={styles.input}
-                type="date"
-                value={form.date}
-                onChange={e => setForm({ ...form, date: e.target.value })}
-              />
+              <input style={styles.input} type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>Project</label>
-              <select
-                style={styles.input}
-                value={form.project_id}
-                onChange={e => setForm({ ...form, project_id: e.target.value })}
-              >
-                <option value="">No project</option>
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.title}</option>
-                ))}
+              <label style={styles.label}>Category</label>
+              <select style={styles.input} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                <option value="">Select category</option>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>Event</label>
-              <select
-                style={styles.input}
-                value={form.event_id}
-                onChange={e => setForm({ ...form, event_id: e.target.value })}
-              >
-                <option value="">No event</option>
-                {events.map(e => (
-                  <option key={e.id} value={e.id}>{e.name}</option>
-                ))}
+              <label style={styles.label}>Tax category</label>
+              <select style={styles.input} value={form.tax_category} onChange={e => setForm({ ...form, tax_category: e.target.value })}>
+                <option value="">Select tax category</option>
+                {taxCategories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div style={styles.field}>
-  <label style={styles.label}>Recurrence</label>
-  <select
-    style={styles.input}
-    value={form.recurrence}
-    onChange={e => setForm({ ...form, recurrence: e.target.value })}
-  >
-    <option value="">One-time</option>
-    <option value="weekly">Weekly</option>
-    <option value="monthly">Monthly</option>
-    <option value="quarterly">Quarterly</option>
-    <option value="annually">Annually</option>
-  </select>
-</div>
-            <div style={{ ...styles.field, gridColumn: 'span 2' }}>
+              <label style={styles.label}>Frequency</label>
+              <select style={styles.input} value={form.recurrence} onChange={e => setForm({ ...form, recurrence: e.target.value })}>
+                {recurrenceOptions.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div style={styles.field}>
               <label style={styles.label}>Notes</label>
-              <input
-                style={styles.input}
-                placeholder="Any additional details"
-                value={form.notes}
-                onChange={e => setForm({ ...form, notes: e.target.value })}
-              />
+              <input style={styles.input} placeholder="Any additional details" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
             </div>
           </div>
           <div style={styles.formActions}>
-            <button
-              onClick={() => { setShowForm(false); setError(null) }}
-              style={styles.cancelBtn}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              style={styles.saveBtn}
-              disabled={saving || !form.title || !form.amount}
-            >
+            <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
+            <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.title || !form.amount}>
               {saving ? 'Saving...' : 'Save Expense'}
             </button>
           </div>
@@ -262,47 +216,58 @@ const taxCategories = [
 
       {loading ? (
         <div style={styles.empty}>Loading expenses...</div>
-      ) : expenses.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div style={styles.emptyState}>
-          <div style={styles.emptyIcon}>💸</div>
-          <h3 style={styles.emptyTitle}>No expenses yet</h3>
-          <p style={styles.emptyText}>Track your business expenses to see real net revenue</p>
-          <button onClick={() => setShowForm(true)} style={styles.addBtn}>
-            + Add Expense
-          </button>
+          <div style={{ fontSize: '40px', marginBottom: '16px' }}>💸</div>
+          <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>
+            No expenses yet
+          </h3>
+          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>
+            Track your business overhead and operating costs here
+          </p>
+          <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Expense</button>
         </div>
       ) : (
         <div style={styles.table}>
           <div style={styles.tableHeader}>
-            <span>Title</span>
+            <span>Description</span>
             <span>Category</span>
-            <span>Project</span>
+            <span>Tax category</span>
             <span>Date</span>
+            <span>Frequency</span>
             <span>Amount</span>
             <span></span>
           </div>
-          {expenses.map(expense => (
+          {filtered.map(expense => (
             <div key={expense.id} style={styles.tableRow}>
-              <span style={styles.expenseTitle}>{expense.title}</span>
+              <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
+                {expense.recurrence && expense.recurrence !== 'One-time' && (
+                  <span style={{ marginRight: '6px' }}>🔄</span>
+                )}
+                {expense.title}
+                {expense.notes && (
+                  <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>{expense.notes}</div>
+                )}
+              </span>
               <span style={styles.tableCell}>{expense.category || '—'}</span>
+              <span style={styles.tableCell}>{expense.tax_category || '—'}</span>
               <span style={styles.tableCell}>
-                {expense.projects ? expense.projects.title : '—'}
+                {expense.date ? new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
               </span>
               <span style={styles.tableCell}>
-                {expense.date
-                  ? new Date(expense.date).toLocaleDateString()
-                  : '—'}
+                <span style={{
+                  padding: '2px 8px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500',
+                  backgroundColor: expense.recurrence && expense.recurrence !== 'One-time' ? '#FEF3C7' : t.colors.bg,
+                  color: expense.recurrence && expense.recurrence !== 'One-time' ? '#92400E' : t.colors.textTertiary,
+                }}>
+                  {expense.recurrence || 'One-time'}
+                </span>
               </span>
-              <span style={{ ...styles.tableCell, color: '#cc3333', fontWeight: '600' }}>
+              <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: '#cc3333' }}>
                 ${parseFloat(expense.amount).toLocaleString()}
               </span>
               <span>
-                <button
-                  onClick={() => handleDelete(expense.id)}
-                  style={styles.deleteBtn}
-                >
-                  ✕
-                </button>
+                <button onClick={() => handleDelete(expense.id)} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '13px' }}>✕</button>
               </span>
             </div>
           ))}
@@ -313,140 +278,21 @@ const taxCategories = [
 }
 
 const styles = {
-  page: { padding: '32px' },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '24px',
-  },
-  title: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: 0 },
-  subtitle: { fontSize: '13px', color: '#999', margin: '4px 0 0' },
-  addBtn: {
-    padding: '10px 18px',
-    borderRadius: '8px',
-    border: 'none',
-    backgroundColor: '#1D9E75',
-    color: '#fff',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  summaryRow: {
-    display: 'flex',
-    gap: '16px',
-    marginBottom: '24px',
-    flexWrap: 'wrap',
-  },
-  summaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '20px 24px',
-    border: '1px solid #f0f0eb',
-    minWidth: '160px',
-  },
-  summaryLabel: { fontSize: '12px', color: '#999', marginBottom: '6px' },
-  summaryValue: { fontSize: '22px', fontWeight: '700', color: '#1a1a1a' },
-  formCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '24px',
-    border: '1px solid #f0f0eb',
-    marginBottom: '24px',
-  },
+  addBtn: { padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
+  formCard: { backgroundColor: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '24px' },
   formTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 20px' },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '16px',
-    marginBottom: '20px',
-  },
+  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: {
-    padding: '9px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    fontSize: '13px',
-    color: '#1a1a1a',
-    outline: 'none',
-    backgroundColor: '#fff',
-  },
+  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1a1a1a', outline: 'none', backgroundColor: '#fff' },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: {
-    padding: '9px 16px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#666',
-    fontSize: '13px',
-    cursor: 'pointer',
-  },
-  saveBtn: {
-    padding: '9px 16px',
-    borderRadius: '8px',
-    border: 'none',
-    backgroundColor: '#1D9E75',
-    color: '#fff',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  error: {
-    padding: '10px 14px',
-    borderRadius: '8px',
-    backgroundColor: '#fff0f0',
-    color: '#cc3333',
-    fontSize: '13px',
-    marginBottom: '16px',
-  },
-  table: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #f0f0eb',
-    overflow: 'hidden',
-  },
-  tableHeader: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.5fr 1.5fr 1fr 1fr 0.3fr',
-    padding: '12px 20px',
-    backgroundColor: '#fafaf8',
-    borderBottom: '1px solid #f0f0eb',
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#999',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  },
-  tableRow: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.5fr 1.5fr 1fr 1fr 0.3fr',
-    padding: '14px 20px',
-    borderBottom: '1px solid #f9f9f7',
-    alignItems: 'center',
-  },
-  expenseTitle: { fontSize: '13px', fontWeight: '500', color: '#1a1a1a' },
+  cancelBtn: { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+  saveBtn: { padding: '9px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
+  error: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' },
+  table: { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' },
+  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1fr 0.3fr', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
+  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1fr 0.3fr', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center' },
   tableCell: { fontSize: '13px', color: '#666' },
-  deleteBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#ddd',
-    fontSize: '14px',
-    cursor: 'pointer',
-    padding: '4px',
-  },
-  emptyState: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '80px 20px',
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #f0f0eb',
-  },
-  emptyIcon: { fontSize: '40px', marginBottom: '16px' },
-  emptyTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 8px' },
-  emptyText: { fontSize: '13px', color: '#999', margin: '0 0 24px' },
+  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' },
   empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
 }

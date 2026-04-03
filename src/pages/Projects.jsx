@@ -318,6 +318,12 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
   const [uploading, setUploading] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [addingTask, setAddingTask] = useState(false)
+  const [budgetItems, setBudgetItems] = useState([])
+  const [showBudgetForm, setShowBudgetForm] = useState(false)
+  const [budgetForm, setBudgetForm] = useState({ category: '', projected_amount: '', actual_amount: '', notes: '' })
+  const [editingBudgetItem, setEditingBudgetItem] = useState(null)
+  const [editBudgetForm, setEditBudgetForm] = useState({ category: '', projected_amount: '', actual_amount: '', notes: '' })
+  const [contingency, setContingency] = useState(0)
 
   useEffect(() => {
     fetchAll()
@@ -330,17 +336,21 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
       { data: invoicesData },
       { data: expensesData },
       { data: docsData },
+      { data: budgetData },
+      { data: docsData },
     ] = await Promise.all([
       supabase.from('tasks').select('*').eq('project_id', project.id).order('created_at', { ascending: true }),
       supabase.from('events').select('*').eq('project_id', project.id).order('event_date', { ascending: true }),
       supabase.from('invoices').select('*').eq('project_id', project.id),
       supabase.from('expenses').select('*').eq('project_id', project.id),
+      supabase.from('project_budget_items').select('*').eq('project_id', project.id).order('created_at', { ascending: true }),
       supabase.from('project_documents').select('*').eq('project_id', project.id).order('created_at', { ascending: false }),
     ])
     setTasks(tasksData || [])
     setEvents(eventsData || [])
     setInvoices(invoicesData || [])
     setExpenses(expensesData || [])
+    setBudgetItems(budgetData || [])
     setDocuments(docsData || [])
   }
 
@@ -400,7 +410,35 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
     await supabase.from('tasks').delete().eq('id', id)
     setTasks(prev => prev.filter(t => t.id !== id))
   }
+async function addBudgetItem() {
+  const { data } = await supabase.from('project_budget_items').insert({
+    project_id: project.id,
+    category: budgetForm.category,
+    projected_amount: budgetForm.projected_amount ? parseFloat(budgetForm.projected_amount) : null,
+    actual_amount: budgetForm.actual_amount ? parseFloat(budgetForm.actual_amount) : null,
+    notes: budgetForm.notes || null,
+  }).select().single()
+  if (data) setBudgetItems(prev => [...prev, data])
+  setBudgetForm({ category: '', projected_amount: '', actual_amount: '', notes: '' })
+  setShowBudgetForm(false)
+}
 
+async function saveBudgetItem(id) {
+  await supabase.from('project_budget_items').update({
+    category: editBudgetForm.category,
+    projected_amount: editBudgetForm.projected_amount ? parseFloat(editBudgetForm.projected_amount) : null,
+    actual_amount: editBudgetForm.actual_amount ? parseFloat(editBudgetForm.actual_amount) : null,
+    notes: editBudgetForm.notes || null,
+  }).eq('id', id)
+  setBudgetItems(prev => prev.map(item => item.id === id ? { ...item, ...editBudgetForm } : item))
+  setEditingBudgetItem(null)
+}
+
+async function deleteBudgetItem(id) {
+  if (!confirm('Delete this budget item?')) return
+  await supabase.from('project_budget_items').delete().eq('id', id)
+  setBudgetItems(prev => prev.filter(item => item.id !== id))
+}
   async function uploadDocument(e) {
     const file = e.target.files[0]
     if (!file) return
@@ -587,65 +625,178 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
 
             {/* Budget tracker */}
-            <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.borderLight}` }}>
-              <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 16px' }}>Budget</h3>
-              {budget === 0 ? (
-                <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>No budget set</p>
+<div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.borderLight}` }}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: 0 }}>Budget</h3>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>Contingency</span>
+        <select
+          value={contingency}
+          onChange={e => setContingency(parseInt(e.target.value))}
+          style={{ padding: '4px 8px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, outline: 'none', backgroundColor: '#fff' }}
+        >
+          {[0, 5, 10, 15, 20, 25].map(n => (
+            <option key={n} value={n}>{n}%</option>
+          ))}
+        </select>
+      </div>
+      <button
+        onClick={() => setShowBudgetForm(true)}
+        style={{ padding: '7px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer' }}
+      >
+        + Add category
+      </button>
+    </div>
+  </div>
+
+  {showBudgetForm && (
+    <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '16px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: t.fontSizes.xs, fontWeight: '500', color: t.colors.textTertiary }}>Category *</label>
+          <input
+            style={{ padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', backgroundColor: '#fff' }}
+            placeholder="e.g. Catering, Venue, AV"
+            value={budgetForm.category}
+            onChange={e => setBudgetForm({ ...budgetForm, category: e.target.value })}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: t.fontSizes.xs, fontWeight: '500', color: t.colors.textTertiary }}>Projected ($)</label>
+          <input
+            style={{ padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', backgroundColor: '#fff' }}
+            type="number"
+            placeholder="0.00"
+            value={budgetForm.projected_amount}
+            onChange={e => setBudgetForm({ ...budgetForm, projected_amount: e.target.value })}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: t.fontSizes.xs, fontWeight: '500', color: t.colors.textTertiary }}>Actual ($)</label>
+          <input
+            style={{ padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', backgroundColor: '#fff' }}
+            type="number"
+            placeholder="0.00"
+            value={budgetForm.actual_amount}
+            onChange={e => setBudgetForm({ ...budgetForm, actual_amount: e.target.value })}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: t.fontSizes.xs, fontWeight: '500', color: t.colors.textTertiary }}>Notes</label>
+          <input
+            style={{ padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', backgroundColor: '#fff' }}
+            placeholder="Optional"
+            value={budgetForm.notes}
+            onChange={e => setBudgetForm({ ...budgetForm, notes: e.target.value })}
+          />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+        <button onClick={() => setShowBudgetForm(false)} style={{ padding: '7px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, backgroundColor: '#fff', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, cursor: 'pointer' }}>Cancel</button>
+        <button onClick={addBudgetItem} disabled={!budgetForm.category} style={{ padding: '7px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer' }}>Add</button>
+      </div>
+    </div>
+  )}
+
+  {budgetItems.length === 0 ? (
+    <div style={{ textAlign: 'center', padding: '32px', color: t.colors.textTertiary, fontSize: t.fontSizes.sm }}>
+      No budget categories yet — add one to start tracking
+    </div>
+  ) : (
+    <>
+      {/* Table header */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.5fr', gap: '8px', padding: '8px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, marginBottom: '8px' }}>
+        {['Category', 'Projected', 'Actual', 'Difference', ''].map(h => (
+          <span key={h} style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>
+        ))}
+      </div>
+
+      {/* Budget rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px' }}>
+        {budgetItems.map(item => {
+          const projected = parseFloat(item.projected_amount) || 0
+          const actual = parseFloat(item.actual_amount) || 0
+          const diff = projected - actual
+          const isEditing = editingBudgetItem === item.id
+
+          return (
+            <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.5fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: t.radius.md, alignItems: 'center' }}>
+              {isEditing ? (
+                <>
+                  <input
+                    style={{ padding: '5px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none' }}
+                    value={editBudgetForm.category}
+                    onChange={e => setEditBudgetForm({ ...editBudgetForm, category: e.target.value })}
+                  />
+                  <input
+                    style={{ padding: '5px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none' }}
+                    type="number"
+                    value={editBudgetForm.projected_amount}
+                    onChange={e => setEditBudgetForm({ ...editBudgetForm, projected_amount: e.target.value })}
+                  />
+                  <input
+                    style={{ padding: '5px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none' }}
+                    type="number"
+                    value={editBudgetForm.actual_amount}
+                    onChange={e => setEditBudgetForm({ ...editBudgetForm, actual_amount: e.target.value })}
+                  />
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button onClick={() => saveBudgetItem(item.id)} style={{ padding: '4px 8px', borderRadius: t.radius.sm, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Save</button>
+                    <button onClick={() => setEditingBudgetItem(null)} style={{ padding: '4px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.borderLight}`, backgroundColor: '#fff', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Cancel</button>
+                  </div>
+                  <span></span>
+                </>
               ) : (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>Spent</span>
-                    <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: budgetPct > 90 ? '#cc3333' : t.colors.textPrimary }}>
-                      ${budgetUsed.toLocaleString()} of ${budget.toLocaleString()}
-                    </span>
+                  <div>
+                    <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>{item.category}</div>
+                    {item.notes && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{item.notes}</div>}
                   </div>
-                  <div style={{ height: '6px', backgroundColor: t.colors.borderLight, borderRadius: '3px', overflow: 'hidden', marginBottom: '12px' }}>
-                    <div style={{ height: '100%', width: `${budgetPct}%`, backgroundColor: budgetPct > 90 ? '#cc3333' : t.colors.primary, borderRadius: '3px', transition: 'width 0.3s' }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#D1FAE5', borderRadius: t.radius.md }}>
-                      <span style={{ fontSize: t.fontSizes.sm, color: '#065F46' }}>Income</span>
-                      <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: '#065F46' }}>${totalIncome.toLocaleString()}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#FEE2E2', borderRadius: t.radius.md }}>
-                      <span style={{ fontSize: t.fontSizes.sm, color: '#991B1B' }}>Expenses</span>
-                      <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: '#991B1B' }}>${totalExpense.toLocaleString()}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
-                      <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>Remaining</span>
-                      <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary }}>${(budget - budgetUsed).toLocaleString()}</span>
-                    </div>
+                  <span style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>
+                    {projected > 0 ? `$${projected.toLocaleString()}` : '—'}
+                  </span>
+                  <span style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>
+                    {actual > 0 ? `$${actual.toLocaleString()}` : '—'}
+                  </span>
+                  <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: projected === 0 ? t.colors.textTertiary : diff >= 0 ? '#10B981' : '#cc3333' }}>
+                    {projected === 0 ? '—' : diff >= 0 ? `+$${diff.toLocaleString()}` : `-$${Math.abs(diff).toLocaleString()}`}
+                  </span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      onClick={() => { setEditingBudgetItem(item.id); setEditBudgetForm({ category: item.category, projected_amount: item.projected_amount || '', actual_amount: item.actual_amount || '', notes: item.notes || '' }) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.colors.textTertiary }}
+                    >✏️</button>
+                    <button onClick={() => deleteBudgetItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.colors.textTertiary }}>✕</button>
                   </div>
                 </>
               )}
             </div>
+          )
+        })}
+      </div>
 
-            {/* Events */}
-            <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.borderLight}` }}>
-              <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 16px' }}>Events</h3>
-              {events.length === 0 ? (
-                <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>No events linked</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {events.map(event => (
-                    <div key={event.id} style={{ padding: '10px 12px', backgroundColor: '#FEF3C7', borderRadius: t.radius.md }}>
-                      <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: '#92400E' }}>{event.name}</div>
-                      {event.event_date && (
-                        <div style={{ fontSize: t.fontSizes.sm, color: '#B45309', marginTop: '2px' }}>
-                          📅 {new Date(event.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </div>
-                      )}
-                      {event.venue && (
-                        <div style={{ fontSize: t.fontSizes.sm, color: '#B45309', marginTop: '2px' }}>📍 {event.venue}</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+      {/* Summary row */}
+      <div style={{ borderTop: `2px solid ${t.colors.borderLight}`, paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {[
+          { label: 'Total projected', value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.projected_amount) || 0), 0), color: t.colors.textPrimary },
+          contingency > 0 && { label: `Total + ${contingency}% contingency`, value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.projected_amount) || 0), 0) * (1 + contingency / 100), color: '#F59E0B' },
+          { label: 'Total actual', value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: '#cc3333' },
+          budget > 0 && { label: 'Overall budget remaining', value: budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0) >= 0 ? '#10B981' : '#cc3333' },
+        ].filter(Boolean).map(row => (
+          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
+            <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>{row.label}</span>
+            <span style={{ fontSize: t.fontSizes.base, fontWeight: '700', color: row.color }}>${row.value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  )}
+</div>
+            
           </div>
 
           {/* Tasks */}
