@@ -142,14 +142,14 @@ export default function Dashboard({ session, onNavigate }) {
       supabase.from('clients').select('*', { count: 'exact', head: true }),
       supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('projects').select('title, status, clients(name)').eq('status', 'active').limit(4),
-      supabase.from('invoices').select('amount_paid, total_amount, status'),
+      supabase.from('revenue').select('amount, status'),
       supabase.from('expenses').select('amount'),
       supabase.from('campaigns').select('name, status, budget, spend, platform').eq('status', 'active').limit(3),
     ])
 
-    const income = invoices?.reduce((sum, inv) => sum + (parseFloat(inv.amount_paid) || 0), 0) || 0
+    const income = revenue?.filter(r => r.status === 'received').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0) || 0
     const totalExpenses = expenses?.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0) || 0
-    const outstanding = invoices?.reduce((sum, inv) => sum + ((parseFloat(inv.total_amount) || 0) - (parseFloat(inv.amount_paid) || 0)), 0) || 0
+    const outstanding = revenue?.filter(r => r.status === 'pending').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0) || 0
 
     setStats({
       activeClients: activeClients || 0,
@@ -169,7 +169,7 @@ export default function Dashboard({ session, onNavigate }) {
     const [
       { data: clients },
       { data: projects },
-      { data: invoices },
+      { data: revenue },
       { data: events },
       { data: tasks },
       { data: vendors },
