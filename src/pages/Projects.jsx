@@ -183,7 +183,7 @@ export default function Projects() {
                 ))}
               </select>
             </div>
-            
+
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
@@ -508,10 +508,7 @@ async function deleteBudgetItem(id) {
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Type</label>
-              <input style={styles.input} value={editForm.type || ''} onChange={e => setEditForm({ ...editForm, type: e.target.value })} />
-            </div>
+            
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
