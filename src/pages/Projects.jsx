@@ -498,7 +498,7 @@ async function deleteBudgetItem(id) {
           <h3 style={styles.formTitle}>Edit Project</h3>
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
-              <label style={styles.label}>Title *</label>
+              <label style={styles.label}>Project Name *</label>
               <input style={styles.input} value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} />
             </div>
             <div style={styles.field}>
@@ -508,7 +508,10 @@ async function deleteBudgetItem(id) {
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            
+            <div style={styles.field}>
+  <label style={styles.label}>Project Type</label>
+  <input style={styles.input} value={editForm.type || ''} onChange={e => setEditForm({ ...editForm, type: e.target.value })} />
+</div>
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
@@ -519,10 +522,7 @@ async function deleteBudgetItem(id) {
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Budget ($)</label>
-              <input style={styles.input} type="number" value={editForm.budget || ''} onChange={e => setEditForm({ ...editForm, budget: e.target.value })} />
-            </div>
+           
             <div style={styles.field}>
               <label style={styles.label}>Start date</label>
               <input style={styles.input} type="date" value={editForm.start_date || ''} onChange={e => setEditForm({ ...editForm, start_date: e.target.value })} />
