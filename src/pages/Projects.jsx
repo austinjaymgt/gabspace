@@ -335,7 +335,6 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
       { data: eventsData },
       { data: invoicesData },
       { data: expensesData },
-      { data: docsData },
       { data: budgetData },
       { data: docsData },
     ] = await Promise.all([
