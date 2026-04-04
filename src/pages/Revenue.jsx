@@ -25,6 +25,9 @@ export default function Revenue() {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [editingEntry, setEditingEntry] = useState(null)
+const [selectedEntry, setSelectedEntry] = useState(null) 
+const [receiptFile, setReceiptFile] = useState(null) 
 
   useEffect(() => {
     fetchEntries()
@@ -53,29 +56,69 @@ export default function Revenue() {
   }
 
   async function handleSave() {
-    setSaving(true)
-    setError(null)
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('revenue').insert({
-      amount: parseFloat(form.amount),
-      date: form.date || null,
-      income_stream: form.income_stream,
-      status: form.status,
-      tax_category: form.tax_category || null,
-      notes: form.notes || null,
-      client_id: form.client_id || null,
-      project_id: form.project_id || null,
-      user_id: user.id,
-    })
-    if (error) setError(error.message)
-    else {
-      setShowForm(false)
-      setForm({ amount: '', date: '', income_stream: '', status: 'received', tax_category: '', notes: '', client_id: '', project_id: '' })
-      fetchEntries()
-    }
-    setSaving(false)
+  setSaving(true)
+  setError(null)
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const payload = {
+    amount: parseFloat(form.amount),
+    date: form.date || null,
+    income_stream: form.income_stream,
+    status: form.status,
+    tax_category: form.tax_category || null,
+    notes: form.notes || null,
+    client_id: form.client_id || null,
+    project_id: form.project_id || null,
   }
 
+  if (editingEntry) {
+    const { error } = await supabase.from('revenue').update(payload).eq('id', editingEntry.id)
+    if (error) { setError(error.message); setSaving(false); return }
+    if (receiptFile) {
+      const ext = receiptFile.name.split('.').pop()
+      const fileName = `${editingEntry.id}/${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('revenue-receipts').upload(fileName, receiptFile)
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('revenue-receipts').getPublicUrl(fileName)
+        await supabase.from('revenue').update({ receipt_url: urlData.publicUrl }).eq('id', editingEntry.id)
+      }
+    }
+    if (selectedEntry?.id === editingEntry.id) setSelectedEntry(prev => ({ ...prev, ...payload }))
+  } else {
+    const { data: newEntry, error } = await supabase.from('revenue').insert({ ...payload, user_id: user.id }).select().single()
+    if (error) { setError(error.message); setSaving(false); return }
+    if (receiptFile && newEntry) {
+      const ext = receiptFile.name.split('.').pop()
+      const fileName = `${newEntry.id}/${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('revenue-receipts').upload(fileName, receiptFile)
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('revenue-receipts').getPublicUrl(fileName)
+        await supabase.from('revenue').update({ receipt_url: urlData.publicUrl }).eq('id', newEntry.id)
+      }
+    }
+  }
+
+  setShowForm(false)
+  setEditingEntry(null)
+setForm({ amount: '', date: '', income_stream: '', status: 'received', tax_category: '', notes: '', client_id: '', project_id: '' })
+setReceiptFile(null)
+  fetchEntries()
+  setSaving(false)
+}
+function openEditForm(entry) {
+  setEditingEntry(entry)
+  setForm({
+    amount: entry.amount || '',
+    date: entry.date || '',
+    income_stream: entry.income_stream || '',
+    status: entry.status || 'received',
+    tax_category: entry.tax_category || '',
+    notes: entry.notes || '',
+    client_id: entry.client_id || '',
+    project_id: entry.project_id || '',
+  })
+  setShowForm(true)
+}
   async function handleDelete(id) {
     if (!confirm('Delete this entry?')) return
     await supabase.from('revenue').delete().eq('id', id)
@@ -94,7 +137,75 @@ export default function Revenue() {
 
   const totalReceived = entries.filter(e => e.status === 'received').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
   const totalPending = entries.filter(e => e.status === 'pending').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+if (selectedEntry) {
+  return (
+    <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <button onClick={() => setSelectedEntry(null)} style={styles.backBtn}>← Back to revenue</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => { setSelectedEntry(null); openEditForm(selectedEntry) }} style={styles.editBtn}>Edit</button>
+          <button onClick={() => { handleDelete(selectedEntry.id); setSelectedEntry(null) }} style={styles.deleteBtn}>Delete</button>
+        </div>
+      </div>
 
+      <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '32px', border: '1px solid #f0f0eb' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 6px' }}>{selectedEntry.income_stream}</h2>
+            {selectedEntry.notes && <p style={{ fontSize: '14px', color: '#999', margin: 0 }}>{selectedEntry.notes}</p>}
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: '#10B981' }}>${parseFloat(selectedEntry.amount).toLocaleString()}</div>
+            <button
+              onClick={() => toggleStatus(selectedEntry)}
+              style={{
+                marginTop: '6px', padding: '3px 10px', borderRadius: '999px', fontSize: '12px',
+                fontWeight: '500', cursor: 'pointer', border: 'none',
+                backgroundColor: selectedEntry.status === 'received' ? '#f0faf6' : '#FEF3C7',
+                color: selectedEntry.status === 'received' ? '#1D9E75' : '#92400E',
+              }}
+            >
+              {selectedEntry.status}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          {[
+            { label: 'Date', value: selectedEntry.date ? new Date(selectedEntry.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—' },
+            { label: 'Status', value: selectedEntry.status ? selectedEntry.status.charAt(0).toUpperCase() + selectedEntry.status.slice(1) : '—' },
+            { label: 'Tax category', value: selectedEntry.tax_category || '—' },
+            { label: 'Client', value: selectedEntry.clients?.name || '—' },
+            { label: 'Project', value: selectedEntry.projects?.title || '—' },
+          ].map(field => (
+            <div key={field.label} style={{ backgroundColor: '#fafaf8', borderRadius: '8px', padding: '14px 16px' }}>
+              <div style={{ fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px' }}>{field.label}</div>
+              <div style={{ fontSize: '14px', color: '#1a1a1a' }}>{field.value}</div>
+            </div>
+          ))}
+       </div>
+
+        {selectedEntry.receipt_url ? (
+          <div style={{ marginTop: '24px', padding: '16px 20px', backgroundColor: '#f0faf6', borderRadius: '10px', border: '1px solid #d0f0e0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>📎</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>File attached</div>
+                <div style={{ fontSize: '12px', color: '#999' }}>Receipt or proof of payment</div>
+              </div>
+            </div>
+            <a href={selectedEntry.receipt_url} target="_blank" rel="noreferrer" style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #1D9E75', backgroundColor: '#fff', color: '#1D9E75', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>View file</a>
+          </div>
+        ) : (
+          <div style={{ marginTop: '24px', padding: '16px 20px', backgroundColor: '#fafaf8', borderRadius: '10px', border: '1px dashed #e0e0e0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>📎</span>
+            <div style={{ fontSize: '13px', color: '#bbb' }}>No file attached — click Edit to add one</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
@@ -196,9 +307,28 @@ export default function Revenue() {
               </select>
             </div>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
-              <label style={styles.label}>Notes</label>
-              <input style={styles.input} placeholder="Any additional details" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-            </div>
+  <label style={styles.label}>Notes</label>
+  <input style={styles.input} placeholder="Any additional details" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+</div>
+<div style={{ ...styles.field, gridColumn: 'span 2' }}>
+  <label style={styles.label}>Receipt / proof of payment <span style={{ color: '#bbb', fontWeight: '400' }}>(optional)</span></label>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+    {editingEntry?.receipt_url && !receiptFile && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', backgroundColor: '#f0faf6', borderRadius: '6px', border: '1px solid #d0f0e0' }}>
+        <span style={{ fontSize: '13px' }}>📎</span>
+        <a href={editingEntry.receipt_url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#1D9E75', textDecoration: 'none', fontWeight: '500' }}>View current file</a>
+        <span style={{ fontSize: '12px', color: '#bbb' }}>· Upload new to replace</span>
+      </div>
+    )}
+    <label style={{ padding: '7px 14px', borderRadius: '8px', border: '1px dashed #e0e0e0', backgroundColor: '#fafaf8', color: '#888', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
+      {receiptFile ? `📎 ${receiptFile.name}` : editingEntry?.receipt_url ? 'Replace file...' : '+ Attach file'}
+      <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setReceiptFile(e.target.files[0] || null)} />
+    </label>
+    {receiptFile && (
+      <button onClick={() => setReceiptFile(null)} style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: '12px' }}>✕ Remove</button>
+    )}
+  </div>
+</div>
           </div>
           <div style={styles.formActions}>
             <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
@@ -230,7 +360,7 @@ export default function Revenue() {
             <span></span>
           </div>
           {filtered.map(entry => (
-            <div key={entry.id} style={styles.tableRow}>
+              <div key={entry.id} style={{ ...styles.tableRow, cursor: 'pointer' }} onClick={() => setSelectedEntry(entry)}>
               <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
                 {entry.income_stream}
                 {entry.notes && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>{entry.notes}</div>}
@@ -255,9 +385,10 @@ export default function Revenue() {
                   {entry.status}
                 </button>
               </span>
-              <span>
-                <button onClick={() => handleDelete(entry.id)} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '13px' }}>✕</button>
-              </span>
+              <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+  <button onClick={e => { e.stopPropagation(); openEditForm(entry) }} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '13px' }}>✏️</button>
+  <button onClick={e => { e.stopPropagation(); handleDelete(entry.id) }} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '13px' }}>✕</button>
+</span>
             </div>
           ))}
         </div>
@@ -284,4 +415,7 @@ const styles = {
   tableCell: { fontSize: '13px', color: '#666' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' },
   empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
+  backBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
+editBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #1D9E75', backgroundColor: '#fff', color: '#1D9E75', fontSize: '13px', cursor: 'pointer' },
+deleteBtn: { padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', cursor: 'pointer' },
 }

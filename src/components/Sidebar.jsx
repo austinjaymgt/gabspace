@@ -8,7 +8,7 @@ const navItems = [
       { label: 'All Clients', path: 'clients' },
       { label: 'Projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
-      { label: 'Client Portal', path: 'client-portal' },
+      { label: 'Client Portals', path: 'client-portal' },
     ]
   },
   {

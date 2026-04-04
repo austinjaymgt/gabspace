@@ -43,6 +43,10 @@ export default function Expenses() {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [editingExpense, setEditingExpense] = useState(null)
+  const [receiptFile, setReceiptFile] = useState(null)
+  const [selectedExpense, setSelectedExpense] = useState(null)
+
 
   useEffect(() => { fetchExpenses() }, [])
 
@@ -57,28 +61,63 @@ export default function Expenses() {
   }
 
   async function handleSave() {
-    setSaving(true)
-    setError(null)
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('expenses').insert({
-      title: form.title,
-      amount: parseFloat(form.amount),
-      date: form.date || null,
-      category: form.category || null,
-      tax_category: form.tax_category || null,
-      recurrence: form.recurrence || 'One-time',
-      notes: form.notes || null,
-      user_id: user.id,
-    })
-    if (error) setError(error.message)
-    else {
-      setShowForm(false)
-      setForm({ title: '', amount: '', date: '', category: '', tax_category: '', recurrence: 'One-time', notes: '' })
-      fetchExpenses()
-    }
-    setSaving(false)
+  setSaving(true)
+  setError(null)
+  const { data: { user } } = await supabase.auth.getUser()
+  const payload = {
+    title: form.title,
+    amount: parseFloat(form.amount),
+    date: form.date || null,
+    category: form.category || null,
+    tax_category: form.tax_category || null,
+    recurrence: form.recurrence || 'One-time',
+    notes: form.notes || null,
   }
-
+  if (editingExpense) {
+    await supabase.from('expenses').update(payload).eq('id', editingExpense.id)
+    if (receiptFile) {
+      const ext = receiptFile.name.split('.').pop()
+      const fileName = `${editingExpense.id}/${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('expense-receipts').upload(fileName, receiptFile)
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('expense-receipts').getPublicUrl(fileName)
+        await supabase.from('expenses').update({ receipt_url: urlData.publicUrl }).eq('id', editingExpense.id)
+      }
+    }
+  } else {
+    const { data: newExpense, error } = await supabase.from('expenses').insert({ ...payload, user_id: user.id }).select().single()
+    if (error) { setError(error.message); setSaving(false); return }
+    if (receiptFile && newExpense) {
+      const ext = receiptFile.name.split('.').pop()
+      const fileName = `${newExpense.id}/${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('expense-receipts').upload(fileName, receiptFile)
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('expense-receipts').getPublicUrl(fileName)
+        await supabase.from('expenses').update({ receipt_url: urlData.publicUrl }).eq('id', newExpense.id)
+      }
+    }
+  }
+  setShowForm(false)
+  setEditingExpense(null)
+  setForm({ title: '', amount: '', date: '', category: '', tax_category: '', recurrence: 'One-time', notes: '' })
+  setReceiptFile(null)
+  fetchExpenses()
+  setSaving(false)
+}
+function openEditForm(expense) {
+  setEditingExpense(expense)
+  setForm({
+    title: expense.title || '',
+    amount: expense.amount || '',
+    date: expense.date || '',
+    category: expense.category || '',
+    tax_category: expense.tax_category || '',
+    recurrence: expense.recurrence || 'One-time',
+    notes: expense.notes || '',
+  })
+  setReceiptFile(null)
+  setShowForm(true)
+}
   async function handleDelete(id) {
     if (!confirm('Delete this expense?')) return
     await supabase.from('expenses').delete().eq('id', id)
@@ -100,7 +139,78 @@ export default function Expenses() {
       if (e.recurrence === 'Annually') return sum + (amount / 12)
       return sum
     }, 0)
+if (selectedExpense) {
+  return (
+    <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <button onClick={() => setSelectedExpense(null)} style={styles.backBtn}>← Back to expenses</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => { setSelectedExpense(null); openEditForm(selectedExpense) }} style={styles.editBtn}>Edit</button>
+          <button onClick={() => { handleDelete(selectedExpense.id); setSelectedExpense(null) }} style={styles.deleteBtn}>Delete</button>
+        </div>
+      </div>
 
+      <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '32px', border: '1px solid #f0f0eb' }}>
+        {/* Title + amount */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 6px' }}>
+              {selectedExpense.recurrence && selectedExpense.recurrence !== 'One-time' && <span style={{ marginRight: '8px' }}>🔄</span>}
+              {selectedExpense.title}
+            </h2>
+            {selectedExpense.notes && (
+              <p style={{ fontSize: '14px', color: '#999', margin: 0 }}>{selectedExpense.notes}</p>
+            )}
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: '#cc3333' }}>
+              ${parseFloat(selectedExpense.amount).toLocaleString()}
+            </div>
+            <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+              {selectedExpense.recurrence || 'One-time'}
+            </div>
+          </div>
+        </div>
+
+        {/* Detail fields */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+          {[
+            { label: 'Date', value: selectedExpense.date ? new Date(selectedExpense.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—' },
+            { label: 'Frequency', value: selectedExpense.recurrence || 'One-time' },
+            { label: 'Category', value: selectedExpense.category || '—' },
+            { label: 'Tax category', value: selectedExpense.tax_category || '—' },
+          ].map(field => (
+            <div key={field.label} style={{ backgroundColor: '#fafaf8', borderRadius: '8px', padding: '14px 16px' }}>
+              <div style={{ fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px' }}>{field.label}</div>
+              <div style={{ fontSize: '14px', color: '#1a1a1a' }}>{field.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Receipt */}
+        {selectedExpense.receipt_url ? (
+          <div style={{ padding: '16px 20px', backgroundColor: '#f0faf6', borderRadius: '10px', border: '1px solid #d0f0e0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>📎</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>Receipt attached</div>
+                <div style={{ fontSize: '12px', color: '#999' }}>Click to open</div>
+              </div>
+            </div>
+            <a href={selectedExpense.receipt_url} target="_blank" rel="noreferrer" style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #1D9E75', backgroundColor: '#fff', color: '#1D9E75', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>
+              View receipt
+            </a>
+          </div>
+        ) : (
+          <div style={{ padding: '16px 20px', backgroundColor: '#fafaf8', borderRadius: '10px', border: '1px dashed #e0e0e0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>📎</span>
+            <div style={{ fontSize: '13px', color: '#bbb' }}>No receipt attached — click Edit to add one</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
@@ -201,9 +311,28 @@ export default function Expenses() {
               </select>
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>Notes</label>
-              <input style={styles.input} placeholder="Any additional details" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-            </div>
+  <label style={styles.label}>Notes</label>
+  <input style={styles.input} placeholder="Any additional details" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+</div>
+<div style={{ ...styles.field, gridColumn: 'span 2' }}>
+  <label style={styles.label}>Receipt <span style={{ color: '#bbb', fontWeight: '400' }}>(optional)</span></label>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+    {editingExpense?.receipt_url && !receiptFile && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', backgroundColor: '#f0faf6', borderRadius: '6px', border: '1px solid #d0f0e0' }}>
+        <span style={{ fontSize: '13px' }}>📎</span>
+        <a href={editingExpense.receipt_url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#1D9E75', textDecoration: 'none', fontWeight: '500' }}>View current receipt</a>
+        <span style={{ fontSize: '12px', color: '#bbb' }}>· Upload new to replace</span>
+      </div>
+    )}
+    <label style={{ padding: '7px 14px', borderRadius: '8px', border: '1px dashed #e0e0e0', backgroundColor: '#fafaf8', color: '#888', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
+      {receiptFile ? `📎 ${receiptFile.name}` : editingExpense?.receipt_url ? 'Replace receipt...' : '+ Attach receipt'}
+      <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setReceiptFile(e.target.files[0] || null)} />
+    </label>
+    {receiptFile && (
+      <button onClick={() => setReceiptFile(null)} style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: '12px' }}>✕ Remove</button>
+    )}
+  </div>
+</div>
           </div>
           <div style={styles.formActions}>
             <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
@@ -229,49 +358,42 @@ export default function Expenses() {
         </div>
       ) : (
         <div style={styles.table}>
-          <div style={styles.tableHeader}>
-            <span>Description</span>
-            <span>Category</span>
-            <span>Tax category</span>
-            <span>Date</span>
-            <span>Frequency</span>
-            <span>Amount</span>
-            <span></span>
-          </div>
-          {filtered.map(expense => (
-            <div key={expense.id} style={styles.tableRow}>
-              <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
-                {expense.recurrence && expense.recurrence !== 'One-time' && (
-                  <span style={{ marginRight: '6px' }}>🔄</span>
-                )}
-                {expense.title}
-                {expense.notes && (
-                  <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>{expense.notes}</div>
-                )}
-              </span>
-              <span style={styles.tableCell}>{expense.category || '—'}</span>
-              <span style={styles.tableCell}>{expense.tax_category || '—'}</span>
-              <span style={styles.tableCell}>
-                {expense.date ? new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-              </span>
-              <span style={styles.tableCell}>
-                <span style={{
-                  padding: '2px 8px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500',
-                  backgroundColor: expense.recurrence && expense.recurrence !== 'One-time' ? '#FEF3C7' : t.colors.bg,
-                  color: expense.recurrence && expense.recurrence !== 'One-time' ? '#92400E' : t.colors.textTertiary,
-                }}>
-                  {expense.recurrence || 'One-time'}
-                </span>
-              </span>
-              <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: '#cc3333' }}>
-                ${parseFloat(expense.amount).toLocaleString()}
-              </span>
-              <span>
-                <button onClick={() => handleDelete(expense.id)} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '13px' }}>✕</button>
-              </span>
-            </div>
-          ))}
-        </div>
+  <div style={styles.tableHeader}>
+    <span>Description</span>
+    <span>Date</span>
+    <span>Frequency</span>
+    <span>Amount</span>
+    <span></span>
+  </div>
+  {filtered.map(expense => (
+    <div key={expense.id} style={{ ...styles.tableRow, cursor: 'pointer' }} onClick={() => setSelectedExpense(expense)}>
+      <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
+        {expense.recurrence && expense.recurrence !== 'One-time' && <span style={{ marginRight: '6px' }}>🔄</span>}
+        {expense.title}
+        {expense.category && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>{expense.category}</div>}
+      </span>
+      <span style={styles.tableCell}>
+        {expense.date ? new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+      </span>
+      <span style={styles.tableCell}>
+        <span style={{
+          padding: '2px 8px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500',
+          backgroundColor: expense.recurrence && expense.recurrence !== 'One-time' ? '#FEF3C7' : t.colors.bg,
+          color: expense.recurrence && expense.recurrence !== 'One-time' ? '#92400E' : t.colors.textTertiary,
+        }}>
+          {expense.recurrence || 'One-time'}
+        </span>
+      </span>
+      <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: '#cc3333' }}>
+        ${parseFloat(expense.amount).toLocaleString()}
+      </span>
+      <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <button onClick={e => { e.stopPropagation(); openEditForm(expense) }} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '13px' }}>✏️</button>
+        <button onClick={e => { e.stopPropagation(); handleDelete(expense.id) }} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '13px' }}>✕</button>
+      </span>
+    </div>
+  ))}
+</div>
       )}
     </div>
   )
@@ -290,9 +412,12 @@ const styles = {
   saveBtn: { padding: '9px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
   error: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' },
   table: { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' },
-  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1fr 0.3fr', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1fr 0.3fr', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center' },
+  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.3fr', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
+  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.3fr', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center' },
   tableCell: { fontSize: '13px', color: '#666' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' },
-  empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
+  empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' }, 
+  backBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
+  editBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #1D9E75', backgroundColor: '#fff', color: '#1D9E75', fontSize: '13px', cursor: 'pointer' },
+  deleteBtn: { padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', cursor: 'pointer' },
 }

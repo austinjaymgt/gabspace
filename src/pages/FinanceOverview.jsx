@@ -67,7 +67,7 @@ export default function FinanceOverview({ onNavigate }) {
           Finance Overview
         </h2>
         <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
-          Your complete business financial picture
+          A snapshot of your financial health in one place.
         </p>
       </div>
 
