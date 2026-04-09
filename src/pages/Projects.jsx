@@ -45,6 +45,7 @@ export default function Projects() {
     const { data } = await supabase
       .from('projects')
       .select('*, clients(name, company)')
+      .eq('type', 'project')
       .order('created_at', { ascending: false })
     if (data) setProjects(data)
     setLoading(false)
@@ -63,6 +64,7 @@ export default function Projects() {
       title: form.title,
       client_id: form.client_id || null,
       status: form.status,
+      type: 'project',
       type: form.type || null,
       start_date: form.start_date || null,
       end_date: form.end_date || null,

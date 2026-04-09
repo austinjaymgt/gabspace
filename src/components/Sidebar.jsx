@@ -11,6 +11,11 @@ const navItems = [
       { label: 'Client Portals', path: 'client-portal' },
     ]
   },
+{
+  label: 'Events', icon: '🎪', path: 'my-events', children: [
+    { label: 'My Events', path: 'my-events' },
+  ]
+},
   {
     label: 'Business', icon: '💼', path: 'business', children: [
       { label: 'Finance Overview', path: 'finance-overview' },
@@ -43,7 +48,7 @@ function useIsDesktop() {
 }
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
-  const [expanded, setExpanded] = useState(['Clients', 'Business', 'Marketing'])
+  const [expanded, setExpanded] = useState(['Clients', 'Business', 'Marketing', 'Events'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
