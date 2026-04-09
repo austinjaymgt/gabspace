@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
+import { supabase } from '../supabaseClient'
 
 export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate }) {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
+  const [firstName, setFirstName] = useState('')
 
   useEffect(() => {
     function handle() { setIsDesktop(window.innerWidth >= 1024) }
@@ -10,7 +12,17 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
     return () => window.removeEventListener('resize', handle)
   }, [])
 
-  const initials = session?.user?.email?.charAt(0).toUpperCase() || 'U'
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase
+      .from('user_settings')
+      .select('first_name')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (data?.first_name) setFirstName(data.first_name) })
+  }, [session])
+
+  const initials = (firstName || session?.user?.email || 'U').charAt(0).toUpperCase()
 
   return (
     <div style={{

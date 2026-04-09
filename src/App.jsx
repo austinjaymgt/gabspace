@@ -31,7 +31,9 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(false) // NEW
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showPassword, setShowPassword] = useState(false) 
+  const [resetSent, setResetSent] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -64,6 +66,15 @@ export default function App() {
   }
 
   async function handleSignUp(e) {
+    async function handleForgotPassword() {
+  if (!email) return setError('Enter your email above first.')
+  setLoading(true)
+  setError(null)
+  const { error } = await supabase.auth.resetPasswordForEmail(email)
+  if (error) setError(error.message)
+  else setResetSent(true)
+  setLoading(false)
+}
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -189,21 +200,38 @@ export default function App() {
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>
                 Password
               </label>
-              <input
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: t.radius.md,
-                  border: `1px solid ${t.colors.border}`,
-                  fontSize: t.fontSizes.md,
-                  outline: 'none',
-                  color: t.colors.textPrimary,
-                  fontFamily: t.fonts.sans,
-                }}
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
+              <div style={{ position: 'relative' }}>
+  <input
+    style={{
+      padding: '10px 14px',
+      borderRadius: t.radius.md,
+      border: `1px solid ${t.colors.border}`,
+      fontSize: t.fontSizes.md,
+      outline: 'none',
+      color: t.colors.textPrimary,
+      fontFamily: t.fonts.sans,
+      width: '100%',
+      boxSizing: 'border-box',
+      paddingRight: '44px',
+    }}
+    type={showPassword ? 'text' : 'password'}
+    placeholder="••••••••"
+    value={password}
+    onChange={e => setPassword(e.target.value)}
+  />
+  <button
+    onClick={() => setShowPassword(prev => !prev)}
+    style={{
+      position: 'absolute', right: '12px', top: '50%',
+      transform: 'translateY(-50%)', background: 'none',
+      border: 'none', cursor: 'pointer', fontSize: '16px',
+      color: t.colors.textTertiary, padding: '2px',
+      lineHeight: 1,
+    }}
+  >
+    {showPassword ? '🙈' : '👁'}
+  </button>
+</div>
             </div>
             <button
               onClick={handleLogin}
@@ -222,6 +250,36 @@ export default function App() {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
+            {resetSent ? (
+  <div style={{
+    padding: '10px 14px',
+    borderRadius: t.radius.md,
+    backgroundColor: '#f0fff8',
+    color: t.colors.primary,
+    fontSize: t.fontSizes.base,
+    textAlign: 'center',
+  }}>
+    ✓ Password reset email sent — check your inbox
+  </div>
+) : (
+  <button
+    onClick={handleForgotPassword}
+    disabled={loading}
+    style={{
+      background: 'none',
+      border: 'none',
+      color: t.colors.textTertiary,
+      fontSize: t.fontSizes.sm,
+      cursor: 'pointer',
+      textAlign: 'center',
+      fontFamily: t.fonts.sans,
+      textDecoration: 'underline',
+      padding: 0,
+    }}
+  >
+    Forgot password?
+  </button>
+)}
             <button
               onClick={handleSignUp}
               disabled={loading}
