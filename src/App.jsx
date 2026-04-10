@@ -18,6 +18,7 @@ import ContentCalendar from './pages/ContentCalendar'
 import Assets from './pages/Assets'
 import BusinessEvents from './pages/BusinessEvents'
 import MyEvents from './pages/MyEvents'
+import EventBrainstorm from './pages/EventBrainstorm'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
@@ -196,6 +197,8 @@ export default function App() {
         return isStaff ? <Events {...pageProps} /> : <AccessDenied />
       case 'my-events':
         return <MyEvents {...pageProps} />
+      case 'brainstorm':
+        return isStaff ? <EventBrainstorm {...pageProps} /> : <AccessDenied />
       case 'business-events':
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
 

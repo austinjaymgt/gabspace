@@ -16,6 +16,7 @@ const navItems = [
     { label: 'My Events', path: 'my-events' },
   ]
 },
+{ label: 'Brainstorm', icon: '💡', path: 'brainstorm' },
   {
     label: 'Business', icon: '💼', path: 'business', children: [
       { label: 'Finance Overview', path: 'finance-overview' },
