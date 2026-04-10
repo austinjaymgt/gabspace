@@ -13,13 +13,13 @@ const navItems = [
   },
 {
   label: 'Events', icon: '🎪', path: 'my-events', children: [
-    { label: 'My Events', path: 'my-events' },
+    { label: 'All Events', path: 'my-events' },
   ]
 },
-{ label: 'Brainstorm', icon: '💡', path: 'brainstorm' },
+{ label: 'Idea Curation', icon: '💡', path: 'brainstorm' },
   {
     label: 'Business', icon: '💼', path: 'business', children: [
-      { label: 'Finance Overview', path: 'finance-overview' },
+      { label: 'Overview', path: 'finance-overview' },
       { label: 'Revenue', path: 'revenue' },
       { label: 'Expenses', path: 'expenses' },
       { label: 'Vendors', path: 'vendors' },
@@ -29,7 +29,7 @@ const navItems = [
     label: 'Marketing', icon: '📣', path: 'marketing', children: [
       { label: 'Campaigns', path: 'campaigns' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
-      { label: 'Business Events', path: 'business-events' },
+      { label: 'Community Events', path: 'business-events' },
       { label: 'Company Assets', path: 'assets' },
     ]
   },
