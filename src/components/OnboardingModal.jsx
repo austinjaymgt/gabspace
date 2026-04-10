@@ -21,7 +21,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
         .from("user_settings")
         .select("onboarding_completed")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (settings?.onboarding_completed) {
         onComplete();

@@ -384,7 +384,12 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, display: 'flex' }}>
       {showOnboarding && (
-        <OnboardingModal onClose={() => setShowOnboarding(false)} session={session} />
+<OnboardingModal
+  userId={session.user.id}
+  onComplete={() => setShowOnboarding(false)}
+  onSkip={() => setShowOnboarding(false)}
+  onNavigate={(page) => setCurrentPage(page)}
+/>
       )}
       <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} />
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
