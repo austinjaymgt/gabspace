@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import BetaAdmin from './pages/BetaAdmin' 
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import Dashboard from './pages/Dashboard'
@@ -232,6 +233,9 @@ export default function App() {
       case 'settings':
           if (workspaceLoading) return null
         return isOwnerOrAdmin ? <Settings {...pageProps} /> : <AccessDenied />
+
+      case 'beta-admin':
+        return isOwnerOrAdmin ? <BetaAdmin {...pageProps} /> : <AccessDenied />
 
       default:
         return (

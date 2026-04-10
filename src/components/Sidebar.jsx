@@ -34,6 +34,7 @@ const navItems = [
     ]
   },
   { label: 'Settings', icon: '⚙️', path: 'settings' },
+  { label: 'Beta Admin', icon: '🧪', path: 'beta-admin' },
 ]
 
 const SIDEBAR_WIDTH = 240
