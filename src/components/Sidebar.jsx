@@ -33,8 +33,8 @@ const navItems = [
       { label: 'Company Assets', path: 'assets' },
     ]
   },
-  { label: 'Settings', icon: '⚙️', path: 'settings' },
   { label: 'Beta Admin', icon: '🧪', path: 'beta-admin' },
+  { label: 'Settings', icon: '⚙️', path: 'settings' },
 ]
 
 const SIDEBAR_WIDTH = 240
