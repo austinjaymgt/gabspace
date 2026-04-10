@@ -16,6 +16,18 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
 
   useEffect(() => {
     async function checkExisting() {
+      // Check if user already completed or skipped onboarding
+      const { data: settings } = await supabase
+        .from("user_settings")
+        .select("onboarding_completed")
+        .eq("user_id", userId)
+        .single();
+
+      if (settings?.onboarding_completed) {
+        onComplete();
+        return;
+      }
+
       const results = await Promise.all(
         steps.map(async (step) => {
           const { count } = await supabase
@@ -49,12 +61,21 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
 
   const allDone = steps.every((s) => completed.includes(s.id));
 
-  const handleFinish = async () => {
+  const markCompleted = async () => {
     await supabase
       .from("user_settings")
       .update({ onboarding_completed: true })
       .eq("user_id", userId);
+  };
+
+  const handleFinish = async () => {
+    await markCompleted();
     onComplete();
+  };
+
+  const handleSkip = async () => {
+    await markCompleted();
+    onSkip();
   };
 
   const completedCount = steps.filter((s) => completed.includes(s.id)).length;
@@ -184,7 +205,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
         </button>
 
         <p
-          onClick={onSkip}
+          onClick={handleSkip}
           style={{
             textAlign: "center", marginTop: "16px", marginBottom: 0,
             fontSize: "13px", color: "#999",
