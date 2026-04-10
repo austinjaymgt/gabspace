@@ -209,11 +209,9 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
 }`
 
     try {
-      const { data: { session: authSession } } = await supabase.auth.getSession()
       const res = await supabase.functions.invoke('generate-event-concept', {
         body: { prompt },
-        headers: { Authorization: `Bearer ${authSession.access_token}` },
-      })
+    })
       const data = res.data
 console.log('Edge function response:', JSON.stringify(data))
 const raw = data.content?.map(b => b.text || '').join('')
