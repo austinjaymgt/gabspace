@@ -215,11 +215,13 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         headers: { Authorization: `Bearer ${authSession.access_token}` },
       })
       const data = res.data
-      const raw = data.content?.map(b => b.text || '').join('')
+console.log('Edge function response:', JSON.stringify(data))
+const raw = data.content?.map(b => b.text || '').join('')
       const clean = raw.replace(/```json|```/g, '').trim()
       setConcept(JSON.parse(clean))
-    } catch {
-      setGenError('Something went wrong generating the concept. Try again.')
+    } catch (err) {
+      console.error('Generation error:', err)
+      setGenError(err?.message || JSON.stringify(err) || 'Something went wrong. Try again.')
     }
     setGenerating(false)
   }
