@@ -140,9 +140,8 @@ export default function Dashboard({ session, onNavigate }) {
     ] = await Promise.all([
       supabase.from('clients').select('*', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('clients').select('*', { count: 'exact', head: true }),
-      supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('projects').select('title, status, clients(name)').eq('status', 'active').limit(4),
-      supabase.from('revenue').select('amount, status'),
+      supabase.from('projects').select('*', { count: 'exact', head: true }).eq('type', 'project').eq('status', 'active'),
+      supabase.from('projects').select('title, status, clients(name)').eq('type', 'project').eq('status', 'active').limit(4),      supabase.from('revenue').select('amount, status'),
       supabase.from('expenses').select('amount'),
       supabase.from('campaigns').select('name, status, budget, spend, platform').eq('status', 'active').limit(3),
     ])
@@ -178,8 +177,7 @@ export default function Dashboard({ session, onNavigate }) {
       supabase.from('clients').select('*').order('created_at', { ascending: false }).limit(5),
       supabase.from('projects').select('*, clients(name)').order('created_at', { ascending: false }).limit(5),
       supabase.from('revenue').select('*, clients(name)').order('created_at', { ascending: false }).limit(5),
-      supabase.from('events').select('*, projects(title)').order('created_at', { ascending: false }).limit(5),
-      supabase.from('tasks').select('*').order('created_at', { ascending: false }).limit(5),
+      supabase.from('projects').select('*').eq('type', 'event').order('created_at', { ascending: false }).limit(5),      supabase.from('tasks').select('*').order('created_at', { ascending: false }).limit(5),
       supabase.from('vendors').select('*').order('created_at', { ascending: false }).limit(5),
       supabase.from('portal_updates').select('*, clients(name)').order('created_at', { ascending: false }).limit(5),
     ])
@@ -188,8 +186,7 @@ export default function Dashboard({ session, onNavigate }) {
       ...(clients || []).map(c => ({ type: 'client', title: c.name, subtitle: c.company ? `from ${c.company}` : 'New client added', meta: c.email || null, created_at: c.created_at, id: `client-${c.id}` })),
       ...(projects || []).map(p => ({ type: 'project', title: p.title, subtitle: p.clients?.name ? `for ${p.clients.name}` : 'New project created', meta: p.status, created_at: p.created_at, id: `project-${p.id}` })),
       ...(revenue || []).map(inv => ({ type: 'invoice', title: inv.invoice_number || 'Invoice', subtitle: inv.clients?.name ? `billed to ${inv.clients.name}` : null, meta: `$${parseFloat(inv.total_amount || 0).toLocaleString()} · ${inv.status}`, created_at: inv.created_at, id: `invoice-${inv.id}` })),
-      ...(events || []).map(e => ({ type: 'event', title: e.name, subtitle: e.projects?.title ? `part of ${e.projects.title}` : null, meta: e.event_date ? new Date(e.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null, created_at: e.created_at, id: `event-${e.id}` })),
-      ...(tasks || []).map(task => ({ type: 'task', title: task.title, subtitle: task.status === 'done' ? 'Completed' : `Status: ${task.status}`, meta: task.due_date ? `Due ${new Date(task.due_date).toLocaleDateString()}` : null, created_at: task.created_at, id: `task-${task.id}` })),
+      ...(events || []).map(e => ({ type: 'event', title: e.title, subtitle: e.venue ? `at ${e.venue}` : null, meta: e.event_date ? new Date(e.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null, created_at: e.created_at, id: `event-${e.id}` })),      ...(tasks || []).map(task => ({ type: 'task', title: task.title, subtitle: task.status === 'done' ? 'Completed' : `Status: ${task.status}`, meta: task.due_date ? `Due ${new Date(task.due_date).toLocaleDateString()}` : null, created_at: task.created_at, id: `task-${task.id}` })),
       ...(vendors || []).map(v => ({ type: 'vendor', title: v.name, subtitle: v.category || 'New vendor added', meta: v.rate ? `$${parseFloat(v.rate).toLocaleString()}` : null, created_at: v.created_at, id: `vendor-${v.id}` })),
       ...(portalUpdates || []).map(u => ({ type: 'portal', title: u.title || 'Portal update', subtitle: u.clients?.name ? `sent to ${u.clients.name}` : null, meta: u.message?.substring(0, 80) + (u.message?.length > 80 ? '...' : ''), created_at: u.created_at, id: `portal-${u.id}` })),
     ]
