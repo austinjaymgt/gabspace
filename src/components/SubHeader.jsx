@@ -15,7 +15,7 @@ const allPages = [
   { path: 'campaigns', label: 'Campaigns', icon: '📣' },
   { path: 'campaign-tracking', label: 'Content Calendar', icon: '🗓' },
   { path: 'business-events', label: 'Business Events', icon: '🎯' },
-  { path: 'assets', label: 'Brand Assets', icon: '🎨' },
+  { path: 'assets', label: 'Company Assets', icon: '🎨' },
 ]
 
 export default function SubHeader({ currentPage, onNavigate, session }) {
