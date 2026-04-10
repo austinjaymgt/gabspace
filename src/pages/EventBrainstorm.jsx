@@ -354,15 +354,16 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                         {isIdea ? 'Idea' : 'Concept'}
                       </span>
                       {isIdea ? (
-                        <>
-                          <button onClick={() => openEdit(c)}
-                            style={{ ...s.editBtn, background: isEditing ? '#8585A0' : '#D4874E' }}>
-                            {isEditing ? 'Cancel' : 'Edit'}
-                          </button>
-                          <button onClick={handleExpandWithAI} style={s.generateBtn}>
-                            Generate ↓
-                          </button>
-                        </>
+  <>
+    <button onClick={() => openEdit(c)}
+      style={{ ...s.editBtn, background: isEditing ? '#8585A0' : '#D4874E' }}>
+      {isEditing ? 'Cancel' : 'Edit'}
+    </button>
+    <button onClick={() => handlePromote(c.id)} disabled={promoting === c.id}
+      style={{ ...s.promoteBtn, opacity: promoting === c.id ? 0.6 : 1 }}>
+      {promoting === c.id ? 'Moving…' : 'Move to Planning →'}
+    </button>
+  </>
                       ) : (
                         <>
                           <button onClick={() => openEdit(c)}
