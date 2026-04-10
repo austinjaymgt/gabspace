@@ -2,52 +2,104 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 
-const statusSteps = ['planning', 'active', 'on-hold', 'completed']
+// ── Constants ──────────────────────────────────────────────────────────────
 
-const statusColors = {
-  planning: { bg: '#FEF3C7', color: '#92400E', border: '#F59E0B' },
-  active: { bg: '#f0faf6', color: '#1D9E75', border: '#1D9E75' },
+const STATUS_COLORS = {
+  planning:  { bg: '#FEF3C7', color: '#92400E', border: '#F59E0B' },
+  active:    { bg: '#f0faf6', color: '#1D9E75', border: '#1D9E75' },
   'on-hold': { bg: '#fff8f0', color: '#cc7700', border: '#F59E0B' },
   completed: { bg: '#f0f4ff', color: '#4466cc', border: '#4466cc' },
   cancelled: { bg: '#fff0f0', color: '#cc3333', border: '#cc3333' },
 }
 
-const statusCardConfig = [
+const PROJECT_STATUS_CARDS = [
   { key: 'planning',  label: 'Planning',  color: '#534AB7' },
   { key: 'active',    label: 'Active',    color: '#1D9E75' },
   { key: 'on-hold',   label: 'On hold',   color: '#BA7517' },
   { key: 'completed', label: 'Completed', color: '#378ADD' },
 ]
 
+const EVENT_STATUS_COLORS = {
+  inquiry:     { bg: '#F0EBF9', color: '#7C5CBF', border: '#7C5CBF' },
+  concept:     { bg: '#F0EBF9', color: '#9B72D0', border: '#9B72D0' },
+  planning:    { bg: '#FEF3C7', color: '#92400E', border: '#F59E0B' },
+  confirmed:   { bg: '#f0faf6', color: '#1D9E75', border: '#1D9E75' },
+  in_progress: { bg: '#fff8f0', color: '#cc7700', border: '#F59E0B' },
+  completed:   { bg: '#f0f4ff', color: '#4466cc', border: '#4466cc' },
+  cancelled:   { bg: '#fff0f0', color: '#cc3333', border: '#cc3333' },
+}
+
+const EVENT_STATUS_CARDS = [
+  { key: 'inquiry',     label: 'Inquiry',      color: '#7C5CBF' },
+  { key: 'confirmed',   label: 'Confirmed',    color: '#1D9E75' },
+  { key: 'in_progress', label: 'In Progress',  color: '#BA7517' },
+  { key: 'completed',   label: 'Completed',    color: '#378ADD' },
+]
+
+const STATUS_STEPS = ['planning', 'active', 'on-hold', 'completed']
+
+// ── Shared helpers ─────────────────────────────────────────────────────────
+
+function StatusBadge({ status, colorMap }) {
+  const sc = colorMap[status] || colorMap.planning || {}
+  return (
+    <div style={{
+      display: 'inline-block',
+      padding: '3px 10px',
+      borderRadius: t.radius.full,
+      fontSize: t.fontSizes.xs,
+      fontWeight: '500',
+      backgroundColor: sc.bg || '#f0f0f0',
+      color: sc.color || '#666',
+    }}>
+      {status?.replace('_', ' ')}
+    </div>
+  )
+}
+
+// ── Main export ────────────────────────────────────────────────────────────
+
 export default function Projects() {
-  const [projects, setProjects] = useState([])
+  const [view, setView] = useState('projects') // 'projects' | 'events'
+  const [records, setRecords] = useState([])
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [selectedProject, setSelectedProject] = useState(null)
+  const [selectedRecord, setSelectedRecord] = useState(null)
   const [sortBy, setSortBy] = useState('created_at')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [form, setForm] = useState({
-    title: '', client_id: '', status: 'planning',
-    type: '', start_date: '', end_date: '', budget: '',
-    description: '',
-  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchProjects()
-    fetchClients()
-  }, [])
+  const isEvents = view === 'events'
 
-  async function fetchProjects() {
+  const [projectForm, setProjectForm] = useState({
+    title: '', client_id: '', status: 'planning',
+    project_type: '', start_date: '', end_date: '',
+    budget: '', description: '',
+  })
+
+  const [eventForm, setEventForm] = useState({
+    title: '', client_id: '', event_status: 'inquiry',
+    event_date: '', venue: '', headcount: '',
+    budget: '', source: '', description: '',
+  })
+
+  useEffect(() => {
+    fetchRecords()
+    fetchClients()
+  }, [view])
+
+  async function fetchRecords() {
     setLoading(true)
-    const { data } = await supabase
+    setFilterStatus('all')
+    const query = supabase
       .from('projects')
       .select('*, clients(name, company)')
-      .eq('type', 'project')
+      .eq('type', isEvents ? 'event' : 'project')
       .order('created_at', { ascending: false })
-    if (data) setProjects(data)
+    const { data } = await query
+    if (data) setRecords(data)
     setLoading(false)
   }
 
@@ -60,49 +112,82 @@ export default function Projects() {
     setSaving(true)
     setError(null)
     const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('projects').insert({
-      title: form.title,
-      client_id: form.client_id || null,
-      status: form.status,
-      type: 'project',
-      type: form.type || null,
-      start_date: form.start_date || null,
-      end_date: form.end_date || null,
-      budget: form.budget ? parseFloat(form.budget) : null,
-      description: form.description || null,
-      user_id: user.id,
-    })
-    if (error) setError(error.message)
-    else {
+
+    const payload = isEvents
+      ? {
+          type: 'event',
+          title: eventForm.title,
+          client_id: eventForm.client_id || null,
+          event_status: eventForm.event_status || 'inquiry',
+          event_date: eventForm.event_date || null,
+          venue: eventForm.venue || null,
+          headcount: eventForm.headcount ? parseInt(eventForm.headcount) : null,
+          budget: eventForm.budget ? parseFloat(eventForm.budget) : null,
+          source: eventForm.source || null,
+          description: eventForm.description || null,
+          status: 'planning', // required field default for events
+          user_id: user.id,
+        }
+      : {
+          type: 'project',
+          title: projectForm.title,
+          client_id: projectForm.client_id || null,
+          status: projectForm.status,
+          project_type: projectForm.project_type || null,
+          start_date: projectForm.start_date || null,
+          end_date: projectForm.end_date || null,
+          budget: projectForm.budget ? parseFloat(projectForm.budget) : null,
+          description: projectForm.description || null,
+          user_id: user.id,
+        }
+
+    const { error: saveError } = await supabase.from('projects').insert(payload)
+    if (saveError) {
+      setError(saveError.message)
+    } else {
       setShowForm(false)
-      setForm({ title: '', client_id: '', status: 'planning', type: '', start_date: '', end_date: '', budget: '', description: '' })
-      fetchProjects()
+      resetForms()
+      fetchRecords()
     }
     setSaving(false)
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Delete this project?')) return
-    await supabase.from('projects').delete().eq('id', id)
-    fetchProjects()
-    setSelectedProject(null)
+  function resetForms() {
+    setProjectForm({ title: '', client_id: '', status: 'planning', project_type: '', start_date: '', end_date: '', budget: '', description: '' })
+    setEventForm({ title: '', client_id: '', event_status: 'inquiry', event_date: '', venue: '', headcount: '', budget: '', source: '', description: '' })
   }
 
-  const filteredProjects = projects
-    .filter(p => filterStatus === 'all' || p.status === filterStatus)
+  async function handleDelete(id) {
+    if (!confirm(`Delete this ${isEvents ? 'event' : 'project'}?`)) return
+    await supabase.from('projects').delete().eq('id', id)
+    fetchRecords()
+    setSelectedRecord(null)
+  }
+
+  const statusCards = isEvents ? EVENT_STATUS_CARDS : PROJECT_STATUS_CARDS
+  const statusColorMap = isEvents ? EVENT_STATUS_COLORS : STATUS_COLORS
+  const statusField = isEvents ? 'event_status' : 'status'
+
+  const filteredRecords = records
+    .filter(r => filterStatus === 'all' || r[statusField] === filterStatus)
     .sort((a, b) => {
       if (sortBy === 'title') return a.title.localeCompare(b.title)
       if (sortBy === 'budget') return (parseFloat(b.budget) || 0) - (parseFloat(a.budget) || 0)
-      if (sortBy === 'status') return a.status.localeCompare(b.status)
-      if (sortBy === 'timeline') return new Date(a.start_date || '9999') - new Date(b.start_date || '9999')
+      if (sortBy === 'status') return (a[statusField] || '').localeCompare(b[statusField] || '')
+      if (sortBy === 'timeline') {
+        const dateA = isEvents ? a.event_date : a.start_date
+        const dateB = isEvents ? b.event_date : b.start_date
+        return new Date(dateA || '9999') - new Date(dateB || '9999')
+      }
       return new Date(b.created_at) - new Date(a.created_at)
     })
 
-  if (selectedProject) {
+  if (selectedRecord) {
     return (
       <ProjectDetail
-        project={selectedProject}
-        onBack={() => { setSelectedProject(null); fetchProjects() }}
+        record={selectedRecord}
+        isEvent={isEvents}
+        onBack={() => { setSelectedRecord(null); fetchRecords() }}
         onDelete={handleDelete}
         clients={clients}
       />
@@ -111,22 +196,52 @@ export default function Projects() {
 
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
+
+      {/* Header + Tab toggle */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: 0 }}>Projects</h2>
-          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' }}>
-            {filteredProjects.length} of {projects.length} projects
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '4px' }}>
+            <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: 0 }}>
+              {isEvents ? 'Events' : 'Projects'}
+            </h2>
+            {/* Tab switcher */}
+            <div style={{ display: 'flex', backgroundColor: '#f0f0eb', borderRadius: '8px', padding: '3px', gap: '2px' }}>
+              {['projects', 'events'].map(v => (
+                <button
+                  key={v}
+                  onClick={() => { setView(v); setShowForm(false); setError(null) }}
+                  style={{
+                    padding: '5px 14px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontFamily: t.fonts.sans,
+                    backgroundColor: view === v ? '#fff' : 'transparent',
+                    color: view === v ? t.colors.textPrimary : t.colors.textTertiary,
+                    boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
+            {filteredRecords.length} of {records.length} {isEvents ? 'events' : 'projects'}
           </p>
         </div>
         <button onClick={() => setShowForm(true)} style={styles.addBtn}>
-          + Add Project
+          + {isEvents ? 'Add Event' : 'Add Project'}
         </button>
       </div>
 
       {/* Status stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '20px' }}>
-        {statusCardConfig.map(({ key, label, color }) => {
-          const count = projects.filter(p => p.status === key).length
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${statusCards.length}, 1fr)`, gap: '14px', marginBottom: '20px' }}>
+        {statusCards.map(({ key, label, color }) => {
+          const count = records.filter(r => r[statusField] === key).length
           const isSelected = filterStatus === key
           return (
             <div
@@ -154,51 +269,36 @@ export default function Projects() {
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value)}
-          style={{
-            padding: '6px 10px',
-            borderRadius: t.radius.md,
-            border: `1px solid ${t.colors.borderLight}`,
-            fontSize: t.fontSizes.sm,
-            color: t.colors.textSecondary,
-            outline: 'none',
-            backgroundColor: '#fff',
-            fontFamily: t.fonts.sans,
-          }}
+          style={{ padding: '6px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, outline: 'none', backgroundColor: '#fff', fontFamily: t.fonts.sans }}
         >
           <option value="created_at">Date added</option>
           <option value="title">Name</option>
           <option value="budget">Budget</option>
           <option value="status">Status</option>
-          <option value="timeline">Timeline</option>
+          <option value="timeline">{isEvents ? 'Event date' : 'Timeline'}</option>
         </select>
       </div>
 
-      {showForm && (
+      {/* New project form */}
+      {showForm && !isEvents && (
         <div style={styles.formCard}>
           <h3 style={styles.formTitle}>New Project</h3>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Project title *</label>
-              <input
-                style={styles.input}
-                placeholder="e.g. Brooklen Wedding 2026"
-                value={form.title}
-                onChange={e => setForm({ ...form, title: e.target.value })}
-              />
+              <input style={styles.input} placeholder="e.g. Brooklen Wedding 2026" value={projectForm.title} onChange={e => setProjectForm({ ...projectForm, title: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Client</label>
-              <select style={styles.input} value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}>
+              <select style={styles.input} value={projectForm.client_id} onChange={e => setProjectForm({ ...projectForm, client_id: e.target.value })}>
                 <option value="">No client</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>
-                ))}
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>)}
               </select>
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
-              <select style={styles.input} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+              <select style={styles.input} value={projectForm.status} onChange={e => setProjectForm({ ...projectForm, status: e.target.value })}>
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
                 <option value="on-hold">On hold</option>
@@ -207,97 +307,160 @@ export default function Projects() {
               </select>
             </div>
             <div style={styles.field}>
+              <label style={styles.label}>Project type</label>
+              <input style={styles.input} placeholder="e.g. Wedding, Portrait, Brand" value={projectForm.project_type} onChange={e => setProjectForm({ ...projectForm, project_type: e.target.value })} />
+            </div>
+            <div style={styles.field}>
               <label style={styles.label}>Budget ($)</label>
-              <input style={styles.input} type="number" placeholder="0.00" value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })} />
+              <input style={styles.input} type="number" placeholder="0.00" value={projectForm.budget} onChange={e => setProjectForm({ ...projectForm, budget: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Start date</label>
-              <input style={styles.input} type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} />
+              <input style={styles.input} type="date" value={projectForm.start_date} onChange={e => setProjectForm({ ...projectForm, start_date: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>End date</label>
-              <input style={styles.input} type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} />
+              <input style={styles.input} type="date" value={projectForm.end_date} onChange={e => setProjectForm({ ...projectForm, end_date: e.target.value })} />
             </div>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Description</label>
-              <textarea
-                style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }}
-                rows={2}
-                placeholder="Brief project description..."
-                value={form.description}
-                onChange={e => setForm({ ...form, description: e.target.value })}
-              />
+              <textarea style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={2} placeholder="Brief project description..." value={projectForm.description} onChange={e => setProjectForm({ ...projectForm, description: e.target.value })} />
             </div>
           </div>
           <div style={styles.formActions}>
-            <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
-            <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.title}>
+            <button onClick={() => { setShowForm(false); setError(null); resetForms() }} style={styles.cancelBtn}>Cancel</button>
+            <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !projectForm.title}>
               {saving ? 'Saving...' : 'Save Project'}
             </button>
           </div>
         </div>
       )}
 
+      {/* New event form */}
+      {showForm && isEvents && (
+        <div style={styles.formCard}>
+          <h3 style={styles.formTitle}>New Event</h3>
+          {error && <div style={styles.error}>{error}</div>}
+          <div style={styles.formGrid}>
+            <div style={{ ...styles.field, gridColumn: 'span 2' }}>
+              <label style={styles.label}>Event title *</label>
+              <input style={styles.input} placeholder="e.g. Johnson Corporate Gala" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Client</label>
+              <select style={styles.input} value={eventForm.client_id} onChange={e => setEventForm({ ...eventForm, client_id: e.target.value })}>
+                <option value="">No client</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>)}
+              </select>
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Status</label>
+              <select style={styles.input} value={eventForm.event_status} onChange={e => setEventForm({ ...eventForm, event_status: e.target.value })}>
+                <option value="inquiry">Inquiry</option>
+                <option value="concept">Concept</option>
+                <option value="planning">Planning</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Event date</label>
+              <input style={styles.input} type="date" value={eventForm.event_date} onChange={e => setEventForm({ ...eventForm, event_date: e.target.value })} />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Venue</label>
+              <input style={styles.input} placeholder="e.g. The Grand Ballroom" value={eventForm.venue} onChange={e => setEventForm({ ...eventForm, venue: e.target.value })} />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Headcount</label>
+              <input style={styles.input} type="number" placeholder="0" value={eventForm.headcount} onChange={e => setEventForm({ ...eventForm, headcount: e.target.value })} />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Budget ($)</label>
+              <input style={styles.input} type="number" placeholder="0.00" value={eventForm.budget} onChange={e => setEventForm({ ...eventForm, budget: e.target.value })} />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Source / Lead origin</label>
+              <input style={styles.input} placeholder="e.g. Referral, Instagram" value={eventForm.source} onChange={e => setEventForm({ ...eventForm, source: e.target.value })} />
+            </div>
+            <div style={{ ...styles.field, gridColumn: 'span 2' }}>
+              <label style={styles.label}>Description</label>
+              <textarea style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={2} placeholder="Brief event description..." value={eventForm.description} onChange={e => setEventForm({ ...eventForm, description: e.target.value })} />
+            </div>
+          </div>
+          <div style={styles.formActions}>
+            <button onClick={() => { setShowForm(false); setError(null); resetForms() }} style={styles.cancelBtn}>Cancel</button>
+            <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !eventForm.title}>
+              {saving ? 'Saving...' : 'Save Event'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
       {loading ? (
-        <div style={styles.empty}>Loading projects...</div>
-      ) : filteredProjects.length === 0 ? (
+        <div style={styles.empty}>Loading {isEvents ? 'events' : 'projects'}...</div>
+      ) : filteredRecords.length === 0 ? (
         <div style={styles.emptyState}>
-          <div style={{ fontSize: '40px', marginBottom: '16px' }}>📋</div>
+          <div style={{ fontSize: '40px', marginBottom: '16px' }}>{isEvents ? '🎉' : '📋'}</div>
           <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>
-            {filterStatus === 'all' ? 'No projects yet' : `No ${filterStatus} projects`}
+            {filterStatus === 'all' ? `No ${isEvents ? 'events' : 'projects'} yet` : `No ${filterStatus} ${isEvents ? 'events' : 'projects'}`}
           </h3>
           <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>
-            {filterStatus === 'all' ? 'Add your first project to get started' : 'Try a different filter'}
+            {filterStatus === 'all' ? `Add your first ${isEvents ? 'event' : 'project'} to get started` : 'Try a different filter'}
           </p>
           {filterStatus === 'all' && (
-            <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Project</button>
+            <button onClick={() => setShowForm(true)} style={styles.addBtn}>
+              + {isEvents ? 'Add Event' : 'Add Project'}
+            </button>
           )}
         </div>
-      ) : (
+      ) : isEvents ? (
+        // Events table
         <div style={styles.table}>
-          <div style={styles.tableHeader}>
-            <span>Project</span>
-            <span>Client</span>
-            <span>Type</span>
-            <span>Budget</span>
-            <span>Timeline</span>
-            <span>Status</span>
-            <span></span>
+          <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 0.3fr' }}>
+            <span>Event</span><span>Client</span><span>Date</span><span>Venue</span><span>Headcount</span><span>Status</span><span></span>
           </div>
-          {filteredProjects.map(project => {
-            const sc = statusColors[project.status] || statusColors.planning
+          {filteredRecords.map(record => (
+            <div key={record.id} style={{ ...styles.tableRow, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 0.3fr' }} onClick={() => setSelectedRecord(record)}>
+              <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>{record.title}</span>
+              <span style={styles.tableCell}>{record.clients?.name || '—'}</span>
+              <span style={styles.tableCell}>
+                {record.event_date ? new Date(record.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+              </span>
+              <span style={styles.tableCell}>{record.venue || '—'}</span>
+              <span style={styles.tableCell}>{record.headcount ? record.headcount.toLocaleString() : '—'}</span>
+              <span><StatusBadge status={record.event_status} colorMap={EVENT_STATUS_COLORS} /></span>
+              <span style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>→</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        // Projects table
+        <div style={styles.table}>
+          <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
+            <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
+          </div>
+          {filteredRecords.map(record => {
+            const sc = STATUS_COLORS[record.status] || STATUS_COLORS.planning
             return (
-              <div
-                key={project.id}
-                style={styles.tableRow}
-                onClick={() => setSelectedProject(project)}
-              >
-                <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
-                  {project.title}
-                </span>
-                <span style={styles.tableCell}>{project.clients ? project.clients.name : '—'}</span>
-                <span style={styles.tableCell}>{project.type || '—'}</span>
+              <div key={record.id} style={{ ...styles.tableRow, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }} onClick={() => setSelectedRecord(record)}>
+                <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>{record.title}</span>
+                <span style={styles.tableCell}>{record.clients?.name || '—'}</span>
+                <span style={styles.tableCell}>{record.project_type || '—'}</span>
+                <span style={styles.tableCell}>{record.budget ? `$${parseFloat(record.budget).toLocaleString()}` : '—'}</span>
                 <span style={styles.tableCell}>
-                  {project.budget ? `$${parseFloat(project.budget).toLocaleString()}` : '—'}
-                </span>
-                <span style={styles.tableCell}>
-                  {project.start_date && project.end_date
-                    ? `${new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} → ${new Date(project.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                    : project.start_date
-                      ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  {record.start_date && record.end_date
+                    ? `${new Date(record.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} → ${new Date(record.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                    : record.start_date
+                      ? new Date(record.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                       : '—'}
                 </span>
                 <span>
-                  <div style={{
-                    display: 'inline-block',
-                    padding: '3px 10px',
-                    borderRadius: t.radius.full,
-                    fontSize: t.fontSizes.xs,
-                    fontWeight: '500',
-                    backgroundColor: sc.bg,
-                    color: sc.color,
-                  }}>
-                    {project.status}
+                  <div style={{ display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: sc.bg, color: sc.color }}>
+                    {record.status}
                   </div>
                 </span>
                 <span style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>→</span>
@@ -310,23 +473,23 @@ export default function Projects() {
   )
 }
 
-// ── PROJECT DETAIL — unchanged below this line ─────────────────────────────
-function ProjectDetail({ project, onBack, onDelete, clients }) {
-  const [data, setData] = useState(project)
+// ── Project / Event Detail ─────────────────────────────────────────────────
+
+function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
+  const [data, setData] = useState(record)
   const [tasks, setTasks] = useState([])
-  const [events, setEvents] = useState([])
   const [invoices, setInvoices] = useState([])
   const [expenses, setExpenses] = useState([])
   const [documents, setDocuments] = useState([])
+  const [budgetItems, setBudgetItems] = useState([])
   const [editMode, setEditMode] = useState(false)
-  const [editForm, setEditForm] = useState({ ...project })
-  const [notes, setNotes] = useState(project.notes || '')
+  const [editForm, setEditForm] = useState({ ...record })
+  const [notes, setNotes] = useState(record.notes || '')
   const [savingNotes, setSavingNotes] = useState(false)
   const [notesSaved, setNotesSaved] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [addingTask, setAddingTask] = useState(false)
-  const [budgetItems, setBudgetItems] = useState([])
   const [showBudgetForm, setShowBudgetForm] = useState(false)
   const [budgetForm, setBudgetForm] = useState({ category: '', projected_amount: '', actual_amount: '', notes: '' })
   const [editingBudgetItem, setEditingBudgetItem] = useState(null)
@@ -340,21 +503,18 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
   async function fetchAll() {
     const [
       { data: tasksData },
-      { data: eventsData },
       { data: invoicesData },
       { data: expensesData },
       { data: budgetData },
       { data: docsData },
     ] = await Promise.all([
-      supabase.from('tasks').select('*').eq('project_id', project.id).order('created_at', { ascending: true }),
-      supabase.from('events').select('*').eq('project_id', project.id).order('event_date', { ascending: true }),
-      supabase.from('invoices').select('*').eq('project_id', project.id),
-      supabase.from('expenses').select('*').eq('project_id', project.id),
-      supabase.from('project_budget_items').select('*').eq('project_id', project.id).order('created_at', { ascending: true }),
-      supabase.from('project_documents').select('*').eq('project_id', project.id).order('created_at', { ascending: false }),
+      supabase.from('tasks').select('*').eq('project_id', record.id).order('created_at', { ascending: true }),
+      supabase.from('invoices').select('*').eq('project_id', record.id),
+      supabase.from('expenses').select('*').eq('project_id', record.id),
+      supabase.from('project_budget_items').select('*').eq('project_id', record.id).order('created_at', { ascending: true }),
+      supabase.from('project_documents').select('*').eq('project_id', record.id).order('created_at', { ascending: false }),
     ])
     setTasks(tasksData || [])
-    setEvents(eventsData || [])
     setInvoices(invoicesData || [])
     setExpenses(expensesData || [])
     setBudgetItems(budgetData || [])
@@ -362,27 +522,42 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
   }
 
   async function handleEditSave() {
-    const { error } = await supabase.from('projects').update({
-      title: editForm.title,
-      client_id: editForm.client_id || null,
-      status: editForm.status,
-      type: editForm.type || null,
-      start_date: editForm.start_date || null,
-      end_date: editForm.end_date || null,
-      budget: editForm.budget ? parseFloat(editForm.budget) : null,
-      description: editForm.description || null,
-    }).eq('id', project.id)
+    const updatePayload = isEvent
+      ? {
+          title: editForm.title,
+          client_id: editForm.client_id || null,
+          event_status: editForm.event_status || 'inquiry',
+          event_date: editForm.event_date || null,
+          venue: editForm.venue || null,
+          headcount: editForm.headcount ? parseInt(editForm.headcount) : null,
+          budget: editForm.budget ? parseFloat(editForm.budget) : null,
+          source: editForm.source || null,
+          description: editForm.description || null,
+        }
+      : {
+          title: editForm.title,
+          client_id: editForm.client_id || null,
+          status: editForm.status,
+          project_type: editForm.project_type || null,
+          start_date: editForm.start_date || null,
+          end_date: editForm.end_date || null,
+          budget: editForm.budget ? parseFloat(editForm.budget) : null,
+          description: editForm.description || null,
+        }
+
+    const { error } = await supabase.from('projects').update(updatePayload).eq('id', record.id)
     if (!error) { setData(prev => ({ ...prev, ...editForm })); setEditMode(false) }
   }
 
   async function updateStatus(status) {
-    await supabase.from('projects').update({ status }).eq('id', project.id)
-    setData(prev => ({ ...prev, status }))
+    const field = isEvent ? 'event_status' : 'status'
+    await supabase.from('projects').update({ [field]: status }).eq('id', record.id)
+    setData(prev => ({ ...prev, [field]: status }))
   }
 
   async function saveNotes() {
     setSavingNotes(true)
-    await supabase.from('projects').update({ notes }).eq('id', project.id)
+    await supabase.from('projects').update({ notes }).eq('id', record.id)
     setSavingNotes(false)
     setNotesSaved(true)
     setTimeout(() => setNotesSaved(false), 2000)
@@ -397,10 +572,8 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
   async function addTask() {
     if (!newTaskTitle.trim()) return
     setAddingTask(true)
-    const { data } = await supabase.from('tasks').insert({
-      title: newTaskTitle, project_id: project.id, status: 'todo',
-    }).select().single()
-    if (data) setTasks(prev => [...prev, data])
+    const { data: newTask } = await supabase.from('tasks').insert({ title: newTaskTitle, project_id: record.id, status: 'todo' }).select().single()
+    if (newTask) setTasks(prev => [...prev, newTask])
     setNewTaskTitle('')
     setAddingTask(false)
   }
@@ -411,20 +584,20 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
   }
 
   async function saveBudget() {
-    await supabase.from('projects').update({ budget: parseFloat(budgetInput) || null }).eq('id', project.id)
+    await supabase.from('projects').update({ budget: parseFloat(budgetInput) || null }).eq('id', record.id)
     setData(prev => ({ ...prev, budget: budgetInput }))
     setEditingBudget(false)
   }
 
   async function addBudgetItem() {
-    const { data } = await supabase.from('project_budget_items').insert({
-      project_id: project.id,
+    const { data: newItem } = await supabase.from('project_budget_items').insert({
+      project_id: record.id,
       category: budgetForm.category,
       projected_amount: budgetForm.projected_amount ? parseFloat(budgetForm.projected_amount) : null,
       actual_amount: budgetForm.actual_amount ? parseFloat(budgetForm.actual_amount) : null,
       notes: budgetForm.notes || null,
     }).select().single()
-    if (data) setBudgetItems(prev => [...prev, data])
+    if (newItem) setBudgetItems(prev => [...prev, newItem])
     setBudgetForm({ category: '', projected_amount: '', actual_amount: '', notes: '' })
     setShowBudgetForm(false)
   }
@@ -451,12 +624,12 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
     if (!file) return
     setUploading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const fileName = `${project.id}/${Date.now()}-${file.name}`
+    const fileName = `${record.id}/${Date.now()}-${file.name}`
     const { error: uploadError } = await supabase.storage.from('project-files').upload(fileName, file)
     if (!uploadError) {
       const { data: urlData } = supabase.storage.from('project-files').getPublicUrl(fileName)
       await supabase.from('project_documents').insert({
-        project_id: project.id, user_id: user.id, name: file.name,
+        project_id: record.id, user_id: user.id, name: file.name,
         file_url: urlData.publicUrl, file_type: file.type,
       })
       fetchAll()
@@ -470,28 +643,32 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
     setDocuments(prev => prev.filter(d => d.id !== id))
   }
 
-  const sc = statusColors[data.status] || statusColors.planning
-  const totalIncome = invoices.reduce((sum, inv) => sum + (parseFloat(inv.amount_paid) || 0), 0)
-  const totalExpense = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+  const colorMap = isEvent ? EVENT_STATUS_COLORS : STATUS_COLORS
+  const currentStatus = isEvent ? data.event_status : data.status
+  const sc = colorMap[currentStatus] || colorMap.planning
   const budget = parseFloat(data.budget) || 0
   const doneTasks = tasks.filter(tk => tk.status === 'done').length
+
+  const statusStepOptions = isEvent
+    ? ['inquiry', 'concept', 'planning', 'confirmed', 'in_progress', 'completed']
+    : STATUS_STEPS
 
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <button onClick={onBack} style={styles.backBtn}>← Back to projects</button>
+        <button onClick={onBack} style={styles.backBtn}>← Back to {isEvent ? 'events' : 'projects'}</button>
         <div style={{ display: 'flex', gap: '8px' }}>
           {!editMode && <button onClick={() => setEditMode(true)} style={styles.editBtn}>Edit</button>}
-          <button onClick={() => onDelete(project.id)} style={styles.deleteBtn}>Delete</button>
+          <button onClick={() => onDelete(record.id)} style={styles.deleteBtn}>Delete</button>
         </div>
       </div>
 
       {editMode ? (
         <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>Edit Project</h3>
+          <h3 style={styles.formTitle}>Edit {isEvent ? 'Event' : 'Project'}</h3>
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
-              <label style={styles.label}>Project Name *</label>
+              <label style={styles.label}>{isEvent ? 'Event' : 'Project'} Name *</label>
               <input style={styles.input} value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} />
             </div>
             <div style={styles.field}>
@@ -501,27 +678,66 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+            {isEvent ? (
+              <>
+                <div style={styles.field}>
+                  <label style={styles.label}>Status</label>
+                  <select style={styles.input} value={editForm.event_status || 'inquiry'} onChange={e => setEditForm({ ...editForm, event_status: e.target.value })}>
+                    <option value="inquiry">Inquiry</option>
+                    <option value="concept">Concept</option>
+                    <option value="planning">Planning</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Event date</label>
+                  <input style={styles.input} type="date" value={editForm.event_date || ''} onChange={e => setEditForm({ ...editForm, event_date: e.target.value })} />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Venue</label>
+                  <input style={styles.input} value={editForm.venue || ''} onChange={e => setEditForm({ ...editForm, venue: e.target.value })} />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Headcount</label>
+                  <input style={styles.input} type="number" value={editForm.headcount || ''} onChange={e => setEditForm({ ...editForm, headcount: e.target.value })} />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Source</label>
+                  <input style={styles.input} value={editForm.source || ''} onChange={e => setEditForm({ ...editForm, source: e.target.value })} />
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={styles.field}>
+                  <label style={styles.label}>Project Type</label>
+                  <input style={styles.input} value={editForm.project_type || ''} onChange={e => setEditForm({ ...editForm, project_type: e.target.value })} />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Status</label>
+                  <select style={styles.input} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                    <option value="planning">Planning</option>
+                    <option value="active">Active</option>
+                    <option value="on-hold">On hold</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Start date</label>
+                  <input style={styles.input} type="date" value={editForm.start_date || ''} onChange={e => setEditForm({ ...editForm, start_date: e.target.value })} />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>End date</label>
+                  <input style={styles.input} type="date" value={editForm.end_date || ''} onChange={e => setEditForm({ ...editForm, end_date: e.target.value })} />
+                </div>
+              </>
+            )}
             <div style={styles.field}>
-              <label style={styles.label}>Project Type</label>
-              <input style={styles.input} value={editForm.type || ''} onChange={e => setEditForm({ ...editForm, type: e.target.value })} />
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Status</label>
-              <select style={styles.input} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
-                <option value="planning">Planning</option>
-                <option value="active">Active</option>
-                <option value="on-hold">On hold</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Start date</label>
-              <input style={styles.input} type="date" value={editForm.start_date || ''} onChange={e => setEditForm({ ...editForm, start_date: e.target.value })} />
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>End date</label>
-              <input style={styles.input} type="date" value={editForm.end_date || ''} onChange={e => setEditForm({ ...editForm, end_date: e.target.value })} />
+              <label style={styles.label}>Budget ($)</label>
+              <input style={styles.input} type="number" value={editForm.budget || ''} onChange={e => setEditForm({ ...editForm, budget: e.target.value })} />
             </div>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Description</label>
@@ -535,50 +751,74 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
         </div>
       ) : (
         <>
+          {/* Header card */}
           <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '28px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
                 <h1 style={{ fontSize: '24px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.3px' }}>{data.title}</h1>
-                {data.clients?.name && (
-                  <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
-                    {data.clients.name}{data.type ? ` · ${data.type}` : ''}
-                  </p>
-                )}
+                <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
+                  {data.clients?.name}
+                  {isEvent && data.venue ? ` · ${data.venue}` : ''}
+                  {!isEvent && data.project_type ? ` · ${data.project_type}` : ''}
+                </p>
               </div>
-              <div style={{ display: 'inline-block', padding: '5px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '600', backgroundColor: sc.bg, color: sc.color }}>
-                {data.status}
-              </div>
+              <StatusBadge status={currentStatus} colorMap={colorMap} />
             </div>
 
             {data.description && (
               <p style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, lineHeight: '1.6', margin: '0 0 20px' }}>{data.description}</p>
             )}
 
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Status timeline</div>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                {['planning', 'active', 'on-hold', 'completed'].map((step, i) => {
-                  const sc = statusColors[step]
-                  const isActive = data.status === step
-                  const isPast = statusSteps.indexOf(data.status) > i
+            {/* Event-specific meta */}
+            {isEvent && (
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                {data.event_date && (
+                  <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '10px 14px' }}>
+                    <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' }}>Date</div>
+                    <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>{new Date(data.event_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                  </div>
+                )}
+                {data.headcount && (
+                  <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '10px 14px' }}>
+                    <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' }}>Headcount</div>
+                    <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>{parseInt(data.headcount).toLocaleString()}</div>
+                  </div>
+                )}
+                {data.source && (
+                  <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '10px 14px' }}>
+                    <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' }}>Source</div>
+                    <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>{data.source}</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Status timeline */}
+            <div style={{ marginBottom: isEvent ? '0' : '20px' }}>
+              <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Status</div>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {statusStepOptions.map(step => {
+                  const sc = colorMap[step] || {}
+                  const isActive = currentStatus === step
                   return (
                     <button key={step} onClick={() => updateStatus(step)} style={{
-                      flex: 1, padding: '8px 4px', borderRadius: t.radius.md,
+                      flex: 1, minWidth: '80px', padding: '8px 4px', borderRadius: t.radius.md,
                       border: `1px solid ${isActive ? sc.border : t.colors.borderLight}`,
-                      backgroundColor: isActive ? sc.bg : isPast ? '#fafaf8' : '#fff',
+                      backgroundColor: isActive ? sc.bg : '#fff',
                       color: isActive ? sc.color : t.colors.textTertiary,
                       fontSize: t.fontSizes.xs, fontWeight: isActive ? '700' : '400',
                       cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'all 0.15s',
                     }}>
-                      {step.charAt(0).toUpperCase() + step.slice(1)}
+                      {step.replace('_', ' ').charAt(0).toUpperCase() + step.replace('_', ' ').slice(1)}
                     </button>
                   )
                 })}
               </div>
             </div>
 
-            {(data.start_date || data.end_date) && (
-              <div style={{ display: 'flex', gap: '16px' }}>
+            {/* Project date range */}
+            {!isEvent && (data.start_date || data.end_date) && (
+              <div style={{ display: 'flex', gap: '16px', marginTop: '20px' }}>
                 {data.start_date && (
                   <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '10px 14px' }}>
                     <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' }}>Start</div>
@@ -595,6 +835,7 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
             )}
           </div>
 
+          {/* Budget */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.borderLight}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -702,7 +943,7 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
                       { label: 'Total projected', value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.projected_amount) || 0), 0), color: t.colors.textPrimary },
                       contingency > 0 && { label: `Total + ${contingency}% contingency`, value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.projected_amount) || 0), 0) * (1 + contingency / 100), color: '#F59E0B' },
                       { label: 'Total actual', value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: '#cc3333' },
-                      budget > 0 && { label: 'Overall budget remaining', value: budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0) >= 0 ? '#10B981' : '#cc3333' },
+                      budget > 0 && { label: 'Overall budget remaining', value: budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: (budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0)) >= 0 ? '#10B981' : '#cc3333' },
                     ].filter(Boolean).map(row => (
                       <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
                         <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>{row.label}</span>
@@ -752,7 +993,7 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
                 {notesSaved ? '✓ Saved' : savingNotes ? 'Saving...' : 'Save notes'}
               </button>
             </div>
-            <textarea style={{ width: '100%', padding: '12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: t.colors.bg }} rows={5} placeholder="Internal notes about this project..." value={notes} onChange={e => setNotes(e.target.value)} />
+            <textarea style={{ width: '100%', padding: '12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: t.colors.bg }} rows={5} placeholder={`Internal notes about this ${isEvent ? 'event' : 'project'}...`} value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
 
           {/* Documents */}
@@ -765,7 +1006,7 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
               </label>
             </div>
             {documents.length === 0 ? (
-              <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>No documents yet — upload contracts, briefs, or any project files</p>
+              <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>No documents yet — upload contracts, briefs, or any files</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {documents.map(doc => (
@@ -786,6 +1027,8 @@ function ProjectDetail({ project, onBack, onDelete, clients }) {
   )
 }
 
+// ── Styles ─────────────────────────────────────────────────────────────────
+
 const styles = {
   addBtn: { padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
   formCard: { backgroundColor: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '24px' },
@@ -799,8 +1042,8 @@ const styles = {
   saveBtn: { padding: '9px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
   error: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' },
   table: { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' },
-  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center', cursor: 'pointer' },
+  tableHeader: { display: 'grid', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
+  tableRow: { display: 'grid', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center', cursor: 'pointer' },
   tableCell: { fontSize: '13px', color: '#666' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' },
   empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
