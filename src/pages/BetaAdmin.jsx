@@ -43,11 +43,26 @@ export default function BetaAdmin() {
   }
 
   async function updateStatus(id, status) {
-    setUpdating(id)
-    await supabase.from('beta_requests').update({ status }).eq('id', id)
-    setApplicants(prev => prev.map(a => a.id === id ? { ...a, status } : a))
-    setUpdating(null)
+  setUpdating(id)
+  await supabase.from('beta_requests').update({ status }).eq('id', id)
+  setApplicants(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+
+  // Send email on approve or reject
+  if (status === 'approved' || status === 'rejected') {
+    const applicant = applicants.find(a => a.id === id)
+    if (applicant?.email) {
+      await supabase.functions.invoke('send-beta-status-email', {
+        body: {
+          name: applicant.name,
+          email: applicant.email,
+          status,
+        },
+      })
+    }
   }
+
+  setUpdating(null)
+}
 
   const counts = {
     all: applicants.length,
