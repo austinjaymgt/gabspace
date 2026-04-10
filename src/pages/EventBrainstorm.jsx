@@ -213,6 +213,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         body: { prompt },
     })
       const data = res.data
+      console.log('Full res object:', JSON.stringify(res))
       console.log('Edge function response:', JSON.stringify(data))
       if (!data?.content) throw new Error(data?.error?.message || 'No content returned')
       const raw = data.content.map(b => b.text || '').join('')
