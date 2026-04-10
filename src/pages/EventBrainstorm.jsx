@@ -236,7 +236,6 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
       type: 'event',
       event_status: 'concept',
       headcount: form.headcount ? parseInt(form.headcount) : null,
-      budget: form.budget || null,
       description: concept.tagline,
       notes: concept.coreConcept,
       concept_data: { ...concept, brief: { ...form, vibes } },
