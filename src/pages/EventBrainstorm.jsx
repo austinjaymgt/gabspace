@@ -22,21 +22,14 @@ const BUDGETS = [
 ]
 
 const STATUS_COLORS = {
-  concept:   { background: '#F0EBF9', color: '#7C5CBF' },
-  idea:      { background: '#FBF0E6', color: '#D4874E' },
-  planning:  { background: '#fff8f0', color: '#cc7700' },
-  confirmed: { background: '#f0faf6', color: '#1D9E75' },
-  live:      { background: '#e8f4ff', color: '#1a6ecc' },
-  wrapped:   { background: '#f5f5f5', color: '#888' },
+  concept: { background: '#F0EBF9', color: '#7C5CBF' },
+  idea:    { background: '#FBF0E6', color: '#D4874E' },
 }
 
 function ConceptSection({ label, children }) {
   return (
     <div style={{ marginBottom: '20px' }}>
-      <div style={{
-        fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em',
-        textTransform: 'uppercase', color: '#7C5CBF', marginBottom: '10px',
-      }}>
+      <div style={{ fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5CBF', marginBottom: '10px' }}>
         {label}
       </div>
       {children}
@@ -45,58 +38,21 @@ function ConceptSection({ label, children }) {
 }
 
 const s = {
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '0.5px solid rgba(0,0,0,0.09)',
-    padding: '22px 24px',
-    marginBottom: '16px',
-  },
-  sectionLabel: {
-    fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em',
-    textTransform: 'uppercase', color: '#8585A0', marginBottom: '12px',
-  },
-  grid2: {
-    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px',
-  },
+  card: { backgroundColor: '#fff', borderRadius: '12px', border: '0.5px solid rgba(0,0,0,0.09)', padding: '22px 24px', marginBottom: '16px' },
+  sectionLabel: { fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8585A0', marginBottom: '12px' },
+  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: '#3D3D5C' },
-  input: {
-    fontFamily: 'inherit', fontSize: '14px', color: '#1A1A2E',
-    background: '#F7F5F0', border: '0.5px solid rgba(0,0,0,0.15)',
-    borderRadius: '8px', padding: '10px 12px', outline: 'none',
-    width: '100%', boxSizing: 'border-box',
-  },
-  chip: {
-    fontSize: '12px', fontWeight: '500', padding: '6px 14px',
-    borderRadius: '100px', border: '0.5px solid', cursor: 'pointer',
-    fontFamily: 'inherit',
-  },
-  primaryBtn: {
-    fontFamily: 'inherit', fontSize: '14px', fontWeight: '500',
-    background: '#1A1A2E', color: '#fff', border: 'none',
-    borderRadius: '100px', padding: '13px 24px', cursor: 'pointer',
-  },
-  promoteBtn: {
-    fontFamily: 'inherit', fontSize: '12px', fontWeight: '500',
-    background: '#7C5CBF', color: '#fff', border: 'none',
-    borderRadius: '100px', padding: '8px 16px', cursor: 'pointer',
-  },
-  expandBtn: {
-    fontFamily: 'inherit', fontSize: '12px', fontWeight: '500',
-    background: '#D4874E', color: '#fff', border: 'none',
-    borderRadius: '100px', padding: '8px 16px', cursor: 'pointer',
-  },
-  deleteBtn: {
-    fontFamily: 'inherit', fontSize: '12px',
-    background: '#fff0f0', color: '#cc3333', border: 'none',
-    borderRadius: '8px', padding: '8px 12px', cursor: 'pointer',
-  },
-  metaPill: {
-    fontSize: '11px', fontWeight: '500', padding: '4px 12px',
-    borderRadius: '100px', border: '0.5px solid rgba(255,255,255,0.2)',
-    color: 'rgba(255,255,255,0.7)',
-  },
+  input: { fontFamily: 'inherit', fontSize: '14px', color: '#1A1A2E', background: '#F7F5F0', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: '8px', padding: '10px 12px', outline: 'none', width: '100%', boxSizing: 'border-box' },
+  chip: { fontSize: '12px', fontWeight: '500', padding: '6px 14px', borderRadius: '100px', border: '0.5px solid', cursor: 'pointer', fontFamily: 'inherit' },
+  primaryBtn: { fontFamily: 'inherit', fontSize: '14px', fontWeight: '500', background: '#1A1A2E', color: '#fff', border: 'none', borderRadius: '100px', padding: '13px 24px', cursor: 'pointer' },
+  secondaryBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#fff', color: '#3D3D5C', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
+  promoteBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#7C5CBF', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
+  editBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#D4874E', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
+  cancelBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#8585A0', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
+  generateBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#fff', color: '#3D3D5C', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
+  deleteBtn: { fontFamily: 'inherit', fontSize: '12px', background: '#fff0f0', color: '#cc3333', border: 'none', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer' },
+  metaPill: { fontSize: '11px', fontWeight: '500', padding: '4px 12px', borderRadius: '100px', border: '0.5px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' },
   divider: { border: 'none', borderTop: '0.5px solid rgba(0,0,0,0.08)', margin: '18px 0' },
   bodyText: { fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 },
   tag: { fontSize: '12px', padding: '4px 11px', borderRadius: '100px', fontWeight: '500' },
@@ -104,26 +60,16 @@ const s = {
   tagSage:   { background: '#EAF2EA', color: '#6B8F71' },
   tagAmber:  { background: '#FBF0E6', color: '#D4874E' },
   tagRose:   { background: '#FAF0F2', color: '#C06B7A' },
-  statusBadge: {
-    fontSize: '11px', fontWeight: '500', padding: '4px 10px',
-    borderRadius: '100px', letterSpacing: '0.04em',
-  },
-  errorMsg: {
-    background: '#FAF0F2', color: '#C06B7A', borderRadius: '8px',
-    padding: '10px 14px', fontSize: '13px', marginBottom: '12px',
-  },
-  successMsg: {
-    background: '#EAF2EA', color: '#6B8F71', borderRadius: '8px',
-    padding: '12px 16px', fontSize: '13px', fontWeight: '500',
-  },
+  statusBadge: { fontSize: '11px', fontWeight: '500', padding: '4px 10px', borderRadius: '100px', letterSpacing: '0.04em' },
+  errorMsg: { background: '#FAF0F2', color: '#C06B7A', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', marginBottom: '12px' },
+  successMsg: { background: '#EAF2EA', color: '#6B8F71', borderRadius: '8px', padding: '12px 16px', fontSize: '13px', fontWeight: '500' },
 }
+
+const emptyEditForm = { eventName: '', clientName: '', eventType: '', audience: '', budget: '', headcount: '', goal: '', context: '' }
 
 export default function EventBrainstorm({ workspaceId, session }) {
   const [vibes, setVibes] = useState([])
-  const [form, setForm] = useState({
-    eventName: '', clientName: '', eventType: '', audience: '',
-    budget: '', headcount: '', goal: '', context: '',
-  })
+  const [form, setForm] = useState({ eventName: '', clientName: '', eventType: '', audience: '', budget: '', headcount: '', goal: '', context: '' })
   const [generating, setGenerating] = useState(false)
   const [concept, setConcept] = useState(null)
   const [genError, setGenError] = useState('')
@@ -134,6 +80,9 @@ export default function EventBrainstorm({ workspaceId, session }) {
   const [promoting, setPromoting] = useState(null)
   const [captureText, setCaptureText] = useState('')
   const [captureSaving, setCaptureSaving] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState(emptyEditForm)
+  const [editSaving, setEditSaving] = useState(false)
   const briefRef = useRef(null)
 
   useEffect(() => { fetchConcepts() }, [workspaceId])
@@ -159,7 +108,7 @@ export default function EventBrainstorm({ workspaceId, session }) {
   async function handleCapture() {
     if (!captureText.trim() || !workspaceId) return
     setCaptureSaving(true)
-    const { error } = await supabase.from('projects').insert({
+    await supabase.from('projects').insert({
       workspace_id: workspaceId,
       user_id: session.user.id,
       title: captureText.slice(0, 80),
@@ -168,11 +117,41 @@ export default function EventBrainstorm({ workspaceId, session }) {
       description: captureText,
       concept_data: null,
     }).select()
-    if (!error) {
-      setCaptureText('')
-      fetchConcepts()
-    }
+    setCaptureText('')
+    fetchConcepts()
     setCaptureSaving(false)
+  }
+
+  function openEdit(c) {
+    if (editingId === c.id) {
+      setEditingId(null)
+      return
+    }
+    const brief = c.concept_data?.brief || {}
+    setEditForm({
+      eventName:  brief.eventName  || '',
+      clientName: brief.clientName || '',
+      eventType:  brief.eventType  || '',
+      audience:   brief.audience   || '',
+      budget:     brief.budget     || '',
+      headcount:  brief.headcount  || '',
+      goal:       brief.goal       || '',
+      context:    brief.context    || c.description || c.title || '',
+    })
+    setEditingId(c.id)
+  }
+
+  async function handleSaveEdit(id) {
+    setEditSaving(true)
+    const title = editForm.eventName || editForm.goal || editForm.context.slice(0, 80) || 'Untitled Idea'
+    await supabase.from('projects').update({
+      title,
+      description: editForm.context || editForm.goal || '',
+      concept_data: { brief: { ...editForm, vibes: [] } },
+    }).eq('id', id)
+    setEditingId(null)
+    fetchConcepts()
+    setEditSaving(false)
   }
 
   function handleExpandWithAI() {
@@ -241,9 +220,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
 }`
 
     try {
-      const res = await supabase.functions.invoke('generate-event-concept', {
-        body: { prompt },
-      })
+      const res = await supabase.functions.invoke('generate-event-concept', { body: { prompt } })
       const data = res.data
       if (!data?.content) throw new Error(data?.error?.message || 'No content returned')
       const raw = data.content.map(b => b.text || '').join('')
@@ -258,7 +235,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
   async function handleSaveConcept() {
     if (!concept || !workspaceId) return
     setSaving(true)
-    const { error } = await supabase.from('projects').insert({
+    await supabase.from('projects').insert({
       workspace_id: workspaceId,
       user_id: session.user.id,
       title: concept.conceptName,
@@ -269,10 +246,8 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
       notes: concept.coreConcept,
       concept_data: { ...concept, brief: { ...form, vibes } },
     }).select()
-    if (!error) {
-      setSaveSuccess(true)
-      fetchConcepts()
-    }
+    setSaveSuccess(true)
+    fetchConcepts()
     setSaving(false)
   }
 
@@ -286,6 +261,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
   async function handleDeleteConcept(id) {
     if (!confirm('Delete this concept?')) return
     await supabase.from('projects').delete().eq('id', id)
+    if (editingId === id) setEditingId(null)
     fetchConcepts()
   }
 
@@ -296,12 +272,8 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
 
       {/* Page header */}
       <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>
-          Event Brainstorm
-        </h2>
-        <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>
-          Capture ideas, generate full concepts, and move them into planning
-        </p>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>Event Brainstorm</h2>
+        <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>Capture ideas, generate full concepts, and move them into planning</p>
       </div>
 
       {/* Quick capture */}
@@ -312,16 +284,13 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         </p>
         <textarea
           style={{ ...s.input, minHeight: '80px', resize: 'vertical', lineHeight: '1.55' }}
-          placeholder="e.g. 'rooftop art show meets street food market — think Soho House but free and chaotic' or paste a link that sparked something..."
+          placeholder="e.g. 'rooftop art show meets street food market — think Soho House but free and chaotic' or paste a link..."
           value={captureText}
           onChange={e => setCaptureText(e.target.value)}
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-          <button
-            onClick={handleCapture}
-            disabled={captureSaving || !captureText.trim()}
-            style={{ ...s.primaryBtn, padding: '10px 20px', fontSize: '13px', opacity: captureSaving || !captureText.trim() ? 0.5 : 1 }}
-          >
+          <button onClick={handleCapture} disabled={captureSaving || !captureText.trim()}
+            style={{ ...s.primaryBtn, padding: '10px 20px', fontSize: '13px', opacity: captureSaving || !captureText.trim() ? 0.5 : 1 }}>
             {captureSaving ? 'Saving…' : 'Save Idea'}
           </button>
         </div>
@@ -332,7 +301,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         <div style={{ marginBottom: '14px' }}>
           <div style={{ fontSize: '15px', fontWeight: '600', color: t.colors.textPrimary }}>Saved Concepts & Ideas</div>
           <div style={{ fontSize: '12px', color: t.colors.textTertiary, marginTop: '2px' }}>
-            Promote a full concept to move it into active event planning
+            Edit ideas to add structure, or promote a full concept into active planning
           </div>
         </div>
 
@@ -343,59 +312,143 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
             No saved concepts or ideas yet. Capture a thought above or generate a full concept below.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {concepts.map(c => {
-              const isIdea = !c.concept_data
+              const isIdea = !c.concept_data || !c.concept_data.conceptName
+              const isEditing = editingId === c.id
               return (
-                <div key={c.id} style={{
-                  ...s.card,
-                  marginBottom: 0,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '12px',
-                  borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
-                  borderRadius: '0 12px 12px 0',
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: t.colors.textPrimary, marginBottom: '3px' }}>
-                      {c.title}
+                <div key={c.id}>
+                  {/* Card row */}
+                  <div style={{
+                    backgroundColor: '#fff',
+                    borderRadius: isEditing ? '12px 12px 0 0' : '12px',
+                    border: '0.5px solid rgba(0,0,0,0.09)',
+                    borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
+                    padding: '18px 20px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    marginBottom: isEditing ? '0' : '10px',
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: t.colors.textPrimary, marginBottom: '3px' }}>{c.title}</div>
+                      {c.description && c.description !== c.title && (
+                        <div style={{ fontSize: '12px', color: t.colors.textTertiary, lineHeight: '1.5' }}>
+                          {c.description.length > 120 ? c.description.slice(0, 120) + '…' : c.description}
+                        </div>
+                      )}
+                      {!isIdea && c.concept_data?.brief?.eventType && (
+                        <div style={{ fontSize: '11px', color: '#7C5CBF', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {c.concept_data.brief.eventType}
+                          {c.concept_data.brief.budget ? ` · ${c.concept_data.brief.budget}` : ''}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '11px', color: t.colors.textTertiary, marginTop: '4px' }}>
+                        {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
                     </div>
-                    {c.description && c.description !== c.title && (
-                      <div style={{ fontSize: '12px', color: t.colors.textTertiary, lineHeight: '1.5' }}>
-                        {c.description.length > 120 ? c.description.slice(0, 120) + '…' : c.description}
-                      </div>
-                    )}
-                    {!isIdea && c.concept_data?.brief?.eventType && (
-                      <div style={{ fontSize: '11px', color: '#7C5CBF', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {c.concept_data.brief.eventType}
-                        {c.concept_data.brief.budget ? ` · ${c.concept_data.brief.budget}` : ''}
-                      </div>
-                    )}
-                    <div style={{ fontSize: '11px', color: t.colors.textTertiary, marginTop: '4px' }}>
-                      {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                      <span style={{ ...s.statusBadge, ...(isIdea ? STATUS_COLORS.idea : STATUS_COLORS.concept) }}>
+                        {isIdea ? 'Idea' : 'Concept'}
+                      </span>
+                      {isIdea ? (
+                        <>
+                          <button onClick={() => openEdit(c)}
+                            style={{ ...s.editBtn, background: isEditing ? '#8585A0' : '#D4874E' }}>
+                            {isEditing ? 'Cancel' : 'Edit'}
+                          </button>
+                          <button onClick={handleExpandWithAI} style={s.generateBtn}>
+                            Generate ↓
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => openEdit(c)}
+                            style={{ ...s.generateBtn, background: isEditing ? '#F0EBF9' : '#fff', color: isEditing ? '#7C5CBF' : '#3D3D5C' }}>
+                            {isEditing ? 'Cancel' : 'Edit'}
+                          </button>
+                          <button onClick={() => handlePromote(c.id)} disabled={promoting === c.id}
+                            style={{ ...s.promoteBtn, opacity: promoting === c.id ? 0.6 : 1 }}>
+                            {promoting === c.id ? 'Moving…' : 'Move to Planning →'}
+                          </button>
+                        </>
+                      )}
+                      <button onClick={() => handleDeleteConcept(c.id)} style={s.deleteBtn}>Delete</button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-                    <span style={{ ...s.statusBadge, ...(isIdea ? STATUS_COLORS.idea : STATUS_COLORS.concept) }}>
-                      {isIdea ? 'Idea' : 'Concept'}
-                    </span>
-                    {isIdea ? (
-                      <button onClick={handleExpandWithAI} style={s.expandBtn}>
-                        Expand with AI ↓
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handlePromote(c.id)}
-                        disabled={promoting === c.id}
-                        style={{ ...s.promoteBtn, opacity: promoting === c.id ? 0.6 : 1 }}
-                      >
-                        {promoting === c.id ? 'Moving…' : 'Move to Planning →'}
-                      </button>
-                    )}
-                    <button onClick={() => handleDeleteConcept(c.id)} style={s.deleteBtn}>Delete</button>
-                  </div>
+
+                  {/* Inline edit form */}
+                  {isEditing && (
+                    <div style={{
+                      backgroundColor: '#F7F5F0',
+                      border: '0.5px solid rgba(0,0,0,0.09)',
+                      borderTop: 'none',
+                      borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
+                      borderRadius: '0 0 12px 12px',
+                      padding: '20px 24px 24px',
+                      marginBottom: '10px',
+                    }}>
+                      <div style={{ ...s.sectionLabel, marginBottom: '16px' }}>
+                        {isIdea ? 'Add structure to this idea' : 'Edit concept brief'}
+                      </div>
+                      <div style={s.grid2}>
+                        <div style={s.field}>
+                          <label style={s.label}>Event name or working title</label>
+                          <input style={s.input} placeholder="e.g. Spring Gala"
+                            value={editForm.eventName} onChange={e => setEditForm({ ...editForm, eventName: e.target.value })} />
+                        </div>
+                        <div style={s.field}>
+                          <label style={s.label}>Client / brand</label>
+                          <input style={s.input} placeholder="e.g. Solis Studio"
+                            value={editForm.clientName} onChange={e => setEditForm({ ...editForm, clientName: e.target.value })} />
+                        </div>
+                        <div style={s.field}>
+                          <label style={s.label}>Event type</label>
+                          <select style={s.input} value={editForm.eventType} onChange={e => setEditForm({ ...editForm, eventType: e.target.value })}>
+                            <option value="">Select a type…</option>
+                            {EVENT_TYPES.map(v => <option key={v}>{v}</option>)}
+                          </select>
+                        </div>
+                        <div style={s.field}>
+                          <label style={s.label}>Audience</label>
+                          <input style={s.input} placeholder="e.g. Gen Z creatives"
+                            value={editForm.audience} onChange={e => setEditForm({ ...editForm, audience: e.target.value })} />
+                        </div>
+                        <div style={s.field}>
+                          <label style={s.label}>Estimated budget</label>
+                          <select style={s.input} value={editForm.budget} onChange={e => setEditForm({ ...editForm, budget: e.target.value })}>
+                            <option value="">Select range…</option>
+                            {BUDGETS.map(v => <option key={v}>{v}</option>)}
+                          </select>
+                        </div>
+                        <div style={s.field}>
+                          <label style={s.label}>Expected headcount</label>
+                          <input style={s.input} placeholder="e.g. 50, 200–500"
+                            value={editForm.headcount} onChange={e => setEditForm({ ...editForm, headcount: e.target.value })} />
+                        </div>
+                        <div style={{ ...s.field, gridColumn: 'span 2' }}>
+                          <label style={s.label}>Brand or event goal</label>
+                          <input style={s.input} placeholder="e.g. Drive awareness, generate press"
+                            value={editForm.goal} onChange={e => setEditForm({ ...editForm, goal: e.target.value })} />
+                        </div>
+                        <div style={{ ...s.field, gridColumn: 'span 2' }}>
+                          <label style={s.label}>Notes / original idea</label>
+                          <textarea style={{ ...s.input, minHeight: '72px', resize: 'vertical', lineHeight: '1.55' }}
+                            placeholder="Your original thought, links, references…"
+                            value={editForm.context} onChange={e => setEditForm({ ...editForm, context: e.target.value })} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button onClick={() => setEditingId(null)} style={s.cancelBtn}>Cancel</button>
+                        <button onClick={() => handleSaveEdit(c.id)} disabled={editSaving}
+                          style={{ ...s.promoteBtn, opacity: editSaving ? 0.6 : 1 }}>
+                          {editSaving ? 'Saving…' : 'Save'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -478,37 +531,26 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         </div>
       </div>
 
-      {/* Loading state */}
       {generating && (
         <div style={{ ...s.card, textAlign: 'center', padding: '48px', color: t.colors.textTertiary }}>
           Building your concept…
         </div>
       )}
 
-      {/* Generated concept */}
       {concept && !generating && (
         <div style={{ ...s.card, padding: 0, overflow: 'hidden' }}>
           <div style={{ background: '#1A1A2E', padding: '24px 28px' }}>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff', marginBottom: '4px', letterSpacing: '-0.3px' }}>
-              {concept.conceptName}
-            </div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
-              {concept.tagline}
-            </div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff', marginBottom: '4px', letterSpacing: '-0.3px' }}>{concept.conceptName}</div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>{concept.tagline}</div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
               {form.eventType && <span style={s.metaPill}>{form.eventType}</span>}
               {form.budget && <span style={s.metaPill}>{form.budget}</span>}
               {form.headcount && <span style={s.metaPill}>{form.headcount} guests</span>}
             </div>
           </div>
-
           <div style={{ padding: '24px 28px' }}>
-            <ConceptSection label="The Big Idea">
-              <p style={s.bodyText}>{concept.coreConcept}</p>
-            </ConceptSection>
-            <ConceptSection label="Why It Works">
-              <p style={s.bodyText}>{concept.why}</p>
-            </ConceptSection>
+            <ConceptSection label="The Big Idea"><p style={s.bodyText}>{concept.coreConcept}</p></ConceptSection>
+            <ConceptSection label="Why It Works"><p style={s.bodyText}>{concept.why}</p></ConceptSection>
             <hr style={s.divider} />
             <ConceptSection label="Experience Design — Key Moments">
               {concept.experienceDesign.map((m, i) => (
@@ -528,15 +570,9 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
               ))}
             </ConceptSection>
             <hr style={s.divider} />
-            <ConceptSection label="Venue & Space">
-              <p style={s.bodyText}>{concept.venueConsiderations}</p>
-            </ConceptSection>
-            <ConceptSection label="Production Notes">
-              <p style={s.bodyText}>{concept.productionNotes}</p>
-            </ConceptSection>
-            <ConceptSection label="Press & Content Strategy">
-              <p style={s.bodyText}>{concept.pressAndContent}</p>
-            </ConceptSection>
+            <ConceptSection label="Venue & Space"><p style={s.bodyText}>{concept.venueConsiderations}</p></ConceptSection>
+            <ConceptSection label="Production Notes"><p style={s.bodyText}>{concept.productionNotes}</p></ConceptSection>
+            <ConceptSection label="Press & Content Strategy"><p style={s.bodyText}>{concept.pressAndContent}</p></ConceptSection>
             <hr style={s.divider} />
             <ConceptSection label="Success Metrics">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -551,16 +587,12 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
             <hr style={s.divider} />
             <ConceptSection label="Vendor Categories">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {concept.vendorCategories.map((v, i) => (
-                  <span key={i} style={{ ...s.tag, ...tagStyles[i % tagStyles.length] }}>{v}</span>
-                ))}
+                {concept.vendorCategories.map((v, i) => <span key={i} style={{ ...s.tag, ...tagStyles[i % tagStyles.length] }}>{v}</span>)}
               </div>
             </ConceptSection>
             <ConceptSection label="Aesthetic Keywords">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {concept.aestheticKeywords.map((k, i) => (
-                  <span key={i} style={{ ...s.tag, ...s.tagViolet }}>{k}</span>
-                ))}
+                {concept.aestheticKeywords.map((k, i) => <span key={i} style={{ ...s.tag, ...s.tagViolet }}>{k}</span>)}
               </div>
             </ConceptSection>
             <ConceptSection label="Budget Allocation">
