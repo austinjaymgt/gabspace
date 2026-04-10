@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 
@@ -23,6 +23,7 @@ const BUDGETS = [
 
 const STATUS_COLORS = {
   concept:   { background: '#F0EBF9', color: '#7C5CBF' },
+  idea:      { background: '#FBF0E6', color: '#D4874E' },
   planning:  { background: '#fff8f0', color: '#cc7700' },
   confirmed: { background: '#f0faf6', color: '#1D9E75' },
   live:      { background: '#e8f4ff', color: '#1a6ecc' },
@@ -81,6 +82,11 @@ const s = {
     background: '#7C5CBF', color: '#fff', border: 'none',
     borderRadius: '100px', padding: '8px 16px', cursor: 'pointer',
   },
+  expandBtn: {
+    fontFamily: 'inherit', fontSize: '12px', fontWeight: '500',
+    background: '#D4874E', color: '#fff', border: 'none',
+    borderRadius: '100px', padding: '8px 16px', cursor: 'pointer',
+  },
   deleteBtn: {
     fontFamily: 'inherit', fontSize: '12px',
     background: '#fff0f0', color: '#cc3333', border: 'none',
@@ -126,6 +132,9 @@ export default function EventBrainstorm({ workspaceId, session }) {
   const [concepts, setConcepts] = useState([])
   const [loadingConcepts, setLoadingConcepts] = useState(true)
   const [promoting, setPromoting] = useState(null)
+  const [captureText, setCaptureText] = useState('')
+  const [captureSaving, setCaptureSaving] = useState(false)
+  const briefRef = useRef(null)
 
   useEffect(() => { fetchConcepts() }, [workspaceId])
 
@@ -145,6 +154,29 @@ export default function EventBrainstorm({ workspaceId, session }) {
 
   function toggleVibe(v) {
     setVibes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
+  }
+
+  async function handleCapture() {
+    if (!captureText.trim() || !workspaceId) return
+    setCaptureSaving(true)
+    const { error } = await supabase.from('projects').insert({
+      workspace_id: workspaceId,
+      user_id: session.user.id,
+      title: captureText.slice(0, 80),
+      type: 'event',
+      event_status: 'concept',
+      description: captureText,
+      concept_data: null,
+    }).select()
+    if (!error) {
+      setCaptureText('')
+      fetchConcepts()
+    }
+    setCaptureSaving(false)
+  }
+
+  function handleExpandWithAI() {
+    briefRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   async function handleGenerate() {
@@ -211,45 +243,38 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
     try {
       const res = await supabase.functions.invoke('generate-event-concept', {
         body: { prompt },
-    })
+      })
       const data = res.data
-      console.log('Full res object:', JSON.stringify(res))
-      console.log('Edge function response:', JSON.stringify(data))
       if (!data?.content) throw new Error(data?.error?.message || 'No content returned')
       const raw = data.content.map(b => b.text || '').join('')
       const clean = raw.replace(/```json|```/g, '').trim()
       setConcept(JSON.parse(clean))
     } catch (err) {
-      console.error('Generation error:', err)
-      setGenError(err?.message || JSON.stringify(err) || 'Something went wrong. Try again.')
+      setGenError(err?.message || 'Something went wrong. Try again.')
     }
     setGenerating(false)
   }
 
- async function handleSaveConcept() {
-  if (!concept || !workspaceId) return
-  setSaving(true)
-  const { data: insertData, error } = await supabase.from('projects').insert({
-    workspace_id: workspaceId,
-    user_id: session.user.id,
-    title: concept.conceptName,
-    type: 'event',
-    event_status: 'concept',
-    headcount: form.headcount ? parseInt(form.headcount) : null,
-    description: concept.tagline,
-    notes: concept.coreConcept,
-    concept_data: { ...concept, brief: { ...form, vibes } },
-  }).select()
-  console.log('INSERT error:', JSON.stringify(error))
-  console.log('INSERT data:', JSON.stringify(insertData))
-  console.log('workspace_id:', workspaceId)
-  console.log('user_id:', session.user.id)
-  if (!error) {
-    setSaveSuccess(true)
-    fetchConcepts()
+  async function handleSaveConcept() {
+    if (!concept || !workspaceId) return
+    setSaving(true)
+    const { error } = await supabase.from('projects').insert({
+      workspace_id: workspaceId,
+      user_id: session.user.id,
+      title: concept.conceptName,
+      type: 'event',
+      event_status: 'concept',
+      headcount: form.headcount ? parseInt(form.headcount) : null,
+      description: concept.tagline,
+      notes: concept.coreConcept,
+      concept_data: { ...concept, brief: { ...form, vibes } },
+    }).select()
+    if (!error) {
+      setSaveSuccess(true)
+      fetchConcepts()
+    }
+    setSaving(false)
   }
-  setSaving(false)
-}
 
   async function handlePromote(id) {
     setPromoting(id)
@@ -269,86 +294,188 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
   return (
     <div style={{ padding: '32px', maxWidth: '860px' }}>
 
+      {/* Page header */}
       <div style={{ marginBottom: '28px' }}>
         <h2 style={{ fontSize: '20px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>
           Event Brainstorm
         </h2>
         <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>
-          Describe your brief and generate a full experiential concept
+          Capture ideas, generate full concepts, and move them into planning
         </p>
       </div>
 
-      {/* Brief form */}
+      {/* Quick capture */}
       <div style={s.card}>
-        <div style={s.sectionLabel}>Event Brief</div>
-        <div style={s.grid2}>
-          <div style={s.field}>
-            <label style={s.label}>Event name or working title</label>
-            <input style={s.input} placeholder="e.g. Spring Gala, Brand Launch…"
-              value={form.eventName} onChange={e => setForm({ ...form, eventName: e.target.value })} />
-          </div>
-          <div style={s.field}>
-            <label style={s.label}>Client / brand</label>
-            <input style={s.input} placeholder="e.g. Solis Studio"
-              value={form.clientName} onChange={e => setForm({ ...form, clientName: e.target.value })} />
-          </div>
-          <div style={s.field}>
-            <label style={s.label}>Event type</label>
-            <select style={s.input} value={form.eventType} onChange={e => setForm({ ...form, eventType: e.target.value })}>
-              <option value="">Select a type…</option>
-              {EVENT_TYPES.map(v => <option key={v}>{v}</option>)}
-            </select>
-          </div>
-          <div style={s.field}>
-            <label style={s.label}>Audience</label>
-            <input style={s.input} placeholder="e.g. Gen Z creatives, luxury consumers"
-              value={form.audience} onChange={e => setForm({ ...form, audience: e.target.value })} />
-          </div>
-          <div style={s.field}>
-            <label style={s.label}>Estimated budget</label>
-            <select style={s.input} value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })}>
-              <option value="">Select range…</option>
-              {BUDGETS.map(v => <option key={v}>{v}</option>)}
-            </select>
-          </div>
-          <div style={s.field}>
-            <label style={s.label}>Expected headcount</label>
-            <input style={s.input} placeholder="e.g. 50, 200–500"
-              value={form.headcount} onChange={e => setForm({ ...form, headcount: e.target.value })} />
-          </div>
-          <div style={{ ...s.field, gridColumn: 'span 2' }}>
-            <label style={s.label}>Brand or event goal</label>
-            <input style={s.input} placeholder="e.g. Drive awareness, generate press, reward loyal customers"
-              value={form.goal} onChange={e => setForm({ ...form, goal: e.target.value })} />
-          </div>
-          <div style={{ ...s.field, gridColumn: 'span 2' }}>
-            <label style={s.label}>Additional context or must-haves</label>
-            <textarea style={{ ...s.input, minHeight: '72px', resize: 'vertical', lineHeight: '1.55' }}
-              placeholder="Location ideas, themes, constraints, inspiration, specific moments you want to create…"
-              value={form.context} onChange={e => setForm({ ...form, context: e.target.value })} />
+        <div style={s.sectionLabel}>Quick Capture</div>
+        <p style={{ fontSize: '13px', color: t.colors.textTertiary, marginBottom: '12px', marginTop: '-4px' }}>
+          Jot down a random thought, link, reference, or half-baked idea before it disappears
+        </p>
+        <textarea
+          style={{ ...s.input, minHeight: '80px', resize: 'vertical', lineHeight: '1.55' }}
+          placeholder="e.g. 'rooftop art show meets street food market — think Soho House but free and chaotic' or paste a link that sparked something..."
+          value={captureText}
+          onChange={e => setCaptureText(e.target.value)}
+        />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+          <button
+            onClick={handleCapture}
+            disabled={captureSaving || !captureText.trim()}
+            style={{ ...s.primaryBtn, padding: '10px 20px', fontSize: '13px', opacity: captureSaving || !captureText.trim() ? 0.5 : 1 }}
+          >
+            {captureSaving ? 'Saving…' : 'Save Idea'}
+          </button>
+        </div>
+      </div>
+
+      {/* Saved concepts + ideas */}
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{ fontSize: '15px', fontWeight: '600', color: t.colors.textPrimary }}>Saved Concepts & Ideas</div>
+          <div style={{ fontSize: '12px', color: t.colors.textTertiary, marginTop: '2px' }}>
+            Promote a full concept to move it into active event planning
           </div>
         </div>
 
-        <div style={s.sectionLabel}>Vibe & aesthetic direction</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
-          {VIBES.map(v => (
-            <button key={v} onClick={() => toggleVibe(v)} style={{
-              ...s.chip,
-              backgroundColor: vibes.includes(v) ? '#7C5CBF' : '#fff',
-              color: vibes.includes(v) ? '#fff' : t.colors.textSecondary,
-              borderColor: vibes.includes(v) ? '#7C5CBF' : t.colors.border,
-            }}>
-              {v}
-            </button>
-          ))}
+        {loadingConcepts ? (
+          <div style={{ fontSize: '13px', color: t.colors.textTertiary, padding: '24px 0' }}>Loading…</div>
+        ) : concepts.length === 0 ? (
+          <div style={{ ...s.card, textAlign: 'center', padding: '40px', color: t.colors.textTertiary, fontSize: '13px' }}>
+            No saved concepts or ideas yet. Capture a thought above or generate a full concept below.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {concepts.map(c => {
+              const isIdea = !c.concept_data
+              return (
+                <div key={c.id} style={{
+                  ...s.card,
+                  marginBottom: 0,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                  borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
+                  borderRadius: '0 12px 12px 0',
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: t.colors.textPrimary, marginBottom: '3px' }}>
+                      {c.title}
+                    </div>
+                    {c.description && c.description !== c.title && (
+                      <div style={{ fontSize: '12px', color: t.colors.textTertiary, lineHeight: '1.5' }}>
+                        {c.description.length > 120 ? c.description.slice(0, 120) + '…' : c.description}
+                      </div>
+                    )}
+                    {!isIdea && c.concept_data?.brief?.eventType && (
+                      <div style={{ fontSize: '11px', color: '#7C5CBF', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {c.concept_data.brief.eventType}
+                        {c.concept_data.brief.budget ? ` · ${c.concept_data.brief.budget}` : ''}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '11px', color: t.colors.textTertiary, marginTop: '4px' }}>
+                      {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                    <span style={{ ...s.statusBadge, ...(isIdea ? STATUS_COLORS.idea : STATUS_COLORS.concept) }}>
+                      {isIdea ? 'Idea' : 'Concept'}
+                    </span>
+                    {isIdea ? (
+                      <button onClick={handleExpandWithAI} style={s.expandBtn}>
+                        Expand with AI ↓
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handlePromote(c.id)}
+                        disabled={promoting === c.id}
+                        style={{ ...s.promoteBtn, opacity: promoting === c.id ? 0.6 : 1 }}
+                      >
+                        {promoting === c.id ? 'Moving…' : 'Move to Planning →'}
+                      </button>
+                    )}
+                    <button onClick={() => handleDeleteConcept(c.id)} style={s.deleteBtn}>Delete</button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Brief form */}
+      <div ref={briefRef}>
+        <div style={s.card}>
+          <div style={s.sectionLabel}>Generate a Full Concept</div>
+          <div style={s.grid2}>
+            <div style={s.field}>
+              <label style={s.label}>Event name or working title</label>
+              <input style={s.input} placeholder="e.g. Spring Gala, Brand Launch…"
+                value={form.eventName} onChange={e => setForm({ ...form, eventName: e.target.value })} />
+            </div>
+            <div style={s.field}>
+              <label style={s.label}>Client / brand</label>
+              <input style={s.input} placeholder="e.g. Solis Studio"
+                value={form.clientName} onChange={e => setForm({ ...form, clientName: e.target.value })} />
+            </div>
+            <div style={s.field}>
+              <label style={s.label}>Event type</label>
+              <select style={s.input} value={form.eventType} onChange={e => setForm({ ...form, eventType: e.target.value })}>
+                <option value="">Select a type…</option>
+                {EVENT_TYPES.map(v => <option key={v}>{v}</option>)}
+              </select>
+            </div>
+            <div style={s.field}>
+              <label style={s.label}>Audience</label>
+              <input style={s.input} placeholder="e.g. Gen Z creatives, luxury consumers"
+                value={form.audience} onChange={e => setForm({ ...form, audience: e.target.value })} />
+            </div>
+            <div style={s.field}>
+              <label style={s.label}>Estimated budget</label>
+              <select style={s.input} value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })}>
+                <option value="">Select range…</option>
+                {BUDGETS.map(v => <option key={v}>{v}</option>)}
+              </select>
+            </div>
+            <div style={s.field}>
+              <label style={s.label}>Expected headcount</label>
+              <input style={s.input} placeholder="e.g. 50, 200–500"
+                value={form.headcount} onChange={e => setForm({ ...form, headcount: e.target.value })} />
+            </div>
+            <div style={{ ...s.field, gridColumn: 'span 2' }}>
+              <label style={s.label}>Brand or event goal</label>
+              <input style={s.input} placeholder="e.g. Drive awareness, generate press, reward loyal customers"
+                value={form.goal} onChange={e => setForm({ ...form, goal: e.target.value })} />
+            </div>
+            <div style={{ ...s.field, gridColumn: 'span 2' }}>
+              <label style={s.label}>Additional context or must-haves</label>
+              <textarea style={{ ...s.input, minHeight: '72px', resize: 'vertical', lineHeight: '1.55' }}
+                placeholder="Location ideas, themes, constraints, inspiration, specific moments you want to create…"
+                value={form.context} onChange={e => setForm({ ...form, context: e.target.value })} />
+            </div>
+          </div>
+
+          <div style={s.sectionLabel}>Vibe & aesthetic direction</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
+            {VIBES.map(v => (
+              <button key={v} onClick={() => toggleVibe(v)} style={{
+                ...s.chip,
+                backgroundColor: vibes.includes(v) ? '#7C5CBF' : '#fff',
+                color: vibes.includes(v) ? '#fff' : t.colors.textSecondary,
+                borderColor: vibes.includes(v) ? '#7C5CBF' : t.colors.border,
+              }}>
+                {v}
+              </button>
+            ))}
+          </div>
+
+          {genError && <div style={s.errorMsg}>{genError}</div>}
+
+          <button onClick={handleGenerate} disabled={generating}
+            style={{ ...s.primaryBtn, width: '100%', opacity: generating ? 0.6 : 1 }}>
+            {generating ? 'Generating concept…' : 'Generate Event Concept'}
+          </button>
         </div>
-
-        {genError && <div style={s.errorMsg}>{genError}</div>}
-
-        <button onClick={handleGenerate} disabled={generating}
-          style={{ ...s.primaryBtn, width: '100%', opacity: generating ? 0.6 : 1 }}>
-          {generating ? 'Generating concept…' : 'Generate Event Concept'}
-        </button>
       </div>
 
       {/* Loading state */}
@@ -382,9 +509,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
             <ConceptSection label="Why It Works">
               <p style={s.bodyText}>{concept.why}</p>
             </ConceptSection>
-
             <hr style={s.divider} />
-
             <ConceptSection label="Experience Design — Key Moments">
               {concept.experienceDesign.map((m, i) => (
                 <div key={i} style={{ marginBottom: '12px' }}>
@@ -393,9 +518,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                 </div>
               ))}
             </ConceptSection>
-
             <hr style={s.divider} />
-
             <ConceptSection label="Run of Show">
               {concept.runOfShow.map((r, i) => (
                 <div key={i} style={{ display: 'flex', gap: '12px', marginBottom: '10px' }}>
@@ -404,9 +527,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                 </div>
               ))}
             </ConceptSection>
-
             <hr style={s.divider} />
-
             <ConceptSection label="Venue & Space">
               <p style={s.bodyText}>{concept.venueConsiderations}</p>
             </ConceptSection>
@@ -416,9 +537,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
             <ConceptSection label="Press & Content Strategy">
               <p style={s.bodyText}>{concept.pressAndContent}</p>
             </ConceptSection>
-
             <hr style={s.divider} />
-
             <ConceptSection label="Success Metrics">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                 {concept.successMetrics.map((m, i) => (
@@ -429,9 +548,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                 ))}
               </div>
             </ConceptSection>
-
             <hr style={s.divider} />
-
             <ConceptSection label="Vendor Categories">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {concept.vendorCategories.map((v, i) => (
@@ -454,11 +571,9 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                 </div>
               ))}
             </ConceptSection>
-
             <hr style={s.divider} />
-
             {saveSuccess ? (
-              <div style={s.successMsg}>✓ Concept saved — find it in your Saved Concepts below</div>
+              <div style={s.successMsg}>✓ Concept saved — find it in your Saved Concepts above</div>
             ) : (
               <button onClick={handleSaveConcept} disabled={saving}
                 style={{ ...s.primaryBtn, opacity: saving ? 0.6 : 1 }}>
@@ -468,49 +583,6 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
           </div>
         </div>
       )}
-
-      {/* Saved concepts */}
-      <div style={{ marginTop: '40px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: t.colors.textPrimary }}>Saved Concepts</div>
-          <div style={{ fontSize: '12px', color: t.colors.textTertiary, marginTop: '2px' }}>
-            Promote a concept to move it into active event planning
-          </div>
-        </div>
-
-        {loadingConcepts ? (
-          <div style={{ fontSize: '13px', color: t.colors.textTertiary, padding: '24px 0' }}>Loading…</div>
-        ) : concepts.length === 0 ? (
-          <div style={{ ...s.card, textAlign: 'center', padding: '40px', color: t.colors.textTertiary, fontSize: '13px' }}>
-            No saved concepts yet. Generate one above and save it.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {concepts.map(c => (
-              <div key={c.id} style={{ ...s.card, marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: t.colors.textPrimary, marginBottom: '3px' }}>{c.title}</div>
-                  <div style={{ fontSize: '12px', color: t.colors.textTertiary }}>{c.description}</div>
-                  {c.concept_data?.brief?.eventType && (
-                    <div style={{ fontSize: '11px', color: '#7C5CBF', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {c.concept_data.brief.eventType}
-                      {c.concept_data.brief.budget ? ` · ${c.concept_data.brief.budget}` : ''}
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ ...s.statusBadge, ...STATUS_COLORS.concept }}>Concept</span>
-                  <button onClick={() => handlePromote(c.id)} disabled={promoting === c.id}
-                    style={{ ...s.promoteBtn, opacity: promoting === c.id ? 0.6 : 1 }}>
-                    {promoting === c.id ? 'Moving…' : 'Move to Planning →'}
-                  </button>
-                  <button onClick={() => handleDeleteConcept(c.id)} style={s.deleteBtn}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   )
 }
