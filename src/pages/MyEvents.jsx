@@ -1149,7 +1149,7 @@ export default function MyEvents() {
 
   async function fetchEvents() {
     setLoading(true)
-    const { data } = await supabase.from('projects').select('*, clients(name, company)').eq('type', 'event').order('event_date', { ascending: true })
+    const { data } = await supabase.from('projects').select('*, clients(name, company)').eq('type', 'event').neq('event_status', 'concept').order('event_date', { ascending: true })
     if (data) setEvents(data)
     setLoading(false)
   }
