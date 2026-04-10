@@ -226,26 +226,30 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
     setGenerating(false)
   }
 
-  async function handleSaveConcept() {
-    if (!concept || !workspaceId) return
-    setSaving(true)
-    const { error } = await supabase.from('projects').insert({
-      workspace_id: workspaceId,
-      user_id: session.user.id,
-      title: concept.conceptName,
-      type: 'event',
-      event_status: 'concept',
-      headcount: form.headcount ? parseInt(form.headcount) : null,
-      description: concept.tagline,
-      notes: concept.coreConcept,
-      concept_data: { ...concept, brief: { ...form, vibes } },
-    })
-    if (!error) {
-      setSaveSuccess(true)
-      fetchConcepts()
-    }
-    setSaving(false)
+ async function handleSaveConcept() {
+  if (!concept || !workspaceId) return
+  setSaving(true)
+  const { data: insertData, error } = await supabase.from('projects').insert({
+    workspace_id: workspaceId,
+    user_id: session.user.id,
+    title: concept.conceptName,
+    type: 'event',
+    event_status: 'concept',
+    headcount: form.headcount ? parseInt(form.headcount) : null,
+    description: concept.tagline,
+    notes: concept.coreConcept,
+    concept_data: { ...concept, brief: { ...form, vibes } },
+  }).select()
+  console.log('INSERT error:', JSON.stringify(error))
+  console.log('INSERT data:', JSON.stringify(insertData))
+  console.log('workspace_id:', workspaceId)
+  console.log('user_id:', session.user.id)
+  if (!error) {
+    setSaveSuccess(true)
+    fetchConcepts()
   }
+  setSaving(false)
+}
 
   async function handlePromote(id) {
     setPromoting(id)
