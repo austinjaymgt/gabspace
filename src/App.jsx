@@ -35,11 +35,18 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
 
+  // Auth layer — workspace + role
+  const [workspaceId, setWorkspaceId] = useState(null)
+  const [userRole, setUserRole] = useState(null)
+  const [workspaceLoading, setWorkspaceLoading] = useState(false)
+
+  // Session listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
   }, [])
 
+  // Onboarding check
   useEffect(() => {
     if (!session) return
     supabase
@@ -48,11 +55,59 @@ export default function App() {
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data && !data.onboarding_completed) {
-          setShowOnboarding(true)
-        }
+        if (data && !data.onboarding_completed) setShowOnboarding(true)
       })
   }, [session])
+
+  // Workspace + role fetch
+  useEffect(() => {
+  if (!session) {
+    setWorkspaceId(null)
+    setUserRole(null)
+    return
+  }
+  setWorkspaceLoading(true)
+
+  supabase
+    .from('user_profiles')
+    .select('workspace_id, role')
+    .eq('user_id', session.user.id)
+    .maybeSingle()
+    .then(async ({ data }) => {
+      if (data) {
+        setWorkspaceId(data.workspace_id)
+        setUserRole(data.role)
+        setWorkspaceLoading(false)
+        return
+      }
+
+      // No profile yet — check for a pending invite matching this email
+      const { data: invite } = await supabase
+        .from('invites')
+        .select('workspace_id, role, id, invited_by')
+        .eq('email', session.user.email)
+        .eq('accepted', false)
+        .maybeSingle()
+
+      if (invite) {
+        // Create their profile
+        await supabase.from('user_profiles').insert({
+          user_id: session.user.id,
+          workspace_id: invite.workspace_id,
+          role: invite.role,
+          invited_by: invite.invited_by,
+        })
+
+        // Mark invite accepted
+        await supabase.from('invites').update({ accepted: true }).eq('id', invite.id)
+
+        setWorkspaceId(invite.workspace_id)
+        setUserRole(invite.role)
+      }
+
+      setWorkspaceLoading(false)
+    })
+}, [session])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -87,44 +142,112 @@ export default function App() {
   async function handleLogout() {
     await supabase.auth.signOut()
     setSession(null)
+    setWorkspaceId(null)
+    setUserRole(null)
+  }
+
+  // Shared props passed to every page
+  const pageProps = { workspaceId, userRole, session }
+
+  // Role guards
+  const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
+  const isStaff = ['owner', 'admin', 'member'].includes(userRole)
+  const isClientOnly = userRole === 'client'
+
+  function AccessDenied() {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans,
+      }}>
+        <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>
+          Access denied
+        </h2>
+        <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>
+          You don't have permission to view this page.
+        </p>
+      </div>
+    )
   }
 
   function renderPage() {
+      console.log('renderPage → userRole:', userRole, 'workspaceLoading:', workspaceLoading)
+    // Client role goes straight to portal
+    if (isClientOnly && currentPage !== 'client-portal') {
+      return <ClientPortal {...pageProps} />
+    }
+
     switch (currentPage) {
-      case 'dashboard': return <Dashboard session={session} onNavigate={setCurrentPage} />
+      case 'dashboard':
+        return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
+
+      // Clients
       case 'clients':
-      case 'all-clients': return <Clients />
-      case 'client-portal': return <ClientPortal />
-      case 'projects': return <Projects />
-      case 'events': return <Events />
-      case 'my-events': return <MyEvents />
-      case 'tasks': return <Tasks />
-      case 'invoices': return <Invoices />
-      case 'expenses': return <Expenses />
-      case 'revenue': return <Revenue />
-      case 'finance-overview': return <FinanceOverview onNavigate={setCurrentPage} />
-      case 'campaigns': return <Campaigns />
-      case 'campaign-tracking': return <ContentCalendar />
-      case 'assets': return <Assets />
-      case 'business-events': return <BusinessEvents />
-      case 'vendors': return <Vendors />
-      case 'settings': return <Settings session={session} />
-      default: return (
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans,
-        }}>
-          <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>
-            Coming soon
-          </h2>
-          <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>
-            This section is under construction.
-          </p>
-        </div>
-      )
+      case 'all-clients':
+        return isStaff ? <Clients {...pageProps} /> : <AccessDenied />
+
+      case 'client-portal':
+        return <ClientPortal {...pageProps} />
+
+      // Projects & Events
+      case 'projects':
+        return isStaff ? <Projects {...pageProps} /> : <AccessDenied />
+      case 'events':
+        return isStaff ? <Events {...pageProps} /> : <AccessDenied />
+      case 'my-events':
+        return <MyEvents {...pageProps} />
+      case 'business-events':
+        return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
+
+      // Tasks
+      case 'tasks':
+        return <Tasks {...pageProps} />
+
+      // Finance — owner/admin only
+      case 'invoices':
+        return isOwnerOrAdmin ? <Invoices {...pageProps} /> : <AccessDenied />
+      case 'expenses':
+        return isOwnerOrAdmin ? <Expenses {...pageProps} /> : <AccessDenied />
+      case 'revenue':
+        return isOwnerOrAdmin ? <Revenue {...pageProps} /> : <AccessDenied />
+      case 'finance-overview':
+        return isOwnerOrAdmin ? <FinanceOverview {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
+
+      // Marketing
+      case 'campaigns':
+        return isStaff ? <Campaigns {...pageProps} /> : <AccessDenied />
+      case 'campaign-tracking':
+        return isStaff ? <ContentCalendar {...pageProps} /> : <AccessDenied />
+      case 'assets':
+        return isStaff ? <Assets {...pageProps} /> : <AccessDenied />
+
+      // Vendors
+      case 'vendors':
+        return isStaff ? <Vendors {...pageProps} /> : <AccessDenied />
+
+      // Settings — owner/admin only
+      case 'settings':
+          if (workspaceLoading) return null
+        return isOwnerOrAdmin ? <Settings {...pageProps} /> : <AccessDenied />
+
+      default:
+        return (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans,
+          }}>
+            <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>
+              Coming soon
+            </h2>
+            <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>
+              This section is under construction.
+            </p>
+          </div>
+        )
     }
   }
 
+  // Login screen
   if (!session) {
     return (
       <div style={{
@@ -155,7 +278,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Email */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Email</label>
               <input
@@ -167,7 +289,6 @@ export default function App() {
               />
             </div>
 
-            {/* Password */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Password</label>
               <div style={{ position: 'relative' }}>
@@ -197,7 +318,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Sign in */}
             <button
               onClick={handleLogin}
               disabled={loading}
@@ -210,7 +330,6 @@ export default function App() {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
 
-            {/* Forgot password */}
             {resetSent ? (
               <div style={{
                 padding: '10px 14px', borderRadius: t.radius.md,
@@ -233,7 +352,6 @@ export default function App() {
               </button>
             )}
 
-            {/* Create account */}
             <button
               onClick={handleSignUp}
               disabled={loading}
@@ -251,11 +369,26 @@ export default function App() {
     )
   }
 
+  // Workspace still loading
+  if (workspaceLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans,
+      }}>
+        <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>Loading workspace…</p>
+      </div>
+    )
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, display: 'flex' }}>
-      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {showOnboarding && (
+        <OnboardingModal onClose={() => setShowOnboarding(false)} session={session} />
+      )}
+      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} />
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} />
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} />
         <div style={{ flex: 1 }}>
           {renderPage()}
