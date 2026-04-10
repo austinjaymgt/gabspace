@@ -109,7 +109,7 @@ export default function Assets() {
     <div style={styles.page}>
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Brand Assets</h2>
+          <h2 style={styles.title}>Company Assets</h2>
           <p style={styles.subtitle}>{assets.length} total assets</p>
         </div>
         <button onClick={() => setShowForm(true)} style={styles.addBtn}>
