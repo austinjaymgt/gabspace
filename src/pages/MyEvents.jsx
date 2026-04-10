@@ -716,6 +716,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh }) {
   const [showBudgetForm, setShowBudgetForm] = useState(false)
   const [budgetForm, setBudgetForm] = useState({ category: '', projected_amount: '', actual_amount: '', notes: '' })
   const [showProposal, setShowProposal] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
 
   useEffect(() => { fetchAll() }, [])
 
@@ -874,143 +875,261 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh }) {
         <div style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Pipeline stage</div>
         <PipelineStepper current={data.event_status} onChange={updateStage} />
       </div>
-
-      {/* Run of Show */}
-      <RunOfShow eventId={event.id} eventTitle={data.title} eventDate={data.event_date} venue={data.venue} />
-
-      {/* Staffing */}
-      <Staffing eventId={event.id} />
-
-      {/* Description */}
-      {data.description && (
-        <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '20px 24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Brief</div>
-          <p style={{ fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 }}>{data.description}</p>
+      
+{/* Tab bar — only show if concept_data exists */}
+      {data.concept_data && (
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', backgroundColor: '#fff', borderRadius: '10px', padding: '6px', border: '1px solid #f0f0eb' }}>
+          {[
+            { key: 'details', label: 'Planning' },
+            { key: 'concept', label: '💡 Concept' },
+          ].map(tab => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+              flex: 1, padding: '8px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+              fontSize: '13px', fontWeight: activeTab === tab.key ? '700' : '400',
+              backgroundColor: activeTab === tab.key ? '#1A1A2E' : 'transparent',
+              color: activeTab === tab.key ? '#fff' : '#8585A0',
+              fontFamily: 'DM Sans, sans-serif', transition: 'all 0.15s',
+            }}>
+              {tab.label}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Budget */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Budget</h3>
-          <button onClick={() => setShowBudgetForm(true)} style={btnStyles.secondary}>+ Add category</button>
-        </div>
-        {showBudgetForm && (
-          <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-              {[{ label: 'Category *', key: 'category', placeholder: 'e.g. Catering, Venue' }, { label: 'Projected ($)', key: 'projected_amount', placeholder: '0.00', type: 'number' }, { label: 'Actual ($)', key: 'actual_amount', placeholder: '0.00', type: 'number' }, { label: 'Notes', key: 'notes', placeholder: 'Optional' }].map(({ label, key, placeholder, type }) => (
-                <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '11px', fontWeight: '500', color: '#8585A0' }}>{label}</label>
-                  <input style={fStyles.input} type={type || 'text'} placeholder={placeholder} value={budgetForm[key]} onChange={e => setBudgetForm({ ...budgetForm, [key]: e.target.value })} />
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowBudgetForm(false)} style={btnStyles.cancel}>Cancel</button>
-              <button onClick={addBudgetItem} disabled={!budgetForm.category} style={btnStyles.primary}>Add</button>
-            </div>
-          </div>
-        )}
-        {budgetItems.length === 0 ? (
-          <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '24px 0' }}>No budget categories yet</p>
-        ) : (
+      {/* Concept tab */}
+      {activeTab === 'concept' && data.concept_data && (() => {
+        const c = data.concept_data
+        const brief = c.brief || {}
+        const sectionLabel = { fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5CBF', marginBottom: '10px' }
+        const bodyText = { fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 }
+        const card = { backgroundColor: '#fff', borderRadius: '14px', padding: '22px 24px', border: '1px solid #f0f0eb', marginBottom: '16px' }
+        const divider = { border: 'none', borderTop: '1px solid #f0f0eb', margin: '16px 0' }
+        const tagViolet = { background: '#F0EBF9', color: '#7C5CBF' }
+        const tagSage = { background: '#EAF2EA', color: '#6B8F71' }
+        const tagAmber = { background: '#FBF0E6', color: '#D4874E' }
+        const tagRose = { background: '#FAF0F2', color: '#C06B7A' }
+        const tagStyles = [tagViolet, tagSage, tagAmber, tagRose]
+        const tag = { fontSize: '12px', padding: '4px 11px', borderRadius: '100px', fontWeight: '500' }
+        return (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.4fr', gap: '8px', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', marginBottom: '6px' }}>
-              {['Category', 'Projected', 'Actual', 'Difference', ''].map(h => <span key={h} style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>)}
+            <div style={card}>
+              <div style={sectionLabel}>The Big Idea</div>
+              <p style={bodyText}>{c.coreConcept}</p>
+              <hr style={divider} />
+              <div style={sectionLabel}>Why It Works</div>
+              <p style={bodyText}>{c.why}</p>
             </div>
-            {budgetItems.map(item => {
-              const proj = parseFloat(item.projected_amount) || 0
-              const actual = parseFloat(item.actual_amount) || 0
-              const diff = proj - actual
-              return (
-                <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.4fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center', marginBottom: '4px' }}>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A2E' }}>{item.category}</div>
-                    {item.notes && <div style={{ fontSize: '11px', color: '#8585A0' }}>{item.notes}</div>}
+
+            {c.experienceDesign?.length > 0 && (
+              <div style={card}>
+                <div style={sectionLabel}>Experience Design — Key Moments</div>
+                {c.experienceDesign.map((m, i) => (
+                  <div key={i} style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E', marginBottom: '2px' }}>{m.moment}</div>
+                    <div style={{ fontSize: '13px', color: '#8585A0', lineHeight: '1.55' }}>{m.description}</div>
                   </div>
-                  <span style={{ fontSize: '13px', color: '#3D3D5C' }}>{proj > 0 ? `$${proj.toLocaleString()}` : '—'}</span>
-                  <span style={{ fontSize: '13px', color: '#3D3D5C' }}>{actual > 0 ? `$${actual.toLocaleString()}` : '—'}</span>
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: proj === 0 ? '#8585A0' : diff >= 0 ? '#1D9E75' : '#cc3333' }}>{proj === 0 ? '—' : diff >= 0 ? `+$${diff.toLocaleString()}` : `-$${Math.abs(diff).toLocaleString()}`}</span>
-                  <button onClick={() => deleteBudgetItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#8585A0' }}>✕</button>
+                ))}
+              </div>
+            )}
+
+            {c.runOfShow?.length > 0 && (
+              <div style={card}>
+                <div style={sectionLabel}>Run of Show (Concept)</div>
+                {c.runOfShow.map((r, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: '#7C5CBF', minWidth: '80px', paddingTop: '2px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{r.time}</span>
+                    <span style={{ fontSize: '13px', color: '#3D3D5C', lineHeight: '1.55', flex: 1 }}>{r.beat}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={card}>
+              {c.venueConsiderations && <>
+                <div style={sectionLabel}>Venue & Space</div>
+                <p style={{ ...bodyText, marginBottom: '16px' }}>{c.venueConsiderations}</p>
+                <hr style={divider} />
+              </>}
+              {c.productionNotes && <>
+                <div style={sectionLabel}>Production Notes</div>
+                <p style={{ ...bodyText, marginBottom: '16px' }}>{c.productionNotes}</p>
+                <hr style={divider} />
+              </>}
+              {c.pressAndContent && <>
+                <div style={sectionLabel}>Press & Content Strategy</div>
+                <p style={bodyText}>{c.pressAndContent}</p>
+              </>}
+            </div>
+
+            {c.successMetrics?.length > 0 && (
+              <div style={card}>
+                <div style={sectionLabel}>Success Metrics</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {c.successMetrics.map((m, i) => (
+                    <div key={i} style={{ background: '#F7F5F0', borderRadius: '8px', padding: '12px 14px' }}>
+                      <div style={{ fontSize: '11px', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{m.label}</div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#1A1A2E' }}>{m.value}</div>
+                    </div>
+                  ))}
                 </div>
-              )
-            })}
-            <div style={{ borderTop: '1px solid #f0f0eb', paddingTop: '12px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {[
-                { label: 'Total projected', value: totalProjected, color: '#1A1A2E' },
-                { label: 'Total actual', value: totalActual, color: '#cc3333' },
-                overallBudget > 0 && { label: 'Remaining', value: overallBudget - totalActual, color: (overallBudget - totalActual) >= 0 ? '#1D9E75' : '#cc3333' },
-              ].filter(Boolean).map(row => (
-                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px' }}>
-                  <span style={{ fontSize: '13px', color: '#8585A0' }}>{row.label}</span>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: row.color }}>${row.value.toLocaleString()}</span>
+              </div>
+            )}
+
+            <div style={card}>
+              {c.vendorCategories?.length > 0 && <>
+                <div style={sectionLabel}>Vendor Categories</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+                  {c.vendorCategories.map((v, i) => <span key={i} style={{ ...tag, ...tagStyles[i % tagStyles.length] }}>{v}</span>)}
                 </div>
-              ))}
+                <hr style={divider} />
+              </>}
+              {c.aestheticKeywords?.length > 0 && <>
+                <div style={sectionLabel}>Aesthetic Keywords</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+                  {c.aestheticKeywords.map((k, i) => <span key={i} style={{ ...tag, ...tagViolet }}>{k}</span>)}
+                </div>
+                <hr style={divider} />
+              </>}
+              {c.budgetAllocation?.length > 0 && <>
+                <div style={sectionLabel}>Budget Allocation</div>
+                {c.budgetAllocation.map((b, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
+                    <span style={{ color: '#3D3D5C' }}>{b.line}</span>
+                    <span style={{ fontWeight: '600', color: '#7C5CBF' }}>{b.pct}</span>
+                  </div>
+                ))}
+              </>}
             </div>
           </>
+        )
+      })()}
+
+      {/* Planning tab (default) */}
+      {(!data.concept_data || activeTab === 'details') && <>
+        <RunOfShow eventId={event.id} eventTitle={data.title} eventDate={data.event_date} venue={data.venue} />
+        <Staffing eventId={event.id} />
+        {data.description && (
+          <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '20px 24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Brief</div>
+            <p style={{ fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 }}>{data.description}</p>
+          </div>
         )}
-      </div>
-
-      {/* Tasks */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Tasks</h3>
-          <span style={{ fontSize: '12px', color: '#8585A0' }}>{doneTasks}/{tasks.length} done</span>
-        </div>
-        {tasks.length > 0 && <div style={{ height: '4px', backgroundColor: '#f0f0eb', borderRadius: '2px', overflow: 'hidden', marginBottom: '14px' }}><div style={{ height: '100%', width: `${(doneTasks / tasks.length) * 100}%`, backgroundColor: '#7C5CBF', borderRadius: '2px', transition: 'width 0.3s' }} /></div>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-          {tasks.map(task => (
-            <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', backgroundColor: '#fafaf8', borderRadius: '8px' }}>
-              <button onClick={() => toggleTask(task)} style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, cursor: 'pointer', border: `2px solid ${task.status === 'done' ? '#7C5CBF' : '#e0e0e0'}`, backgroundColor: task.status === 'done' ? '#7C5CBF' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {task.status === 'done' && <span style={{ color: '#fff', fontSize: '10px', fontWeight: '700' }}>✓</span>}
-              </button>
-              <span style={{ flex: 1, fontSize: '13px', color: task.status === 'done' ? '#8585A0' : '#1A1A2E', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>{task.title}</span>
-              <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: '#8585A0', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+        <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Budget</h3>
+            <button onClick={() => setShowBudgetForm(true)} style={btnStyles.secondary}>+ Add category</button>
+          </div>
+          {showBudgetForm && (
+            <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                {[{ label: 'Category *', key: 'category', placeholder: 'e.g. Catering, Venue' }, { label: 'Projected ($)', key: 'projected_amount', placeholder: '0.00', type: 'number' }, { label: 'Actual ($)', key: 'actual_amount', placeholder: '0.00', type: 'number' }, { label: 'Notes', key: 'notes', placeholder: 'Optional' }].map(({ label, key, placeholder, type }) => (
+                  <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '500', color: '#8585A0' }}>{label}</label>
+                    <input style={fStyles.input} type={type || 'text'} placeholder={placeholder} value={budgetForm[key]} onChange={e => setBudgetForm({ ...budgetForm, [key]: e.target.value })} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setShowBudgetForm(false)} style={btnStyles.cancel}>Cancel</button>
+                <button onClick={addBudgetItem} disabled={!budgetForm.category} style={btnStyles.primary}>Add</button>
+              </div>
             </div>
-          ))}
+          )}
+          {budgetItems.length === 0 ? (
+            <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '24px 0' }}>No budget categories yet</p>
+          ) : (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.4fr', gap: '8px', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', marginBottom: '6px' }}>
+                {['Category', 'Projected', 'Actual', 'Difference', ''].map(h => <span key={h} style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>)}
+              </div>
+              {budgetItems.map(item => {
+                const proj = parseFloat(item.projected_amount) || 0
+                const actual = parseFloat(item.actual_amount) || 0
+                const diff = proj - actual
+                return (
+                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.4fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center', marginBottom: '4px' }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A2E' }}>{item.category}</div>
+                      {item.notes && <div style={{ fontSize: '11px', color: '#8585A0' }}>{item.notes}</div>}
+                    </div>
+                    <span style={{ fontSize: '13px', color: '#3D3D5C' }}>{proj > 0 ? `$${proj.toLocaleString()}` : '—'}</span>
+                    <span style={{ fontSize: '13px', color: '#3D3D5C' }}>{actual > 0 ? `$${actual.toLocaleString()}` : '—'}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: proj === 0 ? '#8585A0' : diff >= 0 ? '#1D9E75' : '#cc3333' }}>{proj === 0 ? '—' : diff >= 0 ? `+$${diff.toLocaleString()}` : `-$${Math.abs(diff).toLocaleString()}`}</span>
+                    <button onClick={() => deleteBudgetItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#8585A0' }}>✕</button>
+                  </div>
+                )
+              })}
+              <div style={{ borderTop: '1px solid #f0f0eb', paddingTop: '12px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {[
+                  { label: 'Total projected', value: totalProjected, color: '#1A1A2E' },
+                  { label: 'Total actual', value: totalActual, color: '#cc3333' },
+                  overallBudget > 0 && { label: 'Remaining', value: overallBudget - totalActual, color: (overallBudget - totalActual) >= 0 ? '#1D9E75' : '#cc3333' },
+                ].filter(Boolean).map(row => (
+                  <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '13px', color: '#8585A0' }}>{row.label}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: row.color }}>${row.value.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input style={{ ...fStyles.input, flex: 1 }} placeholder="Add a task..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} />
-          <button onClick={addTask} disabled={addingTask || !newTaskTitle.trim()} style={btnStyles.primary}>Add</button>
-        </div>
-      </div>
-
-      {/* Notes */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Notes</h3>
-          <button onClick={saveNotes} disabled={savingNotes} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: notesSaved ? '#1D9E75' : '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s' }}>
-            {notesSaved ? '✓ Saved' : savingNotes ? 'Saving...' : 'Save notes'}
-          </button>
-        </div>
-        <textarea style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #f0f0eb', fontSize: '13px', color: '#1A1A2E', outline: 'none', resize: 'vertical', fontFamily: 'DM Sans, sans-serif', lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: '#fafaf8' }} rows={5} placeholder="Internal notes, client preferences, special requirements..." value={notes} onChange={e => setNotes(e.target.value)} />
-      </div>
-
-      {/* Documents */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Documents</h3>
-          <label style={{ ...btnStyles.primary, display: 'inline-block', cursor: 'pointer' }}>
-            {uploading ? 'Uploading...' : '+ Upload file'}
-            <input type="file" onChange={uploadDocument} style={{ display: 'none' }} />
-          </label>
-        </div>
-        {documents.length === 0 ? (
-          <p style={{ fontSize: '13px', color: '#8585A0' }}>No documents yet — upload contracts, floor plans, proposals, or any event files</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {documents.map(doc => (
-              <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', backgroundColor: '#fafaf8', borderRadius: '8px' }}>
-                <span style={{ fontSize: '18px' }}>{doc.file_type?.includes('image') ? '🖼️' : doc.file_type?.includes('pdf') ? '📄' : '📁'}</span>
-                <span style={{ flex: 1, fontSize: '13px', color: '#1A1A2E', fontWeight: '500' }}>{doc.name}</span>
-                <span style={{ fontSize: '11px', color: '#8585A0' }}>{new Date(doc.created_at).toLocaleDateString()}</span>
-                <a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#7C5CBF', fontWeight: '600', textDecoration: 'none' }}>Open</a>
-                <button onClick={() => deleteDocument(doc.id)} style={{ background: 'none', border: 'none', color: '#8585A0', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+        <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Tasks</h3>
+            <span style={{ fontSize: '12px', color: '#8585A0' }}>{doneTasks}/{tasks.length} done</span>
+          </div>
+          {tasks.length > 0 && <div style={{ height: '4px', backgroundColor: '#f0f0eb', borderRadius: '2px', overflow: 'hidden', marginBottom: '14px' }}><div style={{ height: '100%', width: `${(doneTasks / tasks.length) * 100}%`, backgroundColor: '#7C5CBF', borderRadius: '2px', transition: 'width 0.3s' }} /></div>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+            {tasks.map(task => (
+              <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', backgroundColor: '#fafaf8', borderRadius: '8px' }}>
+                <button onClick={() => toggleTask(task)} style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, cursor: 'pointer', border: `2px solid ${task.status === 'done' ? '#7C5CBF' : '#e0e0e0'}`, backgroundColor: task.status === 'done' ? '#7C5CBF' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {task.status === 'done' && <span style={{ color: '#fff', fontSize: '10px', fontWeight: '700' }}>✓</span>}
+                </button>
+                <span style={{ flex: 1, fontSize: '13px', color: task.status === 'done' ? '#8585A0' : '#1A1A2E', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>{task.title}</span>
+                <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: '#8585A0', cursor: 'pointer', fontSize: '12px' }}>✕</button>
               </div>
             ))}
           </div>
-        )}
-      </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input style={{ ...fStyles.input, flex: 1 }} placeholder="Add a task..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} />
+            <button onClick={addTask} disabled={addingTask || !newTaskTitle.trim()} style={btnStyles.primary}>Add</button>
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Notes</h3>
+            <button onClick={saveNotes} disabled={savingNotes} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: notesSaved ? '#1D9E75' : '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s' }}>
+              {notesSaved ? '✓ Saved' : savingNotes ? 'Saving...' : 'Save notes'}
+            </button>
+          </div>
+          <textarea style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #f0f0eb', fontSize: '13px', color: '#1A1A2E', outline: 'none', resize: 'vertical', fontFamily: 'DM Sans, sans-serif', lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: '#fafaf8' }} rows={5} placeholder="Internal notes, client preferences, special requirements..." value={notes} onChange={e => setNotes(e.target.value)} />
+        </div>
+        <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Documents</h3>
+            <label style={{ ...btnStyles.primary, display: 'inline-block', cursor: 'pointer' }}>
+              {uploading ? 'Uploading...' : '+ Upload file'}
+              <input type="file" onChange={uploadDocument} style={{ display: 'none' }} />
+            </label>
+          </div>
+          {documents.length === 0 ? (
+            <p style={{ fontSize: '13px', color: '#8585A0' }}>No documents yet — upload contracts, floor plans, proposals, or any event files</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {documents.map(doc => (
+                <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', backgroundColor: '#fafaf8', borderRadius: '8px' }}>
+                  <span style={{ fontSize: '18px' }}>{doc.file_type?.includes('image') ? '🖼️' : doc.file_type?.includes('pdf') ? '📄' : '📁'}</span>
+                  <span style={{ flex: 1, fontSize: '13px', color: '#1A1A2E', fontWeight: '500' }}>{doc.name}</span>
+                  <span style={{ fontSize: '11px', color: '#8585A0' }}>{new Date(doc.created_at).toLocaleDateString()}</span>
+                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#7C5CBF', fontWeight: '600', textDecoration: 'none' }}>Open</a>
+                  <button onClick={() => deleteDocument(doc.id)} style={{ background: 'none', border: 'none', color: '#8585A0', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </>}
     </div>
   )
 }
