@@ -209,16 +209,12 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
 }`
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }],
-        }),
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      const res = await supabase.functions.invoke('generate-event-concept', {
+        body: { prompt },
+        headers: { Authorization: `Bearer ${authSession.access_token}` },
       })
-      const data = await res.json()
+      const data = res.data
       const raw = data.content?.map(b => b.text || '').join('')
       const clean = raw.replace(/```json|```/g, '').trim()
       setConcept(JSON.parse(clean))
