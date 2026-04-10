@@ -30,7 +30,7 @@ const navItems = [
       { label: 'Campaigns', path: 'campaigns' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
       { label: 'Business Events', path: 'business-events' },
-      { label: 'Brand Assets', path: 'assets' },
+      { label: 'Company Assets', path: 'assets' },
     ]
   },
   { label: 'Settings', icon: '⚙️', path: 'settings' },
