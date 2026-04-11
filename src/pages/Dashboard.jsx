@@ -1,7 +1,7 @@
+import CalendarWidget from '../components/CalendarWidget'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
-import CalendarWidget from '../components/CalendarWidget'
 
 function timeAgo(dateString) {
   if (!dateString) return ''
@@ -340,6 +340,7 @@ export default function Dashboard({ session, onNavigate }) {
       </div>
 
 <CalendarWidget />
+
       {/* Activity Section Header */}
 <div style={{
   display: 'flex',

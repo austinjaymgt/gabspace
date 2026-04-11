@@ -6,8 +6,6 @@ import { theme as t } from '../theme'
 const SOURCES = {
   event:    { label: 'Event',         color: '#7C5CBF', bg: '#F0EBF9' },
   project:  { label: 'Project due',   color: '#4466cc', bg: '#f0f4ff' },
-  task:     { label: 'Task due',      color: '#D4874E', bg: '#FBF0E6' },
-  invoice:  { label: 'Invoice due',   color: '#1D9E75', bg: '#f0faf6' },
   inquiry:  { label: 'Inquiry',       color: '#C06B7A', bg: '#FAF0F2' },
 }
 
@@ -44,14 +42,10 @@ export default function CalendarWidget() {
     const [
       { data: projectEvents },
       { data: projectDeadlines },
-      { data: tasks },
-      { data: invoices },
       { data: inquiries },
     ] = await Promise.all([
       supabase.from('projects').select('id, title, event_date, event_status').eq('type', 'event').not('event_date', 'is', null),
       supabase.from('projects').select('id, title, end_date, status').eq('type', 'project').not('end_date', 'is', null),
-      supabase.from('tasks').select('id, title, due_date, status').not('due_date', 'is', null),
-      supabase.from('revenue').select('id, invoice_number, due_date, status').not('due_date', 'is', null),
       supabase.from('event_inquiries').select('id, first_name, last_name, event_type, event_date').not('event_date', 'is', null),
     ])
 
@@ -67,18 +61,6 @@ export default function CalendarWidget() {
         title: p.title,
         date: toDateKey(p.end_date),
         meta: p.status,
-      })),
-      ...(tasks || []).filter(tk => tk.status !== 'done').map(tk => ({
-        id: `task-${tk.id}`, type: 'task',
-        title: tk.title,
-        date: toDateKey(tk.due_date),
-        meta: tk.status,
-      })),
-      ...(invoices || []).map(inv => ({
-        id: `invoice-${inv.id}`, type: 'invoice',
-        title: inv.invoice_number || 'Invoice',
-        date: toDateKey(inv.due_date),
-        meta: inv.status,
       })),
       ...(inquiries || []).map(inq => ({
         id: `inquiry-${inq.id}`, type: 'inquiry',
