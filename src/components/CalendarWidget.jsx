@@ -39,6 +39,7 @@ export default function CalendarWidget() {
 
   async function fetchAll() {
     setLoading(true)
+    console.log('calendar items:', items)
     const [
       { data: projectEvents },
       { data: projectDeadlines },
@@ -69,7 +70,6 @@ export default function CalendarWidget() {
         meta: 'inquiry',
       })),
     ].filter(e => e.date)
-
     setEvents(items)
     setLoading(false)
   }
