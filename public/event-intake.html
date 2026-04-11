@@ -420,7 +420,6 @@
 </div>
 
 <script>
-  // ── REPLACE THESE WITH YOUR ACTUAL VALUES ──
   const SUPABASE_URL = 'https://qidleiqkwwayaliwlztd.supabase.co'
   const SUPABASE_ANON_KEY = 'sb_publishable_VzThGwrDvGLisScM2yStkA_8eVUwmH1'
 
@@ -429,7 +428,6 @@
     const errorMsg = document.getElementById('errorMsg')
     errorMsg.classList.remove('visible')
 
-    // Collect values
     const firstName   = document.getElementById('firstName').value.trim()
     const lastName    = document.getElementById('lastName').value.trim()
     const email       = document.getElementById('email').value.trim()
@@ -442,7 +440,6 @@
     const venue       = document.getElementById('venue').value.trim()
     const message     = document.getElementById('message').value.trim()
 
-    // Validation
     if (!firstName || !lastName) return showError('Please enter your first and last name.')
     if (!email || !email.includes('@')) return showError('Please enter a valid email address.')
     if (!eventType) return showError('Please select an event type.')
@@ -450,70 +447,31 @@
     btn.disabled = true
     btn.textContent = 'Submitting...'
 
-    // Build the title and description
-    const fullName = `${firstName} ${lastName}`
-    const title = `${eventType} — ${fullName}${org ? ` (${org})` : ''}`
-    const descParts = []
-    if (org) descParts.push(`Organization/Department: ${org}`)
-    if (phone) descParts.push(`Phone: ${phone}`)
-    if (budgetRange) descParts.push(`Budget range: ${budgetRange}`)
-    if (message) descParts.push(`\n${message}`)
-    const description = descParts.join('\n')
-
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/projects`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/event_inquiries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=representation',
+          'Prefer': 'return=minimal',
         },
         body: JSON.stringify({
-          type: 'event',
-          source: 'public',
-          event_status: 'inquiry',
-          status: 'planning',
-          title: title,
-          description: description || null,
-          event_date: eventDate || null,
-          venue: venue || null,
-          headcount: guestCount ? parseInt(guestCount) : null,
-          // Store contact info in description since projects table doesn't have contact fields
-          // The edge function will pull email from the submission metadata below
+          first_name:   firstName,
+          last_name:    lastName,
+          email:        email,
+          phone:        phone || null,
+          organization: org || null,
+          event_type:   eventType,
+          event_date:   eventDate || null,
+          guest_count:  guestCount ? parseInt(guestCount) : null,
+          budget_range: budgetRange || null,
+          venue:        venue || null,
+          message:      message || null,
         }),
       })
 
-      // Also store submitter email for the confirmation — we pass it via a separate metadata insert
-      // Using a custom header approach: store in description for now, edge function parses it
-      // Better: insert to a lightweight event_inquiries table. For now we patch description.
-      // Re-submit with email embedded
       if (res.ok) {
-        const inserted = await res.json()
-        const projectId = inserted[0]?.id
-
-        // Patch the record with email in a parseable way
-        if (projectId) {
-          const fullDesc = [
-            `Submitter email: ${email}`,
-            `Submitter name: ${fullName}`,
-            ...descParts,
-          ].join('\n')
-
-          await fetch(`${SUPABASE_URL}/rest/v1/projects?id=eq.${projectId}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            },
-            body: JSON.stringify({ 
-              description: fullDesc,
-              user_id: '22be9e9c-e787-4c62-8e21-46baa945fe58'
-}),
-          })
-        }
-
         showSuccess()
       } else {
         const err = await res.json()

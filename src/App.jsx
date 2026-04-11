@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import Inquiries from './pages/Inquiries'
 import BetaAdmin from './pages/BetaAdmin' 
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
@@ -202,7 +203,8 @@ export default function App() {
         return isStaff ? <EventBrainstorm {...pageProps} /> : <AccessDenied />
       case 'business-events':
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
-
+      case 'inquiries':
+        return isStaff ? <Inquiries {...pageProps} /> : <AccessDenied />
       // Tasks
       case 'tasks':
         return <Tasks {...pageProps} />
