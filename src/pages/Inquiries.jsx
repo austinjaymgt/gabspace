@@ -28,6 +28,7 @@ export default function Inquiries({ session }) {
   const [selected, setSelected] = useState(null)
   const [converting, setConverting] = useState(null)
   const [converted, setConverted] = useState(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => { fetchInquiries() }, [])
 
@@ -105,15 +106,40 @@ export default function Inquiries({ session }) {
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-          Event Inquiries
-        </h2>
-        <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
-          Incoming event inquiries from your public form.
-        </p>
-      </div>
+{/* Header */}
+<div style={{ marginBottom: '28px' }}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div>
+      <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+        Event Inquiries
+      </h2>
+      <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
+        Incoming event inquiries from your public form.
+      </p>
+    </div>
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText('https://app.gabspace.io/event-intake.html')
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }}
+      style={{
+        padding: '9px 16px',
+        borderRadius: '8px',
+        border: '1px solid #e0e0e0',
+        backgroundColor: copied ? '#f0faf6' : '#fff',
+        color: copied ? '#1D9E75' : t.colors.textSecondary,
+        fontSize: t.fontSizes.sm,
+        fontWeight: '600',
+        cursor: 'pointer',
+        fontFamily: t.fonts.sans,
+        transition: 'all 0.2s',
+      }}
+    >
+      {copied ? '✓ Copied!' : '🔗 Copy intake form link'}
+    </button>
+  </div>
+</div>
 
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
