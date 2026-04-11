@@ -8,6 +8,18 @@ const SOURCES = {
   project:  { label: 'Project due',   color: '#4466cc', bg: '#f0f4ff' },
   inquiry:  { label: 'Inquiry',       color: '#C06B7A', bg: '#FAF0F2' },
 }
+const navBtn = {
+  width: '28px', height: '28px',
+  borderRadius: '6px',
+  border: '1px solid #e0e0e0',
+  backgroundColor: '#fff',
+  color: '#555',
+  fontSize: '16px',
+  cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontFamily: 'sans-serif',
+  lineHeight: 1,
+}
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -39,7 +51,6 @@ export default function CalendarWidget() {
 
   async function fetchAll() {
     setLoading(true)
-    console.log('calendar items:', items)
     const [
       { data: projectEvents },
       { data: projectDeadlines },
@@ -412,15 +423,3 @@ export default function CalendarWidget() {
   )
 }
 
-const navBtn = {
-  width: '28px', height: '28px',
-  borderRadius: '6px',
-  border: '1px solid #e0e0e0',
-  backgroundColor: '#fff',
-  color: '#555',
-  fontSize: '16px',
-  cursor: 'pointer',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontFamily: 'sans-serif',
-  lineHeight: 1,
-}
