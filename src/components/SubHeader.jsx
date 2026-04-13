@@ -4,18 +4,18 @@ import { theme as t } from '../theme'
 
 const allPages = [
   { path: 'dashboard', label: 'Dashboard', icon: '⊞' },
-  { path: 'clients', label: 'Clients', icon: '👥' },
+  { path: 'clients', label: 'Stakeholders', icon: '👥' },
   { path: 'client-portal', label: 'Portals', icon: '🔗' },
   { path: 'projects', label: 'Projects', icon: '📋' },
   { path: 'tasks', label: 'Tasks', icon: '✅' },
+  { path: 'my-events', label: 'Events', icon: '🎪' },
   { path: 'vendors', label: 'Vendors', icon: '🏪' },
   { path: 'finance-overview', label: 'Finances', icon: '📊' },
-  { path: 'revenue', label: 'Revenue', icon: '💵' },
-  { path: 'expenses', label: 'Expenses', icon: '💸' },
+  { path: 'team-goals', label: 'Team Goals', icon: '🎯' },
   { path: 'campaigns', label: 'Campaigns', icon: '📣' },
   { path: 'campaign-tracking', label: 'Content Calendar', icon: '🗓' },
-  { path: 'business-events', label: 'Community Events', icon: '🎯' },
   { path: 'assets', label: 'Company Assets', icon: '🎨' },
+  { path: 'intranet', label: 'Intranet', icon: '🏢' },
 ]
 
 export default function SubHeader({ currentPage, onNavigate, session }) {

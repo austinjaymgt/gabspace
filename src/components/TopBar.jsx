@@ -59,20 +59,20 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
         <div>
           <div style={{
             fontSize: '17px',
-            fontWeight: '700',
+            fontWeight: '800',
             color: t.colors.textPrimary,
             letterSpacing: '-0.4px',
             lineHeight: 1.2,
-            fontFamily: t.fonts.sans,
+            fontFamily: t.fonts.heading,
           }}>
-            gabspace
+            curators
           </div>
           <div style={{
             fontSize: t.fontSizes.xs,
             color: t.colors.textTertiary,
             fontFamily: t.fonts.sans,
           }}>
-            Clarity meets creativity
+            where events meet excellence.
           </div>
         </div>
       </div>
