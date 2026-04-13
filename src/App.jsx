@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
 import Inquiries from './pages/Inquiries'
-import BetaAdmin from './pages/BetaAdmin' 
+import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import Dashboard from './pages/Dashboard'
@@ -21,6 +21,8 @@ import Assets from './pages/Assets'
 import BusinessEvents from './pages/BusinessEvents'
 import MyEvents from './pages/MyEvents'
 import EventBrainstorm from './pages/EventBrainstorm'
+import Intranet from './pages/Intranet'
+import TeamGoals from './pages/TeamGoals'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
@@ -38,18 +40,15 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
 
-  // Auth layer — workspace + role
   const [workspaceId, setWorkspaceId] = useState(null)
   const [userRole, setUserRole] = useState(null)
-  const [workspaceLoading, setWorkspaceLoading] = useState(false)
+const [workspaceLoading, setWorkspaceLoading] = useState(true)
 
-  // Session listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
   }, [])
 
-  // Onboarding check
   useEffect(() => {
     if (!session) return
     supabase
@@ -62,55 +61,50 @@ export default function App() {
       })
   }, [session])
 
-  // Workspace + role fetch
   useEffect(() => {
-  if (!session) {
-    setWorkspaceId(null)
-    setUserRole(null)
-    return
-  }
-  setWorkspaceLoading(true)
+    if (!session) {
+  setWorkspaceId(null)
+  setUserRole(null)
+  setWorkspaceLoading(false)
+  return
+}
+    setWorkspaceLoading(true)
 
-  supabase
-    .from('user_profiles')
-    .select('workspace_id, role')
-    .eq('user_id', session.user.id)
-    .maybeSingle()
-    .then(async ({ data }) => {
-      if (data) {
-        setWorkspaceId(data.workspace_id)
-        setUserRole(data.role)
+    supabase
+      .from('user_profiles')
+      .select('workspace_id, role')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(async ({ data }) => {
+        if (data) {
+          setWorkspaceId(data.workspace_id)
+          setUserRole(data.role)
+          setWorkspaceLoading(false)
+          return
+        }
+
+        const { data: invite } = await supabase
+          .from('invites')
+          .select('workspace_id, role, id, invited_by')
+          .eq('email', session.user.email)
+          .eq('accepted', false)
+          .maybeSingle()
+
+        if (invite) {
+          await supabase.from('user_profiles').insert({
+            user_id: session.user.id,
+            workspace_id: invite.workspace_id,
+            role: invite.role,
+            invited_by: invite.invited_by,
+          })
+          await supabase.from('invites').update({ accepted: true }).eq('id', invite.id)
+          setWorkspaceId(invite.workspace_id)
+          setUserRole(invite.role)
+        }
+
         setWorkspaceLoading(false)
-        return
-      }
-
-      // No profile yet — check for a pending invite matching this email
-      const { data: invite } = await supabase
-        .from('invites')
-        .select('workspace_id, role, id, invited_by')
-        .eq('email', session.user.email)
-        .eq('accepted', false)
-        .maybeSingle()
-
-      if (invite) {
-        // Create their profile
-        await supabase.from('user_profiles').insert({
-          user_id: session.user.id,
-          workspace_id: invite.workspace_id,
-          role: invite.role,
-          invited_by: invite.invited_by,
-        })
-
-        // Mark invite accepted
-        await supabase.from('invites').update({ accepted: true }).eq('id', invite.id)
-
-        setWorkspaceId(invite.workspace_id)
-        setUserRole(invite.role)
-      }
-
-      setWorkspaceLoading(false)
-    })
-}, [session])
+      })
+  }, [session])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -149,43 +143,30 @@ export default function App() {
     setUserRole(null)
   }
 
-  // Shared props passed to every page
   const pageProps = { workspaceId, userRole, session }
-
-  // Role guards
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
   const isStaff = ['owner', 'admin', 'member'].includes(userRole)
   const isClientOnly = userRole === 'client'
 
   function AccessDenied() {
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans,
-      }}>
-        <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>
-          Access denied
-        </h2>
-        <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>
-          You don't have permission to view this page.
-        </p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans }}>
+        <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>Access denied</h2>
+        <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>You don't have permission to view this page.</p>
       </div>
     )
   }
 
-  function renderPage() {
-      console.log('renderPage → userRole:', userRole, 'workspaceLoading:', workspaceLoading)
-    // Client role goes straight to portal
-    function renderPage() {
-    if (workspaceLoading) {
-      return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-          <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, fontFamily: t.fonts.sans }}>Loading...</p>
-        </div>
-      )
-    }
+function renderPage() {
+  if (workspaceLoading) {
+    return (
+      <div style={{ padding: '40px', color: 'red', fontSize: '24px' }}>
+        TEST — workspaceLoading: {String(workspaceLoading)} | userRole: {String(userRole)}
+      </div>
+    )
+  }
 
-    if (isClientOnly && currentPage !== 'client-portal') {
+  if (isClientOnly && currentPage !== 'client-portal') {
       return <ClientPortal {...pageProps} />
     }
 
@@ -193,7 +174,6 @@ export default function App() {
       case 'dashboard':
         return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
 
-      // Clients
       case 'clients':
       case 'all-clients':
         return isStaff ? <Clients {...pageProps} /> : <AccessDenied />
@@ -201,7 +181,6 @@ export default function App() {
       case 'client-portal':
         return <ClientPortal {...pageProps} />
 
-      // Projects & Events
       case 'projects':
         return isStaff ? <Projects {...pageProps} /> : <AccessDenied />
       case 'events':
@@ -214,11 +193,10 @@ export default function App() {
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
       case 'inquiries':
         return isStaff ? <Inquiries {...pageProps} /> : <AccessDenied />
-      // Tasks
+
       case 'tasks':
         return <Tasks {...pageProps} />
 
-      // Finance — owner/admin only
       case 'invoices':
         return isOwnerOrAdmin ? <Invoices {...pageProps} /> : <AccessDenied />
       case 'expenses':
@@ -228,7 +206,6 @@ export default function App() {
       case 'finance-overview':
         return isOwnerOrAdmin ? <FinanceOverview {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
 
-      // Marketing
       case 'campaigns':
         return isStaff ? <Campaigns {...pageProps} /> : <AccessDenied />
       case 'campaign-tracking':
@@ -236,13 +213,17 @@ export default function App() {
       case 'assets':
         return isStaff ? <Assets {...pageProps} /> : <AccessDenied />
 
-      // Vendors
       case 'vendors':
         return isStaff ? <Vendors {...pageProps} /> : <AccessDenied />
 
-      // Settings — owner/admin only
+      case 'team-goals':
+        return isStaff ? <TeamGoals {...pageProps} /> : <AccessDenied />
+
+      case 'intranet':
+        return <Intranet />
+
       case 'settings':
-          if (workspaceLoading) return null
+        if (workspaceLoading) return null
         return isOwnerOrAdmin ? <Settings {...pageProps} /> : <AccessDenied />
 
       case 'beta-admin':
@@ -250,16 +231,9 @@ export default function App() {
 
       default:
         return (
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans,
-          }}>
-            <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>
-              Coming soon
-            </h2>
-            <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>
-              This section is under construction.
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans }}>
+            <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>Coming soon</h2>
+            <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>This section is under construction.</p>
           </div>
         )
     }
@@ -268,30 +242,18 @@ export default function App() {
   // Login screen
   if (!session) {
     return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans,
-      }}>
-        <div style={{
-          backgroundColor: t.colors.bgCard, borderRadius: t.radius.xl,
-          padding: '48px', width: '100%', maxWidth: '400px',
-          boxShadow: t.shadows.lg, margin: '0 16px',
-        }}>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-            gabspace
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.nav, fontFamily: t.fonts.sans }}>
+        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.xl, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px', fontFamily: t.fonts.heading }}>
+            curators
           </h1>
-          <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px' }}>
-            Clarity meets creativity
+          <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
+            where events meet excellence.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
-              <div style={{
-                padding: '10px 14px', borderRadius: t.radius.md,
-                backgroundColor: error.includes('Check') ? '#f0fff8' : t.colors.dangerLight,
-                color: error.includes('Check') ? t.colors.primary : t.colors.danger,
-                fontSize: t.fontSizes.base,
-              }}>
+              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? '#f0fff8' : t.colors.dangerLight, color: error.includes('Check') ? t.colors.primary : t.colors.danger, fontSize: t.fontSizes.base }}>
                 {error}
               </div>
             )}
@@ -301,7 +263,7 @@ export default function App() {
               <input
                 style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
                 type="email"
-                placeholder="you@example.com"
+                placeholder="you@prizepicks.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
               />
@@ -311,12 +273,7 @@ export default function App() {
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Password</label>
               <div style={{ position: 'relative' }}>
                 <input
-                  style={{
-                    padding: '10px 14px', borderRadius: t.radius.md,
-                    border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md,
-                    outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans,
-                    width: '100%', boxSizing: 'border-box', paddingRight: '44px',
-                  }}
+                  style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans, width: '100%', boxSizing: 'border-box', paddingRight: '44px' }}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
@@ -324,12 +281,7 @@ export default function App() {
                 />
                 <button
                   onClick={() => setShowPassword(prev => !prev)}
-                  style={{
-                    position: 'absolute', right: '12px', top: '50%',
-                    transform: 'translateY(-50%)', background: 'none',
-                    border: 'none', cursor: 'pointer', fontSize: '16px',
-                    color: t.colors.textTertiary, padding: '2px', lineHeight: 1,
-                  }}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: t.colors.textTertiary, padding: '2px', lineHeight: 1 }}
                 >
                   {showPassword ? '🙈' : '👁'}
                 </button>
@@ -339,32 +291,20 @@ export default function App() {
             <button
               onClick={handleLogin}
               disabled={loading}
-              style={{
-                padding: '12px', borderRadius: t.radius.md, border: 'none',
-                backgroundColor: t.colors.primary, color: t.colors.textInverse,
-                fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans,
-              }}
+              style={{ padding: '12px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
 
             {resetSent ? (
-              <div style={{
-                padding: '10px 14px', borderRadius: t.radius.md,
-                backgroundColor: '#f0fff8', color: t.colors.primary,
-                fontSize: t.fontSizes.base, textAlign: 'center',
-              }}>
+              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: '#f0fff8', color: t.colors.primary, fontSize: t.fontSizes.base, textAlign: 'center' }}>
                 ✓ Password reset email sent — check your inbox
               </div>
             ) : (
               <button
                 onClick={handleForgotPassword}
                 disabled={loading}
-                style={{
-                  background: 'none', border: 'none', color: t.colors.textTertiary,
-                  fontSize: t.fontSizes.sm, cursor: 'pointer', textAlign: 'center',
-                  fontFamily: t.fonts.sans, textDecoration: 'underline', padding: 0,
-                }}
+                style={{ background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.sm, cursor: 'pointer', textAlign: 'center', fontFamily: t.fonts.sans, textDecoration: 'underline', padding: 0 }}
               >
                 Forgot password?
               </button>
@@ -373,11 +313,7 @@ export default function App() {
             <button
               onClick={handleSignUp}
               disabled={loading}
-              style={{
-                padding: '12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`,
-                backgroundColor: t.colors.bgCard, color: t.colors.textSecondary,
-                fontSize: t.fontSizes.md, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans,
-              }}
+              style={{ padding: '12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
             >
               Create account
             </button>
@@ -387,13 +323,9 @@ export default function App() {
     )
   }
 
-  // Workspace still loading
   if (workspaceLoading) {
     return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans,
-      }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans }}>
         <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>Loading workspace…</p>
       </div>
     )
@@ -402,15 +334,14 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, display: 'flex' }}>
       {showOnboarding && (
-<OnboardingModal
-  userId={session.user.id}
-  onComplete={() => setShowOnboarding(false)}
-  onSkip={() => setShowOnboarding(false)}
-  onNavigate={(page) => setCurrentPage(page)}
-/>
+        <OnboardingModal
+          userId={session.user.id}
+          onComplete={() => setShowOnboarding(false)}
+          onSkip={() => setShowOnboarding(false)}
+          onNavigate={(page) => setCurrentPage(page)}
+        />
       )}
-      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} />
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
+<Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
         <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} />
         <div style={{ flex: 1 }}>
@@ -419,4 +350,4 @@ export default function App() {
       </div>
     </div>
   )
-}}
+}

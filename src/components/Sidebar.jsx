@@ -52,8 +52,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
-  const [expanded, setExpanded] = useState(['Stakeholders', 'Operations', 'Creative Collective', 'Events'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) {  const [expanded, setExpanded] = useState(['Stakeholders', 'Operations', 'Creative Collective', 'Events'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
@@ -208,9 +207,48 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
       <div style={{
         padding: '12px 16px 20px',
         borderTop: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
       }}>
         <button
+          onClick={() => handleNav('settings')}
+          style={{
+            width: '100%',
+            padding: '9px',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: t.radius.md,
+            color: 'rgba(255,255,255,0.35)',
+            fontSize: t.fontSizes.sm,
+            fontFamily: t.fonts.sans,
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          ⚙️ Settings
+        </button>
+        <button
+          onClick={onLogout}
+          style={{
+            width: '100%',
+            padding: '9px',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: t.radius.md,
+            color: 'rgba(255,255,255,0.35)',
+            fontSize: t.fontSizes.sm,
+            fontFamily: t.fonts.sans,
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          → Sign out
+        </button>
+        <button
           onClick={() => handleNav('my-events')}
+
+
           style={{
             width: '100%',
             padding: '10px',
