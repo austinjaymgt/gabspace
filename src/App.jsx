@@ -176,6 +176,15 @@ export default function App() {
   function renderPage() {
       console.log('renderPage → userRole:', userRole, 'workspaceLoading:', workspaceLoading)
     // Client role goes straight to portal
+    function renderPage() {
+    if (workspaceLoading) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+          <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, fontFamily: t.fonts.sans }}>Loading...</p>
+        </div>
+      )
+    }
+
     if (isClientOnly && currentPage !== 'client-portal') {
       return <ClientPortal {...pageProps} />
     }
@@ -410,4 +419,4 @@ export default function App() {
       </div>
     </div>
   )
-}
+}}

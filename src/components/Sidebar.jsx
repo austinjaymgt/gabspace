@@ -4,37 +4,39 @@ import { theme as t } from '../theme'
 const navItems = [
   { label: 'Dashboard', icon: '⊞', path: 'dashboard' },
   {
-    label: 'Clients', icon: '👥', path: 'clients', children: [
-      { label: 'All Clients', path: 'clients' },
+    label: 'Stakeholders', icon: '👥', path: 'clients', children: [
+      { label: 'All Stakeholders', path: 'clients' },
       { label: 'Projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
-      { label: 'Client Portals', path: 'client-portal' },
+      { label: 'Stakeholder Portals', path: 'client-portal' },
     ]
   },
-{
-  label: 'Events', icon: '🎪', path: 'my-events', children: [
-    { label: 'Inquiries', path: 'inquiries' },
-    { label: 'Brainstorm', path: 'brainstorm' },    
-    { label: 'All Events', path: 'my-events' },
-  ]
-},
   {
-    label: 'Business', icon: '💼', path: 'business', children: [
+    label: 'Events', icon: '🎪', path: 'my-events', children: [
+      { label: 'Inquiries', path: 'inquiries' },
+      { label: 'Brainstorm', path: 'brainstorm' },
+      { label: 'All Events', path: 'my-events' },
+    ]
+  },
+  {
+    label: 'Operations', icon: '⚙️', path: 'business', children: [
       { label: 'Overview', path: 'finance-overview' },
       { label: 'Revenue', path: 'revenue' },
       { label: 'Expenses', path: 'expenses' },
       { label: 'Vendors', path: 'vendors' },
+      { label: 'Team Goals', path: 'team-goals' },
+      { label: 'Resources', path: 'resources' },
     ]
   },
   {
-    label: 'Marketing', icon: '📣', path: 'marketing', children: [
+    label: 'Creative Collective', icon: '🎨', path: 'marketing', children: [
       { label: 'Campaigns', path: 'campaigns' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
       { label: 'Community Events', path: 'business-events' },
       { label: 'Company Assets', path: 'assets' },
     ]
   },
-  { label: 'Beta Admin', icon: '🧪', path: 'beta-admin' },
+  { label: 'Intranet', icon: '🏢', path: 'intranet' },
   { label: 'Settings', icon: '⚙️', path: 'settings' },
 ]
 
@@ -51,7 +53,7 @@ function useIsDesktop() {
 }
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
-  const [expanded, setExpanded] = useState(['Clients', 'Business', 'Marketing', 'Events'])
+  const [expanded, setExpanded] = useState(['Stakeholders', 'Operations', 'Creative Collective', 'Events'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
@@ -69,8 +71,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
     <div style={{
       width: `${SIDEBAR_WIDTH}px`,
       height: '100vh',
-      backgroundColor: t.colors.bgCard,
-      borderRight: `1px solid ${t.colors.borderLight}`,
+      backgroundColor: t.colors.nav,
+      borderRight: 'none',
       display: 'flex',
       flexDirection: 'column',
       overflowY: 'auto',
@@ -79,23 +81,43 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
       {/* Logo */}
       <div style={{
         padding: '20px 20px 16px',
-        borderBottom: `1px solid ${t.colors.borderLight}`,
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
         <div>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: t.colors.textPrimary, letterSpacing: '-0.5px', fontFamily: t.fonts.sans }}>
-            gabspace
+          <div style={{
+            fontSize: '22px',
+            fontWeight: '800',
+            color: '#FFFFFF',
+            letterSpacing: '-0.5px',
+            fontFamily: t.fonts.heading,
+            lineHeight: 1,
+          }}>
+            curators
           </div>
-          <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>
-            Clarity meets creativity
+          <div style={{
+            fontSize: t.fontSizes.xs,
+            color: 'rgba(255,255,255,0.35)',
+            marginTop: '4px',
+            fontFamily: t.fonts.sans,
+          }}>
+            where events meet excellence.
           </div>
         </div>
         {!isDesktop && (
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: t.colors.textTertiary, padding: '4px', lineHeight: 1 }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '18px',
+              color: 'rgba(255,255,255,0.4)',
+              padding: '4px',
+              lineHeight: 1,
+            }}
           >
             ✕
           </button>
@@ -104,65 +126,108 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
 
       {/* Nav */}
       <nav style={{ padding: '8px 0', flex: 1 }}>
-        {navItems.map(item => (
-          <div key={item.label}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '9px 20px',
-                cursor: 'pointer',
-                backgroundColor: currentPage === item.path ? t.colors.primaryLight : 'transparent',
-                color: currentPage === item.path ? t.colors.primary : t.colors.textSecondary,
-                fontSize: t.fontSizes.base,
-                fontWeight: '500',
-                fontFamily: t.fonts.sans,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => { if (currentPage !== item.path) e.currentTarget.style.backgroundColor = t.colors.bgHover }}
-              onMouseLeave={e => { if (currentPage !== item.path) e.currentTarget.style.backgroundColor = 'transparent' }}
-              onClick={() => {
-                if (item.children) toggleExpand(item.label)
-                else handleNav(item.path)
-              }}
-            >
-              <span style={{ fontSize: '15px', flexShrink: 0 }}>{item.icon}</span>
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.children && (
-                <span style={{ fontSize: '10px', color: t.colors.textTertiary }}>
-                  {expanded.includes(item.label) ? '▾' : '▸'}
-                </span>
+        {navItems.map(item => {
+          const isActive = currentPage === item.path ||
+            (item.children && item.children.some(c => c.path === currentPage))
+
+          return (
+            <div key={item.label}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '9px 16px',
+                  margin: '1px 8px',
+                  borderRadius: t.radius.md,
+                  cursor: 'pointer',
+                  backgroundColor: isActive ? t.colors.navActive : 'transparent',
+                  color: isActive ? t.colors.navTextActive : t.colors.navText,
+                  fontSize: t.fontSizes.base,
+                  fontWeight: '500',
+                  fontFamily: t.fonts.sans,
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) e.currentTarget.style.backgroundColor = t.colors.navHover
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'
+                }}
+                onClick={() => {
+                  if (item.children) toggleExpand(item.label)
+                  else handleNav(item.path)
+                }}
+              >
+                <span style={{ fontSize: '15px', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.children && (
+                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)' }}>
+                    {expanded.includes(item.label) ? '▾' : '▸'}
+                  </span>
+                )}
+              </div>
+
+              {item.children && expanded.includes(item.label) && (
+                <div style={{ paddingLeft: '41px', paddingBottom: '4px' }}>
+                  {item.children.map(child => (
+                    <div
+                      key={child.label}
+                      style={{
+                        padding: '7px 12px',
+                        fontSize: t.fontSizes.sm,
+                        color: currentPage === child.path ? t.colors.navAccent : 'rgba(255,255,255,0.4)',
+                        fontWeight: currentPage === child.path ? '600' : '400',
+                        cursor: 'pointer',
+                        borderRadius: t.radius.md,
+                        fontFamily: t.fonts.sans,
+                        transition: 'color 0.15s',
+                        borderLeft: currentPage === child.path
+                          ? `2px solid ${t.colors.navAccent}`
+                          : '2px solid transparent',
+                      }}
+                      onMouseEnter={e => {
+                        if (currentPage !== child.path) e.currentTarget.style.color = 'rgba(255,255,255,0.7)'
+                      }}
+                      onMouseLeave={e => {
+                        if (currentPage !== child.path) e.currentTarget.style.color = 'rgba(255,255,255,0.4)'
+                      }}
+                      onClick={() => handleNav(child.path)}
+                    >
+                      {child.label}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-
-            {item.children && expanded.includes(item.label) && (
-              <div style={{ paddingLeft: '45px' }}>
-                {item.children.map(child => (
-                  <div
-                    key={child.label}
-                    style={{
-                      padding: '7px 12px',
-                      fontSize: t.fontSizes.sm,
-                      color: currentPage === child.path ? t.colors.primary : t.colors.textSecondary,
-                      fontWeight: currentPage === child.path ? '600' : '400',
-                      cursor: 'pointer',
-                      borderRadius: t.radius.md,
-                      fontFamily: t.fonts.sans,
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => { if (currentPage !== child.path) e.currentTarget.style.backgroundColor = t.colors.bgHover }}
-                    onMouseLeave={e => { if (currentPage !== child.path) e.currentTarget.style.backgroundColor = 'transparent' }}
-                    onClick={() => handleNav(child.path)}
-                  >
-                    {child.label}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </nav>
+
+      {/* Bottom — New Event CTA */}
+      <div style={{
+        padding: '12px 16px 20px',
+        borderTop: '1px solid rgba(255,255,255,0.07)',
+      }}>
+        <button
+          onClick={() => handleNav('my-events')}
+          style={{
+            width: '100%',
+            padding: '10px',
+            background: 'transparent',
+            border: `1.5px solid ${t.colors.navAccent}`,
+            borderRadius: t.radius.md,
+            color: t.colors.navAccent,
+            fontSize: t.fontSizes.base,
+            fontWeight: '600',
+            fontFamily: t.fonts.sans,
+            cursor: 'pointer',
+            letterSpacing: '0.02em',
+          }}
+        >
+          + New Event
+        </button>
+      </div>
     </div>
   )
 
@@ -177,7 +242,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose }) {
           onClick={onClose}
           style={{
             position: 'fixed', inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.2)',
+            backgroundColor: 'rgba(0,0,0,0.4)',
             zIndex: 40,
           }}
         />

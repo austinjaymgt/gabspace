@@ -1,24 +1,33 @@
 export const theme = {
-  // Refreshed color palette — slightly warmer teal, cleaner neutrals
   colors: {
-    primary: '#0D9373',
-    primaryLight: '#E8F7F3',
-    primaryDark: '#0A7560',
-    accent: '#F59E0B',
+    // Core brand
+    primary: '#7B2FBE',
+    primaryLight: '#F0E8FB',
+    primaryDark: '#5E1F99',
+    accent: '#ADFF2F',
+    accentDark: '#8ACC00',
     danger: '#EF4444',
     dangerLight: '#FEF2F2',
     success: '#10B981',
     warning: '#F59E0B',
 
     // Neutrals
-    bg: '#F8F7F4',
+    bg: '#F7F7F7',
     bgCard: '#FFFFFF',
-    bgHover: '#F3F2EF',
-    border: '#EBEBЕ7',
-    borderLight: '#F4F4F1',
+    bgHover: '#F0F0F0',
+    border: '#E8E8E8',
+    borderLight: '#F2F2F2',
+
+    // Nav (dark sidebar)
+    nav: '#0E0E0E',
+    navHover: 'rgba(255,255,255,0.07)',
+    navActive: '#7B2FBE',
+    navText: 'rgba(255,255,255,0.5)',
+    navTextActive: '#FFFFFF',
+    navAccent: '#ADFF2F',
 
     // Text
-    textPrimary: '#1A1A1A',
+    textPrimary: '#0E0E0E',
     textSecondary: '#6B7280',
     textTertiary: '#9CA3AF',
     textInverse: '#FFFFFF',
@@ -26,7 +35,8 @@ export const theme = {
 
   // Typography
   fonts: {
-    sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    heading: '"Syne", sans-serif',
+    sans: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
   },
 
   fontSizes: {
