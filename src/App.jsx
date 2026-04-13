@@ -158,19 +158,11 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
   }
 
 function renderPage() {
-  if (workspaceLoading) {
-    return (
-      <div style={{ padding: '40px', color: 'red', fontSize: '24px' }}>
-        TEST — workspaceLoading: {String(workspaceLoading)} | userRole: {String(userRole)}
-      </div>
-    )
+  if (isClientOnly && currentPage !== 'client-portal') {
+    return <ClientPortal {...pageProps} />
   }
 
-  if (isClientOnly && currentPage !== 'client-portal') {
-      return <ClientPortal {...pageProps} />
-    }
-
-    switch (currentPage) {
+  switch (currentPage) {
       case 'dashboard':
         return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
 
