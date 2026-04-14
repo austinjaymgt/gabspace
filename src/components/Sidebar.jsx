@@ -20,9 +20,7 @@ const navItems = [
   },
   {
     label: 'Operations', icon: '⚙️', path: 'business', children: [
-      { label: 'Overview', path: 'finance-overview' },
-      { label: 'Revenue', path: 'revenue' },
-      { label: 'Expenses', path: 'expenses' },
+      { label: 'Department Budget', path: 'department-budget' },
       { label: 'Vendors', path: 'vendors' },
       { label: 'Team Goals', path: 'team-goals' },
       { label: 'Resources', path: 'resources' },

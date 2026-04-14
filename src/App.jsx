@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import DepartmentBudget from './pages/DepartmentBudget'
 import Inquiries from './pages/Inquiries'
 import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
@@ -191,13 +192,8 @@ function renderPage() {
 
       case 'invoices':
         return isOwnerOrAdmin ? <Invoices {...pageProps} /> : <AccessDenied />
-      case 'expenses':
-        return isOwnerOrAdmin ? <Expenses {...pageProps} /> : <AccessDenied />
-      case 'revenue':
-        return isOwnerOrAdmin ? <Revenue {...pageProps} /> : <AccessDenied />
-      case 'finance-overview':
-        return isOwnerOrAdmin ? <FinanceOverview {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
-
+      case 'department-budget':
+        return isOwnerOrAdmin ? <DepartmentBudget {...pageProps} /> : <AccessDenied />
       case 'campaigns':
         return isStaff ? <Campaigns {...pageProps} /> : <AccessDenied />
       case 'campaign-tracking':
