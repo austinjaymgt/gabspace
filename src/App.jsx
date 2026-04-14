@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import CreativeStrategy from './pages/CreativeStrategy'
 import Briefs from './pages/Briefs'
 import Packages from './pages/Packages'
 import DepartmentBudget from './pages/DepartmentBudget'
@@ -222,6 +223,9 @@ function renderPage() {
         return <Packages {...pageProps} />
       case 'briefs':
         return <Briefs {...pageProps} />
+
+      case 'creative-strategy':
+        return isStaff ? <CreativeStrategy {...pageProps} /> : <AccessDenied />
 
       default:
         return (

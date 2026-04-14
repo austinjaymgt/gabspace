@@ -34,6 +34,7 @@ const navItems = [
   },
   {
     label: 'Creative Collective', icon: '🎨', path: 'marketing', children: [
+      { label: 'Creative Strategy', path: 'creative-strategy' },
       { label: 'Campaigns', path: 'campaigns' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
       { label: 'Community Events', path: 'business-events' },
