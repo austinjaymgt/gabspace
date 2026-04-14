@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import Briefs from './pages/Briefs'
+import Packages from './pages/Packages'
 import DepartmentBudget from './pages/DepartmentBudget'
 import Inquiries from './pages/Inquiries'
 import BetaAdmin from './pages/BetaAdmin'
@@ -216,6 +218,10 @@ function renderPage() {
 
       case 'beta-admin':
         return isOwnerOrAdmin ? <BetaAdmin {...pageProps} /> : <AccessDenied />
+      case 'packages':
+        return <Packages {...pageProps} />
+      case 'briefs':
+        return <Briefs {...pageProps} />
 
       default:
         return (
