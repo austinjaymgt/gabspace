@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import ProDev from './pages/ProDev'
 import CreativeStrategy from './pages/CreativeStrategy'
 import Briefs from './pages/Briefs'
 import Packages from './pages/Packages'
@@ -198,7 +199,7 @@ function renderPage() {
       case 'department-budget':
         return isOwnerOrAdmin ? <DepartmentBudget {...pageProps} /> : <AccessDenied />
       case 'campaigns':
-        return isStaff ? <Campaigns {...pageProps} /> : <AccessDenied />
+          return isStaff ? <CreativeStrategy {...pageProps} /> : <AccessDenied />
       case 'campaign-tracking':
         return isStaff ? <ContentCalendar {...pageProps} /> : <AccessDenied />
       case 'assets':
@@ -212,6 +213,9 @@ function renderPage() {
 
       case 'intranet':
         return <Intranet />
+
+      case 'pro-dev':
+        return isStaff ? <ProDev {...pageProps} /> : <AccessDenied />
 
       case 'settings':
         if (workspaceLoading) return null

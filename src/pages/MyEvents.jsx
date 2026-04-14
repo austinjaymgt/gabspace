@@ -1180,6 +1180,7 @@ export default function MyEvents({ workspaceId, userRole, session }) {
       headcount: form.headcount ? parseInt(form.headcount) : null,
       budget: form.budget ? parseFloat(form.budget) : null,
       description: form.description || null, source: 'internal', user_id: user.id,
+      workspace_id: workspaceId,
     })
     if (error) { setError(error.message); setSaving(false); return }
     setShowForm(false); setSaving(false); fetchEvents()

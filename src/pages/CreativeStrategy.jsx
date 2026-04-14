@@ -66,7 +66,7 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
     setLoading(true)
     const [campRes, projRes] = await Promise.all([
       supabase.from('campaigns').select('*').eq('workspace_id', workspaceId).order('created_at', { ascending: false }),
-      supabase.from('projects').select('id, title, event_date, event_status').eq('workspace_id', workspaceId).order('title'),
+      supabase.from('projects').select('id, title, event_date, event_status').order('title'),
     ])
     setCampaigns(campRes.data || [])
     setProjects(projRes.data || [])
@@ -448,9 +448,13 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
                   )}
                 </div>
               ) : isCreativeOrDirector ? (
-                <select onChange={e => onLinkEvent(campaign.id, e.target.value)} defaultValue="" style={{ width: '100%', padding: '7px 10px', borderRadius: '8px', border: '1px dashed #E8E8E8', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', color: '#9CA3AF', background: 'transparent', cursor: 'pointer' }}>
-                  <option value="" disabled>+ Link to an event</option>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                <select
+                    onChange={e => { if (e.target.value) onLinkEvent(campaign.id, e.target.value) }}
+                    value=""
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: '8px', border: '1px dashed #E8E8E8', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', color: '#9CA3AF', background: 'transparent', cursor: 'pointer' }}
+          >
+                    <option value="" disabled>+ Link to an event</option>
+                    {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
               ) : (
                 <div style={{ fontSize: '12px', color: '#9CA3AF' }}>No event linked</div>

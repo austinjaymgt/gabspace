@@ -28,19 +28,23 @@ const navItems = [
     label: 'Operations', icon: '⚙️', path: 'business', children: [
       { label: 'Department Budget', path: 'department-budget' },
       { label: 'Vendors', path: 'vendors' },
-      { label: 'Team Goals', path: 'team-goals' },
       { label: 'Resources', path: 'resources' },
     ]
   },
   {
     label: 'Creative Collective', icon: '🎨', path: 'marketing', children: [
       { label: 'Creative Strategy', path: 'creative-strategy' },
-      { label: 'Campaigns', path: 'campaigns' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
-      { label: 'Community Events', path: 'business-events' },
       { label: 'Company Assets', path: 'assets' },
     ]
   },
+  {
+  label: 'Team', icon: '👥', path: 'team', children: [
+    { label: 'Team Goals', path: 'team-goals' },
+    { label: 'Professional Dev', path: 'pro-dev' },
+    { label: 'Community Events', path: 'business-events' },
+  ]
+},
   { label: 'Intranet', icon: '🏢', path: 'intranet' },
   { label: 'Settings', icon: '⚙️', path: 'settings' },
 ]
@@ -57,7 +61,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) {  const [expanded, setExpanded] = useState(['Stakeholders', 'Operations', 'Creative Collective', 'Events', 'Playbooks'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) {  const [expanded, setExpanded] = useState(['Stakeholders', 'Operations', 'Creative Collective', 'Events', 'Playbooks', 'Team'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
