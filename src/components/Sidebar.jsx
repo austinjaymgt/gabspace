@@ -4,8 +4,8 @@ import { theme as t } from '../theme'
 const navItems = [
   { label: 'Dashboard', icon: '⊞', path: 'dashboard' },
   {
-    label: 'Stakeholders', icon: '👥', path: 'clients', children: [
-      { label: 'All Stakeholders', path: 'clients' },
+    label: 'All Stakeholders', icon: '👥', path: 'allstakeholders', children: [
+      { label: 'All Stakeholders', path: 'allstakeholders' },
       { label: 'Projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
       { label: 'Stakeholder Portals', path: 'client-portal' },

@@ -10,7 +10,7 @@ import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import Dashboard from './pages/Dashboard'
-import Clients from './pages/Clients'
+import AllStakeholders from './pages/AllStakeholders'
 import Projects from './pages/Projects'
 import Events from './pages/Events'
 import Vendors from './pages/Vendors'
@@ -76,13 +76,15 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
     setWorkspaceLoading(true)
 
     supabase
-      .from('user_profiles')
-      .select('workspace_id, role')
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-      .then(async ({ data }) => {
-        if (data) {
-          setWorkspaceId(data.workspace_id)
+  .from('user_profiles')
+  .select('workspace_id, role')
+  .eq('user_id', session.user.id)
+  .not('role', 'eq', 'employee')
+  .maybeSingle()
+  .then(async ({ data, error }) => {
+    console.log('profile data:', data, 'error:', error)
+    if (data) {
+      setWorkspaceId(data.workspace_id)
           setUserRole(data.role)
           setWorkspaceLoading(false)
           return
@@ -171,9 +173,11 @@ function renderPage() {
       case 'dashboard':
         return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
 
-      case 'clients':
-      case 'all-clients':
-        return isStaff ? <Clients {...pageProps} /> : <AccessDenied />
+      case 'allstakeholders':
+      case 'all-allstakeholders':
+        return isStaff ? <AllStakeholders {...pageProps} /> : <AccessDenied />
+      case 'resources':
+        return isStaff ? <Vendors {...pageProps} /> : <AccessDenied />  
 
       case 'client-portal':
         return <ClientPortal {...pageProps} />
