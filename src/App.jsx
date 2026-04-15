@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import IntranetManager from './pages/IntranetManager'
 import ProDev from './pages/ProDev'
 import CreativeStrategy from './pages/CreativeStrategy'
 import Briefs from './pages/Briefs'
@@ -235,7 +236,10 @@ function renderPage() {
       case 'creative-strategy':
         return isStaff ? <CreativeStrategy {...pageProps} /> : <AccessDenied />
 
-      default:
+      case 'intranet-manager':
+        return isOwnerOrAdmin ? <IntranetManager {...pageProps} /> : <AccessDenied />
+      
+        default:
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', fontFamily: t.fonts.sans }}>
             <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>Coming soon</h2>

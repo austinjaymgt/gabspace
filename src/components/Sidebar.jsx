@@ -45,7 +45,11 @@ const navItems = [
     { label: 'Community Events', path: 'business-events' },
   ]
 },
-  { label: 'Intranet', icon: '🏢', path: 'intranet' },
+  { label: 'Intranet', icon: '🏢', path: 'intranet', children: [
+  { label: 'Third Spot', path: 'intranet' },
+  { label: 'Manage content', path: 'intranet-manager' },
+]},
+
   { label: 'Settings', icon: '⚙️', path: 'settings' },
 ]
 
