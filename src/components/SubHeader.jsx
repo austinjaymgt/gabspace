@@ -4,7 +4,7 @@ import { theme as t } from '../theme'
 
 const allPages = [
   { path: 'dashboard', label: 'Dashboard', icon: '⊞' },
-  { path: 'clients', label: 'Stakeholders', icon: '👥' },
+  { path: 'allstakeholders', label: 'Stakeholders', icon: '👥' },
   { path: 'client-portal', label: 'Portals', icon: '🔗' },
   { path: 'projects', label: 'Projects', icon: '📋' },
   { path: 'tasks', label: 'Tasks', icon: '✅' },
