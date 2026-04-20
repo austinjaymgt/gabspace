@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { Icon } from './Icon'
 
 const allPages = [
-  { path: 'dashboard', label: 'Dashboard', icon: '⊞' },
-  { path: 'allclients', label: 'Clients', icon: '👥' },
-  { path: 'client-portal', label: 'Portals', icon: '🔗' },
-  { path: 'projects', label: 'Projects', icon: '📋' },
-  { path: 'tasks', label: 'Tasks', icon: '✅' },
-  { path: 'my-events', label: 'Events', icon: '🎪' },
-  { path: 'vendors', label: 'Vendors', icon: '🏪' },
-  { path: 'finance-overview', label: 'Finances', icon: '📊' },
-  { path: 'team-goals', label: 'Team Goals', icon: '🎯' },
-  { path: 'campaigns', label: 'Campaigns', icon: '📣' },
-  { path: 'campaign-tracking', label: 'Content Calendar', icon: '🗓' },
-  { path: 'assets', label: 'Company Assets', icon: '🎨' },
-  { path: 'intranet', label: 'Intranet', icon: '🏢' },
+  { path: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { path: 'allclients', label: 'Clients', icon: 'clients' },
+  { path: 'client-portal', label: 'Portals', icon: 'portal' },
+  { path: 'projects', label: 'Projects', icon: 'projects' },
+  { path: 'tasks', label: 'Tasks', icon: 'task-done' },
+  { path: 'my-events', label: 'Events', icon: 'events' },
+  { path: 'vendors', label: 'Vendors', icon: 'vendors' },
+  { path: 'finance-overview', label: 'Finances', icon: 'chart' },
+  { path: 'team-goals', label: 'Team Goals', icon: 'team-goals' },
+  { path: 'campaigns', label: 'Campaigns', icon: 'campaigns' },
+  { path: 'campaign-tracking', label: 'Content Calendar', icon: 'date' },
+  { path: 'assets', label: 'Company Assets', icon: 'creative' },
+  { path: 'intranet', label: 'Intranet', icon: 'intranet' },
 ]
 
 export default function SubHeader({ currentPage, onNavigate, session }) {
@@ -124,42 +125,54 @@ export default function SubHeader({ currentPage, onNavigate, session }) {
               if (currentPage !== page.path) e.currentTarget.style.backgroundColor = 'transparent'
             }}
           >
-            <span>{page.icon}</span>
+            <Icon name={page.icon} size="sm" />
             <span>{page.label}</span>
           </button>
         ))}
         <button
-          onClick={() => setShowFavPicker(!showFavPicker)}
-          style={{
-            padding: '3px 8px',
-            borderRadius: t.radius.full,
-            border: `1px dashed ${t.colors.border}`,
-            backgroundColor: 'transparent',
-            color: t.colors.textTertiary,
-            fontSize: t.fontSizes.xs,
-            cursor: 'pointer',
-            fontFamily: t.fonts.sans,
-          }}
-        >
-          {showFavPicker ? 'Done' : '+ Edit'}
-        </button>
+  onClick={() => setShowFavPicker(!showFavPicker)}
+  style={{
+    padding: '3px 8px',
+    borderRadius: t.radius.full,
+    border: `1px dashed ${t.colors.border}`,
+    backgroundColor: 'transparent',
+    color: t.colors.textTertiary,
+    fontSize: t.fontSizes.xs,
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+  }}
+>
+  {showFavPicker ? (
+    'Done'
+  ) : (
+    <>
+      <Icon name="add" size="sm" />
+      Edit
+    </>
+  )}
+</button>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
-          onClick={() => onNavigate('settings')}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '14px',
-            color: t.colors.textTertiary,
-            padding: '4px',
-          }}
-          title="Settings"
-        >
-          ⚙️
-        </button>
+  onClick={() => onNavigate('settings')}
+  style={{
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: t.colors.textTertiary,
+    padding: '4px',
+    display: 'flex',
+    alignItems: 'center',
+  }}
+  title="Settings"
+  aria-label="Settings"
+>
+  <Icon name="settings" size="sm" />
+</button>
       </div>
 
       {showFavPicker && (
@@ -207,9 +220,13 @@ export default function SubHeader({ currentPage, onNavigate, session }) {
                 textAlign: 'left',
               }}
             >
-              <span>{page.icon}</span>
-              <span>{page.label}</span>
-              {favorites.includes(page.path) && <span style={{ marginLeft: 'auto' }}>✓</span>}
+              <Icon name={page.icon} size="sm" />
+  <span>{page.label}</span>
+  {favorites.includes(page.path) && (
+    <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+      <Icon name="success" size="sm" />
+    </span>
+  )}
             </button>
           ))}
         </div>
