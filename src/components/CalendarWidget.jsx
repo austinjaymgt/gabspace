@@ -54,11 +54,11 @@ export default function CalendarWidget() {
     const [
       { data: projectEvents },
       { data: projectDeadlines },
-      { data: inquiries },
+      // { data: inquiries }, // Hidden pending multi-tenant re-architecture
     ] = await Promise.all([
       supabase.from('projects').select('id, title, event_date, event_status').eq('type', 'event').not('event_date', 'is', null),
       supabase.from('projects').select('id, title, end_date, status').eq('type', 'project').not('end_date', 'is', null),
-      supabase.from('event_inquiries').select('id, first_name, last_name, event_type, event_date').not('event_date', 'is', null),
+      // supabase.from('event_inquiries').select(...) — Hidden pending multi-tenant re-architecture
     ])
 
     const items = [
@@ -74,12 +74,13 @@ export default function CalendarWidget() {
         date: toDateKey(p.end_date),
         meta: p.status,
       })),
-      ...(inquiries || []).map(inq => ({
-        id: `inquiry-${inq.id}`, type: 'inquiry',
-        title: `${inq.event_type || 'Inquiry'} — ${inq.first_name} ${inq.last_name}`,
-        date: toDateKey(inq.event_date),
-        meta: 'inquiry',
-      })),
+      // Inquiries mapping hidden pending multi-tenant re-architecture
+      // ...(inquiries || []).map(inq => ({
+      //   id: `inquiry-${inq.id}`, type: 'inquiry',
+      //   title: `${inq.event_type || 'Inquiry'} — ${inq.first_name} ${inq.last_name}`,
+      //   date: toDateKey(inq.event_date),
+      //   meta: 'inquiry',
+      // })),
     ].filter(e => e.date)
     setEvents(items)
     setLoading(false)

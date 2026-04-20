@@ -13,7 +13,6 @@ const navItems = [
   },
   {
     label: 'Events', icon: '🎪', path: 'my-events', children: [
-      { label: 'Inquiries', path: 'inquiries' },
       { label: 'Brainstorm', path: 'brainstorm' },
       { label: 'All Events', path: 'my-events' },
     ]

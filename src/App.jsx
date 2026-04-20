@@ -6,7 +6,7 @@ import CreativeStrategy from './pages/CreativeStrategy'
 import Briefs from './pages/Briefs'
 import Packages from './pages/Packages'
 import DepartmentBudget from './pages/DepartmentBudget'
-import Inquiries from './pages/Inquiries'
+// import Inquiries from './pages/Inquiries' // Hidden pending multi-tenant re-architecture
 import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
@@ -193,8 +193,8 @@ function renderPage() {
         return isStaff ? <EventBrainstorm {...pageProps} /> : <AccessDenied />
       case 'business-events':
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
-      case 'inquiries':
-        return isStaff ? <Inquiries {...pageProps} /> : <AccessDenied />
+      // case 'inquiries':
+//   return isStaff ? <Inquiries {...pageProps} /> : <AccessDenied />
 
       case 'tasks':
         return <Tasks {...pageProps} />
