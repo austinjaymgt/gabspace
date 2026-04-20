@@ -20,3 +20,10 @@ input, select, textarea {
   background-color: #F8F7F4;
   min-height: 100vh;
 }
+@keyframes icon-spin {
+  to { transform: rotate(360deg); }
+}
+
+.icon-spin {
+  animation: icon-spin 1s linear infinite;
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import { Icon } from './components/Icon'
 import IntranetManager from './pages/IntranetManager'
 import ProDev from './pages/ProDev'
 import CreativeStrategy from './pages/CreativeStrategy'

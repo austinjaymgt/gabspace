@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
+import { Icon } from './Icon'
 
-const navItems = [
-  { label: 'Dashboard', icon: '⊞', path: 'dashboard' },
+  const navItems = [
+  { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
   {
-    label: 'All Clients', icon: '👥', path: 'allclients', children: [
+    label: 'All Clients', icon: 'clients', path: 'allclients', children: [
       { label: 'All Clients', path: 'allclients' },
       { label: 'Projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
@@ -12,44 +13,45 @@ const navItems = [
     ]
   },
   {
-    label: 'Events', icon: '🎪', path: 'my-events', children: [
+    label: 'Events', icon: 'events', path: 'my-events', children: [
       { label: 'Brainstorm', path: 'brainstorm' },
       { label: 'All Events', path: 'my-events' },
     ]
   },
-{
-  label: 'Playbooks', icon: '📖', path: 'packages', children: [
-    { label: 'Packages', path: 'packages' },
-    { label: 'Briefs', path: 'briefs' },
-  ]
-},
   {
-    label: 'Operations', icon: '⚙️', path: 'business', children: [
+    label: 'Playbooks', icon: 'book', path: 'packages', children: [
+      { label: 'Packages', path: 'packages' },
+      { label: 'Briefs', path: 'briefs' },
+    ]
+  },
+  {
+    label: 'Operations', icon: 'operations', path: 'business', children: [
       { label: 'Department Budget', path: 'department-budget' },
       { label: 'Vendors', path: 'vendors' },
       { label: 'Resources', path: 'resources' },
     ]
   },
   {
-    label: 'Creative Collective', icon: '🎨', path: 'marketing', children: [
+    label: 'Creative Collective', icon: 'creative', path: 'marketing', children: [
       { label: 'Creative Strategy', path: 'creative-strategy' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
       { label: 'Company Assets', path: 'assets' },
     ]
   },
   {
-  label: 'Team', icon: '👥', path: 'team', children: [
-    { label: 'Team Goals', path: 'team-goals' },
-    { label: 'Professional Dev', path: 'pro-dev' },
-    { label: 'Community Events', path: 'business-events' },
-  ]
-},
-  { label: 'Intranet', icon: '🏢', path: 'intranet', children: [
-  { label: 'Third Spot', path: 'intranet' },
-  { label: 'Manage content', path: 'intranet-manager' },
-]},
-
-  { label: 'Settings', icon: '⚙️', path: 'settings' },
+    label: 'Team', icon: 'team', path: 'team', children: [
+      { label: 'Team Goals', path: 'team-goals' },
+      { label: 'Professional Dev', path: 'pro-dev' },
+      { label: 'Community Events', path: 'business-events' },
+    ]
+  },
+  {
+    label: 'Intranet', icon: 'intranet', path: 'intranet', children: [
+      { label: 'Third Spot', path: 'intranet' },
+      { label: 'Manage content', path: 'intranet-manager' },
+    ]
+  },
+  { label: 'Settings', icon: 'settings', path: 'settings' },
 ]
 
 const SIDEBAR_WIDTH = 240
@@ -118,21 +120,22 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
           </div>
         </div>
         {!isDesktop && (
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '18px',
-              color: 'rgba(255,255,255,0.4)',
-              padding: '4px',
-              lineHeight: 1,
-            }}
-          >
-            ✕
-          </button>
-        )}
+  <button
+    onClick={onClose}
+    style={{
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      color: 'rgba(255,255,255,0.4)',
+      padding: '4px',
+      display: 'flex',
+      alignItems: 'center',
+    }}
+    aria-label="Close sidebar"
+  >
+    <Icon name="close" size="md" />
+  </button>
+)}
       </div>
 
       {/* Nav */}
@@ -170,13 +173,15 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
                   else handleNav(item.path)
                 }}
               >
-                <span style={{ fontSize: '15px', flexShrink: 0 }}>{item.icon}</span>
+<span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+  <Icon name={item.icon} size="sm" />
+</span>
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {item.children && (
-                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)' }}>
-                    {expanded.includes(item.label) ? '▾' : '▸'}
-                  </span>
-                )}
+  <span style={{ display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.25)' }}>
+    <Icon name={expanded.includes(item.label) ? 'expand' : 'collapse'} size="sm" />
+  </span>
+)}
               </div>
 
               {item.children && expanded.includes(item.label) && (
@@ -224,59 +229,70 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
         gap: '8px',
       }}>
         <button
-          onClick={() => handleNav('settings')}
-          style={{
-            width: '100%',
-            padding: '9px',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: t.radius.md,
-            color: 'rgba(255,255,255,0.35)',
-            fontSize: t.fontSizes.sm,
-            fontFamily: t.fonts.sans,
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
-        >
-          ⚙️ Settings
-        </button>
+  onClick={() => handleNav('settings')}
+  style={{
+    width: '100%',
+    padding: '9px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: t.radius.md,
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: t.fontSizes.sm,
+    fontFamily: t.fonts.sans,
+    cursor: 'pointer',
+    textAlign: 'left',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  }}
+>
+  <Icon name="settings" size="sm" />
+  Settings
+</button>
+       <button
+  onClick={onLogout}
+  style={{
+    width: '100%',
+    padding: '9px',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: t.radius.md,
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: t.fontSizes.sm,
+    fontFamily: t.fonts.sans,
+    cursor: 'pointer',
+    textAlign: 'left',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  }}
+>
+  <Icon name="signout" size="sm" />
+  Sign out
+</button>
         <button
-          onClick={onLogout}
-          style={{
-            width: '100%',
-            padding: '9px',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: t.radius.md,
-            color: 'rgba(255,255,255,0.35)',
-            fontSize: t.fontSizes.sm,
-            fontFamily: t.fonts.sans,
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
-        >
-          → Sign out
-        </button>
-        <button
-          onClick={() => handleNav('my-events')}
-
-
-          style={{
-            width: '100%',
-            padding: '10px',
-            background: 'transparent',
-            border: `1.5px solid ${t.colors.navAccent}`,
-            borderRadius: t.radius.md,
-            color: t.colors.navAccent,
-            fontSize: t.fontSizes.base,
-            fontWeight: '600',
-            fontFamily: t.fonts.sans,
-            cursor: 'pointer',
-            letterSpacing: '0.02em',
-          }}
-        >
-          + New Event
-        </button>
+  onClick={() => handleNav('my-events')}
+  style={{
+    width: '100%',
+    padding: '10px',
+    background: 'transparent',
+    border: `1.5px solid ${t.colors.navAccent}`,
+    borderRadius: t.radius.md,
+    color: t.colors.navAccent,
+    fontSize: t.fontSizes.base,
+    fontWeight: '600',
+    fontFamily: t.fonts.sans,
+    cursor: 'pointer',
+    letterSpacing: '0.02em',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+  }}
+>
+  <Icon name="add" size="sm" />
+  New Event
+</button>
       </div>
     </div>
   )
