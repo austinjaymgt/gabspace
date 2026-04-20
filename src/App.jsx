@@ -11,7 +11,7 @@ import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import Dashboard from './pages/Dashboard'
-import AllStakeholders from './pages/AllStakeholders'
+import AllClients from './pages/AllClients'
 import Projects from './pages/Projects'
 import Events from './pages/Events'
 import Vendors from './pages/Vendors'
@@ -174,9 +174,9 @@ function renderPage() {
       case 'dashboard':
         return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
 
-      case 'allstakeholders':
-      case 'all-allstakeholders':
-        return isStaff ? <AllStakeholders {...pageProps} /> : <AccessDenied />
+      case 'allclients':
+      case 'all-allclients':
+        return isStaff ? <AllClients {...pageProps} /> : <AccessDenied />
       case 'resources':
         return isStaff ? <Vendors {...pageProps} /> : <AccessDenied />  
 

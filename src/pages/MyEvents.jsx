@@ -622,7 +622,7 @@ function ConceptForm({ event, onSave }) {
         <div style={sectionLabel}>Core Concept *</div>
         <textarea value={form.coreConcept} onChange={e => setForm(f => ({ ...f, coreConcept: e.target.value }))} placeholder="The big idea — what is this event about at its core?" rows={3} style={{ ...inp, resize: 'vertical', marginBottom: '16px' }} />
         <div style={sectionLabel}>Goals</div>
-        <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} placeholder="What does the client/stakeholder want to achieve? What does success look like?" rows={3} style={{ ...inp, resize: 'vertical' }} />
+        <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} placeholder="What does the client want to achieve? What does success look like?" rows={3} style={{ ...inp, resize: 'vertical' }} />
       </div>
 
       {/* Key Moments */}

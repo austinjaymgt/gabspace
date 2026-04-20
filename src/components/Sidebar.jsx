@@ -4,11 +4,11 @@ import { theme as t } from '../theme'
 const navItems = [
   { label: 'Dashboard', icon: '⊞', path: 'dashboard' },
   {
-    label: 'All Stakeholders', icon: '👥', path: 'allstakeholders', children: [
-      { label: 'All Stakeholders', path: 'allstakeholders' },
+    label: 'All Clients', icon: '👥', path: 'allclients', children: [
+      { label: 'All Clients', path: 'allclients' },
       { label: 'Projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
-      { label: 'Stakeholder Portals', path: 'client-portal' },
+      { label: 'Client Portals', path: 'client-portal' },
     ]
   },
   {
@@ -65,7 +65,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) {  const [expanded, setExpanded] = useState(['Stakeholders', 'Operations', 'Creative Collective', 'Events', 'Playbooks', 'Team'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) {  const [expanded, setExpanded] = useState(['Clients', 'Operations', 'Creative Collective', 'Events', 'Playbooks', 'Team'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
