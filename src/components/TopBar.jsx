@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 import { supabase } from '../supabaseClient'
+import { Icon } from './Icon'
 
 export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate }) {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
@@ -38,24 +39,23 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {!isDesktop && (
-          <button
-            onClick={onMenuClick}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '20px',
-              color: t.colors.textSecondary,
-              padding: '4px 6px',
-              borderRadius: t.radius.md,
-              lineHeight: 1,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            ☰
-          </button>
-        )}
+  <button
+    onClick={onMenuClick}
+    style={{
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      color: t.colors.textSecondary,
+      padding: '4px 6px',
+      borderRadius: t.radius.md,
+      display: 'flex',
+      alignItems: 'center',
+    }}
+    aria-label="Open menu"
+  >
+    <Icon name="menu" size="lg" />
+  </button>
+)}
         <div>
           <div style={{
             fontSize: '17px',
@@ -87,7 +87,9 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
           padding: '8px 14px',
           border: `1px solid ${t.colors.borderLight}`,
         }}>
-          <span style={{ fontSize: '13px', color: t.colors.textTertiary }}>🔍</span>
+<span style={{ display: 'flex', alignItems: 'center', color: t.colors.textTertiary }}>
+  <Icon name="search" size="sm" />
+</span>
           <input
             style={{
               border: 'none',
