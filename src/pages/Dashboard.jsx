@@ -2,6 +2,7 @@ import CalendarWidget from '../components/CalendarWidget'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { Icon } from '../components/Icon'
 
 function timeAgo(dateString) {
   if (!dateString) return ''
@@ -17,13 +18,13 @@ function timeAgo(dateString) {
 }
 
 const feedTypes = {
-  client: { color: '#0D9373', bg: '#E8F7F3', icon: '👥', label: 'New client' },
-  project: { color: '#4466cc', bg: '#f0f4ff', icon: '📋', label: 'New project' },
-  invoice: { color: '#10B981', bg: '#f0faf6', icon: '💵', label: 'Invoice' },
-  event: { color: '#F59E0B', bg: '#FEF3C7', icon: '📅', label: 'Event' },
-  task: { color: '#8B5CF6', bg: '#F5F3FF', icon: '✅', label: 'Task' },
-  vendor: { color: '#EC4899', bg: '#FDF2F8', icon: '🏪', label: 'New vendor' },
-  portal: { color: '#06B6D4', bg: '#ECFEFF', icon: '🔗', label: 'Portal update' },
+  client: { color: '#0D9373', bg: '#E8F7F3', icon: 'clients', label: 'New client' },
+  project: { color: '#4466cc', bg: '#f0f4ff', icon: 'projects', label: 'New project' },
+  invoice: { color: '#10B981', bg: '#f0faf6', icon: 'invoice', label: 'Invoice' },
+  event: { color: '#F59E0B', bg: '#FEF3C7', icon: 'events', label: 'Event' },
+  task: { color: '#8B5CF6', bg: '#F5F3FF', icon: 'task-done', label: 'Task' },
+  vendor: { color: '#EC4899', bg: '#FDF2F8', icon: 'vendors', label: 'New vendor' },
+  portal: { color: '#06B6D4', bg: '#ECFEFF', icon: 'portal', label: 'Portal update' },
 }
 
 const platformColors = {
@@ -59,7 +60,7 @@ justifyContent: 'center',
 fontSize: '13px',
 flexShrink: 0,
         }}>
-          {type.icon}
+           <Icon name={type.icon} size="sm" />
         </div>
         <div style={{ width: '1px', flex: 1, backgroundColor: t.colors.borderLight, marginTop: '6px' }} />
       </div>
@@ -220,7 +221,7 @@ export default function Dashboard({ session, onNavigate }) {
               <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontWeight: '500', marginBottom: '4px' }}>Active Clients</div>
               <div style={{ fontSize: '36px', fontWeight: '700', color: t.colors.primary, letterSpacing: '-1px' }}>{stats.activeClients}</div>
             </div>
-            <div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: t.colors.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👥</div>
+<div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: t.colors.primaryLight, color: t.colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="clients" size="lg" /></div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <div style={{ flex: 1, height: '4px', backgroundColor: t.colors.borderLight, borderRadius: '2px', overflow: 'hidden' }}>
@@ -245,7 +246,7 @@ export default function Dashboard({ session, onNavigate }) {
               <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontWeight: '500', marginBottom: '4px' }}>Active Projects</div>
               <div style={{ fontSize: '36px', fontWeight: '700', color: '#4466cc', letterSpacing: '-1px' }}>{stats.activeProjects}</div>
             </div>
-            <div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#f0f4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📋</div>
+<div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#f0f4ff', color: '#4466cc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="projects" size="lg" /></div>
           </div>
           {stats.activeProjectsList?.length === 0 ? (
             <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>No active projects right now</div>
@@ -272,7 +273,7 @@ export default function Dashboard({ session, onNavigate }) {
               <div style={{ fontSize: '36px', fontWeight: '700', color: '#10B981', letterSpacing: '-1px' }}>${(stats.revenue || 0).toLocaleString()}</div>
               <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>net revenue</div>
             </div>
-            <div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>💵</div>
+<div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#D1FAE5', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="revenue" size="lg" /></div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#D1FAE5', borderRadius: t.radius.md }}>
@@ -302,7 +303,7 @@ export default function Dashboard({ session, onNavigate }) {
               <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontWeight: '500', marginBottom: '4px' }}>Active Campaigns</div>
               <div style={{ fontSize: '36px', fontWeight: '700', color: '#8B5CF6', letterSpacing: '-1px' }}>{stats.activeCampaigns?.length || 0}</div>
             </div>
-            <div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📣</div>
+<div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#F5F3FF', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="campaigns" size="lg" /></div>
           </div>
           {stats.activeCampaigns?.length === 0 ? (
             <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>No active campaigns right now</div>
@@ -388,11 +389,13 @@ export default function Dashboard({ session, onNavigate }) {
             Loading activity...
           </div>
         ) : feed.length === 0 ? (
-          <div style={{ padding: '40px 0', textAlign: 'center' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✨</div>
-            <div style={{ fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '4px' }}>Your feed is empty</div>
-            <div style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>Start by adding a client or project</div>
-          </div>
+         <div style={{ padding: '40px 0', textAlign: 'center' }}>
+  <div style={{ marginBottom: '12px', color: t.colors.textTertiary, display: 'flex', justifyContent: 'center' }}>
+    <Icon name="ai" size="xl" />
+  </div>
+  <div style={{ fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '4px' }}>Your feed is empty</div>
+  <div style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>Start by adding a client or project</div>
+</div>
         ) : (
           <div>
             {feed.map(item => <FeedCard key={item.id} item={item} />)}
