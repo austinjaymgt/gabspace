@@ -80,10 +80,7 @@ export default function Settings({ session, workspaceId, userRole }) {
       .order('created_at', { ascending: false })
     if (data) setInvites(data)
   }
-
-console.log('url:', import.meta.env.VITE_SUPABASE_URL)
-console.log('key:', import.meta.env.VITE_SUPABASE_ANON_KEY)
-  async function handleInvite() {
+ async function handleInvite() {
     if (!inviteEmail) return setInviteError('Enter an email address.')
     setInviting(true)
     setInviteError(null)
@@ -91,12 +88,12 @@ console.log('key:', import.meta.env.VITE_SUPABASE_ANON_KEY)
 
     const { data: { session: currentSession } } = await supabase.auth.getSession()
 
-const res = await fetch(`https://dfgbjthfoffsrxwrcnlu.supabase.co/functions/v1/invite-user`, {
+const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${currentSession.access_token}`,
-           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmZ2JqdGhmb2Zmc3J4d3Jjbmx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTA0ODAsImV4cCI6MjA5MTY4NjQ4MH0.rTwlOKx4zARbnLEhKPdxltFTk_25TVRiEY8fTsXny_o',
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({
         email: inviteEmail,
@@ -107,7 +104,7 @@ const res = await fetch(`https://dfgbjthfoffsrxwrcnlu.supabase.co/functions/v1/i
     })
 
     const result = await res.json()
-    console.log('invite result:', result)
+    if (import.meta.env.DEV) console.log('invite result:', result)
 
     if (result.error) {
       setInviteError(result.error.includes('unique') ? 'This email has already been invited.' : result.error)
