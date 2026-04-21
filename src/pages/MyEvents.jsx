@@ -711,9 +711,9 @@ function CampaignPanel({ projectId, workspaceId }) {
 
   const statusColors = {
     draft:     { bg: '#F3F3F3', color: '#6B7280' },
-    active:    { bg: '#F0E8FB', color: '#7B2FBE' },
-    paused:    { bg: '#FEF9EC', color: '#92610A' },
-    completed: { bg: '#F0FBE0', color: '#3B6D11' },
+    active:    { bg: '#F0EBF9', color: '#7C5CBF' },
+    paused:    { bg: '#FBF0E6', color: '#D4874E' },
+    completed: { bg: '#EAF2EA', color: '#6B8F71' },
   }
 
   if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>Loading...</div>
@@ -723,15 +723,15 @@ function CampaignPanel({ projectId, workspaceId }) {
       <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: '16px' }}>Campaign Linkage</div>
       {campaign ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ background: '#F0E8FB', border: '1px solid #C9B9E8', borderRadius: '12px', padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+<div style={{ background: '#F0EBF9', border: '1px solid #C9B9E8', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1A1A2E' }}>{campaign.name}</div>
               <span style={{ fontSize: '10px', fontWeight: '500', background: statusColors[campaign.status]?.bg || '#F3F3F3', color: statusColors[campaign.status]?.color || '#6B7280', padding: '3px 8px', borderRadius: '100px' }}>
                 {campaign.status}
               </span>
             </div>
             {campaign.overall_goal && (
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#7B2FBE', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{campaign.overall_goal}</div>
+<div style={{ fontSize: '12px', fontWeight: '600', color: '#7C5CBF', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{campaign.overall_goal}</div>
             )}
             {campaign.description && (
               <p style={{ fontSize: '13px', color: '#6B7280', margin: '0 0 10px', lineHeight: 1.6 }}>{campaign.description}</p>
@@ -754,8 +754,8 @@ function CampaignPanel({ projectId, workspaceId }) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ padding: '24px', background: '#F7F7F7', borderRadius: '12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎨</div>
+<div style={{ padding: '24px', background: '#F7F5F0', borderRadius: '12px', textAlign: 'center' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎨</div>
             <div style={{ fontSize: '14px', fontWeight: '600', color: '#1A1A2E', marginBottom: '4px' }}>No campaign linked</div>
             <div style={{ fontSize: '13px', color: '#9CA3AF' }}>Link this event to a campaign to see creative strategy here.</div>
           </div>

@@ -33,9 +33,9 @@ const VENDOR_OPTIONS = [
 const DAYS_OUT_OPTIONS = [120, 90, 60, 45, 30, 21, 14, 7, 3, 1, 0]
 
 const trackColors = {
-  'External': { bg: '#F0E8FB', color: '#7B2FBE' },
-  'Internal': { bg: '#F0FBE0', color: '#3B6D11' },
-  'F&F': { bg: '#FEF9EC', color: '#92610A' },
+  'External': { bg: t.colors.primaryLight, color: t.colors.primary },
+  'Internal': { bg: t.colors.successLight, color: t.colors.success },
+  'F&F': { bg: t.colors.warningLight, color: t.colors.warning },
 }
 
 function fmt(n) {
@@ -390,7 +390,7 @@ export default function Packages({ workspaceId, userRole }) {
   // ── DETAIL VIEW ──
   if (view === 'detail' && selectedPackage) {
     const pkg = selectedPackage
-    const tc = trackColors[pkg.event_type] || { bg: '#F3F3F3', color: '#6B7280' }
+    const tc = trackColors[pkg.event_type] || { bg: t.colors.bg, color: t.colors.textSecondary }
     return (
       <div style={{ padding: '32px 40px', fontFamily: t.fonts.sans, maxWidth: '800px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px', flexWrap: 'wrap' }}>
@@ -537,7 +537,7 @@ export default function Packages({ workspaceId, userRole }) {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
           {filtered.map(pkg => {
-            const tc = trackColors[pkg.event_type] || { bg: '#F3F3F3', color: '#6B7280' }
+            const tc = trackColors[pkg.event_type] || { bg: t.colors.bg, color: t.colors.textSecondary }
             return (
               <div key={pkg.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer', transition: 'border-color 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = t.colors.primary}

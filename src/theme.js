@@ -1,33 +1,36 @@
 export const theme = {
   colors: {
     // Core brand
-    primary: '#7B2FBE',
-    primaryLight: '#F0E8FB',
-    primaryDark: '#5E1F99',
-    accent: '#ADFF2F',
-    accentDark: '#8ACC00',
-    danger: '#EF4444',
-    dangerLight: '#FEF2F2',
-    success: '#10B981',
-    warning: '#F59E0B',
+    primary: '#7C5CBF',         // Studio Violet (v2)
+    primaryLight: '#F0EBF9',    // Violet pale (v2)
+    primaryDark: '#5E3F9C',     // Darker violet for hover/active
+    accent: '#6B8F71',          // Soft-retired: was Lime, now Sage
+    accentLight: '#EAF2EA',     // Sage pale
+    accentDark: '#577559',      // Darker sage for hover/active
+    danger: '#C06B7A',          // Dusty Rose (v2)
+    dangerLight: '#FAF0F2',     // Rose pale
+    success: '#6B8F71',          // Sage (v2)
+    successLight: '#EAF2EA',    // Sage pale
+    warning: '#D4874E',          // Warm Amber (v2)
+    warningLight: '#FBF0E6',    // Amber pale
 
     // Neutrals
-    bg: '#F7F7F7',
+    bg: '#F7F5F0',              // Canvas cream (v2) — was cool grey
     bgCard: '#FFFFFF',
-    bgHover: '#F0F0F0',
+    bgHover: '#F0EDE6',         // Warm hover to match Canvas
     border: '#E8E8E8',
     borderLight: '#F2F2F2',
 
     // Nav (dark sidebar)
-    nav: '#0E0E0E',
+    nav: '#1A1A2E',             // Deep Ink (v2) — navy, not pure black
     navHover: 'rgba(255,255,255,0.07)',
-    navActive: '#7B2FBE',
+    navActive: '#7C5CBF',       // Studio Violet (v2)
     navText: 'rgba(255,255,255,0.5)',
     navTextActive: '#FFFFFF',
-    navAccent: '#ADFF2F',
+    navAccent: '#6B8F71',       // Soft-retired: was Lime, now Sage
 
     // Text
-    textPrimary: '#0E0E0E',
+    textPrimary: '#1A1A2E',     // Deep Ink (v2)
     textSecondary: '#6B7280',
     textTertiary: '#9CA3AF',
     textInverse: '#FFFFFF',

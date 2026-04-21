@@ -7,10 +7,10 @@ const TYPES = ['Conference', 'Certification', 'Workshop', 'Course', 'Training', 
 const STATUS_OPTIONS = ['registered', 'in-progress', 'completed', 'cancelled']
 
 const statusStyles = {
-  'registered':  { bg: '#F0E8FB', color: '#7B2FBE', label: 'Registered' },
-  'in-progress': { bg: '#FEF9EC', color: '#92610A', label: 'In Progress' },
-  'completed':   { bg: '#F0FBE0', color: '#3B6D11', label: 'Completed' },
-  'cancelled':   { bg: '#F3F3F3', color: '#6B7280', label: 'Cancelled' },
+  'registered':  { bg: t.colors.primaryLight, color: t.colors.primary, label: 'Registered' },
+  'in-progress': { bg: t.colors.warningLight, color: t.colors.warning, label: 'In Progress' },
+  'completed':   { bg: t.colors.successLight, color: t.colors.success, label: 'Completed' },
+  'cancelled':   { bg: t.colors.bg, color: t.colors.textSecondary, label: 'Cancelled' },
 }
 
 const typeIcons = {
@@ -349,31 +349,31 @@ export default function ProDev({ workspaceId, userRole, session }) {
 function ItemRow({ item, onEdit, onDelete, onStatusChange, isDirector }) {
   const s = statusStyles[item.status] || statusStyles['registered']
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E8', borderRadius: '10px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+    <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.md, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
       <div style={{ fontSize: '20px', flexShrink: 0 }}>{typeIcons[item.type] || '📌'}</div>
       <div style={{ flex: 1, minWidth: '180px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#0E0E0E' }}>{item.title}</span>
-          <span style={{ fontSize: '10px', fontWeight: '500', background: s.bg, color: s.color, padding: '2px 8px', borderRadius: '100px' }}>{s.label}</span>
-          <span style={{ fontSize: '10px', color: '#9CA3AF', background: '#F3F3F3', padding: '2px 8px', borderRadius: '100px' }}>{item.type}</span>
+          <span style={{ fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary }}>{item.title}</span>
+          <span style={{ fontSize: '10px', fontWeight: '500', background: s.bg, color: s.color, padding: '2px 8px', borderRadius: t.radius.full }}>{s.label}</span>
+          <span style={{ fontSize: '10px', color: t.colors.textTertiary, background: t.colors.bg, padding: '2px 8px', borderRadius: t.radius.full }}>{item.type}</span>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {item.provider && <span style={{ fontSize: '12px', color: '#6B7280' }}>📍 {item.provider}</span>}
-          {item.start_date && <span style={{ fontSize: '12px', color: '#6B7280' }}>📅 {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
-          {item.cost > 0 && <span style={{ fontSize: '12px', color: '#6B7280' }}>💰 {Number(item.cost).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</span>}
-          {isDirector && <span style={{ fontSize: '12px', color: '#9CA3AF' }}>👤 {item.member_name}</span>}
+          {item.provider && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>📍 {item.provider}</span>}
+          {item.start_date && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>📅 {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+          {item.cost > 0 && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>💰 {Number(item.cost).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</span>}
+          {isDirector && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>👤 {item.member_name}</span>}
         </div>
-        {item.notes && <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px', fontStyle: 'italic' }}>{item.notes}</div>}
+        {item.notes && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginTop: '4px', fontStyle: 'italic' }}>{item.notes}</div>}
       </div>
       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
         {item.certificate_url && (
-          <a href={item.certificate_url} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #E8E8E8', background: 'transparent', color: '#7B2FBE', fontSize: '11px', fontFamily: 'DM Sans, sans-serif', textDecoration: 'none', fontWeight: '500' }}>🏆 Cert</a>
+          <a href={item.certificate_url} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.primary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, textDecoration: 'none', fontWeight: '500' }}>🏆 Cert</a>
         )}
-        <select value={item.status} onChange={e => onStatusChange(item.id, e.target.value)} style={{ padding: '5px 8px', borderRadius: '6px', border: '1px solid #E8E8E8', fontSize: '11px', fontFamily: 'DM Sans, sans-serif', color: '#0E0E0E', background: '#FFFFFF', cursor: 'pointer' }}>
+        <select value={item.status} onChange={e => onStatusChange(item.id, e.target.value)} style={{ padding: '5px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard, cursor: 'pointer' }}>
           {STATUS_OPTIONS.map(s => <option key={s} value={s}>{statusStyles[s].label}</option>)}
         </select>
-        <button onClick={() => onEdit(item)} style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #E8E8E8', background: 'transparent', color: '#6B7280', fontSize: '11px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Edit</button>
-        <button onClick={() => onDelete(item.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #E8E8E8', background: 'transparent', color: '#EF4444', fontSize: '11px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Delete</button>
+        <button onClick={() => onEdit(item)} style={{ padding: '5px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
+        <button onClick={() => onDelete(item.id)} style={{ padding: '5px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
       </div>
     </div>
   )

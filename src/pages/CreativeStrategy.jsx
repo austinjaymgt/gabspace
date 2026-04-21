@@ -19,9 +19,9 @@ const GOAL_OPTIONS = [
 
 const statusStyles = {
   draft: { bg: '#F3F3F3', color: '#6B7280', label: 'Draft' },
-  active: { bg: '#F0E8FB', color: '#7B2FBE', label: 'Active' },
-  paused: { bg: '#FEF9EC', color: '#92610A', label: 'Paused' },
-  completed: { bg: '#F0FBE0', color: '#3B6D11', label: 'Completed' },
+active: { bg: t.colors.primaryLight, color: t.colors.primary, label: 'Active' },
+  paused: { bg: t.colors.warningLight, color: t.colors.warning, label: 'Paused' },
+  completed: { bg: t.colors.successLight, color: t.colors.success, label: 'Completed' },
 }
 
 function fmt(n) {
@@ -400,75 +400,75 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
         const s = statusStyles[campaign.status] || statusStyles.draft
         const linkedProject = projects.find(p => p.id === campaign.project_id)
         return (
-          <div key={campaign.id} style={{ background: '#FFFFFF', border: `1px solid #E8E8E8`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+<div key={campaign.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: '800', color: '#0E0E0E', lineHeight: 1.2, letterSpacing: '-0.01em' }}>{campaign.name}</div>
+<div style={{ fontFamily: t.fonts.heading, fontSize: '16px', fontWeight: '800', color: t.colors.textPrimary, lineHeight: 1.2, letterSpacing: '-0.01em' }}>{campaign.name}</div>
               <span style={{ fontSize: '10px', fontWeight: '500', background: s.bg, color: s.color, padding: '3px 8px', borderRadius: '100px', flexShrink: 0 }}>{s.label}</span>
             </div>
 
             {/* Goal */}
             {campaign.overall_goal && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7B2FBE', background: '#F0E8FB', padding: '3px 8px', borderRadius: '100px' }}>{campaign.overall_goal}</span>
+<span style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: t.colors.primary, background: t.colors.primaryLight, padding: '3px 8px', borderRadius: t.radius.full }}>{campaign.overall_goal}</span>
               </div>
             )}
 
             {/* Description */}
             {campaign.description && (
-              <p style={{ fontSize: '13px', color: '#6B7280', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{campaign.description}</p>
+              <p style={{ fontSize: '13px', color: t.colors.textSecondary, margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{campaign.description}</p>
             )}
 
             {/* Strategy notes preview */}
             {campaign.strategy_notes && (
-              <div style={{ padding: '10px 12px', background: '#F7F7F7', borderRadius: '8px', fontSize: '12px', color: '#6B7280', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {campaign.strategy_notes}
+<div style={{ padding: '10px 12px', background: t.colors.bg, borderRadius: t.radius.md, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {campaign.strategy_notes}
               </div>
             )}
 
             {/* Meta */}
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {campaign.start_date && campaign.end_date && (
-                <div style={{ fontSize: '11px', color: '#9CA3AF' }}>
+               <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
                   📅 {new Date(campaign.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} → {new Date(campaign.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </div>
               )}
-              {campaign.budget > 0 && <div style={{ fontSize: '11px', color: '#9CA3AF' }}>💰 {Number(campaign.budget).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</div>}
-              {campaign.channel && <div style={{ fontSize: '11px', color: '#9CA3AF' }}>📡 {campaign.channel}</div>}
+              {campaign.budget > 0 && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>💰 {Number(campaign.budget).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</div>}
+              {campaign.channel && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>📡 {campaign.channel}</div>}
             </div>
 
             {/* Linked event */}
             <div>
               {linkedProject ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#F0E8FB', borderRadius: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#7B2FBE', fontWeight: '500', flex: 1 }}>🔗 {linkedProject.title}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: t.colors.primaryLight, borderRadius: t.radius.md }}>
+                  <span style={{ fontSize: t.fontSizes.sm, color: t.colors.primary, fontWeight: '500', flex: 1 }}>🔗 {linkedProject.title}</span>
                   {isCreativeOrDirector && (
-                    <button onClick={() => onLinkEvent(campaign.id, null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: '11px', fontFamily: 'DM Sans, sans-serif' }}>Unlink</button>
+                    <button onClick={() => onLinkEvent(campaign.id, null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans }}>Unlink</button>
                   )}
                 </div>
               ) : isCreativeOrDirector ? (
                 <select
                     onChange={e => { if (e.target.value) onLinkEvent(campaign.id, e.target.value) }}
                     value=""
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: '8px', border: '1px dashed #E8E8E8', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', color: '#9CA3AF', background: 'transparent', cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: t.radius.md, border: `1px dashed ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textTertiary, background: 'transparent', cursor: 'pointer' }}
           >
                     <option value="" disabled>+ Link to an event</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
               ) : (
-                <div style={{ fontSize: '12px', color: '#9CA3AF' }}>No event linked</div>
+                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>No event linked</div>
               )}
             </div>
 
             {/* Actions */}
             {isCreativeOrDirector && (
               <div style={{ display: 'flex', gap: '6px', paddingTop: '4px' }}>
-                <select value={campaign.status} onChange={e => onStatusChange(campaign.id, e.target.value)} style={{ flex: 1, padding: '6px 8px', borderRadius: '6px', border: '1px solid #E8E8E8', fontSize: '11px', fontFamily: 'DM Sans, sans-serif', color: '#0E0E0E', background: '#FFFFFF' }}>
+                <select value={campaign.status} onChange={e => onStatusChange(campaign.id, e.target.value)} style={{ flex: 1, padding: '6px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
                   {Object.entries(statusStyles).map(([val, st]) => <option key={val} value={val}>{st.label}</option>)}
                 </select>
-                <button onClick={() => onEdit(campaign)} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #E8E8E8', background: 'transparent', color: '#6B7280', fontSize: '11px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Edit</button>
-                <button onClick={() => onDelete(campaign.id)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #E8E8E8', background: 'transparent', color: '#EF4444', fontSize: '11px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Delete</button>
+                <button onClick={() => onEdit(campaign)} style={{ padding: '6px 12px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
+                <button onClick={() => onDelete(campaign.id)} style={{ padding: '6px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
               </div>
             )}
           </div>
