@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { theme as t } from '../theme'
+
 
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([])
@@ -32,10 +34,10 @@ export default function Campaigns() {
   ]
 
   const statusColors = {
-    draft: { bg: '#f5f5f0', color: '#888' },
-    active: { bg: '#f0faf6', color: '#1D9E75' },
-    paused: { bg: '#fff8f0', color: '#cc7700' },
-    completed: { bg: '#f0f4ff', color: '#4466cc' },
+    draft: { bg: '#F7F5F0', color: '#6B7280' },
+    active: { bg: '#EAF2EA', color: '#6B8F71' },
+    paused: { bg: '#FBF0E6', color: '#D4874E' },
+    completed: { bg: '#F0EBF9', color: '#7C5CBF' },
   }
 
   useEffect(() => {
@@ -287,7 +289,7 @@ export default function Campaigns() {
             </div>
             <div style={styles.budgetRow}>
               <span style={styles.budgetLabel}>Spent</span>
-              <span style={{ ...styles.budgetValue, color: spendPct > 90 ? '#cc3333' : '#1a1a1a' }}>
+<span style={{ ...styles.budgetValue, color: spendPct > 90 ? t.colors.danger : t.colors.textPrimary }}>  
                 ${spend.toLocaleString()}
               </span>
             </div>
@@ -295,7 +297,7 @@ export default function Campaigns() {
               <div style={{
                 ...styles.progressFill,
                 width: `${spendPct}%`,
-                backgroundColor: spendPct > 90 ? '#cc3333' : '#1D9E75',
+backgroundColor: spendPct > 90 ? t.colors.danger : t.colors.primary,
               }} />
             </div>
             <div style={styles.budgetMeta}>
@@ -361,15 +363,14 @@ export default function Campaigns() {
       <div style={styles.summaryRow}>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLabel}>Active campaigns</div>
-          <div style={{ ...styles.summaryValue, color: '#1D9E75' }}>{activeCampaigns}</div>
-        </div>
+<div style={{ ...styles.summaryValue, color: t.colors.primary }}>{activeCampaigns}</div>        </div>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLabel}>Total budget</div>
           <div style={styles.summaryValue}>${totalBudget.toLocaleString()}</div>
         </div>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLabel}>Total spent</div>
-          <div style={{ ...styles.summaryValue, color: '#cc7700' }}>${totalSpend.toLocaleString()}</div>
+<div style={{ ...styles.summaryValue, color: t.colors.warning }}>${totalSpend.toLocaleString()}</div>
         </div>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLabel}>Remaining</div>
@@ -434,7 +435,7 @@ export default function Campaigns() {
                       <div style={{
                         ...styles.progressFill,
                         width: `${spendPct}%`,
-                        backgroundColor: spendPct > 90 ? '#cc3333' : '#1D9E75',
+backgroundColor: spendPct > 90 ? t.colors.danger : t.colors.primary,
                       }} />
                     </div>
                   </div>
@@ -455,114 +456,63 @@ export default function Campaigns() {
 }
 
 const styles = {
-  page: { padding: '32px' },
-  header: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px',
-  },
-  title: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: 0 },
-  subtitle: { fontSize: '13px', color: '#999', margin: '4px 0 0' },
-  addBtn: {
-    padding: '10px 18px', borderRadius: '8px', border: 'none',
-    backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-  },
-  editBtn: {
-    padding: '8px 14px', borderRadius: '8px', border: '1px solid #1D9E75',
-    backgroundColor: '#fff', color: '#1D9E75', fontSize: '13px', cursor: 'pointer',
-  },
-  summaryRow: {
-    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px',
-  },
-  summaryCard: {
-    backgroundColor: '#fff', borderRadius: '12px', padding: '20px 24px', border: '1px solid #f0f0eb',
-  },
-  summaryLabel: { fontSize: '12px', color: '#999', marginBottom: '6px' },
-  summaryValue: { fontSize: '24px', fontWeight: '700', color: '#1a1a1a' },
-  formCard: {
-    backgroundColor: '#fff', borderRadius: '12px', padding: '24px',
-    border: '1px solid #f0f0eb', marginBottom: '24px',
-  },
-  formTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 20px' },
-  formGrid: {
-    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px',
-  },
+  page: { padding: '32px', fontFamily: t.fonts.sans },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' },
+  title: { fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
+  addBtn: { padding: '10px 18px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  editBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.primary}`, backgroundColor: t.colors.bgCard, color: t.colors.primary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
+  summaryRow: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' },
+  summaryCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.border}` },
+  summaryLabel: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '500' },
+  summaryValue: { fontSize: '26px', fontWeight: '800', color: t.colors.textPrimary, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
+  formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
+  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: {
-    padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0',
-    fontSize: '13px', color: '#1a1a1a', outline: 'none', backgroundColor: '#fff',
-  },
+  label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
+  input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: {
-    padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0',
-    backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer',
-  },
-  saveBtn: {
-    padding: '9px 16px', borderRadius: '8px', border: 'none',
-    backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-  },
-  error: {
-    padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0',
-    color: '#cc3333', fontSize: '13px', marginBottom: '16px',
-  },
-  cardGrid: {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px',
-  },
-  campaignCard: {
-    backgroundColor: '#fff', borderRadius: '12px', padding: '20px',
-    border: '1px solid #f0f0eb', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '10px',
-  },
+  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  saveBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
+  cardGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' },
+  campaignCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px', border: `1px solid ${t.colors.border}`, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '10px', transition: 'border-color 0.15s' },
   campaignCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  statusBadge: {
-    display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '500',
-  },
-  platformBadge: {
-    fontSize: '11px', color: '#888', backgroundColor: '#f5f5f0', padding: '3px 8px', borderRadius: '20px',
-  },
-  campaignName: { fontSize: '15px', fontWeight: '600', color: '#1a1a1a' },
-  campaignProject: { fontSize: '12px', color: '#999' },
-  campaignGoal: { fontSize: '12px', color: '#666' },
+  statusBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '500' },
+  platformBadge: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, backgroundColor: t.colors.bg, padding: '3px 8px', borderRadius: t.radius.full },
+  campaignName: { fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary },
+  campaignProject: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary },
+  campaignGoal: { fontSize: t.fontSizes.sm, color: t.colors.textSecondary },
   campaignBudget: { display: 'flex', flexDirection: 'column', gap: '6px' },
   budgetNumbers: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  spendAmt: { fontSize: '12px', fontWeight: '600', color: '#1a1a1a' },
-  budgetAmt: { fontSize: '11px', color: '#aaa' },
-  progressBar: { height: '4px', backgroundColor: '#f0f0eb', borderRadius: '2px', overflow: 'hidden' },
+  spendAmt: { fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary },
+  budgetAmt: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary },
+  progressBar: { height: '4px', backgroundColor: t.colors.border, borderRadius: '2px', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: '2px', transition: 'width 0.3s ease' },
-  campaignDates: { fontSize: '11px', color: '#bbb' },
-  emptyState: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb',
-  },
+  campaignDates: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary },
+  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   emptyIcon: { fontSize: '40px', marginBottom: '16px' },
-  emptyTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 8px' },
-  emptyText: { fontSize: '13px', color: '#999', margin: '0 0 24px' },
-  empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
+  emptyTitle: { fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading },
+  emptyText: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' },
+  empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
   detailHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '24px' },
-  backBtn: {
-    padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0',
-    backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer',
-  },
-  deleteBtn: {
-    padding: '8px 14px', borderRadius: '8px', border: 'none',
-    backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', cursor: 'pointer',
-  },
-  detailCard: {
-    backgroundColor: '#fff', borderRadius: '12px', padding: '32px', border: '1px solid #f0f0eb',
-  },
+  backBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  deleteBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
+  detailCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '32px', border: `1px solid ${t.colors.border}` },
   detailTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' },
-  detailName: { fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 4px' },
-  detailSub: { fontSize: '14px', color: '#999', margin: 0 },
-  description: { fontSize: '14px', color: '#555', lineHeight: '1.6', margin: '0 0 24px' },
-  budgetSection: { backgroundColor: '#fafaf8', borderRadius: '10px', padding: '20px', marginBottom: '24px' },
+  detailName: { fontSize: '24px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  detailSub: { fontSize: t.fontSizes.md, color: t.colors.textSecondary, margin: 0 },
+  description: { fontSize: t.fontSizes.md, color: t.colors.textSecondary, lineHeight: '1.6', margin: '0 0 24px' },
+  budgetSection: { backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '20px', marginBottom: '24px' },
   budgetRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' },
-  budgetLabel: { fontSize: '13px', color: '#888' },
-  budgetValue: { fontSize: '13px', fontWeight: '600', color: '#1a1a1a' },
-  budgetMeta: { fontSize: '11px', color: '#aaa', marginTop: '8px', textAlign: 'right' },
+  budgetLabel: { fontSize: t.fontSizes.base, color: t.colors.textTertiary },
+  budgetValue: { fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary },
+  budgetMeta: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '8px', textAlign: 'right' },
   detailGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' },
-  detailField: { backgroundColor: '#fafaf8', borderRadius: '8px', padding: '14px 16px' },
-  detailFieldLabel: {
-    fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px',
-  },
-  detailFieldValue: { fontSize: '14px', color: '#1a1a1a' },
-  resultsSection: { backgroundColor: '#f0faf6', borderRadius: '10px', padding: '20px' },
-  resultsText: { fontSize: '14px', color: '#1a1a1a', margin: '8px 0 0', lineHeight: '1.6' },
+  detailField: { backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '14px 16px' },
+  detailFieldLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.06em' },
+  detailFieldValue: { fontSize: t.fontSizes.md, color: t.colors.textPrimary },
+  resultsSection: { backgroundColor: t.colors.successLight, borderRadius: t.radius.md, padding: '20px' },
+  resultsText: { fontSize: t.fontSizes.md, color: t.colors.textPrimary, margin: '8px 0 0', lineHeight: '1.6' },
 }

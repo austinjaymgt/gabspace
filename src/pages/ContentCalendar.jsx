@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { theme as t } from '../theme'
+
 
 export default function ContentCalendar() {
   const [items, setItems] = useState([])
@@ -31,10 +33,10 @@ export default function ContentCalendar() {
   ]
 
   const statuses = [
-    { value: 'idea', label: 'Idea', color: '#888', bg: '#f5f5f0' },
-    { value: 'in-production', label: 'In Production', color: '#cc7700', bg: '#fff8f0' },
-    { value: 'scheduled', label: 'Scheduled', color: '#4466cc', bg: '#f0f4ff' },
-    { value: 'published', label: 'Published', color: '#1D9E75', bg: '#f0faf6' },
+    { value: 'idea', label: 'Idea', color: '#6B7280', bg: '#F7F5F0' },
+    { value: 'in-production', label: 'In production', color: '#D4874E', bg: '#FBF0E6' },
+    { value: 'scheduled', label: 'Scheduled', color: '#7C5CBF', bg: '#F0EBF9' },
+    { value: 'published', label: 'Published', color: '#6B8F71', bg: '#EAF2EA' },
   ]
 
   const platformColors = {
@@ -45,7 +47,7 @@ export default function ContentCalendar() {
     'Email': '#FF6B35',
     'YouTube': '#FF0000',
     'Pinterest': '#E60023',
-    'Blog': '#1D9E75',
+'Blog': '#7C5CBF',
     'Other': '#888',
   }
 
@@ -298,8 +300,8 @@ export default function ContentCalendar() {
                 </div>
                 <div style={{ ...styles.field, gridColumn: 'span 2' }}>
                   <label style={styles.label}>Notes</label>
-                  <textarea style={{ ...styles.input, resize: 'vertical', fontFamily: 'sans-serif' }} rows={3} value={editForm.notes || ''} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
-                </div>
+<textarea style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={3} value={editForm.notes || ''} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
+                  </div>
                 <div style={{ ...styles.formActions, gridColumn: 'span 2' }}>
                   <button onClick={() => setEditMode(false)} style={styles.cancelBtn}>Cancel</button>
                   <button onClick={handleEditSave} style={styles.saveBtn}>Save changes</button>
@@ -323,9 +325,9 @@ export default function ContentCalendar() {
                       onClick={() => updateStatus(selectedItem.id, s.value)}
                       style={{
                         ...styles.statusBtn,
-                        backgroundColor: selectedItem.status === s.value ? s.bg : '#fff',
-                        color: selectedItem.status === s.value ? s.color : '#888',
-                        border: `1px solid ${selectedItem.status === s.value ? s.color : '#e0e0e0'}`,
+                        backgroundColor: selectedItem.status === s.value ? s.bg : t.colors.bgCard,
+                        color: selectedItem.status === s.value ? s.color : t.colors.textTertiary,
+border: `1px solid ${selectedItem.status === s.value ? s.color : t.colors.border}`,
                       }}
                     >
                       {s.label}
@@ -360,7 +362,7 @@ export default function ContentCalendar() {
                 <div style={styles.detailNotes}>
                   <div style={styles.detailRowLabel}>Notes</div>
                   <textarea
-                    style={{ ...styles.input, resize: 'vertical', fontFamily: 'sans-serif', marginTop: '6px', width: '100%', boxSizing: 'border-box' }}
+style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans, marginTop: '6px', width: '100%', boxSizing: 'border-box' }}
                     rows={3}
                     value={selectedItem.notes || ''}
                     onChange={e => setSelectedItem({ ...selectedItem, notes: e.target.value })}
@@ -407,8 +409,8 @@ export default function ContentCalendar() {
                       onClick={() => setSelectedItem(item)}
                       style={{
                         ...styles.calendarItem,
-                        backgroundColor: item.platform ? platformColors[item.platform] + '20' : '#f0faf6',
-                        borderLeft: `3px solid ${item.platform ? platformColors[item.platform] : '#1D9E75'}`,
+                        backgroundColor: item.platform ? platformColors[item.platform] + '20' : t.colors.primaryLight,
+                        borderLeft: `3px solid ${item.platform ? platformColors[item.platform] : t.colors.primary}`,
                       }}
                     >
                       {item.title}
@@ -492,78 +494,78 @@ export default function ContentCalendar() {
 }
 
 const styles = {
-  page: { padding: '32px' },
+  page: { padding: '32px', fontFamily: t.fonts.sans },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' },
-  title: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: 0 },
-  subtitle: { fontSize: '13px', color: '#999', margin: '4px 0 0' },
+  title: { fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
   headerRight: { display: 'flex', gap: '12px', alignItems: 'center' },
-  viewToggle: { display: 'flex', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' },
-  viewBtn: { padding: '8px 14px', border: 'none', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
-  viewBtnActive: { backgroundColor: '#1D9E75', color: '#fff' },
-  addBtn: { padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
+  viewToggle: { display: 'flex', border: `1px solid ${t.colors.border}`, borderRadius: t.radius.md, overflow: 'hidden' },
+  viewBtn: { padding: '8px 14px', border: 'none', backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  viewBtnActive: { backgroundColor: t.colors.primary, color: '#fff', fontWeight: '600' },
+  addBtn: { padding: '10px 18px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
   statusRow: { display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' },
-  statusCard: { backgroundColor: '#fff', borderRadius: '10px', padding: '14px 18px', border: '1px solid #f0f0eb', display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '120px' },
+  statusCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.md, padding: '14px 18px', border: `1px solid ${t.colors.border}`, display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '120px' },
   statusDot: { width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0 },
   statusInfo: {},
-  statusLabel: { fontSize: '11px', color: '#999', marginBottom: '2px' },
-  statusCount: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a' },
-  formCard: { backgroundColor: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '24px' },
-  formTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 20px' },
+  statusLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '500' },
+  statusCount: { fontSize: '20px', fontWeight: '800', color: t.colors.textPrimary, fontFamily: t.fonts.heading },
+  formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
+  formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1a1a1a', outline: 'none', backgroundColor: '#fff' },
+  label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
+  input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
-  saveBtn: { padding: '9px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-  error: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' },
-  calendarCard: { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' },
-  calendarNav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #f0f0eb' },
-  monthTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: 0 },
-  navBtn: { padding: '6px 12px', borderRadius: '6px', border: '1px solid #e0e0e0', backgroundColor: '#fff', cursor: 'pointer', fontSize: '14px' },
+  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  saveBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
+  calendarCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
+  calendarNav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${t.colors.border}` },
+  monthTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
+  navBtn: { padding: '6px 12px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, cursor: 'pointer', fontSize: t.fontSizes.md, color: t.colors.textSecondary, fontFamily: t.fonts.sans },
   calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' },
-  dayHeader: { padding: '10px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', borderBottom: '1px solid #f0f0eb' },
-  emptyDay: { borderRight: '1px solid #f9f9f7', borderBottom: '1px solid #f9f9f7', minHeight: '80px' },
-  dayCell: { borderRight: '1px solid #f9f9f7', borderBottom: '1px solid #f9f9f7', minHeight: '80px', padding: '6px' },
-  todayCell: { backgroundColor: '#f0faf6' },
-  dayNumber: { fontSize: '12px', fontWeight: '500', color: '#999', marginBottom: '4px' },
-  todayNumber: { color: '#1D9E75', fontWeight: '700' },
-  calendarItem: { fontSize: '10px', padding: '2px 5px', borderRadius: '3px', marginBottom: '2px', cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: '#333' },
-  detailOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  detailPanel: { backgroundColor: '#fff', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '90vh', overflowY: 'auto' },
+  dayHeader: { padding: '10px', textAlign: 'center', fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: `1px solid ${t.colors.border}` },
+  emptyDay: { borderRight: `1px solid ${t.colors.borderLight}`, borderBottom: `1px solid ${t.colors.borderLight}`, minHeight: '80px' },
+  dayCell: { borderRight: `1px solid ${t.colors.borderLight}`, borderBottom: `1px solid ${t.colors.borderLight}`, minHeight: '80px', padding: '6px' },
+  todayCell: { backgroundColor: t.colors.primaryLight },
+  dayNumber: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textTertiary, marginBottom: '4px' },
+  todayNumber: { color: t.colors.primary, fontWeight: '700' },
+  calendarItem: { fontSize: '10px', padding: '2px 5px', borderRadius: '3px', marginBottom: '2px', cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', color: t.colors.textPrimary },
+  detailOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, fontFamily: t.fonts.sans },
+  detailPanel: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '28px', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '90vh', overflowY: 'auto' },
   detailPanelHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
-  detailPanelTitle: { fontSize: '18px', fontWeight: '700', color: '#1a1a1a', margin: 0, flex: 1, paddingRight: '12px' },
-  editBtn: { padding: '6px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '12px', cursor: 'pointer' },
-  closeBtn: { background: 'none', border: 'none', fontSize: '16px', color: '#aaa', cursor: 'pointer', padding: '2px' },
-  platformTag: { display: 'inline-block', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', alignSelf: 'flex-start' },
+  detailPanelTitle: { fontSize: '20px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, flex: 1, paddingRight: '12px', fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  editBtn: { padding: '6px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, cursor: 'pointer', fontFamily: t.fonts.sans },
+  closeBtn: { background: 'none', border: 'none', fontSize: t.fontSizes.md, color: t.colors.textTertiary, cursor: 'pointer', padding: '2px' },
+  platformTag: { display: 'inline-block', padding: '4px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '600', alignSelf: 'flex-start' },
   statusButtons: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
-  statusBtn: { padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' },
-  detailRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: '#fafaf8', borderRadius: '8px' },
-  detailRowLabel: { fontSize: '12px', color: '#888' },
-  detailRowValue: { fontSize: '13px', fontWeight: '500', color: '#1a1a1a' },
-  detailNotes: { backgroundColor: '#fafaf8', borderRadius: '8px', padding: '12px 14px' },
-  detailNotesText: { fontSize: '13px', color: '#555', margin: '6px 0 0', lineHeight: '1.5' },
-  mediaLink: { display: 'inline-block', padding: '8px 14px', borderRadius: '8px', backgroundColor: '#f0f4ff', color: '#4466cc', fontSize: '13px', fontWeight: '500', textDecoration: 'none' },
-  deleteBtnFull: { padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', cursor: 'pointer', width: '100%' },
-  table: { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' },
-  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1.5fr 0.3fr', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1.5fr 0.3fr', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center', cursor: 'pointer' },
-  itemTitle: { fontSize: '13px', fontWeight: '500', color: '#1a1a1a' },
-  tableCell: { fontSize: '13px', color: '#666' },
-  platformPill: { display: 'inline-block', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' },
-  statusPill: { display: 'inline-block', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '500' },
-  emptyList: { padding: '40px', textAlign: 'center', fontSize: '13px', color: '#bbb' },
+  statusBtn: { padding: '6px 12px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans },
+  detailRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: t.colors.bg, borderRadius: t.radius.md },
+  detailRowLabel: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary },
+  detailRowValue: { fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary },
+  detailNotes: { backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '12px 14px' },
+  detailNotesText: { fontSize: t.fontSizes.base, color: t.colors.textSecondary, margin: '6px 0 0', lineHeight: '1.5' },
+  mediaLink: { display: 'inline-block', padding: '8px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontSize: t.fontSizes.base, fontWeight: '500', textDecoration: 'none' },
+  deleteBtnFull: { padding: '10px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', width: '100%', fontFamily: t.fonts.sans, fontWeight: '500' },
+  table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
+  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1.5fr 0.3fr', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
+  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1.5fr 0.3fr', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer' },
+  itemTitle: { fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary },
+  tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
+  platformPill: { display: 'inline-block', padding: '2px 8px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '600' },
+  statusPill: { display: 'inline-block', padding: '2px 8px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500' },
+  emptyList: { padding: '40px', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary },
   kanban: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'start' },
-  kanbanCol: { backgroundColor: '#fafaf8', borderRadius: '12px', padding: '16px', border: '1px solid #f0f0eb' },
+  kanbanCol: { backgroundColor: t.colors.bg, borderRadius: t.radius.lg, padding: '16px', border: `1px solid ${t.colors.border}` },
   kanbanColHeader: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' },
   kanbanDot: { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
-  kanbanColTitle: { fontSize: '13px', fontWeight: '600', color: '#1a1a1a', flex: 1 },
-  kanbanCount: { fontSize: '12px', color: '#aaa', backgroundColor: '#fff', padding: '2px 7px', borderRadius: '10px', border: '1px solid #f0f0eb' },
+  kanbanColTitle: { fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary, flex: 1 },
+  kanbanCount: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, backgroundColor: t.colors.bgCard, padding: '2px 7px', borderRadius: '10px', border: `1px solid ${t.colors.border}` },
   kanbanItems: { display: 'flex', flexDirection: 'column', gap: '8px' },
-  kanbanCard: { backgroundColor: '#fff', borderRadius: '8px', padding: '12px', border: '1px solid #f0f0eb', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '6px' },
-  kanbanPlatform: { display: 'inline-block', padding: '2px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: '600', alignSelf: 'flex-start' },
-  kanbanCardTitle: { fontSize: '13px', fontWeight: '500', color: '#1a1a1a' },
-  kanbanDate: { fontSize: '11px', color: '#aaa' },
-  kanbanCampaign: { fontSize: '11px', color: '#aaa' },
-  kanbanEmpty: { fontSize: '12px', color: '#ccc', textAlign: 'center', padding: '20px 0' },
+  kanbanCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.md, padding: '12px', border: `1px solid ${t.colors.border}`, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '6px' },
+  kanbanPlatform: { display: 'inline-block', padding: '2px 8px', borderRadius: t.radius.full, fontSize: '10px', fontWeight: '600', alignSelf: 'flex-start' },
+  kanbanCardTitle: { fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary },
+  kanbanDate: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary },
+  kanbanCampaign: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary },
+  kanbanEmpty: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, textAlign: 'center', padding: '20px 0' },
 }
