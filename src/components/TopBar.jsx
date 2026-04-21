@@ -72,7 +72,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
             color: t.colors.textTertiary,
             fontFamily: t.fonts.sans,
           }}>
-            where events meet excellence.
+            creativity meets clarity
           </div>
         </div>
       </div>

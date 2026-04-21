@@ -116,7 +116,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
             marginTop: '4px',
             fontFamily: t.fonts.sans,
           }}>
-            where events meet excellence.
+            creativity meets clarity
           </div>
         </div>
         {!isDesktop && (
