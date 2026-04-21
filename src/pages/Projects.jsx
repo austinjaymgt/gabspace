@@ -5,16 +5,16 @@ import { theme as t } from '../theme'
 // ── Constants ──────────────────────────────────────────────────────────────
 
 const STATUS_COLORS = {
-  planning:  { bg: '#FEF3C7', color: '#92400E', border: '#F59E0B' },
-  active:    { bg: '#f0faf6', color: '#1D9E75', border: '#1D9E75' },
-  'on-hold': { bg: '#fff8f0', color: '#cc7700', border: '#F59E0B' },
-  completed: { bg: '#f0f4ff', color: '#4466cc', border: '#4466cc' },
-  cancelled: { bg: '#fff0f0', color: '#cc3333', border: '#cc3333' },
+  planning:  { bg: '#FBF0E6', color: '#D4874E', border: '#D4874E' },
+  active:    { bg: '#EAF2EA', color: '#6B8F71', border: '#6B8F71' },
+  'on-hold': { bg: '#FBF0E6', color: '#D4874E', border: '#D4874E' },
+  completed: { bg: '#F0EBF9', color: '#7C5CBF', border: '#7C5CBF' },
+  cancelled: { bg: '#FAF0F2', color: '#C06B7A', border: '#C06B7A' },
 }
 
 const PROJECT_STATUS_CARDS = [
   { key: 'planning',  label: 'Planning',  color: '#534AB7' },
-  { key: 'active',    label: 'Active',    color: '#1D9E75' },
+{ key: 'active',    label: 'Active',    color: '#6B8F71' },
   { key: 'on-hold',   label: 'On hold',   color: '#BA7517' },
   { key: 'completed', label: 'Completed', color: '#378ADD' },
 ]
@@ -22,16 +22,16 @@ const PROJECT_STATUS_CARDS = [
 const EVENT_STATUS_COLORS = {
   inquiry:     { bg: '#F0EBF9', color: '#7C5CBF', border: '#7C5CBF' },
   concept:     { bg: '#F0EBF9', color: '#9B72D0', border: '#9B72D0' },
-  planning:    { bg: '#FEF3C7', color: '#92400E', border: '#F59E0B' },
-  confirmed:   { bg: '#f0faf6', color: '#1D9E75', border: '#1D9E75' },
-  in_progress: { bg: '#fff8f0', color: '#cc7700', border: '#F59E0B' },
-  completed:   { bg: '#f0f4ff', color: '#4466cc', border: '#4466cc' },
-  cancelled:   { bg: '#fff0f0', color: '#cc3333', border: '#cc3333' },
+  planning:    { bg: '#FBF0E6', color: '#D4874E', border: '#D4874E' },
+  confirmed:   { bg: '#EAF2EA', color: '#6B8F71', border: '#6B8F71' },
+  in_progress: { bg: '#FBF0E6', color: '#D4874E', border: '#D4874E' },
+  completed:   { bg: '#F0EBF9', color: '#7C5CBF', border: '#7C5CBF' },
+  cancelled:   { bg: '#FAF0F2', color: '#C06B7A', border: '#C06B7A' },
 }
 
 const EVENT_STATUS_CARDS = [
   { key: 'inquiry',     label: 'Inquiry',      color: '#7C5CBF' },
-  { key: 'confirmed',   label: 'Confirmed',    color: '#1D9E75' },
+{ key: 'confirmed',   label: 'Confirmed',    color: '#6B8F71' },
   { key: 'in_progress', label: 'In Progress',  color: '#BA7517' },
   { key: 'completed',   label: 'Completed',    color: '#378ADD' },
 ]
@@ -1030,24 +1030,24 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
 // ── Styles ─────────────────────────────────────────────────────────────────
 
 const styles = {
-  addBtn: { padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-  formCard: { backgroundColor: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '24px' },
-  formTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 20px' },
+  addBtn: { padding: '10px 18px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
+  formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1a1a1a', outline: 'none', backgroundColor: '#fff' },
+  label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
+  input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
-  saveBtn: { padding: '9px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-  error: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' },
-  table: { backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' },
-  tableHeader: { display: 'grid', padding: '12px 20px', backgroundColor: '#fafaf8', borderBottom: '1px solid #f0f0eb', fontSize: '12px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  tableRow: { display: 'grid', padding: '14px 20px', borderBottom: '1px solid #f9f9f7', alignItems: 'center', cursor: 'pointer' },
-  tableCell: { fontSize: '13px', color: '#666' },
-  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' },
-  empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
-  backBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
-  editBtn: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
-  deleteBtn: { padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', cursor: 'pointer' },
+  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  saveBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
+  table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
+  tableHeader: { display: 'grid', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
+  tableRow: { display: 'grid', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
+  tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
+  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
+  empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
+  backBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  editBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  deleteBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
 }
