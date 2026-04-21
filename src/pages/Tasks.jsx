@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { theme as t } from '../theme'
+
+const statusConfig = {
+  'todo':        { bg: t.colors.bg,           color: t.colors.textTertiary, label: 'To do' },
+  'in-progress': { bg: t.colors.warningLight, color: t.colors.warning,      label: 'In progress' },
+  'done':        { bg: t.colors.successLight, color: t.colors.success,      label: 'Done' },
+}
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([])
@@ -75,18 +82,9 @@ export default function Tasks() {
     fetchTasks()
   }
 
-  const statusColors = {
-    todo: { bg: '#f5f5f0', color: '#888' },
-    'in-progress': { bg: '#fff8f0', color: '#cc7700' },
-    done: { bg: '#f0faf6', color: '#1D9E75' },
-  }
-
   const filteredTasks = tasks.filter(t => {
     if (filter === 'all') return true
-    if (filter === 'todo') return t.status === 'todo'
-    if (filter === 'in-progress') return t.status === 'in-progress'
-    if (filter === 'done') return t.status === 'done'
-    return true
+    return t.status === filter
   })
 
   const todoCount = tasks.filter(t => t.status === 'todo').length
@@ -98,46 +96,49 @@ export default function Tasks() {
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Tasks</h2>
-          <p style={styles.subtitle}>{tasks.length} total tasks</p>
+          <p style={styles.subtitle}>{tasks.length} total task{tasks.length !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={() => setShowForm(true)} style={styles.addBtn}>
-          + Add Task
+          + Add task
         </button>
       </div>
 
       <div style={styles.summaryRow}>
         <div style={styles.summaryCard} onClick={() => setFilter('todo')}>
           <div style={styles.summaryLabel}>To do</div>
-          <div style={{ ...styles.summaryValue, color: '#888' }}>{todoCount}</div>
+          <div style={{ ...styles.summaryValue, color: t.colors.textTertiary }}>{todoCount}</div>
         </div>
         <div style={styles.summaryCard} onClick={() => setFilter('in-progress')}>
           <div style={styles.summaryLabel}>In progress</div>
-          <div style={{ ...styles.summaryValue, color: '#cc7700' }}>{inProgressCount}</div>
+          <div style={{ ...styles.summaryValue, color: t.colors.warning }}>{inProgressCount}</div>
         </div>
         <div style={styles.summaryCard} onClick={() => setFilter('done')}>
           <div style={styles.summaryLabel}>Done</div>
-          <div style={{ ...styles.summaryValue, color: '#1D9E75' }}>{doneCount}</div>
+          <div style={{ ...styles.summaryValue, color: t.colors.success }}>{doneCount}</div>
         </div>
       </div>
 
       <div style={styles.filters}>
-        {['all', 'todo', 'in-progress', 'done'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              ...styles.filterBtn,
-              ...(filter === f ? styles.filterBtnActive : {})
-            }}
-          >
-            {f === 'all' ? 'All' : f === 'in-progress' ? 'In progress' : f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
+        {['all', 'todo', 'in-progress', 'done'].map(f => {
+          const isActive = filter === f
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                ...styles.filterBtn,
+                ...(isActive ? styles.filterBtnActive : {})
+              }}
+            >
+              {f === 'all' ? 'All' : f === 'in-progress' ? 'In progress' : f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          )
+        })}
       </div>
 
       {showForm && (
         <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Task</h3>
+          <h3 style={styles.formTitle}>New task</h3>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -218,7 +219,7 @@ export default function Tasks() {
               style={styles.saveBtn}
               disabled={saving || !form.title}
             >
-              {saving ? 'Saving...' : 'Save Task'}
+              {saving ? 'Saving...' : 'Save task'}
             </button>
           </div>
         </div>
@@ -230,38 +231,39 @@ export default function Tasks() {
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>✅</div>
           <h3 style={styles.emptyTitle}>
-            {filter === 'all' ? 'No tasks yet' : `No ${filter} tasks`}
+            {filter === 'all' ? 'No tasks yet' : `No ${filter === 'in-progress' ? 'in-progress' : filter} tasks`}
           </h3>
           <p style={styles.emptyText}>
             {filter === 'all' ? 'Add your first task to get started' : 'Try a different filter'}
           </p>
           {filter === 'all' && (
             <button onClick={() => setShowForm(true)} style={styles.addBtn}>
-              + Add Task
+              + Add task
             </button>
           )}
         </div>
       ) : (
         <div style={styles.taskList}>
           {filteredTasks.map(task => {
-            const sc = statusColors[task.status] || statusColors.todo
+            const sc = statusConfig[task.status] || statusConfig.todo
+            const isDone = task.status === 'done'
             return (
               <div key={task.id} style={styles.taskRow}>
                 <button
                   onClick={() => toggleStatus(task)}
                   style={{
                     ...styles.checkbox,
-                    backgroundColor: task.status === 'done' ? '#1D9E75' : '#fff',
-                    borderColor: task.status === 'done' ? '#1D9E75' : '#ddd',
+                    backgroundColor: isDone ? t.colors.success : t.colors.bgCard,
+                    borderColor: isDone ? t.colors.success : t.colors.border,
                   }}
                 >
-                  {task.status === 'done' && <span style={styles.checkmark}>✓</span>}
+                  {isDone && <span style={styles.checkmark}>✓</span>}
                 </button>
                 <div style={styles.taskContent}>
                   <div style={{
                     ...styles.taskTitle,
-                    textDecoration: task.status === 'done' ? 'line-through' : 'none',
-                    color: task.status === 'done' ? '#bbb' : '#1a1a1a',
+                    textDecoration: isDone ? 'line-through' : 'none',
+                    color: isDone ? t.colors.textTertiary : t.colors.textPrimary,
                   }}>
                     {task.title}
                   </div>
@@ -283,11 +285,12 @@ export default function Tasks() {
                   </div>
                 </div>
                 <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
-                  {task.status === 'in-progress' ? 'In progress' : task.status}
+                  {sc.label}
                 </div>
                 <button
                   onClick={() => handleDelete(task.id)}
                   style={styles.deleteBtn}
+                  title="Delete task"
                 >
                   ✕
                 </button>
@@ -301,24 +304,32 @@ export default function Tasks() {
 }
 
 const styles = {
-  page: { padding: '32px' },
+  page: { padding: '32px', fontFamily: t.fonts.sans },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: '24px',
   },
-  title: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: 0 },
-  subtitle: { fontSize: '13px', color: '#999', margin: '4px 0 0' },
+  title: {
+    fontSize: '22px',
+    fontWeight: '800',
+    color: t.colors.textPrimary,
+    margin: 0,
+    fontFamily: t.fonts.heading,
+    letterSpacing: '-0.02em',
+  },
+  subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
   addBtn: {
     padding: '10px 18px',
-    borderRadius: '8px',
+    borderRadius: t.radius.md,
     border: 'none',
-    backgroundColor: '#1D9E75',
+    backgroundColor: t.colors.primary,
     color: '#fff',
-    fontSize: '13px',
+    fontSize: t.fontSizes.base,
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   summaryRow: {
     display: 'grid',
@@ -327,41 +338,46 @@ const styles = {
     marginBottom: '20px',
   },
   summaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
     padding: '20px 24px',
-    border: '1px solid #f0f0eb',
+    border: `1px solid ${t.colors.border}`,
     cursor: 'pointer',
+    transition: 'border-color 0.15s',
   },
-  summaryLabel: { fontSize: '12px', color: '#999', marginBottom: '6px' },
-  summaryValue: { fontSize: '28px', fontWeight: '700', color: '#1a1a1a' },
+  summaryLabel: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '500' },
+  summaryValue: { fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
   filters: {
     display: 'flex',
     gap: '8px',
     marginBottom: '20px',
+    flexWrap: 'wrap',
   },
   filterBtn: {
     padding: '7px 14px',
-    borderRadius: '20px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#666',
-    fontSize: '13px',
+    borderRadius: t.radius.full,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.sm,
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+    transition: 'all 0.15s',
   },
   filterBtnActive: {
-    backgroundColor: '#1D9E75',
-    borderColor: '#1D9E75',
+    backgroundColor: t.colors.primary,
+    borderColor: t.colors.primary,
     color: '#fff',
+    fontWeight: '600',
   },
   formCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
     padding: '24px',
-    border: '1px solid #f0f0eb',
+    border: `1px solid ${t.colors.border}`,
     marginBottom: '24px',
   },
-  formTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 20px' },
+  formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -369,42 +385,45 @@ const styles = {
     marginBottom: '20px',
   },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
+  label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
   input: {
     padding: '9px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    fontSize: '13px',
-    color: '#1a1a1a',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    fontSize: t.fontSizes.base,
+    color: t.colors.textPrimary,
     outline: 'none',
-    backgroundColor: '#fff',
+    backgroundColor: t.colors.bgCard,
+    fontFamily: t.fonts.sans,
   },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
   cancelBtn: {
     padding: '9px 16px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#666',
-    fontSize: '13px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.base,
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   saveBtn: {
     padding: '9px 16px',
-    borderRadius: '8px',
+    borderRadius: t.radius.md,
     border: 'none',
-    backgroundColor: '#1D9E75',
+    backgroundColor: t.colors.primary,
     color: '#fff',
-    fontSize: '13px',
+    fontSize: t.fontSizes.base,
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   error: {
     padding: '10px 14px',
-    borderRadius: '8px',
-    backgroundColor: '#fff0f0',
-    color: '#cc3333',
-    fontSize: '13px',
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.dangerLight,
+    color: t.colors.danger,
+    fontSize: t.fontSizes.base,
     marginBottom: '16px',
   },
   taskList: {
@@ -416,32 +435,34 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '14px',
-    backgroundColor: '#fff',
-    borderRadius: '10px',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.md,
     padding: '14px 16px',
-    border: '1px solid #f0f0eb',
+    border: `1px solid ${t.colors.border}`,
+    transition: 'border-color 0.15s',
   },
   checkbox: {
     width: '22px',
     height: '22px',
     borderRadius: '50%',
-    border: '2px solid #ddd',
+    border: `2px solid ${t.colors.border}`,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+    transition: 'all 0.15s',
   },
   checkmark: {
     color: '#fff',
-    fontSize: '12px',
+    fontSize: t.fontSizes.sm,
     fontWeight: '700',
   },
-  taskContent: { flex: 1 },
+  taskContent: { flex: 1, minWidth: 0 },
   taskTitle: {
-    fontSize: '14px',
+    fontSize: t.fontSizes.md,
     fontWeight: '500',
-    color: '#1a1a1a',
+    color: t.colors.textPrimary,
     marginBottom: '4px',
   },
   taskMeta: {
@@ -450,24 +471,26 @@ const styles = {
     flexWrap: 'wrap',
   },
   metaTag: {
-    fontSize: '11px',
-    color: '#999',
+    fontSize: t.fontSizes.xs,
+    color: t.colors.textTertiary,
   },
   statusBadge: {
     padding: '3px 10px',
-    borderRadius: '20px',
-    fontSize: '12px',
+    borderRadius: t.radius.full,
+    fontSize: t.fontSizes.sm,
     fontWeight: '500',
     flexShrink: 0,
   },
   deleteBtn: {
     background: 'none',
     border: 'none',
-    color: '#ddd',
-    fontSize: '14px',
+    color: t.colors.textTertiary,
+    fontSize: t.fontSizes.md,
     cursor: 'pointer',
-    padding: '4px',
+    padding: '4px 8px',
     flexShrink: 0,
+    borderRadius: t.radius.sm,
+    fontFamily: t.fonts.sans,
   },
   emptyState: {
     display: 'flex',
@@ -475,12 +498,12 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '80px 20px',
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #f0f0eb',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
+    border: `1px solid ${t.colors.border}`,
   },
   emptyIcon: { fontSize: '40px', marginBottom: '16px' },
-  emptyTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 8px' },
-  emptyText: { fontSize: '13px', color: '#999', margin: '0 0 24px' },
-  empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
+  emptyTitle: { fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading },
+  emptyText: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' },
+  empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
 }

@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { theme as t } from '../theme'
+
+const statusConfig = {
+  draft:   { bg: t.colors.bg,           color: t.colors.textTertiary, label: 'Draft' },
+  sent:    { bg: t.colors.primaryLight, color: t.colors.primary,      label: 'Sent' },
+  paid:    { bg: t.colors.successLight, color: t.colors.success,      label: 'Paid' },
+  overdue: { bg: t.colors.dangerLight,  color: t.colors.danger,       label: 'Overdue' },
+}
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState([])
@@ -76,18 +84,12 @@ export default function Invoices() {
     if (selectedInvoice?.id === id) setSelectedInvoice(null)
   }
 
-  const statusColors = {
-    draft: { bg: '#f5f5f0', color: '#888' },
-    sent: { bg: '#f0f4ff', color: '#4466cc' },
-    paid: { bg: '#f0faf6', color: '#1D9E75' },
-    overdue: { bg: '#fff0f0', color: '#cc3333' },
-  }
-
   const totalRevenue = invoices.reduce((sum, inv) => sum + (parseFloat(inv.amount_paid) || 0), 0)
   const totalOutstanding = invoices.reduce((sum, inv) => sum + ((parseFloat(inv.total_amount) || 0) - (parseFloat(inv.amount_paid) || 0)), 0)
+  const totalInvoiced = invoices.reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0)
 
   if (selectedInvoice) {
-    const sc = statusColors[selectedInvoice.status] || statusColors.draft
+    const sc = statusConfig[selectedInvoice.status] || statusConfig.draft
     const outstanding = (parseFloat(selectedInvoice.total_amount) || 0) - (parseFloat(selectedInvoice.amount_paid) || 0)
     return (
       <div style={styles.page}>
@@ -113,7 +115,7 @@ export default function Invoices() {
               )}
             </div>
             <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
-              {selectedInvoice.status}
+              {sc.label}
             </div>
           </div>
           <div style={styles.amountRow}>
@@ -125,13 +127,13 @@ export default function Invoices() {
             </div>
             <div style={styles.amountBox}>
               <div style={styles.amountLabel}>Amount paid</div>
-              <div style={{ ...styles.amountValue, color: '#1D9E75' }}>
+              <div style={{ ...styles.amountValue, color: t.colors.success }}>
                 ${parseFloat(selectedInvoice.amount_paid || 0).toLocaleString()}
               </div>
             </div>
             <div style={styles.amountBox}>
               <div style={styles.amountLabel}>Outstanding</div>
-              <div style={{ ...styles.amountValue, color: outstanding > 0 ? '#cc3333' : '#1D9E75' }}>
+              <div style={{ ...styles.amountValue, color: outstanding > 0 ? t.colors.danger : t.colors.success }}>
                 ${outstanding.toLocaleString()}
               </div>
             </div>
@@ -162,37 +164,37 @@ export default function Invoices() {
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Invoices</h2>
-          <p style={styles.subtitle}>{invoices.length} total invoices</p>
+          <p style={styles.subtitle}>{invoices.length} total invoice{invoices.length !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={() => setShowForm(true)} style={styles.addBtn}>
-          + New Invoice
+          + New invoice
         </button>
       </div>
 
       <div style={styles.summaryRow}>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLabel}>Total collected</div>
-          <div style={{ ...styles.summaryValue, color: '#1D9E75' }}>
+          <div style={{ ...styles.summaryValue, color: t.colors.success }}>
             ${totalRevenue.toLocaleString()}
           </div>
         </div>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLabel}>Outstanding</div>
-          <div style={{ ...styles.summaryValue, color: totalOutstanding > 0 ? '#cc7700' : '#1D9E75' }}>
+          <div style={{ ...styles.summaryValue, color: totalOutstanding > 0 ? t.colors.warning : t.colors.success }}>
             ${totalOutstanding.toLocaleString()}
           </div>
         </div>
         <div style={styles.summaryCard}>
           <div style={styles.summaryLabel}>Total invoiced</div>
           <div style={styles.summaryValue}>
-            ${invoices.reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0).toLocaleString()}
+            ${totalInvoiced.toLocaleString()}
           </div>
         </div>
       </div>
 
       {showForm && (
         <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Invoice</h3>
+          <h3 style={styles.formTitle}>New invoice</h3>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={styles.field}>
@@ -287,7 +289,7 @@ export default function Invoices() {
               style={styles.saveBtn}
               disabled={saving}
             >
-              {saving ? 'Saving...' : 'Save Invoice'}
+              {saving ? 'Saving...' : 'Save invoice'}
             </button>
           </div>
         </div>
@@ -301,7 +303,7 @@ export default function Invoices() {
           <h3 style={styles.emptyTitle}>No invoices yet</h3>
           <p style={styles.emptyText}>Create your first invoice to start tracking revenue</p>
           <button onClick={() => setShowForm(true)} style={styles.addBtn}>
-            + New Invoice
+            + New invoice
           </button>
         </div>
       ) : (
@@ -317,7 +319,7 @@ export default function Invoices() {
             <span></span>
           </div>
           {invoices.map(invoice => {
-            const sc = statusColors[invoice.status] || statusColors.draft
+            const sc = statusConfig[invoice.status] || statusConfig.draft
             return (
               <div
                 key={invoice.id}
@@ -336,7 +338,7 @@ export default function Invoices() {
                 <span style={styles.tableCell}>
                   ${parseFloat(invoice.total_amount || 0).toLocaleString()}
                 </span>
-                <span style={{ ...styles.tableCell, color: '#1D9E75', fontWeight: '500' }}>
+                <span style={{ ...styles.tableCell, color: t.colors.success, fontWeight: '500' }}>
                   ${parseFloat(invoice.amount_paid || 0).toLocaleString()}
                 </span>
                 <span style={styles.tableCell}>
@@ -346,10 +348,10 @@ export default function Invoices() {
                 </span>
                 <span>
                   <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
-                    {invoice.status}
+                    {sc.label}
                   </div>
                 </span>
-                <span style={styles.tableCell}>→</span>
+                <span style={{ ...styles.tableCell, color: t.colors.textTertiary }}>→</span>
               </div>
             )
           })}
@@ -360,24 +362,25 @@ export default function Invoices() {
 }
 
 const styles = {
-  page: { padding: '32px' },
+  page: { padding: '32px', fontFamily: t.fonts.sans },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: '24px',
   },
-  title: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: 0 },
-  subtitle: { fontSize: '13px', color: '#999', margin: '4px 0 0' },
+  title: { fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
   addBtn: {
     padding: '10px 18px',
-    borderRadius: '8px',
+    borderRadius: t.radius.md,
     border: 'none',
-    backgroundColor: '#1D9E75',
+    backgroundColor: t.colors.primary,
     color: '#fff',
-    fontSize: '13px',
+    fontSize: t.fontSizes.base,
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   summaryRow: {
     display: 'grid',
@@ -386,21 +389,21 @@ const styles = {
     marginBottom: '24px',
   },
   summaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
     padding: '20px 24px',
-    border: '1px solid #f0f0eb',
+    border: `1px solid ${t.colors.border}`,
   },
-  summaryLabel: { fontSize: '12px', color: '#999', marginBottom: '6px' },
-  summaryValue: { fontSize: '24px', fontWeight: '700', color: '#1a1a1a' },
+  summaryLabel: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '500' },
+  summaryValue: { fontSize: '26px', fontWeight: '800', color: t.colors.textPrimary, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
   formCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
     padding: '24px',
-    border: '1px solid #f0f0eb',
+    border: `1px solid ${t.colors.border}`,
     marginBottom: '24px',
   },
-  formTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 20px' },
+  formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -408,77 +411,81 @@ const styles = {
     marginBottom: '20px',
   },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
+  label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
   input: {
     padding: '9px 12px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    fontSize: '13px',
-    color: '#1a1a1a',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    fontSize: t.fontSizes.base,
+    color: t.colors.textPrimary,
     outline: 'none',
-    backgroundColor: '#fff',
+    backgroundColor: t.colors.bgCard,
+    fontFamily: t.fonts.sans,
   },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
   cancelBtn: {
     padding: '9px 16px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#666',
-    fontSize: '13px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.base,
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   saveBtn: {
     padding: '9px 16px',
-    borderRadius: '8px',
+    borderRadius: t.radius.md,
     border: 'none',
-    backgroundColor: '#1D9E75',
+    backgroundColor: t.colors.primary,
     color: '#fff',
-    fontSize: '13px',
+    fontSize: t.fontSizes.base,
     fontWeight: '600',
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   error: {
     padding: '10px 14px',
-    borderRadius: '8px',
-    backgroundColor: '#fff0f0',
-    color: '#cc3333',
-    fontSize: '13px',
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.dangerLight,
+    color: t.colors.danger,
+    fontSize: t.fontSizes.base,
     marginBottom: '16px',
   },
   table: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #f0f0eb',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
+    border: `1px solid ${t.colors.border}`,
     overflow: 'hidden',
   },
   tableHeader: {
     display: 'grid',
     gridTemplateColumns: '1fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr 0.3fr',
     padding: '12px 20px',
-    backgroundColor: '#fafaf8',
-    borderBottom: '1px solid #f0f0eb',
-    fontSize: '12px',
+    backgroundColor: t.colors.bg,
+    borderBottom: `1px solid ${t.colors.border}`,
+    fontSize: t.fontSizes.xs,
     fontWeight: '600',
-    color: '#999',
+    color: t.colors.textTertiary,
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.08em',
   },
   tableRow: {
     display: 'grid',
     gridTemplateColumns: '1fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr 0.3fr',
     padding: '14px 20px',
-    borderBottom: '1px solid #f9f9f7',
+    borderBottom: `1px solid ${t.colors.borderLight}`,
     alignItems: 'center',
     cursor: 'pointer',
+    transition: 'background 0.15s',
   },
-  invoiceNumber: { fontSize: '13px', fontWeight: '600', color: '#1a1a1a' },
-  tableCell: { fontSize: '13px', color: '#666' },
+  invoiceNumber: { fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary },
+  tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
   statusBadge: {
     display: 'inline-block',
     padding: '3px 10px',
-    borderRadius: '20px',
-    fontSize: '12px',
+    borderRadius: t.radius.full,
+    fontSize: t.fontSizes.sm,
     fontWeight: '500',
   },
   emptyState: {
@@ -487,14 +494,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '80px 20px',
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #f0f0eb',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
+    border: `1px solid ${t.colors.border}`,
   },
   emptyIcon: { fontSize: '40px', marginBottom: '16px' },
-  emptyTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 8px' },
-  emptyText: { fontSize: '13px', color: '#999', margin: '0 0 24px' },
-  empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
+  emptyTitle: { fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading },
+  emptyText: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' },
+  empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
   detailHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -502,27 +509,30 @@ const styles = {
   },
   backBtn: {
     padding: '8px 14px',
-    borderRadius: '8px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#555',
-    fontSize: '13px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.base,
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   deleteBtn: {
     padding: '8px 14px',
-    borderRadius: '8px',
+    borderRadius: t.radius.md,
     border: 'none',
-    backgroundColor: '#fff0f0',
-    color: '#cc3333',
-    fontSize: '13px',
+    backgroundColor: t.colors.dangerLight,
+    color: t.colors.danger,
+    fontSize: t.fontSizes.base,
     cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+    fontWeight: '500',
   },
   detailCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
     padding: '32px',
-    border: '1px solid #f0f0eb',
+    border: `1px solid ${t.colors.border}`,
   },
   detailTop: {
     display: 'flex',
@@ -530,8 +540,8 @@ const styles = {
     alignItems: 'flex-start',
     marginBottom: '28px',
   },
-  detailName: { fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 4px' },
-  detailSub: { fontSize: '14px', color: '#999', margin: 0 },
+  detailName: { fontSize: '26px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  detailSub: { fontSize: t.fontSizes.md, color: t.colors.textSecondary, margin: 0 },
   amountRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
@@ -539,28 +549,29 @@ const styles = {
     marginBottom: '24px',
   },
   amountBox: {
-    backgroundColor: '#fafaf8',
-    borderRadius: '8px',
-    padding: '16px',
+    backgroundColor: t.colors.bg,
+    borderRadius: t.radius.md,
+    padding: '16px 18px',
   },
-  amountLabel: { fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', marginBottom: '6px' },
-  amountValue: { fontSize: '22px', fontWeight: '700', color: '#1a1a1a' },
+  amountLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.06em' },
+  amountValue: { fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
   detailGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '16px',
   },
   detailField: {
-    backgroundColor: '#fafaf8',
-    borderRadius: '8px',
+    backgroundColor: t.colors.bg,
+    borderRadius: t.radius.md,
     padding: '14px 16px',
   },
   detailFieldLabel: {
-    fontSize: '11px',
-    color: '#aaa',
+    fontSize: t.fontSizes.xs,
+    color: t.colors.textTertiary,
     fontWeight: '600',
     textTransform: 'uppercase',
     marginBottom: '4px',
+    letterSpacing: '0.06em',
   },
-  detailFieldValue: { fontSize: '14px', color: '#1a1a1a' },
+  detailFieldValue: { fontSize: t.fontSizes.md, color: t.colors.textPrimary },
 }
