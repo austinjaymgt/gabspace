@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { theme as t } from '../theme'
 
 function getSessionId() {
   let id = localStorage.getItem('portal_session_id')
@@ -9,6 +10,33 @@ function getSessionId() {
     localStorage.setItem('portal_session_id', id)
   }
   return id
+}
+
+// Small four-square brand mark — reused in header and update avatars
+function BrandMark({ size = 32 }) {
+  const inner = size * 0.28
+  const offset = size * 0.11
+  const gap = size * 0.5
+  const rx = size * 0.07
+  return (
+    <div style={{
+      width: `${size}px`,
+      height: `${size}px`,
+      background: 'linear-gradient(135deg, #7C5CBF, #6B8F71)',
+      borderRadius: `${size * 0.25}px`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      <svg viewBox="0 0 28 28" width={size * 0.55} height={size * 0.55} fill="none">
+        <rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.9"/>
+        <rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.55"/>
+        <rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.55"/>
+        <rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.9"/>
+      </svg>
+    </div>
+  )
 }
 
 export default function Portal() {
@@ -177,7 +205,10 @@ export default function Portal() {
     <div style={styles.page}>
       <div style={styles.header}>
         <div style={styles.headerInner}>
-          <div style={styles.brand}>gabspace</div>
+          <div style={styles.brandLockup}>
+            <BrandMark size={32} />
+            <span style={styles.brandWordmark}>gabspace</span>
+          </div>
           <div style={styles.clientName}>{client.name}'s Portal</div>
         </div>
       </div>
@@ -204,8 +235,8 @@ export default function Portal() {
                   <div style={styles.projectTitle}>{project.title}</div>
                   <div style={{
                     ...styles.statusBadge,
-                    backgroundColor: project.status === 'active' ? '#f0faf6' : '#f5f5f0',
-                    color: project.status === 'active' ? '#1D9E75' : '#999',
+                    backgroundColor: project.status === 'active' ? t.colors.successLight : t.colors.bg,
+                    color: project.status === 'active' ? t.colors.success : t.colors.textTertiary,
                   }}>
                     {project.status}
                   </div>
@@ -248,7 +279,7 @@ export default function Portal() {
               {updates.slice(0, visibleCount).map(update => (
                 <div key={update.id} style={styles.updateCard}>
                   <div style={styles.updateMeta}>
-                    <div style={styles.updateAvatar}>G</div>
+                    <BrandMark size={32} />
                     <div>
                       <div style={styles.updateAuthor}>Gabspace Team</div>
                       <div style={styles.updateDate}>
@@ -276,9 +307,9 @@ export default function Portal() {
                           onClick={() => handleReaction(update.id, emoji)}
                           style={{
                             ...styles.reactionBtn,
-                            backgroundColor: reacted ? '#f0faf6' : '#f5f5f0',
-                            border: reacted ? '1px solid #1D9E75' : '1px solid #e0e0e0',
-                            color: reacted ? '#1D9E75' : '#666',
+                            backgroundColor: reacted ? t.colors.primaryLight : t.colors.bg,
+                            border: `1px solid ${reacted ? t.colors.primary : t.colors.border}`,
+                            color: reacted ? t.colors.primary : t.colors.textSecondary,
                           }}
                         >
                           {emoji} {count > 0 && <span style={styles.reactionCount}>{count}</span>}
@@ -365,86 +396,391 @@ export default function Portal() {
       </div>
 
       <div style={styles.footer}>
-        <p style={styles.footerText}>Powered by gabspace · Clarity meets creativity</p>
+        <p style={styles.footerText}>Powered by gabspace · creativity meets clarity</p>
       </div>
     </div>
   )
 }
 
 const styles = {
-  page: { minHeight: '100vh', backgroundColor: '#f5f5f0', fontFamily: 'sans-serif' },
-  centered: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f0', fontFamily: 'sans-serif' },
-  loadingText: { fontSize: '14px', color: '#999' },
-  notFound: { textAlign: 'center', padding: '40px' },
-  notFoundIcon: { fontSize: '48px', marginBottom: '16px' },
-  notFoundTitle: { fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 8px' },
-  notFoundText: { fontSize: '14px', color: '#999', margin: 0 },
-  header: { backgroundColor: '#ffffff', borderBottom: '1px solid #f0f0eb', padding: '16px 24px' },
-  headerInner: { maxWidth: '680px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  brand: { fontSize: '18px', fontWeight: '700', color: '#1a1a1a' },
-  clientName: { fontSize: '13px', color: '#999' },
-  content: { maxWidth: '680px', margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '24px' },
-  welcomeCard: { backgroundColor: '#ffffff', borderRadius: '16px', padding: '28px', border: '1px solid #f0f0eb', display: 'flex', alignItems: 'center', gap: '20px' },
-  welcomeAvatar: { width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#1D9E75', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: '700', flexShrink: 0 },
-  welcomeTitle: { fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 4px' },
-  welcomeSubtitle: { fontSize: '14px', color: '#999', margin: 0 },
-  section: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  sectionTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: 0 },
-  projectCard: { backgroundColor: '#ffffff', borderRadius: '12px', padding: '20px', border: '1px solid #f0f0eb' },
-  projectTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
-  projectTitle: { fontSize: '15px', fontWeight: '600', color: '#1a1a1a' },
-  statusBadge: { padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '500' },
-  eventList: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  eventItem: { display: 'flex', gap: '12px', alignItems: 'flex-start', backgroundColor: '#fafaf8', borderRadius: '8px', padding: '12px' },
-  eventIcon: { fontSize: '18px' },
-  eventName: { fontSize: '14px', fontWeight: '600', color: '#1a1a1a', marginBottom: '2px' },
-  eventDate: { fontSize: '13px', color: '#666', marginBottom: '2px' },
-  eventVenue: { fontSize: '12px', color: '#999' },
-  updateFeed: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  updateCard: { backgroundColor: '#ffffff', borderRadius: '12px', padding: '20px', border: '1px solid #f0f0eb' },
-  updateMeta: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' },
-  updateAvatar: { width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1D9E75', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', flexShrink: 0 },
-  updateAuthor: { fontSize: '13px', fontWeight: '600', color: '#1a1a1a' },
-  updateDate: { fontSize: '11px', color: '#bbb' },
-  updateTitle: { fontSize: '15px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 8px' },
-  updateMessage: { fontSize: '14px', color: '#555', margin: '0 0 16px', lineHeight: '1.6' },
-  reactionsRow: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' },
+  page: {
+    minHeight: '100vh',
+    backgroundColor: t.colors.bg,
+    fontFamily: t.fonts.sans,
+  },
+  centered: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: t.colors.bg,
+    fontFamily: t.fonts.sans,
+  },
+  loadingText: {
+    fontSize: t.fontSizes.md,
+    color: t.colors.textTertiary,
+  },
+  notFound: {
+    textAlign: 'center',
+    padding: '40px',
+  },
+  notFoundIcon: {
+    fontSize: '48px',
+    marginBottom: '16px',
+  },
+  notFoundTitle: {
+    fontSize: '22px',
+    fontWeight: '800',
+    color: t.colors.textPrimary,
+    margin: '0 0 8px',
+    fontFamily: t.fonts.heading,
+    letterSpacing: '-0.02em',
+  },
+  notFoundText: {
+    fontSize: t.fontSizes.md,
+    color: t.colors.textTertiary,
+    margin: 0,
+  },
+  header: {
+    backgroundColor: t.colors.bgCard,
+    borderBottom: `1px solid ${t.colors.border}`,
+    padding: '16px 24px',
+  },
+  headerInner: {
+    maxWidth: '680px',
+    margin: '0 auto',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  brandLockup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  brandWordmark: {
+    fontFamily: t.fonts.heading,
+    fontSize: '22px',
+    fontWeight: '800',
+    color: t.colors.textPrimary,
+    letterSpacing: '-0.02em',
+    lineHeight: 1,
+  },
+  clientName: {
+    fontSize: t.fontSizes.base,
+    color: t.colors.textTertiary,
+    fontFamily: t.fonts.sans,
+  },
+  content: {
+    maxWidth: '680px',
+    margin: '0 auto',
+    padding: '32px 24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+  },
+  welcomeCard: {
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.xl,
+    padding: '28px',
+    border: `1px solid ${t.colors.border}`,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+  },
+  welcomeAvatar: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '50%',
+    background: `linear-gradient(135deg, ${t.colors.primary}, #6B8F71)`,
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '22px',
+    fontWeight: '700',
+    fontFamily: t.fonts.heading,
+    flexShrink: 0,
+  },
+  welcomeTitle: {
+    fontSize: '24px',
+    fontWeight: '800',
+    color: t.colors.textPrimary,
+    margin: '0 0 4px',
+    fontFamily: t.fonts.heading,
+    letterSpacing: '-0.02em',
+  },
+  welcomeSubtitle: {
+    fontSize: t.fontSizes.md,
+    color: t.colors.textSecondary,
+    margin: 0,
+  },
+  section: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  sectionTitle: {
+    fontSize: t.fontSizes.lg,
+    fontWeight: '700',
+    color: t.colors.textPrimary,
+    margin: 0,
+    fontFamily: t.fonts.heading,
+    letterSpacing: '-0.01em',
+  },
+  projectCard: {
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
+    padding: '20px',
+    border: `1px solid ${t.colors.border}`,
+  },
+  projectTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+  },
+  projectTitle: {
+    fontSize: t.fontSizes.md,
+    fontWeight: '600',
+    color: t.colors.textPrimary,
+  },
+  statusBadge: {
+    padding: '3px 10px',
+    borderRadius: t.radius.full,
+    fontSize: t.fontSizes.sm,
+    fontWeight: '500',
+    textTransform: 'capitalize',
+  },
+  eventList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  eventItem: {
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'flex-start',
+    backgroundColor: t.colors.bg,
+    borderRadius: t.radius.md,
+    padding: '12px',
+  },
+  eventIcon: {
+    fontSize: '18px',
+  },
+  eventName: {
+    fontSize: t.fontSizes.md,
+    fontWeight: '600',
+    color: t.colors.textPrimary,
+    marginBottom: '2px',
+  },
+  eventDate: {
+    fontSize: t.fontSizes.base,
+    color: t.colors.textSecondary,
+    marginBottom: '2px',
+  },
+  eventVenue: {
+    fontSize: t.fontSizes.sm,
+    color: t.colors.textTertiary,
+  },
+  updateFeed: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  updateCard: {
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
+    padding: '20px',
+    border: `1px solid ${t.colors.border}`,
+  },
+  updateMeta: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '14px',
+  },
+  updateAuthor: {
+    fontSize: t.fontSizes.base,
+    fontWeight: '600',
+    color: t.colors.textPrimary,
+  },
+  updateDate: {
+    fontSize: t.fontSizes.xs,
+    color: t.colors.textTertiary,
+  },
+  updateTitle: {
+    fontSize: t.fontSizes.md,
+    fontWeight: '600',
+    color: t.colors.textPrimary,
+    margin: '0 0 8px',
+  },
+  updateMessage: {
+    fontSize: t.fontSizes.md,
+    color: t.colors.textSecondary,
+    margin: '0 0 16px',
+    lineHeight: '1.6',
+  },
+  reactionsRow: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'wrap',
+    marginBottom: '12px',
+  },
   reactionBtn: {
     padding: '5px 10px',
-    borderRadius: '20px',
-    fontSize: '13px',
+    borderRadius: t.radius.full,
+    fontSize: t.fontSizes.base,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     gap: '4px',
-    fontFamily: 'sans-serif',
+    fontFamily: t.fonts.sans,
+    transition: 'all 0.15s',
   },
-  reactionCount: { fontSize: '12px', fontWeight: '600' },
+  reactionCount: {
+    fontSize: t.fontSizes.sm,
+    fontWeight: '600',
+  },
   commentToggleBtn: {
     padding: '5px 10px',
-    borderRadius: '20px',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#fff',
-    color: '#666',
-    fontSize: '13px',
+    borderRadius: t.radius.full,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.base,
     cursor: 'pointer',
-    fontFamily: 'sans-serif',
+    fontFamily: t.fonts.sans,
   },
-  commentsSection: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' },
-  commentItem: { display: 'flex', gap: '10px', alignItems: 'flex-start' },
-  commentAvatar: { width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#f0f0eb', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600', flexShrink: 0 },
-  commentContent: { flex: 1, backgroundColor: '#fafaf8', borderRadius: '10px', padding: '8px 12px' },
-  commentAuthor: { fontSize: '12px', fontWeight: '600', color: '#1a1a1a', marginBottom: '2px' },
-  commentMessage: { fontSize: '13px', color: '#555', lineHeight: '1.5' },
-  commentDate: { fontSize: '11px', color: '#bbb', marginTop: '4px' },
-  commentForm: { display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', backgroundColor: '#fafaf8', borderRadius: '10px' },
-  commentInput: { padding: '8px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', outline: 'none', fontFamily: 'sans-serif' },
-  commentTextarea: { padding: '8px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', outline: 'none', resize: 'vertical', fontFamily: 'sans-serif' },
-  commentFormActions: { display: 'flex', gap: '8px', justifyContent: 'flex-end' },
-  commentCancelBtn: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '12px', cursor: 'pointer' },
-  commentSubmitBtn: { padding: '7px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
-  noUpdates: { backgroundColor: '#ffffff', borderRadius: '12px', padding: '32px', border: '1px solid #f0f0eb', textAlign: 'center', fontSize: '14px', color: '#bbb' },
-  loadMoreBtn: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#888', fontSize: '13px', cursor: 'pointer', fontFamily: 'sans-serif' },
-  footer: { textAlign: 'center', padding: '32px 24px' },
-  footerText: { fontSize: '12px', color: '#ccc', margin: 0 },
+  commentsSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    marginBottom: '12px',
+  },
+  commentItem: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'flex-start',
+  },
+  commentAvatar: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    backgroundColor: t.colors.border,
+    color: t.colors.textSecondary,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: t.fontSizes.xs,
+    fontWeight: '600',
+    flexShrink: 0,
+  },
+  commentContent: {
+    flex: 1,
+    backgroundColor: t.colors.bg,
+    borderRadius: t.radius.md,
+    padding: '8px 12px',
+  },
+  commentAuthor: {
+    fontSize: t.fontSizes.sm,
+    fontWeight: '600',
+    color: t.colors.textPrimary,
+    marginBottom: '2px',
+  },
+  commentMessage: {
+    fontSize: t.fontSizes.base,
+    color: t.colors.textSecondary,
+    lineHeight: '1.5',
+  },
+  commentDate: {
+    fontSize: t.fontSizes.xs,
+    color: t.colors.textTertiary,
+    marginTop: '4px',
+  },
+  commentForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    padding: '12px',
+    backgroundColor: t.colors.bg,
+    borderRadius: t.radius.md,
+  },
+  commentInput: {
+    padding: '8px 12px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    fontSize: t.fontSizes.base,
+    outline: 'none',
+    fontFamily: t.fonts.sans,
+    color: t.colors.textPrimary,
+  },
+  commentTextarea: {
+    padding: '8px 12px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    fontSize: t.fontSizes.base,
+    outline: 'none',
+    resize: 'vertical',
+    fontFamily: t.fonts.sans,
+    color: t.colors.textPrimary,
+  },
+  commentFormActions: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'flex-end',
+  },
+  commentCancelBtn: {
+    padding: '7px 14px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.sm,
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+  },
+  commentSubmitBtn: {
+    padding: '7px 14px',
+    borderRadius: t.radius.md,
+    border: 'none',
+    backgroundColor: t.colors.primary,
+    color: '#fff',
+    fontSize: t.fontSizes.sm,
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+  },
+  noUpdates: {
+    backgroundColor: t.colors.bgCard,
+    borderRadius: t.radius.lg,
+    padding: '32px',
+    border: `1px solid ${t.colors.border}`,
+    textAlign: 'center',
+    fontSize: t.fontSizes.md,
+    color: t.colors.textTertiary,
+  },
+  loadMoreBtn: {
+    width: '100%',
+    padding: '12px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.base,
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+  },
+  footer: {
+    textAlign: 'center',
+    padding: '32px 24px',
+  },
+  footerText: {
+    fontSize: t.fontSizes.sm,
+    color: t.colors.textTertiary,
+    margin: 0,
+    fontFamily: t.fonts.sans,
+  },
 }
