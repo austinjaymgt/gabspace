@@ -256,7 +256,7 @@ function renderPage() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.nav, fontFamily: t.fonts.sans }}>
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.xl, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px', fontFamily: t.fonts.heading }}>
-            curators
+            gabspace
           </h1>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
             where events meet excellence.

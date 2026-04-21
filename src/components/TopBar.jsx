@@ -65,7 +65,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
             lineHeight: 1.2,
             fontFamily: t.fonts.heading,
           }}>
-            curators
+            gabspace
           </div>
           <div style={{
             fontSize: t.fontSizes.xs,

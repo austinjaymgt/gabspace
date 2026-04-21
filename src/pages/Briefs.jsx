@@ -249,7 +249,7 @@ export default function Briefs({ workspaceId, userRole, session }) {
 <body>
   <div class="header">
     <div>
-      <div class="wordmark">curators</div>
+      <div class="wordmark">gabspace</div>
       <div class="tagline">where events meet excellence.</div>
     </div>
     <div>
@@ -327,7 +327,7 @@ export default function Briefs({ workspaceId, userRole, session }) {
   </div>` : ''}
 
   <div class="footer">
-    <span>curators — PrizePicks Events</span>
+    <span>gabspace — Creativity meets clarity</span>
     <span>Confidential · Internal Use Only</span>
   </div>
 </body>

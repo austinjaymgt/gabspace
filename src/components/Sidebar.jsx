@@ -108,7 +108,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
             fontFamily: t.fonts.heading,
             lineHeight: 1,
           }}>
-            curators
+            gabspace
           </div>
           <div style={{
             fontSize: t.fontSizes.xs,
