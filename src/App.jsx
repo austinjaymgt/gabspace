@@ -255,17 +255,27 @@ function renderPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.nav, fontFamily: t.fonts.sans }}>
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.xl, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px', fontFamily: t.fonts.heading }}>
-            gabspace
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+            <div style={{ width: '44px', height: '44px', background: 'linear-gradient(135deg, #7C5CBF, #6B8F71)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg viewBox="0 0 28 28" width="24" height="24" fill="none">
+                <rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.9"/>
+                <rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.55"/>
+                <rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.55"/>
+                <rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.9"/>
+              </svg>
+            </div>
+            <h1 style={{ fontSize: '32px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, letterSpacing: '-0.02em', fontFamily: t.fonts.heading, lineHeight: 1 }}>
+              gabspace
+            </h1>
+          </div>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
-            where events meet excellence.
+            creativity meets clarity.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
-              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? '#f0fff8' : t.colors.dangerLight, color: error.includes('Check') ? t.colors.primary : t.colors.danger, fontSize: t.fontSizes.base }}>
-                {error}
+<div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
+                  {error}
               </div>
             )}
 
@@ -274,7 +284,7 @@ function renderPage() {
               <input
                 style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
                 type="email"
-                placeholder="you@prizepicks.com"
+                placeholder="you@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
               />
@@ -308,7 +318,7 @@ function renderPage() {
             </button>
 
             {resetSent ? (
-              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: '#f0fff8', color: t.colors.primary, fontSize: t.fontSizes.base, textAlign: 'center' }}>
+              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight, color: t.colors.success, fontSize: t.fontSizes.base, textAlign: 'center' }}>
                 ✓ Password reset email sent — check your inbox
               </div>
             ) : (
