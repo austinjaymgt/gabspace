@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { theme as t } from '../theme'
 
 function timeAgo(dateString) {
   if (!dateString) return 'Never'
@@ -151,7 +152,7 @@ export default function ClientPortal() {
       {/* Search + sort */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
         <div style={{ position: 'relative', flex: 1 }}>
-          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#bbb', fontSize: '14px', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: t.colors.textTertiary, fontSize: '14px', pointerEvents: 'none' }}>🔍</span>
           <input
             style={{ ...styles.input, paddingLeft: '34px', width: '100%', boxSizing: 'border-box' }}
             placeholder="Search by client or company..."
@@ -160,7 +161,7 @@ export default function ClientPortal() {
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#999', whiteSpace: 'nowrap' }}>Sort by</span>
+          <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, whiteSpace: 'nowrap' }}>Sort by</span>
           <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value)}
@@ -243,7 +244,7 @@ export default function ClientPortal() {
                   <div style={styles.metaDivider} />
                   <div style={styles.metaChip}>
                     <span style={styles.metaLabel}>Comments</span>
-                    <span style={{ ...styles.metaValue, color: totalPortalComments > 0 ? '#1D9E75' : '#1a1a1a' }}>
+                    <span style={{ ...styles.metaValue, color: totalPortalComments > 0 ? t.colors.primary : t.colors.textPrimary }}>
                       {totalPortalComments}
                     </span>
                   </div>
@@ -254,7 +255,7 @@ export default function ClientPortal() {
                       <div style={styles.metaDivider} />
                       <div style={styles.metaChip}>
                         <span style={styles.metaLabel}>Latest update</span>
-                        <span style={{ ...styles.metaValue, color: '#666', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ ...styles.metaValue, color: t.colors.textSecondary, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {latestUpdate.title || latestUpdate.message}
                         </span>
                       </div>
@@ -389,54 +390,54 @@ export default function ClientPortal() {
 }
 
 const styles = {
-  page: { padding: '32px' },
+  page: { padding: '32px', fontFamily: t.fonts.sans },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' },
-  title: { fontSize: '20px', fontWeight: '700', color: '#1a1a1a', margin: 0 },
-  subtitle: { fontSize: '13px', color: '#999', margin: '4px 0 0' },
-  input: { padding: '8px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1a1a1a', outline: 'none', backgroundColor: '#fff' },
+  title: { fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
+  input: { padding: '8px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
   portalList: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  portalCard: { backgroundColor: '#fff', borderRadius: '12px', padding: '18px 22px', border: '1px solid #f0f0eb' },
+  portalCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '18px 22px', border: `1px solid ${t.colors.border}` },
   portalCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
   portalClientInfo: { display: 'flex', alignItems: 'center', gap: '10px' },
-  avatar: { width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1D9E75', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '600', flexShrink: 0 },
-  clientName: { fontSize: '14px', fontWeight: '600', color: '#1a1a1a' },
-  clientCompany: { fontSize: '12px', color: '#999', marginTop: '1px' },
+  avatar: { width: '36px', height: '36px', borderRadius: '50%', backgroundColor: t.colors.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: t.fontSizes.md, fontWeight: '600', flexShrink: 0, fontFamily: t.fonts.heading },
+  clientName: { fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary },
+  clientCompany: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginTop: '1px' },
   portalActions: { display: 'flex', gap: '8px' },
-  copyBtn: { padding: '6px 12px', borderRadius: '8px', border: '1px solid #1D9E75', backgroundColor: '#fff', color: '#1D9E75', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
-  postBtn: { padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
-  metaStrip: { display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', backgroundColor: '#fafaf8', borderRadius: '8px', marginBottom: '0px', flexWrap: 'wrap' },
+  copyBtn: { padding: '6px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.primary}`, backgroundColor: t.colors.bgCard, color: t.colors.primary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  postBtn: { padding: '6px 12px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  metaStrip: { display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, marginBottom: '0px', flexWrap: 'wrap' },
   metaChip: { display: 'flex', gap: '6px', alignItems: 'center' },
-  metaLabel: { fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase' },
-  metaValue: { fontSize: '12px', color: '#1a1a1a', fontWeight: '500' },
-  metaDivider: { width: '1px', height: '14px', backgroundColor: '#e8e8e4', flexShrink: 0 },
-  updateForm: { display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: '#fafaf8', borderRadius: '10px', padding: '14px', marginTop: '12px', marginBottom: '4px' },
-  updateInput: { padding: '8px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', outline: 'none', backgroundColor: '#fff' },
-  updateTextarea: { padding: '8px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', outline: 'none', resize: 'vertical', fontFamily: 'sans-serif', backgroundColor: '#fff' },
+  metaLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' },
+  metaValue: { fontSize: t.fontSizes.sm, color: t.colors.textPrimary, fontWeight: '500' },
+  metaDivider: { width: '1px', height: '14px', backgroundColor: t.colors.border, flexShrink: 0 },
+  updateForm: { display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '14px', marginTop: '12px', marginBottom: '4px' },
+  updateInput: { padding: '8px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans, color: t.colors.textPrimary },
+  updateTextarea: { padding: '8px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary },
   updateFormActions: { display: 'flex', gap: '8px', justifyContent: 'flex-end' },
-  cancelBtn: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
-  saveBtn: { padding: '7px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#1D9E75', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-  updatesSection: { borderTop: '1px solid #f0f0eb', paddingTop: '12px', marginTop: '12px' },
-  toggleUpdatesBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#666', fontWeight: '600', padding: 0, display: 'flex', alignItems: 'center', gap: '8px' },
-  commentBadge: { fontSize: '11px', backgroundColor: '#f0faf6', color: '#1D9E75', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' },
+  cancelBtn: { padding: '7px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  saveBtn: { padding: '7px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  updatesSection: { borderTop: `1px solid ${t.colors.border}`, paddingTop: '12px', marginTop: '12px' },
+  toggleUpdatesBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: t.fontSizes.sm, color: t.colors.textSecondary, fontWeight: '600', padding: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: t.fonts.sans },
+  commentBadge: { fontSize: t.fontSizes.xs, backgroundColor: t.colors.primaryLight, color: t.colors.primary, padding: '2px 8px', borderRadius: t.radius.full, fontWeight: '600' },
   updatesList: { display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' },
-  updateItem: { backgroundColor: '#fafaf8', borderRadius: '8px', padding: '12px 14px' },
+  updateItem: { backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '12px 14px' },
   updateItemHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' },
-  updateItemTitle: { fontSize: '13px', fontWeight: '600', color: '#1a1a1a', marginBottom: '2px' },
-  updateItemDate: { fontSize: '11px', color: '#bbb' },
-  updateItemMessage: { fontSize: '13px', color: '#555', margin: '0 0 8px', lineHeight: '1.5' },
-  iconBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#bbb', padding: '2px' },
-  reactionPill: { padding: '2px 8px', borderRadius: '20px', backgroundColor: '#f0faf6', border: '1px solid #1D9E75', fontSize: '12px', color: '#1D9E75', fontWeight: '500' },
-  commentsSection: { borderTop: '1px solid #f0f0eb', paddingTop: '8px', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px' },
-  commentsLabel: { fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' },
+  updateItemTitle: { fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '2px' },
+  updateItemDate: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary },
+  updateItemMessage: { fontSize: t.fontSizes.base, color: t.colors.textSecondary, margin: '0 0 8px', lineHeight: '1.5' },
+  iconBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: t.fontSizes.sm, color: t.colors.textTertiary, padding: '2px' },
+  reactionPill: { padding: '2px 8px', borderRadius: t.radius.full, backgroundColor: t.colors.primaryLight, border: `1px solid ${t.colors.primary}`, fontSize: t.fontSizes.sm, color: t.colors.primary, fontWeight: '500' },
+  commentsSection: { borderTop: `1px solid ${t.colors.border}`, paddingTop: '8px', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px' },
+  commentsLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' },
   commentItem: { display: 'flex', gap: '8px', alignItems: 'flex-start' },
-  commentAvatar: { width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#f0f0eb', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: '600', flexShrink: 0 },
-  commentContent: { flex: 1, backgroundColor: '#fff', borderRadius: '8px', padding: '6px 10px', border: '1px solid #f0f0eb' },
-  commentAuthor: { fontSize: '11px', fontWeight: '600', color: '#1a1a1a', marginBottom: '2px' },
-  commentMessage: { fontSize: '12px', color: '#555', lineHeight: '1.4' },
-  commentDate: { fontSize: '10px', color: '#bbb', marginTop: '3px' },
-  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' },
+  commentAvatar: { width: '22px', height: '22px', borderRadius: '50%', backgroundColor: t.colors.border, color: t.colors.textSecondary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: '600', flexShrink: 0 },
+  commentContent: { flex: 1, backgroundColor: t.colors.bgCard, borderRadius: t.radius.md, padding: '6px 10px', border: `1px solid ${t.colors.border}` },
+  commentAuthor: { fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '2px' },
+  commentMessage: { fontSize: t.fontSizes.sm, color: t.colors.textSecondary, lineHeight: '1.4' },
+  commentDate: { fontSize: '10px', color: t.colors.textTertiary, marginTop: '3px' },
+  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   emptyIcon: { fontSize: '40px', marginBottom: '16px' },
-  emptyTitle: { fontSize: '16px', fontWeight: '600', color: '#1a1a1a', margin: '0 0 8px' },
-  emptyText: { fontSize: '13px', color: '#999', margin: 0, textAlign: 'center' },
-  empty: { fontSize: '13px', color: '#999', padding: '40px', textAlign: 'center' },
+  emptyTitle: { fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading },
+  emptyText: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0, textAlign: 'center' },
+  empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
 }
