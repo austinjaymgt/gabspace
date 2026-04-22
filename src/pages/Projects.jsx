@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import EventHero from '../components/events/EventHero'
+import RunOfShow from '../components/events/RunOfShow'
+import Staffing from '../components/events/Staffing'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -19,21 +22,25 @@ const PROJECT_STATUS_CARDS = [
   { key: 'completed', label: 'Completed', color: '#378ADD' },
 ]
 
-const EVENT_STATUS_COLORS = {
-  inquiry:     { bg: '#F0EBF9', color: '#7C5CBF', border: '#7C5CBF' },
-  concept:     { bg: '#F0EBF9', color: '#9B72D0', border: '#9B72D0' },
-  planning:    { bg: '#FBF0E6', color: '#D4874E', border: '#D4874E' },
-  confirmed:   { bg: '#EAF2EA', color: '#6B8F71', border: '#6B8F71' },
-  in_progress: { bg: '#FBF0E6', color: '#D4874E', border: '#D4874E' },
-  completed:   { bg: '#F0EBF9', color: '#7C5CBF', border: '#7C5CBF' },
-  cancelled:   { bg: '#FAF0F2', color: '#C06B7A', border: '#C06B7A' },
-}
+const EVENT_STATUSES = [
+  { key: 'inquiry',        label: 'Inquiry',       color: '#8585A0', bg: '#F0EBF9', border: '#8585A0' },
+  { key: 'proposal_sent',  label: 'Proposal Sent', color: '#D4874E', bg: '#FBF0E6', border: '#D4874E' },
+  { key: 'contracted',     label: 'Contracted',    color: '#6B8F71', bg: '#EAF2EA', border: '#6B8F71' },
+  { key: 'in_planning',    label: 'In Planning',   color: '#7C5CBF', bg: '#F0EBF9', border: '#7C5CBF' },
+  { key: 'day_of',         label: 'Day Of',        color: '#1A1A2E', bg: '#E8E8F0', border: '#1A1A2E' },
+  { key: 'post_event',     label: 'Post-Event',    color: '#5B9BBF', bg: '#EAF4F9', border: '#5B9BBF' },
+  { key: 'closed',         label: 'Closed',        color: '#1D9E75', bg: '#f0faf6', border: '#1D9E75' },
+]
+
+const EVENT_STATUS_COLORS = Object.fromEntries(
+  EVENT_STATUSES.map(s => [s.key, { bg: s.bg, color: s.color, border: s.border }])
+)
 
 const EVENT_STATUS_CARDS = [
-  { key: 'inquiry',     label: 'Inquiry',      color: '#7C5CBF' },
-{ key: 'confirmed',   label: 'Confirmed',    color: '#6B8F71' },
-  { key: 'in_progress', label: 'In Progress',  color: '#BA7517' },
-  { key: 'completed',   label: 'Completed',    color: '#378ADD' },
+  { key: 'inquiry',      label: 'Inquiry',      color: '#8585A0' },
+  { key: 'contracted',   label: 'Contracted',   color: '#6B8F71' },
+  { key: 'in_planning',  label: 'In Planning',  color: '#7C5CBF' },
+  { key: 'closed',       label: 'Closed',       color: '#1D9E75' },
 ]
 
 const STATUS_STEPS = ['planning', 'active', 'on-hold', 'completed']
@@ -93,11 +100,14 @@ export default function Projects() {
   async function fetchRecords() {
     setLoading(true)
     setFilterStatus('all')
-    const query = supabase
+    let query = supabase
       .from('projects')
       .select('*, clients(name, company)')
       .eq('type', isEvents ? 'event' : 'project')
       .order('created_at', { ascending: false })
+
+    // Filter out Spark-generated concepts from the Events list
+    if (isEvents) query = query.neq('event_status', 'concept')
     const { data } = await query
     if (data) setRecords(data)
     setLoading(false)
@@ -356,13 +366,7 @@ export default function Projects() {
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={eventForm.event_status} onChange={e => setEventForm({ ...eventForm, event_status: e.target.value })}>
-                <option value="inquiry">Inquiry</option>
-                <option value="concept">Concept</option>
-                <option value="planning">Planning</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                {EVENT_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
             </div>
             <div style={styles.field}>
@@ -649,8 +653,8 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
   const budget = parseFloat(data.budget) || 0
   const doneTasks = tasks.filter(tk => tk.status === 'done').length
 
-  const statusStepOptions = isEvent
-    ? ['inquiry', 'concept', 'planning', 'confirmed', 'in_progress', 'completed']
+ const statusStepOptions = isEvent
+    ? EVENT_STATUSES.map(s => s.key)
     : STATUS_STEPS
 
   return (
@@ -683,13 +687,7 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
                 <div style={styles.field}>
                   <label style={styles.label}>Status</label>
                   <select style={styles.input} value={editForm.event_status || 'inquiry'} onChange={e => setEditForm({ ...editForm, event_status: e.target.value })}>
-                    <option value="inquiry">Inquiry</option>
-                    <option value="concept">Concept</option>
-                    <option value="planning">Planning</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
+                    {EVENT_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                   </select>
                 </div>
                 <div style={styles.field}>
@@ -751,8 +749,14 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
         </div>
       ) : (
         <>
-          {/* Header card */}
-          <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '28px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
+
+        
+         {/* Event hero (events only) */}
+          {isEvent && <EventHero data={data} statusColor={colorMap[currentStatus]} />}
+
+          {/* Header card (non-event projects only, or events wanting the light header too) */}
+          {!isEvent && <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '28px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>           
+           
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
                 <h1 style={{ fontSize: '24px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.3px' }}>{data.title}</h1>
@@ -833,7 +837,45 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
                 )}
               </div>
             )}
-          </div>
+          </div>}
+
+          {/* Event pipeline stepper (events only, since their header is now the dark hero) */}
+          {isEvent && (
+            <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
+              <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Pipeline stage</div>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {statusStepOptions.map(step => {
+                  const sc = colorMap[step] || {}
+                  const isActive = currentStatus === step
+                  return (
+                    <button key={step} onClick={() => updateStatus(step)} style={{
+                      flex: 1, minWidth: '80px', padding: '8px 4px', borderRadius: t.radius.md,
+                      border: `1px solid ${isActive ? sc.border : t.colors.borderLight}`,
+                      backgroundColor: isActive ? sc.bg : '#fff',
+                      color: isActive ? sc.color : t.colors.textTertiary,
+                      fontSize: t.fontSizes.xs, fontWeight: isActive ? '700' : '400',
+                      cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'all 0.15s',
+                    }}>
+                      {step.replace(/_/g, ' ').charAt(0).toUpperCase() + step.replace(/_/g, ' ').slice(1)}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Event-only sections */}
+          {isEvent && (
+            <>
+              <RunOfShow
+                eventId={record.id}
+                eventTitle={data.title}
+                eventDate={data.event_date}
+                venue={data.venue}
+              />
+              <Staffing eventId={record.id} />
+            </>
+          )}
 
           {/* Budget */}
           <div style={{ marginBottom: '20px' }}>
