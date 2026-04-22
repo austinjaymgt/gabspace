@@ -4,19 +4,16 @@ import { Icon } from './Icon'
 
   const navItems = [
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
-  {
+  
+    {
     label: 'All Clients', icon: 'clients', path: 'allclients', children: [
       { label: 'All Clients', path: 'allclients' },
-      { label: 'Projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
       { label: 'Client Portals', path: 'client-portal' },
     ]
   },
-    {
-    label: 'Events', icon: 'events', path: 'my-events', children: [
-      { label: 'All Events', path: 'my-events' },
-    ]
-  },
+  { label: 'Projects', icon: 'projects', path: 'projects' },
+
   {
     label: 'Toolkit', icon: 'sparkles', path: 'packages', children: [
       { label: 'Packages', path: 'packages' },
@@ -66,7 +63,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Clients', 'Operations', 'Creative Collective', 'Events', 'Toolkit', 'Team'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Clients', 'Operations', 'Creative Collective', 'Toolkit', 'Team'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
@@ -271,7 +268,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
   Sign out
 </button>
         <button
-  onClick={() => handleNav('my-events')}
+    onClick={() => handleNav('projects')}
   style={{
     width: '100%',
     padding: '10px',
