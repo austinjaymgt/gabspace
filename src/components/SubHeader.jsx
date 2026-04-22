@@ -4,19 +4,40 @@ import { theme as t } from '../theme'
 import { Icon } from './Icon'
 
 const allPages = [
-  { path: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { path: 'allclients', label: 'Clients', icon: 'clients' },
-  { path: 'client-portal', label: 'Portals', icon: 'portal' },
-  { path: 'projects', label: 'Projects', icon: 'projects' },
-  { path: 'tasks', label: 'Tasks', icon: 'task-done' },
-  { path: 'my-events', label: 'Events', icon: 'events' },
-  { path: 'vendors', label: 'Vendors', icon: 'vendors' },
-  { path: 'finance-overview', label: 'Finances', icon: 'chart' },
-  { path: 'team-goals', label: 'Team Goals', icon: 'team-goals' },
-  { path: 'campaigns', label: 'Campaigns', icon: 'campaigns' },
-  { path: 'campaign-tracking', label: 'Content Calendar', icon: 'date' },
-  { path: 'assets', label: 'Company Assets', icon: 'creative' },
-  { path: 'intranet', label: 'Intranet', icon: 'intranet' },
+  // Core
+  { path: 'dashboard',         label: 'Dashboard',         icon: 'dashboard' },
+  { path: 'allclients',        label: 'Clients',           icon: 'clients' },
+  { path: 'client-portal',     label: 'Client Portals',    icon: 'portal' },
+  { path: 'projects',          label: 'Projects',          icon: 'projects' },
+  { path: 'tasks',             label: 'Tasks',             icon: 'task-done' },
+
+  // Toolkit
+  { path: 'packages',          label: 'Packages',          icon: 'book' },
+  { path: 'briefs',            label: 'Briefs',            icon: 'brief' },
+  { path: 'spark',             label: 'Spark',             icon: 'sparkles' },
+
+  // Operations
+  { path: 'vendors',           label: 'Vendors',           icon: 'vendors' },
+  { path: 'department-budget', label: 'Dept. Budget',      icon: 'finance' },
+
+  // Finance
+  { path: 'finance-overview',  label: 'Finances',          icon: 'chart' },
+  { path: 'invoices',          label: 'Invoices',          icon: 'invoice' },
+  { path: 'expenses',          label: 'Expenses',          icon: 'expense' },
+  { path: 'revenue',           label: 'Revenue',           icon: 'revenue' },
+
+  // Creative Collective
+  { path: 'creative-strategy', label: 'Creative Strategy', icon: 'creative' },
+  { path: 'campaign-tracking', label: 'Content Calendar',  icon: 'date' },
+  { path: 'assets',            label: 'Company Assets',    icon: 'image' },
+
+  // Team
+  { path: 'team-goals',        label: 'Team Goals',        icon: 'team-goals' },
+  { path: 'pro-dev',           label: 'Pro Dev',           icon: 'star' },
+  { path: 'business-events',   label: 'Community Events',  icon: 'events' },
+
+  // Community
+  { path: 'intranet',          label: 'Intranet',          icon: 'intranet' },
 ]
 
 export default function SubHeader({ currentPage, onNavigate, session }) {
@@ -37,7 +58,7 @@ export default function SubHeader({ currentPage, onNavigate, session }) {
   }
 
   async function toggleFavorite(path) {
-    const current = settings?.favorites || ['dashboard', 'clients', 'invoices']
+    const current = settings?.favorites || ['dashboard', 'allclients', 'projects']
     const updated = current.includes(path)
       ? current.filter(p => p !== path)
       : current.length < 5
@@ -57,8 +78,8 @@ export default function SubHeader({ currentPage, onNavigate, session }) {
     fetchSettings()
   }
 
-  const favorites = settings?.favorites || ['dashboard', 'clients', 'invoices']
-  const favoritePages = allPages.filter(p => favorites.includes(p.path))
+const favorites = settings?.favorites || ['dashboard', 'allclients', 'projects']
+const favoritePages = allPages.filter(p => favorites.includes(p.path))
 
   return (
     <div style={{
