@@ -191,6 +191,7 @@ function renderPage() {
       case 'my-events':
         return <MyEvents {...pageProps} />
       case 'brainstorm':
+      case 'spark':
         return isStaff ? <EventBrainstorm {...pageProps} /> : <AccessDenied />
       case 'business-events':
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />

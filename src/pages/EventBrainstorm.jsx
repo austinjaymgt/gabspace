@@ -272,9 +272,9 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
 
       {/* Page header */}
       <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>Event Brainstorm</h2>
-        <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>Capture ideas, generate full concepts, and move them into planning</p>
-      </div>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>Spark</h2>
+        <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>Capture event ideas, generate full concepts, and move them into planning</p>
+              </div>
 
       {/* Quick capture */}
       <div style={s.card}>

@@ -12,16 +12,16 @@ import { Icon } from './Icon'
       { label: 'Client Portals', path: 'client-portal' },
     ]
   },
-  {
+    {
     label: 'Events', icon: 'events', path: 'my-events', children: [
-      { label: 'Brainstorm', path: 'brainstorm' },
       { label: 'All Events', path: 'my-events' },
     ]
   },
   {
-    label: 'Playbooks', icon: 'book', path: 'packages', children: [
+    label: 'Toolkit', icon: 'sparkles', path: 'packages', children: [
       { label: 'Packages', path: 'packages' },
       { label: 'Briefs', path: 'briefs' },
+      { label: 'Spark', path: 'spark' },
     ]
   },
   {
@@ -66,7 +66,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) {  const [expanded, setExpanded] = useState(['Clients', 'Operations', 'Creative Collective', 'Events', 'Playbooks', 'Team'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Clients', 'Operations', 'Creative Collective', 'Events', 'Toolkit', 'Team'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {

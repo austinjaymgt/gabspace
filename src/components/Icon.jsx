@@ -154,6 +154,7 @@ const ICON_MAP = {
 
   // AI & Delight
   'ai': Sparkles,
+  'sparkles': Sparkles,
   'magic': Wand2,
 };
 
