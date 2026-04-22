@@ -5,7 +5,7 @@ import EventHero from '../components/events/EventHero'
 import RunOfShow from '../components/events/RunOfShow'
 import Staffing from '../components/events/Staffing'
 import ConceptForm from '../components/events/ConceptForm'
-import CampaignPanel from '../components/events/CampaignPanel'
+import ProposalGenerator from '../components/events/ProposalGenerator'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -502,10 +502,11 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients, workspaceId
   const [editingBudgetItem, setEditingBudgetItem] = useState(null)
   const [editBudgetForm, setEditBudgetForm] = useState({ category: '', projected_amount: '', actual_amount: '', notes: '' })
   const [contingency, setContingency] = useState(0)
-  const [editingBudget, setEditingBudget] = useState(false)
+ const [editingBudget, setEditingBudget] = useState(false)
   const [budgetInput, setBudgetInput] = useState(data.budget || '')
   const [activeTab, setActiveTab] = useState('planning')
-  
+  const [showProposal, setShowProposal] = useState(false)
+
   useEffect(() => { fetchAll() }, [])
 
   async function fetchAll() {
@@ -663,9 +664,12 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients, workspaceId
 
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
+      {showProposal && <ProposalGenerator event={data} onClose={() => setShowProposal(false)} />}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <button onClick={onBack} style={styles.backBtn}>← Back to {isEvent ? 'events' : 'projects'}</button>
         <div style={{ display: 'flex', gap: '8px' }}>
+          {isEvent && !editMode && <button onClick={() => setShowProposal(true)} style={{ ...styles.editBtn, color: '#7C5CBF', borderColor: '#C9B9E8' }}>📄 Proposal</button>}
           {!editMode && <button onClick={() => setEditMode(true)} style={styles.editBtn}>Edit</button>}
           <button onClick={() => onDelete(record.id)} style={styles.deleteBtn}>Delete</button>
         </div>
