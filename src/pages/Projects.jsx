@@ -153,7 +153,7 @@ export default function Projects({ workspaceId }) {
           user_id: user.id,
         }
 
-    const { error: saveError } = await supabase.from('projects').insert(payload)
+const { error: saveError } = await supabase.from('projects').insert({ ...payload, workspace_id: workspaceId })
     if (saveError) {
       setError(saveError.message)
     } else {
@@ -581,7 +581,8 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients, workspaceId
   async function addTask() {
     if (!newTaskTitle.trim()) return
     setAddingTask(true)
-    const { data: newTask } = await supabase.from('tasks').insert({ title: newTaskTitle, project_id: record.id, status: 'todo' }).select().single()
+const { data: newTask, error: taskError } = await supabase.from('tasks').insert({ title: newTaskTitle, project_id: record.id, workspace_id: workspaceId, status: 'todo' }).select().single()
+if (taskError) { console.error('Task insert failed:', taskError); return }
     if (newTask) setTasks(prev => [...prev, newTask])
     setNewTaskTitle('')
     setAddingTask(false)
@@ -599,17 +600,17 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients, workspaceId
   }
 
   async function addBudgetItem() {
-    const { data: newItem } = await supabase.from('project_budget_items').insert({
-      project_id: record.id,
-      category: budgetForm.category,
-      projected_amount: budgetForm.projected_amount ? parseFloat(budgetForm.projected_amount) : null,
-      actual_amount: budgetForm.actual_amount ? parseFloat(budgetForm.actual_amount) : null,
-      notes: budgetForm.notes || null,
-    }).select().single()
-    if (newItem) setBudgetItems(prev => [...prev, newItem])
-    setBudgetForm({ category: '', projected_amount: '', actual_amount: '', notes: '' })
-    setShowBudgetForm(false)
-  }
+  const { data: newItem } = await supabase.from('project_budget_items').insert({
+    project_id: record.id,
+    category: budgetForm.category,
+    projected_amount: budgetForm.projected_amount ? parseFloat(budgetForm.projected_amount) : null,
+    actual_amount: budgetForm.actual_amount ? parseFloat(budgetForm.actual_amount) : null,
+    notes: budgetForm.notes || null,
+  }).select().single()
+  if (newItem) setBudgetItems(prev => [...prev, newItem])
+  setBudgetForm({ category: '', projected_amount: '', actual_amount: '', notes: '' })
+  setShowBudgetForm(false)
+}
 
   async function saveBudgetItem(id) {
     await supabase.from('project_budget_items').update({
@@ -637,11 +638,16 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients, workspaceId
     const { error: uploadError } = await supabase.storage.from('project-files').upload(fileName, file)
     if (!uploadError) {
       const { data: urlData } = supabase.storage.from('project-files').getPublicUrl(fileName)
-      await supabase.from('project_documents').insert({
-        project_id: record.id, user_id: user.id, name: file.name,
-        file_url: urlData.publicUrl, file_type: file.type,
-      })
-      fetchAll()
+      const { error: docError } = await supabase.from('project_documents').insert({
+  project_id: record.id,
+  workspace_id: workspaceId,
+  user_id: user.id,
+  name: file.name,
+  file_url: urlData.publicUrl,
+  file_type: file.type,
+})
+if (docError) { console.error('Document insert failed:', docError); return }
+fetchAll()
     }
     setUploading(false)
   }

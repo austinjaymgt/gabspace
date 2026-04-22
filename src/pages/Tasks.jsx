@@ -8,8 +8,8 @@ const statusConfig = {
   'done':        { bg: t.colors.successLight, color: t.colors.success,      label: 'Done' },
 }
 
-export default function Tasks() {
-  const [tasks, setTasks] = useState([])
+export default function Tasks({ workspaceId }) {
+    const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -27,10 +27,26 @@ export default function Tasks() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetchTasks()
-    fetchProjects()
-    fetchEvents()
-  }, [])
+  loadWorkspace()
+  fetchTasks()
+  fetchProjects()
+  fetchEvents()
+}, [])
+
+async function loadWorkspace() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('workspace_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (error) {
+    console.error('Could not load workspace:', error)
+    return
+  }
+  if (data) setWorkspaceId(data.workspace_id)
+}
 
   async function fetchTasks() {
     setLoading(true)
@@ -52,24 +68,32 @@ export default function Tasks() {
   }
 
   async function handleSave() {
-    setSaving(true)
-    setError(null)
-    const { error } = await supabase.from('tasks').insert({
-      title: form.title,
-      project_id: form.project_id || null,
-      event_id: form.event_id || null,
-      status: form.status,
-      due_date: form.due_date || null,
-      assigned_to: form.assigned_to || null,
-    })
-    if (error) setError(error.message)
-    else {
-      setShowForm(false)
-      setForm({ title: '', project_id: '', event_id: '', status: 'todo', due_date: '', assigned_to: '' })
-      fetchTasks()
-    }
+  setSaving(true)
+  setError(null)
+
+  if (!workspaceId) {
+    setError('Workspace not loaded yet. Please try again.')
     setSaving(false)
+    return
   }
+
+  const { error } = await supabase.from('tasks').insert({
+    title: form.title,
+    workspace_id: workspaceId,
+    project_id: form.project_id || null,
+    event_id: form.event_id || null,
+    status: form.status,
+    due_date: form.due_date || null,
+    assigned_to: form.assigned_to || null,
+  })
+  if (error) setError(error.message)
+  else {
+    setShowForm(false)
+    setForm({ title: '', project_id: '', event_id: '', status: 'todo', due_date: '', assigned_to: '' })
+    fetchTasks()
+  }
+  setSaving(false)
+}
 
   async function toggleStatus(task) {
     const nextStatus = task.status === 'todo' ? 'done' : 'todo'
