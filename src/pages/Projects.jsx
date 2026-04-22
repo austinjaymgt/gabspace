@@ -4,6 +4,8 @@ import { theme as t } from '../theme'
 import EventHero from '../components/events/EventHero'
 import RunOfShow from '../components/events/RunOfShow'
 import Staffing from '../components/events/Staffing'
+import ConceptForm from '../components/events/ConceptForm'
+import CampaignPanel from '../components/events/CampaignPanel'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -66,8 +68,8 @@ function StatusBadge({ status, colorMap }) {
 
 // ── Main export ────────────────────────────────────────────────────────────
 
-export default function Projects() {
-  const [view, setView] = useState('projects') // 'projects' | 'events'
+export default function Projects({ workspaceId }) {
+    const [view, setView] = useState('projects') // 'projects' | 'events'
   const [records, setRecords] = useState([])
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -200,6 +202,7 @@ export default function Projects() {
         onBack={() => { setSelectedRecord(null); fetchRecords() }}
         onDelete={handleDelete}
         clients={clients}
+        workspaceId={workspaceId}
       />
     )
   }
@@ -479,7 +482,7 @@ export default function Projects() {
 
 // ── Project / Event Detail ─────────────────────────────────────────────────
 
-function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
+function ProjectDetail({ record, isEvent, onBack, onDelete, clients, workspaceId }) {
   const [data, setData] = useState(record)
   const [tasks, setTasks] = useState([])
   const [invoices, setInvoices] = useState([])
@@ -501,7 +504,8 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
   const [contingency, setContingency] = useState(0)
   const [editingBudget, setEditingBudget] = useState(false)
   const [budgetInput, setBudgetInput] = useState(data.budget || '')
-
+  const [activeTab, setActiveTab] = useState('planning')
+  
   useEffect(() => { fetchAll() }, [])
 
   async function fetchAll() {
@@ -864,8 +868,42 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients }) {
             </div>
           )}
 
-          {/* Event-only sections */}
+          {/* Event tab bar */}
           {isEvent && (
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', backgroundColor: '#fff', borderRadius: '10px', padding: '6px', border: `1px solid ${t.colors.borderLight}` }}>
+              {[
+                { key: 'planning', label: 'Planning' },
+                { key: 'concept', label: '💡 Concept' },
+                { key: 'campaign', label: '🎨 Campaign' },
+              ].map(tab => (
+                <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                  flex: 1, padding: '8px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+                  fontSize: t.fontSizes.sm, fontWeight: activeTab === tab.key ? '700' : '400',
+                  backgroundColor: activeTab === tab.key ? '#1A1A2E' : 'transparent',
+                  color: activeTab === tab.key ? '#fff' : t.colors.textTertiary,
+                  fontFamily: t.fonts.sans, transition: 'all 0.15s',
+                }}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Concept tab */}
+          {isEvent && activeTab === 'concept' && (
+            <ConceptForm
+              event={data}
+              onSave={concept_data => setData(prev => ({ ...prev, concept_data }))}
+            />
+          )}
+
+          {/* Campaign tab */}
+          {isEvent && activeTab === 'campaign' && (
+            <CampaignPanel projectId={record.id} workspaceId={workspaceId} />
+          )}
+
+          {/* Event planning sections (events on planning tab only) */}
+          {isEvent && activeTab === 'planning' && (
             <>
               <RunOfShow
                 eventId={record.id}
