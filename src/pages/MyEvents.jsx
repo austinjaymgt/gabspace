@@ -995,19 +995,30 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, workspaceId 
     setTimeout(() => setNotesSaved(false), 2000)
   }
 
-  async function toggleTask(task) {
-    const newStatus = task.status === 'done' ? 'todo' : 'done'
-    await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
-    setTasks(prev => prev.map(tk => tk.id === task.id ? { ...tk, status: newStatus } : tk))
-  }
-
   async function addTask() {
-    if (!newTaskTitle.trim()) return
-    setAddingTask(true)
-    const { data } = await supabase.from('tasks').insert({ title: newTaskTitle, project_id: event.id, status: 'todo' }).select().single()
-    if (data) setTasks(prev => [...prev, data])
-    setNewTaskTitle(''); setAddingTask(false)
+  if (!newTaskTitle.trim()) return
+  setAddingTask(true)
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      title: newTaskTitle,
+      project_id: event.id,
+      workspace_id: event.workspace_id,  // ✅ added
+      status: 'todo'
+    })
+    .select()
+    .single()
+  
+  if (error) {
+    console.error('Task insert failed:', error)
+    setAddingTask(false)
+    return
   }
+  
+  if (data) setTasks(prev => [...prev, data])
+  setNewTaskTitle('')
+  setAddingTask(false)
+}
 
   async function deleteTask(id) {
     await supabase.from('tasks').delete().eq('id', id)
