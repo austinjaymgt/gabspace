@@ -169,7 +169,7 @@ serve(async (req) => {
           <!-- Footer -->
           <tr>
             <td style="text-align:center;padding-top:24px;border-top:1px solid rgba(0,0,0,0.08);">
-              <p style="font-size:12px;color:#8585A0;margin:0 0 4px;">gabspace — clarity meets creativity</p>
+<p style="font-size:12px;color:#8585A0;margin:0 0 4px;">gabspace — creativity meets clarity</p>
               <p style="font-size:11px;color:#B0B0C0;margin:0;">You're receiving this because you submitted an event inquiry.</p>
             </td>
           </tr>
@@ -189,7 +189,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'gabspace <onboarding@resend.dev>', // swap for verified domain later
+from: 'Gabspace <hello@gabspace.io>',
         to: [submitterEmail],
         subject: `We received your ${eventTypePart} inquiry`,
         html,

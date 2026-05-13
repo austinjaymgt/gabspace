@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "onboarding@resend.dev";
+const FROM_EMAIL = "hello@gabspace.io";
 const FROM_NAME = "Gabspace";
 
 serve(async (req) => {
@@ -19,7 +19,7 @@ serve(async (req) => {
     }
 
     const { name, email } = record;
-    const firstName = name?.split(" ")[0] ?? "there";
+    const greeting = name?.trim() || "there";
 
     const emailBody = `<!DOCTYPE html>
 <html lang="en">
@@ -33,8 +33,7 @@ serve(async (req) => {
         </td></tr>
         <tr><td style="padding:36px 40px;">
           <p style="font-size:13px;text-transform:uppercase;letter-spacing:0.1em;color:#7C5CBF;margin:0 0 12px;">Early access confirmed</p>
-          <h1 style="font-size:26px;color:#1A1A2E;margin:0 0 16px;">You're on the list, ${firstName}.</h1>
-          <p style="font-size:15px;color:#3D3D5C;line-height:1.75;margin:0 0 20px;">Thanks for applying to the Gabspace beta. We review every application personally and will be in touch soon.</p>
+<h1 style="font-size:26px;color:#1A1A2E;margin:0 0 16px;">You're on the list, ${greeting}.</h1>          <p style="font-size:15px;color:#3D3D5C;line-height:1.75;margin:0 0 20px;">Thanks for applying to the Gabspace beta. We review every application personally and will be in touch soon.</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#F7F5F0;border-radius:12px;margin-bottom:24px;">
             <tr><td style="padding:20px 24px;">
               <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:#8585A0;margin:0 0 12px;">What happens next</p>
@@ -64,7 +63,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: [email],
-        subject: `You're on the Gabspace beta list, ${firstName}!`,
+subject: `You're on the Gabspace beta list, ${greeting}!`,
         html: emailBody,
       }),
     });

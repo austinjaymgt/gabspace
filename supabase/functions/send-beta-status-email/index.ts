@@ -21,16 +21,16 @@ function approvalEmail(firstName: string): string {
           <span style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:-0.5px;">gabspace</span>
         </td></tr>
         <tr><td style="padding:36px 40px;">
-          <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:#1D9E75;margin:0 0 12px;font-weight:600;">Beta access granted</p>
+<p style="font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:#6B8F71;margin:0 0 12px;font-weight:600;">Beta access granted</p>
           <h1 style="font-size:26px;color:#1A1A2E;margin:0 0 16px;letter-spacing:-0.5px;">You're in, ${firstName}. 🎉</h1>
           <p style="font-size:15px;color:#3D3D5C;line-height:1.75;margin:0 0 24px;">Your Gabspace beta application has been approved. We're excited to have you on board — you're joining a small group of creatives helping shape the future of the platform.</p>
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0faf6;border-radius:12px;border:1px solid #1D9E75;margin-bottom:28px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#EAF2EA;border-radius:12px;border:1px solid #6B8F71;margin-bottom:28px;">
             <tr><td style="padding:22px 24px;">
-              <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:#1D9E75;margin:0 0 10px;font-weight:600;">Getting started</p>
-              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#1D9E75;margin-right:8px;font-weight:700;">01</span>Head to <a href="https://app.gabspace.io" style="color:#1D9E75;font-weight:600;text-decoration:none;">app.gabspace.io</a> and create your account</p>
-              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#1D9E75;margin-right:8px;font-weight:700;">02</span>Set up your workspace — clients, projects, whatever fits your workflow</p>
-              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#1D9E75;margin-right:8px;font-weight:700;">03</span>Use it free for 4–6 weeks</p>
-              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#1D9E75;margin-right:8px;font-weight:700;">04</span>We'll reach out for a quick 20-min feedback call</p>
+<p style="font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:#6B8F71;margin:0 0 10px;font-weight:600;">Getting started</p>
+              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#6B8F71;margin-right:8px;font-weight:700;">01</span>Head to <a href="https://app.gabspace.io" style="color:#6B8F71;font-weight:600;text-decoration:none;">app.gabspace.io</a> and create your account</p>
+              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#6B8F71;margin-right:8px;font-weight:700;">02</span>Set up your workspace — clients, projects, whatever fits your workflow</p>
+              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#6B8F71;margin-right:8px;font-weight:700;">03</span>Use it free for 4–6 weeks</p>
+              <p style="font-size:14px;color:#3D3D5C;margin:6px 0;"><span style="color:#6B8F71;margin-right:8px;font-weight:700;">04</span>We'll reach out for a quick 20-min feedback call</p>
             </td></tr>
           </table>
           <p style="font-size:14px;color:#3D3D5C;line-height:1.7;margin:0 0 8px;">If you run into anything or have questions along the way, just reply to this email — we're here.</p>
