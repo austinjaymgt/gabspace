@@ -23,6 +23,7 @@ export default function Vendors({ workspaceId }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [activeTagFilter, setActiveTagFilter] = useState(null)
 
   useEffect(() => { fetchVendors() }, [])
 
@@ -52,7 +53,6 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
       rate: vendor.rate || '',
       address: vendor.address || '',
       website: vendor.website || '',
-      instagram: vendor.instagram || '',
       instagram: vendor.instagram || '',
     tags: vendor.tags || [],
     })
@@ -247,11 +247,30 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
                 <div style={styles.detailFieldValue}>{selectedVendor.instagram}</div>
               </div>
             )}
+            {selectedVendor.tags && selectedVendor.tags.length > 0 && (
+  <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
+    <div style={styles.detailFieldLabel}>Tags</div>
+    <div style={styles.detailTagRow}>
+      {selectedVendor.tags.map(tag => (
+        <span key={tag} style={styles.tagChip}>{tag}</span>
+      ))}
+    </div>
+  </div>
+)}
           </div>
         </div>
       </div>
     )
   }
+// All unique tags across vendors, sorted
+const allTags = Array.from(
+  new Set(vendors.flatMap(v => v.tags || []))
+).sort((a, b) => a.localeCompare(b))
+
+// Filtered list based on active tag
+const visibleVendors = activeTagFilter
+  ? vendors.filter(v => (v.tags || []).includes(activeTagFilter))
+  : vendors
 
   // ── MAIN LIST VIEW ─────────────────────────────────────────────────────────
   return (
@@ -329,18 +348,43 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
         </div>
       )}
 
-      {loading ? (
-        <div style={styles.empty}>Loading vendors...</div>
-      ) : vendors.length === 0 ? (
-        <div style={styles.emptyState}>
-          <div style={styles.emptyIcon}>🏪</div>
-          <h3 style={styles.emptyTitle}>No vendors yet</h3>
-          <p style={styles.emptyText}>Add vendors you work with regularly</p>
-          <button onClick={openAddForm} style={styles.addBtn}>+ Add Vendor</button>
-        </div>
-      ) : (
-        <div style={styles.grid}>
-          {vendors.map(vendor => (
+      {!loading && allTags.length > 0 && (
+  <div style={styles.filterBar}>
+    <span style={styles.filterLabel}>Filter:</span>
+    {allTags.map(tag => (
+      <button
+        key={tag}
+        onClick={() => setActiveTagFilter(activeTagFilter === tag ? null : tag)}
+        style={{
+          ...styles.filterChip,
+          ...(activeTagFilter === tag ? styles.filterChipActive : {}),
+        }}
+      >
+        {tag}
+      </button>
+    ))}
+    {activeTagFilter && (
+      <button onClick={() => setActiveTagFilter(null)} style={styles.clearFilter}>
+        Clear
+      </button>
+    )}
+  </div>
+)}
+
+{loading ? (
+  <div style={styles.empty}>Loading vendors...</div>
+) : vendors.length === 0 ? (
+  <div style={styles.emptyState}>
+    <div style={styles.emptyIcon}>🏪</div>
+    <h3 style={styles.emptyTitle}>No vendors yet</h3>
+    <p style={styles.emptyText}>Add vendors you work with regularly</p>
+    <button onClick={openAddForm} style={styles.addBtn}>+ Add Vendor</button>
+  </div>
+) : visibleVendors.length === 0 ? (
+  <div style={styles.empty}>No vendors match the "{activeTagFilter}" filter.</div>
+) : (
+  <div style={styles.grid}>
+    {visibleVendors.map(vendor => (
             <div key={vendor.id} style={styles.vendorCard} onClick={() => setSelectedVendor(vendor)}>
               <div style={styles.vendorTop}>
                 <div style={styles.avatar}>{vendor.name.charAt(0).toUpperCase()}</div>
@@ -352,6 +396,13 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
               {vendor.rate && (
                 <div style={styles.vendorRate}>${parseFloat(vendor.rate).toLocaleString()}</div>
               )}
+              {vendor.tags && vendor.tags.length > 0 && (
+  <div style={styles.tagRow}>
+    {vendor.tags.map(tag => (
+      <span key={tag} style={styles.tagChip}>{tag}</span>
+    ))}
+  </div>
+)}
             </div>
           ))}
         </div>
@@ -385,6 +436,74 @@ const styles = {
   vendorName: { fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' },
   vendorDetail: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '2px' },
   vendorRate: { fontSize: t.fontSizes.md, fontWeight: '700', color: t.colors.primary, marginTop: '8px', fontFamily: t.fonts.heading },
+  tagRow: {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '4px',
+  marginTop: '10px',
+},
+filterBar: {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '12px 16px',
+  marginBottom: '16px',
+  backgroundColor: t.colors.bgCard,
+  border: `1px solid ${t.colors.border}`,
+  borderRadius: t.radius.md,
+},
+filterLabel: {
+  fontSize: t.fontSizes.xs,
+  color: t.colors.textTertiary,
+  fontWeight: 500,
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase',
+  marginRight: '4px',
+},
+filterChip: {
+  padding: '4px 12px',
+  borderRadius: t.radius.full,
+  border: `1px solid ${t.colors.border}`,
+  backgroundColor: t.colors.bg,
+  color: t.colors.textSecondary,
+  fontSize: t.fontSizes.xs,
+  fontWeight: 500,
+  cursor: 'pointer',
+  fontFamily: t.fonts.sans,
+  transition: 'all 0.15s',
+},
+filterChipActive: {
+  backgroundColor: t.colors.primary,
+  color: '#fff',
+  borderColor: t.colors.primary,
+},
+clearFilter: {
+  background: 'none',
+  border: 'none',
+  color: t.colors.textTertiary,
+  fontSize: t.fontSizes.xs,
+  cursor: 'pointer',
+  textDecoration: 'underline',
+  fontFamily: t.fonts.sans,
+  padding: '4px 8px',
+  marginLeft: 'auto',
+},
+tagChip: {
+  padding: '2px 8px',
+  borderRadius: t.radius.full,
+  backgroundColor: t.colors.primaryLight,
+  color: t.colors.primary,
+  fontSize: '11px',
+  fontWeight: 500,
+  fontFamily: t.fonts.sans,
+},
+detailTagRow: {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '6px',
+  marginTop: '4px',
+},
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   emptyIcon: { fontSize: '40px', marginBottom: '16px' },
   emptyTitle: { fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading },
