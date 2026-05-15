@@ -81,12 +81,12 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
     setWorkspaceLoading(true)
 
     supabase
-  supabase
-  .from('user_profiles')
-  .select('workspace_id, role')
-  .eq('user_id', session.user.id)
-  .maybeSingle()
-  .then(async ({ data, error }) => {
+      .from('user_profiles')
+      .select('workspace_id, role')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(async ({ data, error }) => {
+      
     console.log('profile data:', data, 'error:', error)
     if (data) {
       setWorkspaceId(data.workspace_id)
@@ -387,7 +387,7 @@ function renderPage() {
       </div>
     )
   }
-  
+
   if (workspaceLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans }}>
