@@ -22,7 +22,6 @@ const allPages = [
 
   // Finance
   { path: 'finance-overview',  label: 'Finances',          icon: 'chart' },
-  { path: 'invoices',          label: 'Invoices',          icon: 'invoice' },
   { path: 'expenses',          label: 'Expenses',          icon: 'expense' },
   { path: 'revenue',           label: 'Revenue',           icon: 'revenue' },
 
