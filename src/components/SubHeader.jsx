@@ -11,11 +11,12 @@ const allPages = [
   { path: 'projects',          label: 'Projects',          icon: 'projects' },
   { path: 'tasks',             label: 'Tasks',             icon: 'task-done' },
 
-  // Toolkit
+// Toolkit
   { path: 'packages',          label: 'Packages',          icon: 'book' },
   { path: 'briefs',            label: 'Briefs',            icon: 'brief' },
   { path: 'spark',             label: 'Spark',             icon: 'sparkles' },
-
+  { path: 'resources',         label: 'Resources',         icon: 'resources' },
+  
   // Operations
   { path: 'vendors',           label: 'Vendors',           icon: 'vendors' },
   { path: 'department-budget', label: 'Dept. Budget',      icon: 'finance' },
@@ -220,10 +221,15 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
           }}>
             Pick up to 5 favorites
           </div>
-          {allPages.map(page => (
+          {allPages.map(page => {
+            const isFav = favorites.includes(page.path)
+            const atCap = !isFav && favorites.length >= 5
+            return (
             <button
               key={page.path}
-              onClick={() => toggleFavorite(page.path)}
+              onClick={() => !atCap && toggleFavorite(page.path)}
+              disabled={atCap}
+              title={atCap ? 'Remove one favorite first (max 5)' : ''}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -231,11 +237,12 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
                 padding: '6px 10px',
                 borderRadius: t.radius.md,
                 border: 'none',
-                backgroundColor: favorites.includes(page.path) ? t.colors.primaryLight : t.colors.bg,
-                color: favorites.includes(page.path) ? t.colors.primary : t.colors.textSecondary,
+                backgroundColor: isFav ? t.colors.primaryLight : t.colors.bg,
+                color: isFav ? t.colors.primary : t.colors.textSecondary,
                 fontSize: t.fontSizes.xs,
-                fontWeight: favorites.includes(page.path) ? '600' : '400',
-                cursor: 'pointer',
+                fontWeight: isFav ? '600' : '400',
+                cursor: atCap ? 'not-allowed' : 'pointer',
+                opacity: atCap ? 0.4 : 1,
                 fontFamily: t.fonts.sans,
                 textAlign: 'left',
               }}
@@ -248,7 +255,8 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
     </span>
   )}
             </button>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

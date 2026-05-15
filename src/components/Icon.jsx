@@ -17,7 +17,7 @@ import {
   LayoutDashboard, Search, Menu, X, ArrowLeft, Settings, Bell,
   CircleUser, PanelLeft, MoreVertical, ExternalLink,
   ChevronDown, ChevronRight, LogOut, Building2, Wrench, BookOpen, UsersRound,
-  Store, Target, Megaphone, BarChart3,
+  Store, Target, Megaphone, BarChart3, Library,
   // Events
   CalendarDays, Plus, Clock, Calendar, MapPin, Users, Lightbulb,
   FileText, Sparkles, ClipboardList, CheckCircle2, Radio, Archive,
@@ -69,6 +69,7 @@ const ICON_MAP = {
   'team-goals': Target,
   'campaigns': Megaphone,
   'chart': BarChart3,
+  'resources': Library,
 
   // Events
   'events': CalendarDays,

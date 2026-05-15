@@ -34,6 +34,7 @@ import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
 import OnboardingModal from './components/OnboardingModal'
+import Resources from './pages/Resources'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -191,8 +192,8 @@ function renderPage() {
       case 'all-allclients':
         return isStaff ? <AllClients {...pageProps} /> : <AccessDenied />
       case 'resources':
-        return isStaff ? <Vendors {...pageProps} /> : <AccessDenied />  
-
+  return <Resources {...pageProps} />
+  
       case 'client-portal':
         return <ClientPortal {...pageProps} />
 
