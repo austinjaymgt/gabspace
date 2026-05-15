@@ -164,7 +164,7 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
     setUserRole(null)
   }
 
-  const pageProps = { workspaceId, userRole, session }
+const pageProps = { workspaceId, userRole, session }
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
   const isStaff = ['owner', 'admin', 'member'].includes(userRole)
   const isClientOnly = userRole === 'client'
