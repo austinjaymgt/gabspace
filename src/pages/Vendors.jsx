@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import TagInput from '../components/TagInput'
 
-export default function Vendors() {
-  const [vendors, setVendors] = useState([])
+export default function Vendors({ workspaceId }) {
+    const [vendors, setVendors] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedVendor, setSelectedVendor] = useState(null)
@@ -17,6 +19,7 @@ export default function Vendors() {
     address: '',
     website: '',
     instagram: '',
+    tags: [],
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -35,7 +38,7 @@ export default function Vendors() {
 
   function openAddForm() {
     setEditingVendor(null)
-    setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '' })
+setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '', tags: [] })
     setShowForm(true)
   }
 
@@ -50,6 +53,8 @@ export default function Vendors() {
       address: vendor.address || '',
       website: vendor.website || '',
       instagram: vendor.instagram || '',
+      instagram: vendor.instagram || '',
+    tags: vendor.tags || [],
     })
     setShowForm(true)
   }
@@ -68,6 +73,7 @@ export default function Vendors() {
       address: form.address || null,
       website: form.website || null,
       instagram: form.instagram || null,
+        tags: form.tags || [],
     }
 
     let error
@@ -81,17 +87,17 @@ export default function Vendors() {
         setSelectedVendor(updated)
       }
     } else {
-      // Insert new vendor
-      const result = await supabase.from('vendors').insert({ ...payload, user_id: user.id })
-      error = result.error
-    }
+  // Insert new vendor
+  const result = await supabase.from('vendors').insert({ ...payload, user_id: user.id, workspace_id: workspaceId })
+  error = result.error
+}
 
     if (error) {
       setError(error.message)
     } else {
       setShowForm(false)
       setEditingVendor(null)
-      setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '' })
+setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '', tags: [] })
       fetchVendors()
     }
     setSaving(false)
@@ -165,11 +171,19 @@ export default function Vendors() {
                 <input style={styles.input} placeholder="https://example.com" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>Instagram</label>
-                <input style={styles.input} placeholder="@handle" value={form.instagram} onChange={e => setForm({ ...form, instagram: e.target.value })} />
-              </div>
-            </div>
-            <div style={styles.formActions}>
+  <label style={styles.label}>Instagram</label>
+  <input style={styles.input} placeholder="@handle" value={form.instagram} onChange={e => setForm({ ...form, instagram: e.target.value })} />
+</div>
+<div style={{ ...styles.field, gridColumn: 'span 2' }}>
+  <label style={styles.label}>Tags</label>
+  <TagInput
+    value={form.tags}
+    onChange={tags => setForm({ ...form, tags })}
+    placeholder="e.g. internal, preferred, backup..."
+  />
+</div>
+</div>
+<div style={styles.formActions}>
               <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
               <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.name}>
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -294,11 +308,19 @@ export default function Vendors() {
               <input style={styles.input} placeholder="https://example.com" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>Instagram</label>
-              <input style={styles.input} placeholder="@handle" value={form.instagram} onChange={e => setForm({ ...form, instagram: e.target.value })} />
-            </div>
-          </div>
-          <div style={styles.formActions}>
+  <label style={styles.label}>Instagram</label>
+  <input style={styles.input} placeholder="@handle" value={form.instagram} onChange={e => setForm({ ...form, instagram: e.target.value })} />
+</div>
+<div style={{ ...styles.field, gridColumn: 'span 2' }}>
+  <label style={styles.label}>Tags</label>
+  <TagInput
+    value={form.tags}
+    onChange={tags => setForm({ ...form, tags })}
+    placeholder="e.g. internal, preferred, backup..."
+  />
+</div>
+</div>
+<div style={styles.formActions}>
             <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
             <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.name}>
               {saving ? 'Saving...' : 'Save Vendor'}
