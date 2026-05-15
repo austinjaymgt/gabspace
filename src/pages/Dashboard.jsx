@@ -93,16 +93,22 @@ flexShrink: 0,
 
 export default function Dashboard({ session, onNavigate }) {
   const [stats, setStats] = useState({
-    activeClients: 0,
-    totalClients: 0,
-    activeProjects: 0,
-    activeProjectsList: [],
-    income: 0,
-    totalExpenses: 0,
-    revenue: 0,
-    outstanding: 0,
-    activeCampaigns: [],
-  })
+  activeClients: 0,
+  totalClients: 0,
+  activeProjects: 0,
+  activeProjectsList: [],
+  income: 0,
+  totalExpenses: 0,
+  revenue: 0,
+  outstanding: 0,
+  activeCampaigns: [],
+  budgetRow: null,
+  annualBudget: 0,
+  annualSpent: 0,
+  currentQuarter: 'Q1',
+  quarterTarget: 0,
+  quarterSpent: 0,
+})
   const [feed, setFeed] = useState([])
   const [loadingFeed, setLoadingFeed] = useState(true)
   const [settings, setSettings] = useState(null)
@@ -131,39 +137,66 @@ export default function Dashboard({ session, onNavigate }) {
   }
 
   async function fetchStats() {
-    const [
-      { count: activeClients },
-      { count: totalClients },
-      { count: activeProjects },
-      { data: activeProjectsList },
-      { data:revenue },
-      { data: expenses },
-      { data: activeCampaigns },
-    ] = await Promise.all([
-      supabase.from('clients').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('clients').select('*', { count: 'exact', head: true }),
-      supabase.from('projects').select('*', { count: 'exact', head: true }).eq('type', 'project').eq('status', 'active'),
-      supabase.from('projects').select('title, status, clients(name)').eq('type', 'project').eq('status', 'active').limit(4),      supabase.from('revenue').select('amount, status'),
-      supabase.from('expenses').select('amount'),
-      supabase.from('campaigns').select('name, status, budget, spend, platform').eq('status', 'active').limit(3),
-    ])
+  const now = new Date()
+  const year = now.getFullYear()
+  const currentQuarter = `Q${Math.floor(now.getMonth() / 3) + 1}`
 
-    const income = revenue?.filter(r => r.status === 'received').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0) || 0
-    const totalExpenses = expenses?.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0) || 0
-    const outstanding = revenue?.filter(r => r.status === 'pending').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0) || 0
+  // Current calendar quarter date range for filtering line items by created_at
+  const qStartMonth = (parseInt(currentQuarter[1]) - 1) * 3
+  const qStart = new Date(year, qStartMonth, 1).toISOString()
+  const qEnd = new Date(year, qStartMonth + 3, 1).toISOString()
 
-    setStats({
-      activeClients: activeClients || 0,
-      totalClients: totalClients || 0,
-      activeProjects: activeProjects || 0,
-      activeProjectsList: activeProjectsList || [],
-      income,
-      totalExpenses,
-      revenue: income - totalExpenses,
-      outstanding,
-      activeCampaigns: activeCampaigns || [],
-    })
-  }
+  const [
+    { count: activeClients },
+    { count: totalClients },
+    { count: activeProjects },
+    { data: activeProjectsList },
+    { data: revenue },
+    { data: expenses },
+    { data: activeCampaigns },
+    { data: budgetRow },
+    { data: allLineItems },
+    { data: quarterLineItems },
+  ] = await Promise.all([
+    supabase.from('clients').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('clients').select('*', { count: 'exact', head: true }),
+    supabase.from('projects').select('*', { count: 'exact', head: true }).eq('type', 'project').eq('status', 'active'),
+    supabase.from('projects').select('title, status, clients(name)').eq('type', 'project').eq('status', 'active').limit(4),
+    supabase.from('revenue').select('amount, status'),
+    supabase.from('expenses').select('amount'),
+    supabase.from('campaigns').select('name, status, budget, spend, platform').eq('status', 'active').limit(3),
+    supabase.from('department_budget').select('*').eq('year', year).maybeSingle(),
+    supabase.from('budget_line_items').select('actual_amount'),
+    supabase.from('budget_line_items').select('actual_amount').gte('created_at', qStart).lt('created_at', qEnd),
+  ])
+
+  const income = revenue?.filter(r => r.status === 'received').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0) || 0
+  const totalExpenses = expenses?.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0) || 0
+  const outstanding = revenue?.filter(r => r.status === 'pending').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0) || 0
+
+  const annualBudget = parseFloat(budgetRow?.annual_budget) || 0
+  const annualSpent = (allLineItems || []).reduce((sum, li) => sum + (parseFloat(li.actual_amount) || 0), 0)
+  const quarterTarget = parseFloat(budgetRow?.[`${currentQuarter.toLowerCase()}_target`]) || 0
+  const quarterSpent = (quarterLineItems || []).reduce((sum, li) => sum + (parseFloat(li.actual_amount) || 0), 0)
+
+  setStats({
+    activeClients: activeClients || 0,
+    totalClients: totalClients || 0,
+    activeProjects: activeProjects || 0,
+    activeProjectsList: activeProjectsList || [],
+    income,
+    totalExpenses,
+    revenue: income - totalExpenses,
+    outstanding,
+    activeCampaigns: activeCampaigns || [],
+    budgetRow,
+    annualBudget,
+    annualSpent,
+    currentQuarter,
+    quarterTarget,
+    quarterSpent,
+  })
+}
 
   async function fetchFeed() {
     setLoadingFeed(true)
@@ -265,36 +298,91 @@ export default function Dashboard({ session, onNavigate }) {
           </button>
         </div>
 
-        {/* Finance Snapshot */}
-        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.borderLight}`, borderTop: '3px solid #10B981' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-            <div>
-              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontWeight: '500', marginBottom: '4px' }}>Finance Snapshot</div>
-              <div style={{ fontSize: '36px', fontWeight: '700', color: '#10B981', letterSpacing: '-1px' }}>${(stats.revenue || 0).toLocaleString()}</div>
-              <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>net revenue</div>
-            </div>
-<div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#D1FAE5', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="revenue" size="lg" /></div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#D1FAE5', borderRadius: t.radius.md }}>
-              <span style={{ fontSize: t.fontSizes.sm, color: '#065F46', fontWeight: '500' }}>Income</span>
-              <span style={{ fontSize: t.fontSizes.sm, color: '#065F46', fontWeight: '700' }}>${(stats.income || 0).toLocaleString()}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#FEE2E2', borderRadius: t.radius.md }}>
-              <span style={{ fontSize: t.fontSizes.sm, color: '#991B1B', fontWeight: '500' }}>Expenses</span>
-              <span style={{ fontSize: t.fontSizes.sm, color: '#991B1B', fontWeight: '700' }}>${(stats.totalExpenses || 0).toLocaleString()}</span>
-            </div>
-            {stats.outstanding > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#FEF3C7', borderRadius: t.radius.md }}>
-                <span style={{ fontSize: t.fontSizes.sm, color: '#92400E', fontWeight: '500' }}>Outstanding</span>
-                <span style={{ fontSize: t.fontSizes.sm, color: '#92400E', fontWeight: '700' }}>${(stats.outstanding || 0).toLocaleString()}</span>
-              </div>
-            )}
-          </div>
-          <button onClick={() => onNavigate('finance-overview')} style={{ fontSize: t.fontSizes.xs, color: '#10B981', background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '600', marginTop: '12px', padding: 0 }}>
-            View overview →
-          </button>
+        {/* Department Budget */}
+<div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.borderLight}`, borderTop: '3px solid #10B981' }}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+    <div>
+      <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontWeight: '500', marginBottom: '4px' }}>Department Budget</div>
+      <div style={{ fontSize: '20px', fontWeight: '700', color: t.colors.textPrimary, letterSpacing: '-0.5px' }}>
+        {new Date().getFullYear()}
+      </div>
+    </div>
+    <div style={{ width: '44px', height: '44px', borderRadius: t.radius.lg, backgroundColor: '#D1FAE5', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name="finance" size="lg" />
+    </div>
+  </div>
+
+  {!stats.budgetRow ? (
+    // Empty state — no budget set for the year
+    <div style={{ padding: '20px 0', textAlign: 'center' }}>
+      <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginBottom: '12px' }}>
+        No budget set for {new Date().getFullYear()}
+      </div>
+      <button
+        onClick={() => onNavigate('department-budget')}
+        style={{
+          padding: '8px 16px',
+          borderRadius: t.radius.md,
+          border: 'none',
+          backgroundColor: '#10B981',
+          color: '#fff',
+          fontSize: t.fontSizes.sm,
+          fontWeight: '600',
+          cursor: 'pointer',
+          fontFamily: t.fonts.sans,
+        }}
+      >
+        Set Budget
+      </button>
+    </div>
+  ) : (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* Annual */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+          <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Annual</span>
+          <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>
+            <strong style={{ color: t.colors.textPrimary }}>${stats.annualSpent.toLocaleString()}</strong>
+            {' / '}${stats.annualBudget.toLocaleString()}
+          </span>
         </div>
+        <div style={{ height: '8px', backgroundColor: t.colors.borderLight, borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${stats.annualBudget > 0 ? Math.min((stats.annualSpent / stats.annualBudget) * 100, 100) : 0}%`,
+            backgroundColor: stats.annualBudget > 0 && stats.annualSpent / stats.annualBudget > 0.9 ? '#cc3333' : '#10B981',
+            borderRadius: '4px',
+            transition: 'width 0.3s',
+          }} />
+        </div>
+      </div>
+
+      {/* Current Quarter */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+          <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stats.currentQuarter}</span>
+          <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>
+            <strong style={{ color: t.colors.textPrimary }}>${stats.quarterSpent.toLocaleString()}</strong>
+            {' / '}${stats.quarterTarget.toLocaleString()}
+          </span>
+        </div>
+        <div style={{ height: '8px', backgroundColor: t.colors.borderLight, borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${stats.quarterTarget > 0 ? Math.min((stats.quarterSpent / stats.quarterTarget) * 100, 100) : 0}%`,
+            backgroundColor: stats.quarterTarget > 0 && stats.quarterSpent / stats.quarterTarget > 0.9 ? '#cc3333' : '#7C5CBF',
+            borderRadius: '4px',
+            transition: 'width 0.3s',
+          }} />
+        </div>
+      </div>
+    </div>
+  )}
+
+  <button onClick={() => onNavigate('department-budget')} style={{ fontSize: t.fontSizes.xs, color: '#10B981', background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '600', marginTop: '14px', padding: 0 }}>
+    View department budget →
+  </button>
+</div>
 
         {/* Active Campaigns */}
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.borderLight}`, borderTop: '3px solid #8B5CF6' }}>
