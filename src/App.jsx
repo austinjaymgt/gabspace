@@ -38,9 +38,11 @@ import OnboardingModal from './components/OnboardingModal'
 export default function App() {
   const [session, setSession] = useState(null)
   const [currentPage, setCurrentPage] = useState('dashboard')
+  const [mode, setMode] = useState('signin') // 'signin' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [workspaceName, setWorkspaceName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -79,10 +81,10 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
     setWorkspaceLoading(true)
 
     supabase
+  supabase
   .from('user_profiles')
   .select('workspace_id, role')
   .eq('user_id', session.user.id)
-  .not('role', 'eq', 'owner')
   .maybeSingle()
   .then(async ({ data, error }) => {
     console.log('profile data:', data, 'error:', error)
@@ -127,20 +129,23 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
   }
 
   async function handleSignUp(e) {
-  e.preventDefault()
-  setLoading(true)
-  setError(null)
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: fullName }
-    }
-  })
-  if (error) setError(error.message)
-  else setError('Check your email to confirm your account!')
-  setLoading(false)
-}
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          workspace_name: workspaceName,
+        }
+      }
+    })
+    if (error) setError(error.message)
+    else setError('Check your email to confirm your account!')
+    setLoading(false)
+  }
 
   async function handleForgotPassword() {
     if (!email) return setError('Enter your email above first.')
@@ -258,9 +263,9 @@ function renderPage() {
         )
     }
   }
-
-  // Login screen
+// Login / Signup screen
   if (!session) {
+    const isSignup = mode === 'signup'
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.nav, fontFamily: t.fonts.sans }}>
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.xl, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
@@ -278,25 +283,41 @@ function renderPage() {
             </h1>
           </div>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
-            creativity meets clarity.
+            {isSignup ? 'create your space.' : 'welcome back.'}
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
-<div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
-                  {error}
+              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
+                {error}
               </div>
             )}
-<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-  <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Full name</label>
-  <input
-    style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
-    type="text"
-    placeholder="Jane Doe"
-    value={fullName}
-    onChange={e => setFullName(e.target.value)}
-  />
-</div>
+
+            {isSignup && (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Your name</label>
+                  <input
+                    style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                    type="text"
+                    placeholder="Jane Doe"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Workspace name</label>
+                  <input
+                    style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                    type="text"
+                    placeholder="Jane Doe Studio"
+                    value={workspaceName}
+                    onChange={e => setWorkspaceName(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Email</label>
@@ -315,7 +336,7 @@ function renderPage() {
                 <input
                   style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans, width: '100%', boxSizing: 'border-box', paddingRight: '44px' }}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder={isSignup ? 'At least 8 characters' : '••••••••'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
@@ -329,40 +350,44 @@ function renderPage() {
             </div>
 
             <button
-              onClick={handleLogin}
+              onClick={isSignup ? handleSignUp : handleLogin}
               disabled={loading}
               style={{ padding: '12px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (isSignup ? 'Creating account...' : 'Signing in...') : (isSignup ? 'Create account' : 'Sign in')}
             </button>
 
-            {resetSent ? (
-              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight, color: t.colors.success, fontSize: t.fontSizes.base, textAlign: 'center' }}>
-                ✓ Password reset email sent — check your inbox
-              </div>
-            ) : (
-              <button
-                onClick={handleForgotPassword}
-                disabled={loading}
-                style={{ background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.sm, cursor: 'pointer', textAlign: 'center', fontFamily: t.fonts.sans, textDecoration: 'underline', padding: 0 }}
-              >
-                Forgot password?
-              </button>
+            {!isSignup && (
+              resetSent ? (
+                <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight, color: t.colors.success, fontSize: t.fontSizes.base, textAlign: 'center' }}>
+                  ✓ Password reset email sent — check your inbox
+                </div>
+              ) : (
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={loading}
+                  style={{ background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.sm, cursor: 'pointer', textAlign: 'center', fontFamily: t.fonts.sans, textDecoration: 'underline', padding: 0 }}
+                >
+                  Forgot password?
+                </button>
+              )
             )}
 
-            <button
-              onClick={handleSignUp}
-              disabled={loading}
-              style={{ padding: '12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
-            >
-              Create account
-            </button>
+            <div style={{ textAlign: 'center', marginTop: '8px', paddingTop: '16px', borderTop: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontFamily: t.fonts.sans }}>
+              {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
+              <button
+                onClick={() => { setMode(isSignup ? 'signin' : 'signup'); setError(null); }}
+                style={{ background: 'none', border: 'none', color: t.colors.primary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, padding: 0 }}
+              >
+                {isSignup ? 'Sign in' : 'Sign up'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
     )
   }
-
+  
   if (workspaceLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans }}>
