@@ -40,6 +40,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -81,7 +82,7 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
   .from('user_profiles')
   .select('workspace_id, role')
   .eq('user_id', session.user.id)
-  .not('role', 'eq', 'employee')
+  .not('role', 'eq', 'owner')
   .maybeSingle()
   .then(async ({ data, error }) => {
     console.log('profile data:', data, 'error:', error)
@@ -126,14 +127,20 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
   }
 
   async function handleSignUp(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) setError(error.message)
-    else setError('Check your email to confirm your account!')
-    setLoading(false)
-  }
+  e.preventDefault()
+  setLoading(true)
+  setError(null)
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: fullName }
+    }
+  })
+  if (error) setError(error.message)
+  else setError('Check your email to confirm your account!')
+  setLoading(false)
+}
 
   async function handleForgotPassword() {
     if (!email) return setError('Enter your email above first.')
@@ -247,6 +254,7 @@ function renderPage() {
             <h2 style={{ fontSize: t.fontSizes.xl, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>Coming soon</h2>
             <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>This section is under construction.</p>
           </div>
+          
         )
     }
   }
@@ -279,6 +287,16 @@ function renderPage() {
                   {error}
               </div>
             )}
+<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+  <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Full name</label>
+  <input
+    style={{ padding: '10px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+    type="text"
+    placeholder="Jane Doe"
+    value={fullName}
+    onChange={e => setFullName(e.target.value)}
+  />
+</div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Email</label>
