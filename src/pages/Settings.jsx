@@ -39,6 +39,13 @@ export default function Settings({ session, workspaceId, userRole }) {
   const [inviteError, setInviteError] = useState(null)
   const [inviteSent, setInviteSent] = useState(false)
 
+// Delete account
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
+  const [blockedWorkspaces, setBlockedWorkspaces] = useState(null)
+
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
 
   useEffect(() => { fetchSettings() }, [])
@@ -175,6 +182,52 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
     const { data: urlData } = supabase.storage.from('logos').getPublicUrl(fileName)
     setForm(prev => ({ ...prev, logo_url: urlData.publicUrl }))
     setUploading(false)
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    setDeleteError(null)
+    setBlockedWorkspaces(null)
+
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({}),
+      })
+
+      const result = await res.json()
+
+      if (result.status === 'deleted') {
+        await supabase.auth.signOut()
+        window.location.href = 'https://gabspace.io'
+        return
+      }
+
+      if (result.status === 'blocked') {
+        setBlockedWorkspaces(result.blocking_workspaces || [])
+        setDeleting(false)
+        return
+      }
+
+      setDeleteError(result.error || 'Something went wrong. Please try again or contact support.')
+      setDeleting(false)
+    } catch (err) {
+      setDeleteError(err.message || 'Network error. Please try again.')
+      setDeleting(false)
+    }
+  }
+
+  function closeDeleteModal() {
+    setDeleteModalOpen(false)
+    setDeleteConfirmText('')
+    setDeleteError(null)
+    setBlockedWorkspaces(null)
   }
 
   const inputStyle = {
@@ -412,6 +465,34 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
         </div>
       )}
 
+{/* ── Danger Zone ── */}
+      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.dangerLight}`, overflow: 'hidden', marginBottom: '24px' }}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+          <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.danger, margin: '0 0 4px' }}>Danger zone</h3>
+          <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>Permanent actions that can't be undone</p>
+        </div>
+        <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, marginBottom: '4px' }}>Delete account</div>
+            <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, maxWidth: '380px' }}>
+              Permanently delete your account, your data, and any workspace you solely own. This cannot be undone.
+            </div>
+          </div>
+          <button
+            onClick={() => setDeleteModalOpen(true)}
+            style={{
+              padding: '10px 20px', borderRadius: t.radius.md,
+              border: `1px solid ${t.colors.danger}`,
+              backgroundColor: t.colors.bgCard, color: t.colors.danger,
+              fontSize: t.fontSizes.sm, fontWeight: '500',
+              cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap',
+            }}
+          >
+            Delete account
+          </button>
+        </div>
+      </div>
+
       {/* ── Actions ── */}
       <div style={{ display: 'flex', gap: '12px' }}>
         <button
@@ -428,6 +509,127 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
           {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save settings'}
         </button>
       </div>
+
+    {/* ── Delete confirmation modal ── */}
+      {deleteModalOpen && (
+        <div
+          onClick={closeDeleteModal}
+          style={{
+            position: 'fixed', inset: 0,
+            backgroundColor: 'rgba(26, 26, 46, 0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '20px',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              backgroundColor: t.colors.bgCard,
+              borderRadius: t.radius.lg,
+              maxWidth: '480px', width: '100%',
+              maxHeight: '90vh', overflow: 'auto',
+              border: `1px solid ${t.colors.borderLight}`,
+            }}
+          >
+            <div style={{ padding: '24px 28px 20px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+              <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.danger, margin: '0 0 4px' }}>
+                Delete account
+              </h3>
+              <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>
+                This action is permanent and cannot be undone.
+              </p>
+            </div>
+
+            <div style={{ padding: '24px 28px' }}>
+              {blockedWorkspaces ? (
+                <>
+                  <div style={{ padding: '14px 16px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, marginBottom: '20px' }}>
+                    <div style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.danger, marginBottom: '6px' }}>
+                      You own {blockedWorkspaces.length === 1 ? 'a workspace' : 'workspaces'} with other members
+                    </div>
+                    <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, lineHeight: 1.55 }}>
+                      Before you can delete your account, you'll need to transfer ownership or remove the other members from:
+                    </div>
+                    <ul style={{ margin: '10px 0 0 18px', padding: 0, fontSize: t.fontSizes.sm, color: t.colors.danger }}>
+                      {blockedWorkspaces.map(ws => (
+                        <li key={ws.id} style={{ marginBottom: '4px' }}>
+                          <strong>{ws.name}</strong> ({ws.other_member_count} other {ws.other_member_count === 1 ? 'member' : 'members'})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={closeDeleteModal}
+                      style={{ padding: '10px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                    >
+                      Got it
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: t.fontSizes.base, color: t.colors.textPrimary, lineHeight: 1.6, margin: '0 0 16px' }}>
+                    Deleting your account will permanently remove:
+                  </p>
+                  <ul style={{ margin: '0 0 20px 18px', padding: 0, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, lineHeight: 1.8 }}>
+                    <li>Your profile and login</li>
+                    <li>Any workspace where you're the only member</li>
+                    <li>All clients, projects, invoices, files, and other data in those workspaces</li>
+                    <li>Your membership in workspaces owned by others</li>
+                  </ul>
+                  <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginBottom: '20px' }}>
+                    To confirm, type <strong style={{ color: t.colors.textPrimary, fontFamily: 'monospace' }}>DELETE MY ACCOUNT</strong> below.
+                  </p>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={e => setDeleteConfirmText(e.target.value)}
+                    placeholder="DELETE MY ACCOUNT"
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      padding: '10px 14px', borderRadius: t.radius.md,
+                      border: `1px solid ${t.colors.border}`,
+                      fontSize: t.fontSizes.md, outline: 'none',
+                      color: t.colors.textPrimary, fontFamily: 'monospace',
+                      marginBottom: '20px',
+                    }}
+                    autoFocus
+                  />
+                  {deleteError && (
+                    <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm, marginBottom: '16px' }}>
+                      {deleteError}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                    <button
+                      onClick={closeDeleteModal}
+                      disabled={deleting}
+                      style={{ padding: '10px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleting || deleteConfirmText !== 'DELETE MY ACCOUNT'}
+                      style={{
+                        padding: '10px 20px', borderRadius: t.radius.md, border: 'none',
+                        backgroundColor: t.colors.danger, color: t.colors.textInverse,
+                        fontSize: t.fontSizes.sm, fontWeight: '600',
+                        cursor: deleting || deleteConfirmText !== 'DELETE MY ACCOUNT' ? 'not-allowed' : 'pointer',
+                        opacity: deleting || deleteConfirmText !== 'DELETE MY ACCOUNT' ? 0.5 : 1,
+                        fontFamily: t.fonts.sans,
+                      }}
+                    >
+                      {deleting ? 'Deleting…' : 'Delete my account'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
