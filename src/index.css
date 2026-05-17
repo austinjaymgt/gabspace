@@ -27,3 +27,7 @@ input, select, textarea {
 .icon-spin {
   animation: icon-spin 1s linear infinite;
 }
+/* Hide horizontal scrollbar on mobile-scrollable rows (used by SubHeader) */
+.subheader-scroll::-webkit-scrollbar {
+  display: none;
+}

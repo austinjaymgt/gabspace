@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from './Icon'
+import { useIsNotDesktop } from '../hooks/useMediaQuery'
 
 const allPages = [
   // Core
@@ -43,6 +44,7 @@ const allPages = [
 export default function SubHeader({ currentPage, onNavigate, session }) {
   const [settings, setSettings] = useState(null)
   const [showFavPicker, setShowFavPicker] = useState(false)
+  const isMobile = useIsNotDesktop()
 
   useEffect(() => {
     if (session) fetchSettings()
@@ -82,10 +84,10 @@ const favorites = settings?.favorites || ['dashboard', 'allclients', 'projects']
 const favoritePages = allPages.filter(p => favorites.includes(p.path))
 
   return (
-    <div style={{
+<div style={{
       backgroundColor: '#FAFAF8',
       borderBottom: `1px solid ${t.colors.borderLight}`,
-      padding: '0 24px',
+      padding: isMobile ? '0 12px' : '0 24px',
       height: '44px',
       display: 'flex',
       alignItems: 'center',
@@ -93,8 +95,21 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
       flexShrink: 0,
       position: 'relative',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {settings?.logo_url && (
+      <div
+        className="subheader-scroll"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          flex: 1,
+          minWidth: 0,
+          overflowX: isMobile ? 'auto' : 'visible',
+          overflowY: 'visible',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >        {settings?.logo_url && !isMobile && (
           <img
             src={settings.logo_url}
             alt="logo"
@@ -107,7 +122,8 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
             }}
           />
         )}
-        {settings?.business_name && (
+
+{settings?.business_name && !isMobile && (
           <span style={{
             fontSize: t.fontSizes.sm,
             fontWeight: '600',
@@ -117,9 +133,11 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
             {settings.business_name}
           </span>
         )}
-        <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
-          Quick access:
-        </span>
+        {!isMobile && (
+          <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
+            Quick access:
+          </span>
+        )}
         {favoritePages.map(page => (
           <button
             key={page.path}
@@ -150,31 +168,33 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
             <span>{page.label}</span>
           </button>
         ))}
-        <button
-  onClick={() => setShowFavPicker(!showFavPicker)}
-  style={{
-    padding: '3px 8px',
-    borderRadius: t.radius.full,
-    border: `1px dashed ${t.colors.border}`,
-    backgroundColor: 'transparent',
-    color: t.colors.textTertiary,
-    fontSize: t.fontSizes.xs,
-    cursor: 'pointer',
-    fontFamily: t.fonts.sans,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px',
-  }}
->
-  {showFavPicker ? (
-    'Done'
-  ) : (
-    <>
-      <Icon name="add" size="sm" />
-      Edit
-    </>
-  )}
-</button>
+        {!isMobile && (
+          <button
+            onClick={() => setShowFavPicker(!showFavPicker)}
+            style={{
+              padding: '3px 8px',
+              borderRadius: t.radius.full,
+              border: `1px dashed ${t.colors.border}`,
+              backgroundColor: 'transparent',
+              color: t.colors.textTertiary,
+              fontSize: t.fontSizes.xs,
+              cursor: 'pointer',
+              fontFamily: t.fonts.sans,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            {showFavPicker ? (
+              'Done'
+            ) : (
+              <>
+                <Icon name="add" size="sm" />
+                Edit
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -231,21 +251,22 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
               disabled={atCap}
               title={atCap ? 'Remove one favorite first (max 5)' : ''}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 10px',
-                borderRadius: t.radius.md,
-                border: 'none',
-                backgroundColor: isFav ? t.colors.primaryLight : t.colors.bg,
-                color: isFav ? t.colors.primary : t.colors.textSecondary,
-                fontSize: t.fontSizes.xs,
-                fontWeight: isFav ? '600' : '400',
-                cursor: atCap ? 'not-allowed' : 'pointer',
-                opacity: atCap ? 0.4 : 1,
-                fontFamily: t.fonts.sans,
-                textAlign: 'left',
-              }}
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '3px 10px',
+              borderRadius: t.radius.full,
+              border: 'none',
+              backgroundColor: currentPage === page.path ? t.colors.primaryLight : 'transparent',
+              color: currentPage === page.path ? t.colors.primary : t.colors.textSecondary,
+              fontSize: t.fontSizes.xs,
+              fontWeight: currentPage === page.path ? '600' : '400',
+              cursor: 'pointer',
+              fontFamily: t.fonts.sans,
+              transition: 'background 0.15s',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+            }}
             >
               <Icon name={page.icon} size="sm" />
   <span>{page.label}</span>
