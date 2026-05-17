@@ -79,4 +79,18 @@ export const theme = {
     md: '0 4px 12px rgba(0,0,0,0.08)',
     lg: '0 8px 24px rgba(0,0,0,0.12)',
   },
+  // Responsive breakpoints (pixel values)
+  breakpoints: {
+    mobile: 767,   //   0 - 767px
+    tablet: 1023,  // 768 - 1023px
+    desktop: 1024, // 1024px and up
+  },
+  // Pre-built media query strings, keyed by semantic name.
+  // Used by the useMediaQuery hook.
+  mediaQueries: {
+    mobile: '(max-width: 767px)',
+    tablet: '(min-width: 768px) and (max-width: 1023px)',
+    desktop: '(min-width: 1024px)',
+    notDesktop: '(max-width: 1023px)',
+  },
 }
