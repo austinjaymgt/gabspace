@@ -6,7 +6,7 @@ import { Icon } from './Icon'
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
   
     {
-    label: 'All Clients', icon: 'clients', path: 'allclients', children: [
+    label: 'Client Management', icon: 'clients', path: 'allclients', children: [
       { label: 'All Clients', path: 'allclients' },
       { label: 'Tasks', path: 'tasks' },
       { label: 'Client Portals', path: 'client-portal' },
@@ -63,7 +63,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Clients', 'Operations', 'Creative Collective', 'Toolkit', 'Team'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Client Management', 'Operations', 'Creative Collective', 'Toolkit', 'Team'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
