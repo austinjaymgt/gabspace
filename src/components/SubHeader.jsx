@@ -93,7 +93,9 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
       alignItems: 'center',
       justifyContent: 'space-between',
       flexShrink: 0,
-      position: 'relative',
+      position: 'sticky',
+      top: 60,
+      zIndex: 29,
     }}>
       <div
         className="subheader-scroll"

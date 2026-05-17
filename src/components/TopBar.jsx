@@ -36,6 +36,9 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       borderBottom: `1px solid ${t.colors.borderLight}`,
       fontFamily: t.fonts.sans,
       flexShrink: 0,
+      position: 'sticky',
+      top: 0,
+      zIndex: 30,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {!isDesktop && (
