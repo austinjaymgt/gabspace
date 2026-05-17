@@ -55,17 +55,17 @@ export default function Clients({ workspaceId }) {
   }
 
   async function generatePortalLink(clientId) {
-    const { data: existing } = await supabase
-      .from('portal_tokens').select('*').eq('client_id', clientId).maybeSingle()
-    if (existing) { setPortalToken(existing); return }
-    const { data: { user } } = await supabase.auth.getUser()
-    const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)
-    const { data } = await supabase
-      .from('portal_tokens')
-      .insert({ client_id: clientId, user_id: user.id, token })
-      .select().single()
-    setPortalToken(data)
-  }
+  const { data: existing } = await supabase
+    .from('portal_tokens').select('*').eq('client_id', clientId).maybeSingle()
+  if (existing) { setPortalToken(existing); return }
+  const { data: { user } } = await supabase.auth.getUser()
+  const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)
+  const { data } = await supabase
+    .from('portal_tokens')
+    .insert({ client_id: clientId, user_id: user.id, workspace_id: workspaceId, token })
+    .select().single()
+  setPortalToken(data)
+}
 
   async function regeneratePortalLink(clientId) {
     if (!confirm('This will invalidate the old link. Are you sure?')) return
@@ -225,49 +225,6 @@ export default function Clients({ workspaceId }) {
                 </div>
               </div>
 
-              <div style={styles.portalSection}>
-                <div style={styles.portalHeader}>
-                  <h3 style={styles.portalTitle}>Client portal</h3>
-                  {!portalToken ? (
-                    <button onClick={() => generatePortalLink(selectedClient.id)} style={styles.portalGenerateBtn}>
-                      Generate portal link
-                    </button>
-                  ) : (
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => copyPortalLink(portalToken.token)} style={styles.portalCopyBtn}>
-                        {copied ? '✓ Copied!' : 'Copy link'}
-                      </button>
-                      <button onClick={() => regeneratePortalLink(portalToken.client_id)} style={styles.portalRegenerateBtn}>
-                        Regenerate
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {portalToken && (
-                  <>
-                    <div style={styles.portalLinkBox}>
-                      <span style={styles.portalLinkText}>{window.location.origin}/portal/{portalToken.token}</span>
-                    </div>
-                    <div style={styles.portalMetaRow}>
-                      <div style={styles.portalMetaItem}>
-                        <div style={styles.portalMetaLabel}>Last viewed</div>
-                        <div style={styles.portalMetaValue}>
-                          {portalToken.last_viewed_at
-                            ? new Date(portalToken.last_viewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            : 'Not yet viewed'}
-                        </div>
-                      </div>
-                      <div style={styles.portalMetaItem}>
-                        <div style={styles.portalMetaLabel}>Updates posted</div>
-                        <div style={styles.portalMetaValue}>{portalUpdates.length}</div>
-                      </div>
-                    </div>
-                    <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: '8px 0 0', textAlign: 'center' }}>
-                      Manage updates and view comments in the <strong style={{ color: t.colors.textSecondary }}>Client Portal</strong> section
-                    </p>
-                  </>
-                )}
-              </div>
             </>
           )}
         </div>

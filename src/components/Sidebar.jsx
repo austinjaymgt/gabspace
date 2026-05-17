@@ -9,10 +9,9 @@ import { Icon } from './Icon'
     label: 'Client Management', icon: 'clients', path: 'allclients', children: [
       { label: 'All Clients', path: 'allclients' },
       { label: 'Tasks', path: 'tasks' },
-      { label: 'Client Portals', path: 'client-portal' },
+      { label: 'Projects', icon: 'projects', path: 'projects' },
     ]
   },
-  { label: 'Projects', icon: 'projects', path: 'projects' },
 
   {
     label: 'Toolkit', icon: 'sparkles', path: 'packages', children: [
