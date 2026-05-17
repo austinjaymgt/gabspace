@@ -266,7 +266,7 @@ export default function Dashboard({ session, onNavigate }) {
             <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
               {stats.activeProjects} active project{stats.activeProjects !== 1 ? 's' : ''} across all clients
             </div>
-            <button onClick={() => onNavigate('clients')} style={{ fontSize: t.fontSizes.xs, color: t.colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '600' }}>
+            <button onClick={() => onNavigate('allclients')} style={{ fontSize: t.fontSizes.xs, color: t.colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '600' }}>
               View all →
             </button>
           </div>
