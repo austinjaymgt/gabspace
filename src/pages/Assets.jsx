@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 
-export default function Assets() {
+export default function Assets({ workspaceId }) {
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -60,6 +60,8 @@ export default function Assets() {
       description: form.description || null,
       tags: form.tags || null,
       user_id: user.id,
+      workspace_id: workspaceId,
+
     })
     if (error) setError(error.message)
     else {

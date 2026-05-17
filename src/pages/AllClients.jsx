@@ -10,7 +10,7 @@ const statusConfig = {
   inactive:  { bg: t.colors.bg,            color: t.colors.textTertiary,   label: 'Inactive' },
 }
 
-export default function Clients() {
+export default function Clients({ workspaceId }) {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -81,11 +81,11 @@ export default function Clients() {
   }
 
   async function handleSave() {
-    setSaving(true)
-    setError(null)
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('clients').insert({ ...form, user_id: user.id })
-    if (error) setError(error.message)
+  setSaving(true)
+  setError(null)
+  const { data: { user } } = await supabase.auth.getUser()
+  const { error } = await supabase.from('clients').insert({ ...form, user_id: user.id, workspace_id: workspaceId })
+      if (error) setError(error.message)
     else {
       setShowForm(false)
       setForm({ name: '', company: '', email: '', phone: '', status: 'active' })
