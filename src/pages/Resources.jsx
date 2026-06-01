@@ -70,7 +70,7 @@ export default function Resources({ workspaceId, session }) {
       setSaving(false)
       return
     }
-    if (form.kind === 'link' && !form.url.trim()) {
+    if (form.kind === 'link' && !normalizeUrl(form.url)) {
       setError('URL is required for link resources.')
       setSaving(false)
       return
@@ -94,7 +94,7 @@ export default function Resources({ workspaceId, session }) {
           description: form.description.trim() || null,
           tags: form.tags || [],
         }
-        if (form.kind === 'link') payload.url = form.url.trim()
+if (form.kind === 'link') payload.url = normalizeUrl(form.url)
 
         const { error: updErr } = await supabase
           .from('resources')
@@ -115,7 +115,7 @@ export default function Resources({ workspaceId, session }) {
             title: form.title.trim(),
             description: form.description.trim() || null,
             tags: form.tags || [],
-            url: form.url.trim(),
+  url: normalizeUrl(form.url),
           })
           if (insErr) throw insErr
         } else {
@@ -186,10 +186,10 @@ export default function Resources({ workspaceId, session }) {
   }
 
   async function handleOpenResource(resource) {
-    if (resource.kind === 'link') {
-      window.open(resource.url, '_blank', 'noopener,noreferrer')
-      return
-    }
+  if (resource.kind === 'link') {
+  window.open(normalizeUrl(resource.url), '_blank', 'noopener,noreferrer')
+  return
+}
     // file — fetch a signed URL and open it
     const { data, error } = await supabase
       .storage
@@ -201,7 +201,15 @@ export default function Resources({ workspaceId, session }) {
     }
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
   }
-
+function normalizeUrl(url) {
+  if (!url) return url
+  const trimmed = url.trim()
+  // already has a scheme (http, https, mailto, etc.) → leave it
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) || /^mailto:/i.test(trimmed)) {
+    return trimmed
+  }
+  return `https://${trimmed}`
+}
   function formatBytes(bytes) {
     if (!bytes) return ''
     if (bytes < 1024) return `${bytes} B`
@@ -292,13 +300,13 @@ export default function Resources({ workspaceId, session }) {
                 <div style={styles.detailFieldLabel}>URL</div>
                 <div style={styles.detailFieldValue}>
                   <a
-                    href={selectedResource.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={styles.link}
-                  >
-                    {selectedResource.url}
-                  </a>
+                    href={normalizeUrl(selectedResource.url)}
+  target="_blank"
+  rel="noreferrer"
+  style={styles.link}
+>
+  {selectedResource.url}
+</a>
                 </div>
               </div>
             )}
