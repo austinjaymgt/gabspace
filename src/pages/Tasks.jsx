@@ -8,18 +8,49 @@ const statusConfig = {
   'done':        { bg: t.colors.successLight, color: t.colors.success,      label: 'Done' },
 }
 
+const sortOptions = [
+  { value: 'default',      label: 'Sort: manual' },
+  { value: 'due-asc',      label: 'Due date · soonest' },
+  { value: 'due-desc',     label: 'Due date · latest' },
+  { value: 'start-asc',    label: 'Start date · soonest' },
+  { value: 'created-desc', label: 'Recently added' },
+  { value: 'title-asc',    label: 'Title · A–Z' },
+]
+
+// Date strings ('YYYY-MM-DD' or ISO) sort correctly as plain string compares.
+// Missing dates always fall to the bottom regardless of direction.
+function dateCompare(av, bv, dir) {
+  if (!av && !bv) return 0
+  if (!av) return 1
+  if (!bv) return -1
+  return av < bv ? -dir : av > bv ? dir : 0
+}
+
+function compareTasks(a, b, sortBy) {
+  switch (sortBy) {
+    case 'due-asc':      return dateCompare(a.due_date, b.due_date, 1)
+    case 'due-desc':     return dateCompare(a.due_date, b.due_date, -1)
+    case 'start-asc':    return dateCompare(a.start_date, b.start_date, 1)
+    case 'created-desc': return dateCompare(a.created_at, b.created_at, -1)
+    case 'title-asc':    return (a.title || '').localeCompare(b.title || '')
+    default:             return 0
+  }
+}
+
 export default function Tasks({ workspaceId }) {
-    const [tasks, setTasks] = useState([])
+  const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
-  const [events, setEvents] = useState([])
+  const [editingId, setEditingId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('default')
+  const [showCompleted, setShowCompleted] = useState(false)
   const [form, setForm] = useState({
     title: '',
     project_id: '',
-    event_id: '',
     status: 'todo',
+    start_date: '',
     due_date: '',
     assigned_to: '',
   })
@@ -27,73 +58,88 @@ export default function Tasks({ workspaceId }) {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-  loadWorkspace()
-  fetchTasks()
-  fetchProjects()
-  fetchEvents()
-}, [])
-
-async function loadWorkspace() {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .maybeSingle()
-  if (error) {
-    console.error('Could not load workspace:', error)
-    return
-  }
-  if (data) setWorkspaceId(data.workspace_id)
-}
+    if (!workspaceId) return
+    fetchTasks()
+    fetchProjects()
+  }, [workspaceId])
 
   async function fetchTasks() {
     setLoading(true)
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(title), events(name)')
+      .select('*, projects(title)')
+      .eq('workspace_id', workspaceId)
     if (!error) setTasks(data)
     setLoading(false)
   }
 
   async function fetchProjects() {
-    const { data } = await supabase.from('projects').select('id, title')
+    const { data } = await supabase
+      .from('projects')
+      .select('id, title')
+      .eq('workspace_id', workspaceId)
     if (data) setProjects(data)
   }
 
-  async function fetchEvents() {
-    const { data } = await supabase.from('events').select('id, name')
-    if (data) setEvents(data)
+  function openCreate() {
+    setEditingId(null)
+    setForm({ title: '', project_id: '', status: 'todo', start_date: '', due_date: '', assigned_to: '' })
+    setError(null)
+    setShowForm(true)
+  }
+
+  function openEdit(task) {
+    setEditingId(task.id)
+    setForm({
+      title: task.title || '',
+      project_id: task.project_id || '',
+      status: task.status || 'todo',
+      start_date: task.start_date ? task.start_date.slice(0, 10) : '',
+      due_date: task.due_date ? task.due_date.slice(0, 10) : '',
+      assigned_to: task.assigned_to || '',
+    })
+    setError(null)
+    setShowForm(true)
+  }
+
+  function closeForm() {
+    setShowForm(false)
+    setEditingId(null)
+    setForm({ title: '', project_id: '', status: 'todo', start_date: '', due_date: '', assigned_to: '' })
+    setError(null)
   }
 
   async function handleSave() {
-  setSaving(true)
-  setError(null)
+    setSaving(true)
+    setError(null)
 
-  if (!workspaceId) {
-    setError('Workspace not loaded yet. Please try again.')
+    if (!workspaceId) {
+      setError('Workspace not loaded yet. Please try again.')
+      setSaving(false)
+      return
+    }
+
+    const payload = {
+      title: form.title,
+      workspace_id: workspaceId,
+      project_id: form.project_id || null,
+      status: form.status,
+      start_date: form.start_date || null,
+      due_date: form.due_date || null,
+      assigned_to: form.assigned_to || null,
+    }
+
+    const { error } = editingId
+      ? await supabase.from('tasks').update(payload).eq('id', editingId)
+      : await supabase.from('tasks').insert(payload)
+
+    if (error) setError(error.message)
+    else {
+      closeForm()
+      fetchTasks()
+    }
     setSaving(false)
-    return
   }
-
-  const { error } = await supabase.from('tasks').insert({
-    title: form.title,
-    workspace_id: workspaceId,
-    project_id: form.project_id || null,
-    event_id: form.event_id || null,
-    status: form.status,
-    due_date: form.due_date || null,
-    assigned_to: form.assigned_to || null,
-  })
-  if (error) setError(error.message)
-  else {
-    setShowForm(false)
-    setForm({ title: '', project_id: '', event_id: '', status: 'todo', due_date: '', assigned_to: '' })
-    fetchTasks()
-  }
-  setSaving(false)
-}
 
   async function toggleStatus(task) {
     const nextStatus = task.status === 'todo' ? 'done' : 'todo'
@@ -106,14 +152,76 @@ async function loadWorkspace() {
     fetchTasks()
   }
 
-  const filteredTasks = tasks.filter(t => {
-    if (filter === 'all') return true
-    return t.status === filter
-  })
+  const visibleTasks = tasks
+    .filter(task => (filter === 'all' ? true : task.status === filter))
+    .sort((a, b) => compareTasks(a, b, sortBy))
 
-  const todoCount = tasks.filter(t => t.status === 'todo').length
-  const inProgressCount = tasks.filter(t => t.status === 'in-progress').length
-  const doneCount = tasks.filter(t => t.status === 'done').length
+  const activeTasks = visibleTasks.filter(task => task.status !== 'done')
+  const completedTasks = visibleTasks.filter(task => task.status === 'done')
+  const completedOpen = showCompleted || filter === 'done'
+
+  const todoCount = tasks.filter(task => task.status === 'todo').length
+  const inProgressCount = tasks.filter(task => task.status === 'in-progress').length
+  const doneCount = tasks.filter(task => task.status === 'done').length
+
+  function renderTaskRow(task) {
+    const sc = statusConfig[task.status] || statusConfig.todo
+    const isDone = task.status === 'done'
+    return (
+      <div key={task.id} style={styles.taskRow}>
+        <button
+          onClick={() => toggleStatus(task)}
+          style={{
+            ...styles.checkbox,
+            backgroundColor: isDone ? t.colors.success : t.colors.bgCard,
+            borderColor: isDone ? t.colors.success : t.colors.border,
+          }}
+        >
+          {isDone && <span style={styles.checkmark}>✓</span>}
+        </button>
+        <div style={styles.taskContent}>
+          <div style={{
+            ...styles.taskTitle,
+            textDecoration: isDone ? 'line-through' : 'none',
+            color: isDone ? t.colors.textTertiary : t.colors.textPrimary,
+          }}>
+            {task.title}
+          </div>
+          <div style={styles.taskMeta}>
+            {task.projects && (
+              <span style={styles.metaTag}>📋 {task.projects.title}</span>
+            )}
+            {task.start_date && (
+              <span style={styles.metaTag}>🗓 Starts {new Date(task.start_date).toLocaleDateString()}</span>
+            )}
+            {task.due_date && (
+              <span style={styles.metaTag}>🗓 Due {new Date(task.due_date).toLocaleDateString()}</span>
+            )}
+            {task.assigned_to && (
+              <span style={styles.metaTag}>👤 {task.assigned_to}</span>
+            )}
+          </div>
+        </div>
+        <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
+          {sc.label}
+        </div>
+        <button
+          onClick={() => openEdit(task)}
+          style={styles.editBtn}
+          title="Edit task"
+        >
+          ✎
+        </button>
+        <button
+          onClick={() => handleDelete(task.id)}
+          style={styles.deleteBtn}
+          title="Delete task"
+        >
+          ✕
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div style={styles.page}>
@@ -122,7 +230,7 @@ async function loadWorkspace() {
           <h2 style={styles.title}>Tasks</h2>
           <p style={styles.subtitle}>{tasks.length} total task{tasks.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={() => setShowForm(true)} style={styles.addBtn}>
+        <button onClick={openCreate} style={styles.addBtn}>
           + Add task
         </button>
       </div>
@@ -142,27 +250,38 @@ async function loadWorkspace() {
         </div>
       </div>
 
-      <div style={styles.filters}>
-        {['all', 'todo', 'in-progress', 'done'].map(f => {
-          const isActive = filter === f
-          return (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              style={{
-                ...styles.filterBtn,
-                ...(isActive ? styles.filterBtnActive : {})
-              }}
-            >
-              {f === 'all' ? 'All' : f === 'in-progress' ? 'In progress' : f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          )
-        })}
+      <div style={styles.toolbar}>
+        <div style={styles.filters}>
+          {['all', 'todo', 'in-progress', 'done'].map(f => {
+            const isActive = filter === f
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  ...styles.filterBtn,
+                  ...(isActive ? styles.filterBtnActive : {})
+                }}
+              >
+                {f === 'all' ? 'All' : f === 'in-progress' ? 'In progress' : f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            )
+          })}
+        </div>
+        <select
+          style={styles.sortSelect}
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+        >
+          {sortOptions.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
       </div>
 
       {showForm && (
         <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New task</h3>
+          <h3 style={styles.formTitle}>{editingId ? 'Edit task' : 'New task'}</h3>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -188,19 +307,6 @@ async function loadWorkspace() {
               </select>
             </div>
             <div style={styles.field}>
-              <label style={styles.label}>Event</label>
-              <select
-                style={styles.input}
-                value={form.event_id}
-                onChange={e => setForm({ ...form, event_id: e.target.value })}
-              >
-                <option value="">No event</option>
-                {events.map(e => (
-                  <option key={e.id} value={e.id}>{e.name}</option>
-                ))}
-              </select>
-            </div>
-            <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select
                 style={styles.input}
@@ -211,6 +317,15 @@ async function loadWorkspace() {
                 <option value="in-progress">In progress</option>
                 <option value="done">Done</option>
               </select>
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Start date</label>
+              <input
+                style={styles.input}
+                type="date"
+                value={form.start_date}
+                onChange={e => setForm({ ...form, start_date: e.target.value })}
+              />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Due date</label>
@@ -233,7 +348,7 @@ async function loadWorkspace() {
           </div>
           <div style={styles.formActions}>
             <button
-              onClick={() => { setShowForm(false); setError(null) }}
+              onClick={closeForm}
               style={styles.cancelBtn}
             >
               Cancel
@@ -243,7 +358,7 @@ async function loadWorkspace() {
               style={styles.saveBtn}
               disabled={saving || !form.title}
             >
-              {saving ? 'Saving...' : 'Save task'}
+              {saving ? 'Saving...' : editingId ? 'Save changes' : 'Save task'}
             </button>
           </div>
         </div>
@@ -251,7 +366,7 @@ async function loadWorkspace() {
 
       {loading ? (
         <div style={styles.empty}>Loading tasks...</div>
-      ) : filteredTasks.length === 0 ? (
+      ) : visibleTasks.length === 0 ? (
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>✅</div>
           <h3 style={styles.emptyTitle}>
@@ -261,67 +376,37 @@ async function loadWorkspace() {
             {filter === 'all' ? 'Add your first task to get started' : 'Try a different filter'}
           </p>
           {filter === 'all' && (
-            <button onClick={() => setShowForm(true)} style={styles.addBtn}>
+            <button onClick={openCreate} style={styles.addBtn}>
               + Add task
             </button>
           )}
         </div>
       ) : (
-        <div style={styles.taskList}>
-          {filteredTasks.map(task => {
-            const sc = statusConfig[task.status] || statusConfig.todo
-            const isDone = task.status === 'done'
-            return (
-              <div key={task.id} style={styles.taskRow}>
-                <button
-                  onClick={() => toggleStatus(task)}
-                  style={{
-                    ...styles.checkbox,
-                    backgroundColor: isDone ? t.colors.success : t.colors.bgCard,
-                    borderColor: isDone ? t.colors.success : t.colors.border,
-                  }}
-                >
-                  {isDone && <span style={styles.checkmark}>✓</span>}
-                </button>
-                <div style={styles.taskContent}>
-                  <div style={{
-                    ...styles.taskTitle,
-                    textDecoration: isDone ? 'line-through' : 'none',
-                    color: isDone ? t.colors.textTertiary : t.colors.textPrimary,
-                  }}>
-                    {task.title}
-                  </div>
-                  <div style={styles.taskMeta}>
-                    {task.projects && (
-                      <span style={styles.metaTag}>📋 {task.projects.title}</span>
-                    )}
-                    {task.events && (
-                      <span style={styles.metaTag}>📅 {task.events.name}</span>
-                    )}
-                    {task.due_date && (
-                      <span style={styles.metaTag}>
-                        🗓 {new Date(task.due_date).toLocaleDateString()}
-                      </span>
-                    )}
-                    {task.assigned_to && (
-                      <span style={styles.metaTag}>👤 {task.assigned_to}</span>
-                    )}
-                  </div>
+        <>
+          {activeTasks.length > 0 && (
+            <div style={styles.taskList}>
+              {activeTasks.map(renderTaskRow)}
+            </div>
+          )}
+
+          {completedTasks.length > 0 && (
+            <div style={styles.completedSection}>
+              <button
+                style={styles.completedHeader}
+                onClick={() => setShowCompleted(s => !s)}
+              >
+                <span style={styles.completedChevron}>{completedOpen ? '▾' : '▸'}</span>
+                Completed
+                <span style={styles.completedCount}>{completedTasks.length}</span>
+              </button>
+              {completedOpen && (
+                <div style={styles.taskList}>
+                  {completedTasks.map(renderTaskRow)}
                 </div>
-                <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
-                  {sc.label}
-                </div>
-                <button
-                  onClick={() => handleDelete(task.id)}
-                  style={styles.deleteBtn}
-                  title="Delete task"
-                >
-                  ✕
-                </button>
-              </div>
-            )
-          })}
-        </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -371,10 +456,17 @@ const styles = {
   },
   summaryLabel: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '500' },
   summaryValue: { fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
+  toolbar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '20px',
+    flexWrap: 'wrap',
+  },
   filters: {
     display: 'flex',
     gap: '8px',
-    marginBottom: '20px',
     flexWrap: 'wrap',
   },
   filterBtn: {
@@ -393,6 +485,17 @@ const styles = {
     borderColor: t.colors.primary,
     color: '#fff',
     fontWeight: '600',
+  },
+  sortSelect: {
+    padding: '7px 12px',
+    borderRadius: t.radius.md,
+    border: `1px solid ${t.colors.border}`,
+    backgroundColor: t.colors.bgCard,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSizes.sm,
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+    outline: 'none',
   },
   formCard: {
     backgroundColor: t.colors.bgCard,
@@ -505,6 +608,17 @@ const styles = {
     fontWeight: '500',
     flexShrink: 0,
   },
+  editBtn: {
+    background: 'none',
+    border: 'none',
+    color: t.colors.textTertiary,
+    fontSize: t.fontSizes.md,
+    cursor: 'pointer',
+    padding: '4px 8px',
+    flexShrink: 0,
+    borderRadius: t.radius.sm,
+    fontFamily: t.fonts.sans,
+  },
   deleteBtn: {
     background: 'none',
     border: 'none',
@@ -515,6 +629,40 @@ const styles = {
     flexShrink: 0,
     borderRadius: t.radius.sm,
     fontFamily: t.fonts.sans,
+  },
+  completedSection: {
+    marginTop: '20px',
+  },
+  completedHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    width: '100%',
+    background: 'none',
+    border: 'none',
+    padding: '8px 4px',
+    marginBottom: '8px',
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+    fontSize: t.fontSizes.sm,
+    fontWeight: '600',
+    color: t.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+  },
+  completedChevron: {
+    fontSize: t.fontSizes.sm,
+    color: t.colors.textTertiary,
+  },
+  completedCount: {
+    fontSize: t.fontSizes.xs,
+    fontWeight: '500',
+    color: t.colors.textTertiary,
+    backgroundColor: t.colors.bg,
+    borderRadius: t.radius.full,
+    padding: '2px 8px',
+    textTransform: 'none',
+    letterSpacing: 'normal',
   },
   emptyState: {
     display: 'flex',
