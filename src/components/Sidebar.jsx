@@ -299,7 +299,11 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
   )
 
   if (isDesktop) {
-    return sidebarContent
+    return (
+      <div style={{ position: 'sticky', top: 0, alignSelf: 'flex-start', height: '100vh', flexShrink: 0 }}>
+        {sidebarContent}
+      </div>
+    )
   }
 
   return (
