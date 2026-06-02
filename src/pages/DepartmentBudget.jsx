@@ -198,7 +198,7 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
         <div>
           <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Operations</div>
           <h1 style={{ fontFamily: t.fonts.heading, fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>
-            Department Budget
+            Annual Budget
           </h1>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

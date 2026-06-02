@@ -8,38 +8,34 @@ const allPages = [
   // Core
   { path: 'dashboard',         label: 'Dashboard',         icon: 'dashboard' },
   { path: 'allclients',        label: 'Clients',           icon: 'clients' },
-  { path: 'client-portal',     label: 'Client Portals',    icon: 'portal' },
   { path: 'projects',          label: 'Projects',          icon: 'projects' },
   { path: 'tasks',             label: 'Tasks',             icon: 'task-done' },
 
-// Toolkit
-  { path: 'packages',          label: 'Packages',          icon: 'book' },
-  { path: 'briefs',            label: 'Briefs',            icon: 'brief' },
-  { path: 'spark',             label: 'Spark',             icon: 'sparkles' },
-  { path: 'resources',         label: 'Resources',         icon: 'resources' },
   
+// Toolkit — Packages & Briefs hidden for now (kept for backup). Spark now lives under Creative Collective.
+  // { path: 'packages',          label: 'Packages',          icon: 'book' },
+  // { path: 'briefs',            label: 'Briefs',            icon: 'brief' },
+  { path: 'resources',         label: 'Resources',         icon: 'resources' },  
+ 
   // Operations
   { path: 'vendors',           label: 'Vendors',           icon: 'vendors' },
-  { path: 'department-budget', label: 'Dept. Budget',      icon: 'finance' },
-
-  // Finance
-  { path: 'finance-overview',  label: 'Finances',          icon: 'chart' },
-  { path: 'expenses',          label: 'Expenses',          icon: 'expense' },
-  { path: 'revenue',           label: 'Revenue',           icon: 'revenue' },
+  { path: 'department-budget', label: 'Budget',      icon: 'finance' },
 
   // Creative Collective
   { path: 'creative-strategy', label: 'Creative Strategy', icon: 'creative' },
   { path: 'campaign-tracking', label: 'Content Calendar',  icon: 'date' },
-  { path: 'assets',            label: 'Company Assets',    icon: 'image' },
+  { path: 'assets',            label: 'Creative Assets',    icon: 'image' },
+  { path: 'spark',             label: 'Spark',             icon: 'sparkles' },
 
   // Team
   { path: 'team-goals',        label: 'Goals',        icon: 'team-goals' },
   { path: 'pro-dev',           label: 'Pro Dev',           icon: 'star' },
-  { path: 'business-events',   label: 'Community Events',  icon: 'events' },
+  { path: 'business-events',   label: 'Events',  icon: 'events' },
 
-  // Community
-  { path: 'intranet',          label: 'Intranet',          icon: 'intranet' },
 ]
+
+const validPaths = new Set(allPages.map(p => p.path))
+
 
 export default function SubHeader({ currentPage, onNavigate, session }) {
   const [settings, setSettings] = useState(null)
@@ -60,7 +56,8 @@ export default function SubHeader({ currentPage, onNavigate, session }) {
   }
 
   async function toggleFavorite(path) {
-    const current = settings?.favorites || ['dashboard', 'allclients', 'projects']
+    const current = (settings?.favorites || ['dashboard', 'allclients', 'projects'])
+      .filter(p => validPaths.has(p))
     const updated = current.includes(path)
       ? current.filter(p => p !== path)
       : current.length < 5
@@ -80,9 +77,8 @@ export default function SubHeader({ currentPage, onNavigate, session }) {
     fetchSettings()
   }
 
-const favorites = settings?.favorites || ['dashboard', 'allclients', 'projects']
+const favorites = (settings?.favorites || ['dashboard', 'allclients', 'projects']).filter(p => validPaths.has(p))
 const favoritePages = allPages.filter(p => favorites.includes(p.path))
-
   return (
 <div style={{
       backgroundColor: '#FAFAF8',

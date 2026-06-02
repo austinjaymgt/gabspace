@@ -84,6 +84,7 @@ export default function EventBrainstorm({ workspaceId, session }) {
   const [editForm, setEditForm] = useState(emptyEditForm)
   const [editSaving, setEditSaving] = useState(false)
   const briefRef = useRef(null)
+  const SHOW_GENERATOR = false  // flip to true to re-enable the AI concept generator
 
   useEffect(() => { fetchConcepts() }, [workspaceId])
 
@@ -458,6 +459,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
       </div>
 
       {/* Brief form */}
+      {SHOW_GENERATOR && (
       <div ref={briefRef}>
         <div style={s.card}>
           <div style={s.sectionLabel}>Generate a Full Concept</div>
@@ -531,14 +533,15 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
           </button>
         </div>
       </div>
+      )}
 
-      {generating && (
+      {SHOW_GENERATOR && generating && (
         <div style={{ ...s.card, textAlign: 'center', padding: '48px', color: t.colors.textTertiary }}>
           Building your concept…
         </div>
       )}
 
-      {concept && !generating && (
+      {SHOW_GENERATOR && concept && !generating && (
         <div style={{ ...s.card, padding: 0, overflow: 'hidden' }}>
           <div style={{ background: '#1A1A2E', padding: '24px 28px' }}>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#fff', marginBottom: '4px', letterSpacing: '-0.3px' }}>{concept.conceptName}</div>

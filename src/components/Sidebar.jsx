@@ -7,12 +7,14 @@ import { Icon } from './Icon'
   
     {
     label: 'Client Management', icon: 'clients', path: 'allclients', children: [
-      { label: 'All Clients', path: 'allclients' },
-      { label: 'Tasks', path: 'tasks' },
+      { label: 'Clients', path: 'allclients' },
       { label: 'Projects', icon: 'projects', path: 'projects' },
-    ]
+      { label: 'Tasks', path: 'tasks' },
+  ]
   },
 
+  
+  /* Hidden for now — keeping for backup. Spark moved to Creative Collective.
   {
     label: 'Toolkit', icon: 'sparkles', path: 'packages', children: [
       { label: 'Packages', path: 'packages' },
@@ -20,25 +22,28 @@ import { Icon } from './Icon'
       { label: 'Spark', path: 'spark' },
     ]
   },
+  */
+
   {
     label: 'Operations', icon: 'operations', path: 'business', children: [
-      { label: 'Department Budget', path: 'department-budget' },
+      { label: 'Budget', path: 'department-budget' },
       { label: 'Vendors', path: 'vendors' },
       { label: 'Resources', path: 'resources' },
     ]
   },
   {
     label: 'Creative Collective', icon: 'creative', path: 'marketing', children: [
+      { label: 'Spark', path: 'spark' },
       { label: 'Creative Strategy', path: 'creative-strategy' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
-      { label: 'Company Assets', path: 'assets' },
+      { label: 'Creative Assets', path: 'assets' },
     ]
   },
   {
     label: 'Team', icon: 'team', path: 'team', children: [
       { label: ' Goals', path: 'team-goals' },
-      { label: 'Professional Dev', path: 'pro-dev' },
-      { label: 'Community Events', path: 'business-events' },
+      { label: 'Professional Development', path: 'pro-dev' },
+      { label: 'Events', path: 'business-events' },
     ]
   },
   {
@@ -62,7 +67,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Client Management', 'Operations', 'Creative Collective', 'Toolkit', 'Team'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Client Management', 'Operations', 'Creative Collective', 'Team'])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
