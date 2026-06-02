@@ -6,6 +6,7 @@ import RunOfShow from '../components/events/RunOfShow'
 import Staffing from '../components/events/Staffing'
 import ConceptForm from '../components/events/ConceptForm'
 import ProposalGenerator from '../components/events/ProposalGenerator'
+import Milestones from '../components/Milestones'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -66,6 +67,11 @@ function StatusBadge({ status, colorMap }) {
   )
 }
 
+// Format a stored date/timestamp for <input type="date"> (which only accepts yyyy-MM-dd)
+function toDateInput(value) {
+  return value ? String(value).slice(0, 10) : ''
+}
+
 // ── Main export ────────────────────────────────────────────────────────────
 
 export default function Projects({ workspaceId }) {
@@ -90,7 +96,7 @@ export default function Projects({ workspaceId }) {
 
   const [eventForm, setEventForm] = useState({
     title: '', client_id: '', event_status: 'inquiry',
-    event_date: '', venue: '', headcount: '',
+event_date: '', end_date: '', venue: '', headcount: '',
     budget: '', source: '', description: '',
   })
 
@@ -132,6 +138,7 @@ export default function Projects({ workspaceId }) {
           client_id: eventForm.client_id || null,
           event_status: eventForm.event_status || 'inquiry',
           event_date: eventForm.event_date || null,
+          end_date: eventForm.end_date || null,
           venue: eventForm.venue || null,
           headcount: eventForm.headcount ? parseInt(eventForm.headcount) : null,
           budget: eventForm.budget ? parseFloat(eventForm.budget) : null,
@@ -166,8 +173,7 @@ const { error: saveError } = await supabase.from('projects').insert({ ...payload
 
   function resetForms() {
     setProjectForm({ title: '', client_id: '', status: 'planning', project_type: '', start_date: '', end_date: '', budget: '', description: '' })
-    setEventForm({ title: '', client_id: '', event_status: 'inquiry', event_date: '', venue: '', headcount: '', budget: '', source: '', description: '' })
-  }
+setEventForm({ title: '', client_id: '', event_status: 'inquiry', event_date: '', end_date: '', venue: '', headcount: '', budget: '', source: '', description: '' })  }
 
   async function handleDelete(id) {
     if (!confirm(`Delete this ${isEvents ? 'event' : 'project'}?`)) return
@@ -372,9 +378,13 @@ const { error: saveError } = await supabase.from('projects').insert({ ...payload
                 {EVENT_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
             </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Event date</label>
+           <div style={styles.field}>
+              <label style={styles.label}>Start date</label>
               <input style={styles.input} type="date" value={eventForm.event_date} onChange={e => setEventForm({ ...eventForm, event_date: e.target.value })} />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>End date <span style={{ color: t.colors.textTertiary, fontWeight: '400' }}>(if multi-day)</span></label>
+              <input style={styles.input} type="date" value={eventForm.end_date} onChange={e => setEventForm({ ...eventForm, end_date: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Venue</label>
@@ -537,6 +547,7 @@ function ProjectDetail({ record, isEvent, onBack, onDelete, clients, workspaceId
           client_id: editForm.client_id || null,
           event_status: editForm.event_status || 'inquiry',
           event_date: editForm.event_date || null,
+          end_date: editForm.end_date || null,
           venue: editForm.venue || null,
           headcount: editForm.headcount ? parseInt(editForm.headcount) : null,
           budget: editForm.budget ? parseFloat(editForm.budget) : null,
@@ -600,13 +611,15 @@ if (taskError) { console.error('Task insert failed:', taskError); return }
   }
 
   async function addBudgetItem() {
-  const { data: newItem } = await supabase.from('project_budget_items').insert({
+  const { data: newItem, error } = await supabase.from('project_budget_items').insert({
     project_id: record.id,
+    workspace_id: workspaceId,          // ← was missing; RLS silently rejected the row
     category: budgetForm.category,
     projected_amount: budgetForm.projected_amount ? parseFloat(budgetForm.projected_amount) : null,
     actual_amount: budgetForm.actual_amount ? parseFloat(budgetForm.actual_amount) : null,
     notes: budgetForm.notes || null,
   }).select().single()
+  if (error) { console.error('Budget item insert failed:', error); return }   // ← so it won't fail silently next time
   if (newItem) setBudgetItems(prev => [...prev, newItem])
   setBudgetForm({ category: '', projected_amount: '', actual_amount: '', notes: '' })
   setShowBudgetForm(false)
@@ -705,8 +718,12 @@ fetchAll()
                   </select>
                 </div>
                 <div style={styles.field}>
-                  <label style={styles.label}>Event date</label>
-                  <input style={styles.input} type="date" value={editForm.event_date || ''} onChange={e => setEditForm({ ...editForm, event_date: e.target.value })} />
+                  <label style={styles.label}>Start date</label>
+                  <input style={styles.input} type="date" value={toDateInput(editForm.event_date)} onChange={e => setEditForm({ ...editForm, event_date: e.target.value })} />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>End date <span style={{ color: t.colors.textTertiary, fontWeight: '400' }}>(if multi-day)</span></label>
+                  <input style={styles.input} type="date" value={toDateInput(editForm.end_date)} onChange={e => setEditForm({ ...editForm, end_date: e.target.value })} />
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Venue</label>
@@ -884,7 +901,6 @@ fetchAll()
               {[
                 { key: 'planning', label: 'Planning' },
                 { key: 'concept', label: '💡 Concept' },
-                { key: 'campaign', label: '🎨 Campaign' },
               ].map(tab => (
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
                   flex: 1, padding: '8px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer',
@@ -907,11 +923,6 @@ fetchAll()
             />
           )}
 
-          {/* Campaign tab */}
-          {isEvent && activeTab === 'campaign' && (
-            <CampaignPanel projectId={record.id} workspaceId={workspaceId} />
-          )}
-
           {/* Event planning sections (events on planning tab only) */}
           {isEvent && activeTab === 'planning' && (
             <>
@@ -920,10 +931,13 @@ fetchAll()
                 eventTitle={data.title}
                 eventDate={data.event_date}
                 venue={data.venue}
+                workspaceId={workspaceId}
               />
-              <Staffing eventId={record.id} />
+              <Staffing eventId={record.id} workspaceId={workspaceId} />
             </>
           )}
+{/* Milestones (projects only) */}
+          {!isEvent && <Milestones projectId={record.id} workspaceId={workspaceId} />}
 
           {/* Budget */}
           <div style={{ marginBottom: '20px' }}>

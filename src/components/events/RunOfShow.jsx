@@ -4,7 +4,7 @@ import { supabase } from '../../supabaseClient'
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(String(dateStr).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function formatTime(timeStr) {
@@ -14,6 +14,11 @@ function formatTime(timeStr) {
   const ampm = hour >= 12 ? 'PM' : 'AM'
   const display = hour % 12 === 0 ? 12 : hour % 12
   return `${display}:${m} ${ampm}`
+}
+
+function sortItems(a, b) {
+  const d = (a.item_date || '').localeCompare(b.item_date || '')
+  return d !== 0 ? d : (a.start_time || '').localeCompare(b.start_time || '')
 }
 
 const btnStyles = {
@@ -28,18 +33,18 @@ const fStyles = {
   input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
 }
 
-export default function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
+export default function RunOfShow({ eventId, eventTitle, eventDate, venue, workspaceId }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ title: '', start_time: '', end_time: '', role_label: '', notes: '' })
+  const [form, setForm] = useState({ title: '', item_date: '', start_time: '', end_time: '', role_label: '', notes: '' })
   const [saving, setSaving] = useState(false)
 
   useEffect(() => { fetchItems() }, [])
 
   async function fetchItems() {
     setLoading(true)
-    const { data } = await supabase.from('run_of_show').select('*').eq('project_id', eventId).order('start_time', { ascending: true })
+    const { data } = await supabase.from('run_of_show').select('*').eq('project_id', eventId).order('item_date', { ascending: true, nullsFirst: true }).order('start_time', { ascending: true })
     setItems(data || [])
     setLoading(false)
   }
@@ -48,13 +53,20 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
     if (!form.title || !form.start_time || !form.end_time) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { data } = await supabase.from('run_of_show').insert({
-      project_id: eventId, user_id: user.id,
-      title: form.title, start_time: form.start_time, end_time: form.end_time,
-      role_label: form.role_label || null, notes: form.notes || null,
+    const { data: newItem, error } = await supabase.from('run_of_show').insert({
+      project_id: eventId,
+      workspace_id: workspaceId,
+      user_id: user.id,
+      title: form.title,
+      item_date: form.item_date || null,
+      start_time: form.start_time,
+      end_time: form.end_time,
+      role_label: form.role_label || null,
+      notes: form.notes || null,
     }).select().single()
-    if (data) setItems(prev => [...prev, data].sort((a, b) => a.start_time.localeCompare(b.start_time)))
-    setForm({ title: '', start_time: '', end_time: '', role_label: '', notes: '' })
+    if (error) { console.error('Run of show insert failed:', error); setSaving(false); return }
+    if (newItem) setItems(prev => [...prev, newItem].sort(sortItems))
+    setForm({ title: '', item_date: '', start_time: '', end_time: '', role_label: '', notes: '' })
     setShowForm(false)
     setSaving(false)
   }
@@ -69,7 +81,7 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
     const printWindow = window.open('', '_blank')
     const rows = items.map(item => `
       <tr>
-        <td style="padding:12px 16px;border-bottom:1px solid #f0f0eb;white-space:nowrap;font-weight:600;color:#7C5CBF;">${formatTime(item.start_time)} → ${formatTime(item.end_time)}</td>
+        <td style="padding:12px 16px;border-bottom:1px solid #f0f0eb;white-space:nowrap;font-weight:600;color:#7C5CBF;">${item.item_date ? `<div style="font-size:11px;color:#6B8F71;font-weight:700;margin-bottom:2px;">${formatDate(item.item_date)}</div>` : ''}${formatTime(item.start_time)} → ${formatTime(item.end_time)}</td>
         <td style="padding:12px 16px;border-bottom:1px solid #f0f0eb;font-weight:600;color:#1A1A2E;">${item.title}</td>
         <td style="padding:12px 16px;border-bottom:1px solid #f0f0eb;">${item.role_label ? `<span style="background:#F0EBF9;color:#7C5CBF;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">${item.role_label}</span>` : ''}</td>
         <td style="padding:12px 16px;border-bottom:1px solid #f0f0eb;color:#8585A0;font-size:13px;">${item.notes || ''}</td>
@@ -127,6 +139,10 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
               <label style={fStyles.label}>Item title *</label>
               <input style={fStyles.input} placeholder="e.g. Guest Arrival, Dinner Service, Speeches" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             </div>
+            <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
+              <label style={fStyles.label}>Day <span style={{ color: '#8585A0', fontWeight: '400' }}>(for multi-day events)</span></label>
+              <input style={fStyles.input} type="date" value={form.item_date} onChange={e => setForm({ ...form, item_date: e.target.value })} />
+            </div>
             <div style={fStyles.field}>
               <label style={fStyles.label}>Start time *</label>
               <input style={fStyles.input} type="time" value={form.start_time} onChange={e => setForm({ ...form, start_time: e.target.value })} />
@@ -169,7 +185,8 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
               <div style={{ flex: 1, paddingBottom: index < items.length - 1 ? '8px' : '0', paddingTop: '8px' }}>
                 <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: item.notes ? '4px' : '0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: item.notes ? '4px' : '0', flexWrap: 'wrap' }}>
+                      {item.item_date && <span style={{ fontSize: '11px', fontWeight: '600', backgroundColor: '#EAF2EA', color: '#6B8F71', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{formatDate(item.item_date)}</span>}
                       <span style={{ fontSize: '12px', fontWeight: '700', color: '#7C5CBF', whiteSpace: 'nowrap' }}>{formatTime(item.start_time)} → {formatTime(item.end_time)}</span>
                       {item.role_label && <span style={{ fontSize: '11px', fontWeight: '600', backgroundColor: '#F0EBF9', color: '#7C5CBF', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{item.role_label}</span>}
                     </div>

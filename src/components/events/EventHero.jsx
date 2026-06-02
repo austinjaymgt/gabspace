@@ -2,13 +2,26 @@
 // Dark hero header for event-type projects.
 // Reusable: pass in the event data + status color info.
 
+function parseLocal(dateStr) {
+  // Treat stored dates as calendar dates, not UTC instants — avoids the ET off-by-one.
+  return new Date(String(dateStr).slice(0, 10) + 'T00:00:00')
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return parseLocal(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatDateRange(start, end) {
+  if (!start) return '—'
+  if (!end || String(end).slice(0, 10) === String(start).slice(0, 10)) return formatDate(start)
+  const startShort = parseLocal(start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return `${startShort} → ${formatDate(end)}`
 }
 
 export default function EventHero({ data, statusColor }) {
   const es = statusColor || { bg: '#F0EBF9', color: '#7C5CBF', label: data.event_status }
+  const multiDay = data.end_date && String(data.end_date).slice(0, 10) !== String(data.event_date || '').slice(0, 10)
 
   return (
     <div style={{ backgroundColor: '#1A1A2E', borderRadius: '16px', padding: '32px', marginBottom: '20px', position: 'relative', overflow: 'hidden' }}>
@@ -29,7 +42,7 @@ export default function EventHero({ data, statusColor }) {
         </div>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           {[
-            data.event_date && { icon: '📅', label: 'Date', value: formatDate(data.event_date) },
+            data.event_date && { icon: '📅', label: multiDay ? 'Dates' : 'Date', value: formatDateRange(data.event_date, data.end_date) },
             data.venue && { icon: '📍', label: 'Venue', value: data.venue },
             data.headcount && { icon: '👥', label: 'Guests', value: `${data.headcount}` },
             data.budget && { icon: '💰', label: 'Budget', value: `$${parseFloat(data.budget).toLocaleString()}` },

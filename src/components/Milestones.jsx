@@ -1,0 +1,138 @@
+// src/components/Milestones.jsx
+import { useState, useEffect } from 'react'
+import { supabase } from '../supabaseClient'
+
+const STATUSES = {
+  upcoming:    { label: 'Upcoming',    color: '#8585A0', bg: '#F0EBF9' },
+  in_progress: { label: 'In progress', color: '#D4874E', bg: '#FBF0E6' },
+  done:        { label: 'Done',        color: '#1D9E75', bg: '#f0faf6' },
+}
+
+const btnStyles = {
+  primary: { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
+  secondary: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#3D3D5C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel: { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+}
+
+const fStyles = {
+  field: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
+  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return null
+  return new Date(String(dateStr).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+export default function Milestones({ projectId, workspaceId }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ title: '', target_date: '' })
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { fetchItems() }, [])
+
+  async function fetchItems() {
+    setLoading(true)
+    const { data } = await supabase.from('project_milestones').select('*').eq('project_id', projectId).order('target_date', { ascending: true, nullsFirst: false })
+    setItems(data || [])
+    setLoading(false)
+  }
+
+  async function addItem() {
+    if (!form.title.trim()) return
+    setSaving(true)
+    const { data: newItem, error } = await supabase.from('project_milestones').insert({
+      project_id: projectId,
+      workspace_id: workspaceId,
+      title: form.title,
+      target_date: form.target_date || null,
+    }).select().single()
+    if (error) { console.error('Milestone insert failed:', error); setSaving(false); return }
+    if (newItem) setItems(prev => [...prev, newItem])
+    setForm({ title: '', target_date: '' })
+    setShowForm(false)
+    setSaving(false)
+  }
+
+  async function updateStatus(id, status) {
+    await supabase.from('project_milestones').update({ status }).eq('id', id)
+    setItems(prev => prev.map(m => m.id === id ? { ...m, status } : m))
+  }
+
+  async function deleteItem(id) {
+    if (!confirm('Remove this milestone?')) return
+    await supabase.from('project_milestones').delete().eq('id', id)
+    setItems(prev => prev.filter(m => m.id !== id))
+  }
+
+  const done = items.filter(m => m.status === 'done').length
+
+  return (
+    <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Milestones</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {items.length > 0 && <span style={{ fontSize: '13px', color: '#8585A0' }}>{done}/{items.length} done</span>}
+          <button onClick={() => setShowForm(true)} style={btnStyles.secondary}>+ Add milestone</button>
+        </div>
+      </div>
+
+      {items.length > 0 && (
+        <div style={{ height: '4px', backgroundColor: '#f0f0eb', borderRadius: '2px', overflow: 'hidden', marginBottom: '16px' }}>
+          <div style={{ height: '100%', width: `${(done / items.length) * 100}%`, backgroundColor: '#7C5CBF', borderRadius: '2px', transition: 'width 0.3s' }} />
+        </div>
+      )}
+
+      {showForm && (
+        <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '12px' }}>
+            <div style={fStyles.field}>
+              <label style={fStyles.label}>Milestone *</label>
+              <input style={fStyles.input} placeholder="e.g. Deposit received, Venue booked, Final delivery" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+            </div>
+            <div style={fStyles.field}>
+              <label style={fStyles.label}>Target date</label>
+              <input style={fStyles.input} type="date" value={form.target_date} onChange={e => setForm({ ...form, target_date: e.target.value })} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <button onClick={() => setShowForm(false)} style={btnStyles.cancel}>Cancel</button>
+            <button onClick={addItem} disabled={saving || !form.title.trim()} style={btnStyles.primary}>{saving ? 'Adding...' : 'Add'}</button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '20px 0' }}>Loading...</p>
+      ) : items.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '32px 0' }}>
+          <div style={{ fontSize: '28px', marginBottom: '10px' }}>🎯</div>
+          <p style={{ fontSize: '13px', color: '#8585A0', margin: 0 }}>No milestones yet — map out the key moments</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {items.map(m => {
+            const st = STATUSES[m.status] || STATUSES.upcoming
+            return (
+              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E', textDecoration: m.status === 'done' ? 'line-through' : 'none' }}>{m.title}</span>
+                <span style={{ fontSize: '12px', color: m.target_date ? '#3D3D5C' : '#B0B0C0', fontStyle: m.target_date ? 'normal' : 'italic' }}>
+                  {formatDate(m.target_date) || 'No date'}
+                </span>
+                <select value={m.status} onChange={e => updateStatus(m.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="done">Done</option>
+                </select>
+                <button onClick={() => deleteItem(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#8585A0' }}>✕</button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}

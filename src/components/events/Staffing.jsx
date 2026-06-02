@@ -1,4 +1,3 @@
-// src/components/events/Staffing.jsx
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 
@@ -20,7 +19,7 @@ const fStyles = {
   input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
 }
 
-export default function Staffing({ eventId }) {
+export default function Staffing({ eventId, workspaceId }) {
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -40,12 +39,17 @@ export default function Staffing({ eventId }) {
     if (!form.role) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { data } = await supabase.from('event_staffing').insert({
-      project_id: eventId, user_id: user.id,
-      role: form.role, person_name: form.person_name || null,
-      status: form.status, notes: form.notes || null,
+    const { data: newStaff, error } = await supabase.from('event_staffing').insert({
+      project_id: eventId,
+      workspace_id: workspaceId,
+      user_id: user.id,
+      role: form.role,
+      person_name: form.person_name || null,
+      status: form.status,
+      notes: form.notes || null,
     }).select().single()
-    if (data) setStaff(prev => [...prev, data])
+    if (error) { console.error('Staffing insert failed:', error); setSaving(false); return }
+    if (newStaff) setStaff(prev => [...prev, newStaff])
     setForm({ role: '', person_name: '', status: 'needed', notes: '' })
     setShowForm(false)
     setSaving(false)

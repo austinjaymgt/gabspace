@@ -33,7 +33,7 @@ const allPages = [
   { path: 'assets',            label: 'Company Assets',    icon: 'image' },
 
   // Team
-  { path: 'team-goals',        label: 'Team Goals',        icon: 'team-goals' },
+  { path: 'team-goals',        label: 'Goals',        icon: 'team-goals' },
   { path: 'pro-dev',           label: 'Pro Dev',           icon: 'star' },
   { path: 'business-events',   label: 'Community Events',  icon: 'events' },
 

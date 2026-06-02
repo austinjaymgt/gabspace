@@ -36,7 +36,7 @@ import { Icon } from './Icon'
   },
   {
     label: 'Team', icon: 'team', path: 'team', children: [
-      { label: 'Team Goals', path: 'team-goals' },
+      { label: ' Goals', path: 'team-goals' },
       { label: 'Professional Dev', path: 'pro-dev' },
       { label: 'Community Events', path: 'business-events' },
     ]
