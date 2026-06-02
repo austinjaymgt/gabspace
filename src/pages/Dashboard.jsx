@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
-import Pixel from '../components/Pixel'
 
 // Local midnight today, for date-only (YYYY-MM-DD) comparisons
 function startOfToday() {
@@ -431,7 +430,6 @@ export default function Dashboard({ session, onNavigate }) {
   if (todayTasks.length) flags.push({ key: 'today', icon: 'task-done', label: `${todayTasks.length} due today`, color: '#D4874E', bg: '#FBF0E6', onClick: () => onNavigate('tasks') })
   if (eventsThisWeek) flags.push({ key: 'events', icon: 'events', label: `${eventsThisWeek} event${eventsThisWeek > 1 ? 's' : ''} this week`, color: '#4466cc', bg: '#EEF2FC' })
   const subline = flags.length > 0 ? "Here's what needs you today." : "You're all clear — nothing urgent today. 🎉"
-  const pixelMood = flags.length > 0 ? 'working' : 'celebrating'
 
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
@@ -439,7 +437,6 @@ export default function Dashboard({ session, onNavigate }) {
       {/* Welcome message + attention strip */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <Pixel mood={pixelMood} size={56} wave={flags.length === 0} sparkles={false} />
           <div>
             <h2 style={{ fontFamily: t.fonts.heading, fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
               {getGreeting()}, {settings?.first_name || session?.user?.email?.split('@')[0]} 👋
