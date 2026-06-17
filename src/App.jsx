@@ -67,7 +67,6 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
     script.async = true
     document.head.appendChild(script)
   }, [session])
-
   useEffect(() => {
     if (!session) return
     supabase
