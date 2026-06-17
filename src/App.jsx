@@ -59,14 +59,6 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
   }, [])
 
- useEffect(() => {
-    if (!session) return
-    const script = document.createElement('script')
-    script.src = 'https://cdn.feedbucket.app/assets/feedbucket.js'
-    script.setAttribute('data-feedbucket', 'YOUR_TOKEN')
-    script.async = true
-    document.head.appendChild(script)
-  }, [session])
   useEffect(() => {
     if (!session) return
     supabase
