@@ -1,470 +1,359 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 
-/*
- * Pixel — the Gabspace mascot.
- *
- * FOR YOUR APP:  import { Pixel } from './Pixel'
- *   <Pixel mood="idle" size={120} />
- *   <Pixel mood="celebrating" size={160} wave sparkles />
- *
- * The default export (PixelShowcase) is just an interactive preview/demo.
- * You can delete it once Pixel is wired in, or keep it around as a living
- * reference. The Pixel component itself has zero external dependencies.
- *
- * Props:
- *   mood      'idle' | 'working' | 'thinking' | 'celebrating'   (default 'idle')
- *   size      total height in px                                 (default 160)
- *   wave      boolean — right arm waves hello                    (default false)
- *   sparkles  boolean — celebratory sparkles                     (default auto-on for 'celebrating')
- *   animated  boolean — toggle all motion                        (default true)
- *   className / style — passed through to the wrapper
- *
- * Pixel reads on any surface, but his body is intentionally dark-tinted,
- * so the glowing eyes / feet / chart bars pop most on a darker panel.
- */
-
-const MOODS = {
-  idle: {
-    accent: '#7C5CBF',
-    accentLight: '#C9B9E8',
-    body: '#252140',
-    bodyHi: '#2E2950',
-    screen: '#1A1730',
-    eye: '#C9B9E8',
-    glow: 'rgba(124,92,191,0.75)',
-  },
-  working: {
-    accent: '#D4874E',
-    accentLight: '#F0C99A',
-    body: '#2E2518',
-    bodyHi: '#3A2E1E',
-    screen: '#221B11',
-    eye: '#F0C99A',
-    glow: 'rgba(212,135,78,0.75)',
-  },
-  thinking: {
-    accent: '#5B9BBF',
-    accentLight: '#A9D2E8',
-    body: '#1B2530',
-    bodyHi: '#223040',
-    screen: '#131C26',
-    eye: '#A9D2E8',
-    glow: 'rgba(91,155,191,0.75)',
-  },
-  celebrating: {
-    accent: '#6B8F71',
-    accentLight: '#8FD996',
-    body: '#182A20',
-    bodyHi: '#1F3528',
-    screen: '#112018',
-    eye: '#8FD996',
-    glow: 'rgba(107,143,113,0.8)',
-  },
+const COLORS = {
+  cosmicPlum:     '#7F5793',
+  electricOrchid: '#09ACEF',
+  tropicalGlow:   '#6EFFFF',
+  pacificBlue:    '#09ACEF',
+  graphiteGray:   '#414042',
+  lavenderBlue:   '#B8B0E8',
+  bodyDark:       '#5C3B6E',
+  white:          '#FFFFFF',
 }
 
-const BORDER = '1.5px solid rgba(255,255,255,0.07)'
+const themes = {
+  light: { shadowColor: 'rgba(127,87,147,0.25)', bgHint: 'transparent' },
+  dark:  { shadowColor: 'rgba(110,255,255,0.2)',  bgHint: 'transparent' },
+}
 
-// Base canvas the figure is drawn at; the whole thing scales from here.
-const BASE_W = 150
-const BASE_H = 210
-
-const KEYFRAMES = `
-@keyframes px-float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-@keyframes px-antenna { 0%,100%{transform:scale(1);   box-shadow:0 0 6px var(--px-glow)} 50%{transform:scale(1.18); box-shadow:0 0 15px var(--px-glow)} }
-@keyframes px-bar     { 0%,100%{transform:scaleY(0.45)} 50%{transform:scaleY(1)} }
-@keyframes px-blink   { 0%,90%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.08)} }
-@keyframes px-dot     { 0%,100%{opacity:0.25} 50%{opacity:1} }
-@keyframes px-arm-l   { 0%,100%{transform:rotate(5deg)}  50%{transform:rotate(-3deg)} }
-@keyframes px-arm-r   { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(3deg)} }
-@keyframes px-wave    { 0%,100%{transform:rotate(-32deg)} 50%{transform:rotate(12deg)} }
-@keyframes px-sparkle { 0%,100%{opacity:0; transform:scale(0.5) rotate(0deg)} 50%{opacity:1; transform:scale(1) rotate(20deg)} }
+const ANIMATIONS = `
+@keyframes gabi-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+@keyframes gabi-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.02); }
+}
+@keyframes gabi-sway {
+  0%, 100% { transform: translateX(0px) rotate(0deg); }
+  25%       { transform: translateX(-4px) rotate(-1.5deg); }
+  75%       { transform: translateX(4px) rotate(1.5deg); }
+}
+@keyframes gabi-bounce {
+  0%, 100% { transform: translateY(0px); }
+  35%       { transform: translateY(-10px); }
+  55%       { transform: translateY(-8px); }
+}
+@keyframes gabi-shadow-float {
+  0%, 100% { transform: scaleX(1); opacity: 0.55; }
+  50%       { transform: scaleX(0.82); opacity: 0.28; }
+}
+@keyframes gabi-shadow-sway {
+  0%, 100% { transform: scaleX(1) translateX(0); opacity: 0.55; }
+  25%       { transform: scaleX(0.94) translateX(-3px); opacity: 0.38; }
+  75%       { transform: scaleX(0.94) translateX(3px); opacity: 0.38; }
+}
+@keyframes gabi-shadow-bounce {
+  0%, 100% { transform: scaleX(1); opacity: 0.55; }
+  35%       { transform: scaleX(0.72); opacity: 0.18; }
+  55%       { transform: scaleX(0.76); opacity: 0.22; }
+}
 `
 
-function useKeyframes() {
-  useEffect(() => {
-    if (document.getElementById('pixel-keyframes')) return
-    const tag = document.createElement('style')
-    tag.id = 'pixel-keyframes'
-    tag.textContent = KEYFRAMES
-    document.head.appendChild(tag)
-  }, [])
+function injectAnimations() {
+  if (window.__gabiAnimationsInjected) return
+  window.__gabiAnimationsInjected = true
+  const style = document.createElement('style')
+  style.textContent = ANIMATIONS
+  document.head.appendChild(style)
 }
 
-export function Pixel({
-  mood = 'idle',
-  size = 160,
-  wave = false,
-  sparkles,
-  animated = true,
-  className,
-  style,
-}) {
-  useKeyframes()
+export default function Gabi({ mood = 'idle', size = 56, theme = 'light' }) {
+  useEffect(() => { injectAnimations() }, [])
 
-  const m = MOODS[mood] || MOODS.idle
-  const scale = size / BASE_H
-  const showSparkles = sparkles ?? mood === 'celebrating'
-  const anim = (a) => (animated ? a : 'none')
+  const th = themes[theme] || themes.light
+  const s = size
 
-  const limbBase = { background: m.body, border: BORDER, transition: 'all 0.45s ease' }
+  // --- Proportions (all relative to total height `s`) ---
+  // Head: wide boxy rectangle, dominant element
+  const headH     = s * 0.38
+  const headW     = s * 0.64
+  const headRx    = headH * 0.22
+  const borderPx  = Math.max(1.5, s * 0.028)   // gradient border thickness
+
+  // Body: smaller, sits below head with overlap
+  const bodyH     = s * 0.40
+  const bodyW     = s * 0.50
+  const bodyRx    = bodyW * 0.22
+  const overlap   = s * 0.05
+
+  // Arms
+  const armW      = s * 0.085
+  const armH      = s * 0.18
+  const armRx     = armW * 0.48
+
+  // Total canvas dimensions
+  const totalW    = headW + armW * 2 + s * 0.02
+  const totalH    = s
+
+  const cx = totalW / 2
+
+  // Y layout (top to bottom)
+  const headY     = s * 0.02
+  const headX     = cx - headW / 2
+  const bodyY     = headY + headH - overlap
+  const bodyX     = cx - bodyW / 2
+  const armY      = bodyY + bodyH * 0.08
+  const leftArmX  = bodyX - armW + s * 0.008
+  const rightArmX = bodyX + bodyW - s * 0.008
+  const shadowCY  = totalH - s * 0.025
+  const shadowRX  = bodyW * 0.48
+  const shadowRY  = s * 0.032
+
+  // Face center (in head)
+  const faceCX    = cx
+  const faceCY    = headY + headH * 0.52
+
+  // Eye geometry
+  const eyeSpan   = headW * 0.20
+  const leftEyeX  = faceCX - eyeSpan
+  const rightEyeX = faceCX + eyeSpan
+  const eyeY      = faceCY - headH * 0.10
+  const eyeW      = headW * 0.12
+  const eyeH      = headH * 0.16
+  const eyeRx     = eyeH * 0.25
+  const eyeThk    = Math.max(1.5, s * 0.032)
+
+  // Mouth geometry
+  const mouthY    = faceCY + headH * 0.18
+  const mouthW    = headW * 0.18
+
+  // Chest "G" panel
+  const panelW    = bodyW * 0.68
+  const panelH    = bodyH * 0.58
+  const panelX    = cx - panelW / 2
+  const panelY    = bodyY + bodyH * 0.18
+  const gSize     = panelH * 0.62
+
+  // Unique gradient IDs per instance (mood differentiates to avoid conflicts)
+  const uid       = `gabi_${mood}`
+  const sigGradId = `${uid}_sig`
+  const headFillId= `${uid}_hf`
+  const shadowId  = `${uid}_sh`
+
+  const moodAnims = {
+    idle:        { body: 'gabi-float 3s ease-in-out infinite',   shadow: 'gabi-shadow-float 3s ease-in-out infinite' },
+    working:     { body: 'gabi-pulse 1.5s ease-in-out infinite', shadow: 'none' },
+    thinking:    { body: 'gabi-sway 2.5s ease-in-out infinite',  shadow: 'gabi-shadow-sway 2.5s ease-in-out infinite' },
+    celebrating: { body: 'gabi-bounce 0.6s ease-in-out infinite',shadow: 'gabi-shadow-bounce 0.6s ease-in-out infinite' },
+  }
+  const anim = moodAnims[mood] || moodAnims.idle
+
+  // --- Eye renderers ---
+  function Eyes() {
+    if (mood === 'idle' || mood === 'celebrating') {
+      // ^^ caret shapes — celebrating is slightly larger
+      const scale   = mood === 'celebrating' ? 1.25 : 1
+      const cW      = eyeW * 0.85 * scale
+      const cH      = eyeH * 0.75 * scale
+      const thick   = eyeThk * (mood === 'celebrating' ? 1.1 : 1)
+      return (
+        <>
+          <polyline
+            points={`${leftEyeX - cW},${eyeY + cH * 0.45} ${leftEyeX},${eyeY - cH * 0.55} ${leftEyeX + cW},${eyeY + cH * 0.45}`}
+            fill="none" stroke={COLORS.white} strokeWidth={thick}
+            strokeLinecap="round" strokeLinejoin="round"
+          />
+          <polyline
+            points={`${rightEyeX - cW},${eyeY + cH * 0.45} ${rightEyeX},${eyeY - cH * 0.55} ${rightEyeX + cW},${eyeY + cH * 0.45}`}
+            fill="none" stroke={COLORS.white} strokeWidth={thick}
+            strokeLinecap="round" strokeLinejoin="round"
+          />
+        </>
+      )
+    }
+
+    if (mood === 'working') {
+      // Flat horizontal bars angled inward — determined brow
+      const barW  = eyeW * 1.0
+      const tilt  = eyeH * 0.32
+      const thick = eyeThk * 1.4
+      return (
+        <>
+          <line
+            x1={leftEyeX - barW * 0.5} y1={eyeY + tilt}
+            x2={leftEyeX + barW * 0.5} y2={eyeY - tilt}
+            stroke={COLORS.white} strokeWidth={thick} strokeLinecap="round"
+          />
+          <line
+            x1={rightEyeX - barW * 0.5} y1={eyeY - tilt}
+            x2={rightEyeX + barW * 0.5} y2={eyeY + tilt}
+            stroke={COLORS.white} strokeWidth={thick} strokeLinecap="round"
+          />
+        </>
+      )
+    }
+
+    if (mood === 'thinking') {
+      // ╮╭ droopy downward arcs — pensive
+      const r    = eyeW * 0.9
+      const thick = eyeThk
+      return (
+        <>
+          <path
+            d={`M ${leftEyeX - r},${eyeY - r * 0.25} Q ${leftEyeX},${eyeY + r * 0.75} ${leftEyeX + r},${eyeY - r * 0.25}`}
+            fill="none" stroke={COLORS.white} strokeWidth={thick} strokeLinecap="round"
+          />
+          <path
+            d={`M ${rightEyeX - r},${eyeY - r * 0.25} Q ${rightEyeX},${eyeY + r * 0.75} ${rightEyeX + r},${eyeY - r * 0.25}`}
+            fill="none" stroke={COLORS.white} strokeWidth={thick} strokeLinecap="round"
+          />
+        </>
+      )
+    }
+
+    return null
+  }
+
+  function Mouth() {
+    if (mood === 'idle') {
+      return (
+        <path
+          d={`M ${faceCX - mouthW},${mouthY} Q ${faceCX},${mouthY + mouthW * 0.75} ${faceCX + mouthW},${mouthY}`}
+          fill="none" stroke={COLORS.white} strokeWidth={eyeThk * 0.85} strokeLinecap="round"
+        />
+      )
+    }
+    if (mood === 'celebrating') {
+      const bw = mouthW * 1.5
+      return (
+        <path
+          d={`M ${faceCX - bw},${mouthY} Q ${faceCX},${mouthY + bw * 1.05} ${faceCX + bw},${mouthY}`}
+          fill="none" stroke={COLORS.white} strokeWidth={eyeThk * 0.95} strokeLinecap="round"
+        />
+      )
+    }
+    if (mood === 'working') {
+      return (
+        <line
+          x1={faceCX - mouthW * 0.65} y1={mouthY}
+          x2={faceCX + mouthW * 0.65} y2={mouthY}
+          stroke={COLORS.white} strokeWidth={eyeThk * 0.85} strokeLinecap="round"
+        />
+      )
+    }
+    if (mood === 'thinking') {
+      return (
+        <line
+          x1={faceCX - mouthW * 0.55} y1={mouthY - s * 0.008}
+          x2={faceCX + mouthW * 0.55} y2={mouthY + s * 0.012}
+          stroke={COLORS.white} strokeWidth={eyeThk * 0.85} strokeLinecap="round"
+        />
+      )
+    }
+    return null
+  }
 
   return (
-    <div
-      className={className}
-      style={{
-        width: BASE_W * scale,
-        height: BASE_H * scale,
-        position: 'relative',
-        // expose mood glow to the keyframes
-        '--px-glow': m.glow,
-        ...style,
-      }}
+    <svg
+      width={totalW}
+      height={totalH}
+      viewBox={`0 0 ${totalW} ${totalH}`}
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ overflow: 'visible', display: 'block' }}
     >
-      <div
+      <defs>
+        {/* Signature gradient: Electric Orchid → Tropical Glow → Pacific Blue */}
+        <linearGradient id={sigGradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stopColor={COLORS.electricOrchid} />
+          <stop offset="50%"  stopColor={COLORS.tropicalGlow} />
+          <stop offset="100%" stopColor={COLORS.pacificBlue} />
+        </linearGradient>
+
+        {/* Head fill: Cosmic Plum top → lavender/blue bottom */}
+        <linearGradient id={headFillId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor={COLORS.cosmicPlum} />
+          <stop offset="100%" stopColor={COLORS.lavenderBlue} />
+        </linearGradient>
+
+        {/* Drop shadow gradient */}
+        <radialGradient id={shadowId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor={th.shadowColor} stopOpacity="1" />
+          <stop offset="100%" stopColor={th.shadowColor} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Drop shadow — animates independently */}
+      <ellipse
+        cx={cx} cy={shadowCY}
+        rx={shadowRX} ry={shadowRY}
+        fill={`url(#${shadowId})`}
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: BASE_W,
-          height: BASE_H,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          animation: anim('px-float 3.4s ease-in-out infinite'),
+          transformOrigin: `${cx}px ${shadowCY}px`,
+          animation: anim.shadow,
         }}
-      >
-        {/* Antenna */}
-        <div style={{ width: 4, height: 22, background: m.body, borderRadius: 2 }} />
-        <div
-          style={{
-            width: 13,
-            height: 13,
-            borderRadius: '50%',
-            background: m.accent,
-            marginTop: -2,
-            marginBottom: 4,
-            animation: anim('px-antenna 2.2s ease-in-out infinite'),
-          }}
+      />
+
+      {/* Main animated group */}
+      <g style={{ transformOrigin: `${cx}px ${totalH * 0.45}px`, animation: anim.body }}>
+
+        {/* Body */}
+        <rect
+          x={bodyX} y={bodyY}
+          width={bodyW} height={bodyH}
+          rx={bodyRx} ry={bodyRx}
+          fill={COLORS.bodyDark}
         />
 
-        {/* Head */}
-        <div style={{ position: 'relative' }}>
-          {/* ears */}
-          <div style={{ ...limbBase, position: 'absolute', left: -8, top: 26, width: 11, height: 26, borderRadius: 5 }} />
-          <div style={{ ...limbBase, position: 'absolute', right: -8, top: 26, width: 11, height: 26, borderRadius: 5 }} />
-          {/* head shell */}
-          <div
-            style={{
-              width: 96,
-              height: 78,
-              borderRadius: 24,
-              background: `linear-gradient(160deg, ${m.bodyHi}, ${m.body})`,
-              border: BORDER,
-              transition: 'all 0.45s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-            }}
-          >
-            {/* visor */}
-            <div
-              style={{
-                width: 70,
-                height: 34,
-                borderRadius: 13,
-                background: m.screen,
-                border: '1px solid rgba(255,255,255,0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 14,
-                transition: 'all 0.45s ease',
-              }}
-            >
-              {[0, 1].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: 15,
-                    height: 15,
-                    borderRadius: 5,
-                    background: m.eye,
-                    boxShadow: `0 0 8px ${m.glow}`,
-                    transition: 'all 0.45s ease',
-                    animation: anim('px-blink 4.5s ease-in-out infinite'),
-                  }}
-                />
-              ))}
-            </div>
-            {/* cheeks — the "warm" in techy-but-warm */}
-            <div style={{ display: 'flex', gap: 44 }}>
-              {[0, 1].map((i) => (
-                <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: m.accent, opacity: 0.55, transition: 'all 0.45s ease' }} />
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Left arm nub */}
+        <rect
+          x={leftArmX} y={armY}
+          width={armW} height={armH}
+          rx={armRx} ry={armRx}
+          fill={COLORS.bodyDark}
+        />
 
-        {/* neck */}
-        <div style={{ width: 18, height: 7, background: m.body, borderRadius: 3, marginTop: 2 }} />
+        {/* Right arm nub */}
+        <rect
+          x={rightArmX} y={armY}
+          width={armW} height={armH}
+          rx={armRx} ry={armRx}
+          fill={COLORS.bodyDark}
+        />
 
-        {/* Torso + arms */}
-        <div style={{ position: 'relative', marginTop: 1 }}>
-          {/* left arm */}
-          <div
-            style={{
-              ...limbBase,
-              position: 'absolute',
-              left: -20,
-              top: 6,
-              width: 15,
-              height: 46,
-              borderRadius: 8,
-              transformOrigin: 'top center',
-              animation: anim('px-arm-l 3s ease-in-out infinite'),
-            }}
-          >
-            <div style={{ width: 13, height: 13, borderRadius: 4, background: m.bodyHi, border: BORDER, position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)' }} />
-          </div>
-          {/* right arm (waves) */}
-          <div
-            style={{
-              ...limbBase,
-              position: 'absolute',
-              right: -20,
-              top: 6,
-              width: 15,
-              height: 46,
-              borderRadius: 8,
-              transformOrigin: 'top center',
-              animation: anim(wave ? 'px-wave 0.6s ease-in-out infinite' : 'px-arm-r 3s ease-in-out infinite'),
-            }}
-          >
-            <div style={{ width: 13, height: 13, borderRadius: 4, background: m.bodyHi, border: BORDER, position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)' }} />
-          </div>
+        {/* Chest panel — signature gradient */}
+        <rect
+          x={panelX} y={panelY}
+          width={panelW} height={panelH}
+          rx={panelH * 0.22} ry={panelH * 0.22}
+          fill={`url(#${sigGradId})`}
+          opacity={0.9}
+        />
 
-          {/* torso shell */}
-          <div
-            style={{
-              width: 84,
-              height: 82,
-              borderRadius: 20,
-              background: `linear-gradient(160deg, ${m.bodyHi}, ${m.body})`,
-              border: BORDER,
-              transition: 'all 0.45s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {/* chest dashboard */}
-            <div
-              style={{
-                position: 'relative',
-                width: 60,
-                height: 56,
-                borderRadius: 11,
-                background: m.screen,
-                border: '1px solid rgba(255,255,255,0.05)',
-                padding: '8px 7px 7px',
-                transition: 'all 0.45s ease',
-              }}
-            >
-              {/* status dots */}
-              <div style={{ position: 'absolute', top: 5, left: 7, display: 'flex', gap: 3 }}>
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: '50%',
-                      background: m.accentLight,
-                      animation: anim(`px-dot 1.4s ease-in-out infinite ${i * 0.3}s`),
-                    }}
-                  />
-                ))}
-              </div>
-              {/* animated bar chart */}
-              <div style={{ position: 'absolute', bottom: 7, left: 7, right: 7, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 30 }}>
-                {[0.55, 0.85, 0.4, 1, 0.7].map((h, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: 6,
-                      height: 30 * h,
-                      borderRadius: '3px 3px 1px 1px',
-                      background: i % 2 ? m.accentLight : m.accent,
-                      transformOrigin: 'bottom',
-                      transition: 'all 0.45s ease',
-                      animation: anim(`px-bar 1.8s ease-in-out infinite ${i * 0.25}s`),
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Legs + feet */}
-        <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
-          {[0, 1].map((i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: 18, height: 22, borderRadius: 6, ...limbBase }} />
-              <div style={{ width: 28, height: 11, borderRadius: 6, background: m.accent, marginTop: -2, transition: 'all 0.45s ease' }} />
-            </div>
-          ))}
-        </div>
-
-        {/* Sparkles */}
-        {showSparkles && (
-          <>
-            {[
-              { top: 8, left: -2, s: 14, d: 0 },
-              { top: 30, right: -4, s: 10, d: 0.4 },
-              { bottom: 40, left: -6, s: 11, d: 0.8 },
-            ].map((sp, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  top: sp.top,
-                  bottom: sp.bottom,
-                  left: sp.left,
-                  right: sp.right,
-                  color: m.accentLight,
-                  fontSize: sp.s,
-                  animation: anim(`px-sparkle 1.6s ease-in-out infinite ${sp.d}s`),
-                }}
-              >
-                ✦
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
-export default Pixel
-
-/* ------------------------------------------------------------------ *
- *  Interactive preview — safe to delete once Pixel is wired into app  *
- * ------------------------------------------------------------------ */
-
-const PILLS = [
-  { key: 'idle', label: 'Idle', sub: 'violet', caption: '"Ready when you are."' },
-  { key: 'working', label: 'Working', sub: 'amber', caption: '"On it — crunching the numbers."' },
-  { key: 'thinking', label: 'Thinking', sub: 'blue', caption: '"Hmm, let me figure this out for you…"' },
-  { key: 'celebrating', label: 'Celebrating', sub: 'sage', caption: '"Look at you go! Another one in the books. 🎉"' },
-]
-
-function PixelShowcase() {
-  const [mood, setMood] = useState('idle')
-  const active = PILLS.find((p) => p.key === mood)
-  const accent = MOODS[mood].accent
-
-  return (
-    <div
-      style={{
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-        background: '#F7F5F0',
-        minHeight: '100%',
-        padding: 32,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 24,
-      }}
-    >
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=DM+Sans:ital,wght@0,400;0,500;1,300&display=swap');"}</style>
-
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 30, color: '#1A1A2E', letterSpacing: '-0.02em' }}>
-          meet pixel
-        </div>
-        <div style={{ fontStyle: 'italic', fontWeight: 300, color: '#8585A0', fontSize: 14, marginTop: 4 }}>
-          your gabspace companion — click a mood
-        </div>
-      </div>
-
-      {/* dark studio panel so the glow reads */}
-      <div
-        style={{
-          background: '#1A1A2E',
-          borderRadius: 24,
-          padding: '36px 56px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 18,
-          boxShadow: '0 24px 60px rgba(26,26,46,0.25)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ position: 'absolute', width: 220, height: 220, borderRadius: '50%', background: accent, opacity: 0.14, top: -70, right: -70, transition: 'background 0.45s ease' }} />
-        <Pixel mood={mood} size={200} wave={mood === 'idle' || mood === 'celebrating'} sparkles={mood === 'celebrating'} />
-        <div
-          style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'rgba(255,255,255,0.85)',
-            fontStyle: 'italic',
-            fontWeight: 300,
-            fontSize: 13,
-            padding: '8px 16px',
-            borderRadius: 100,
-            position: 'relative',
-            transition: 'all 0.3s ease',
-          }}
+        {/* Chest "G" */}
+        <text
+          x={cx} y={panelY + panelH * 0.73}
+          textAnchor="middle"
+          fontFamily="'Georgia', 'Times New Roman', serif"
+          fontWeight="bold"
+          fontSize={gSize}
+          fill={COLORS.white}
+          opacity={0.95}
         >
-          {active.caption}
-        </div>
-      </div>
+          G
+        </text>
 
-      {/* mood pills */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {PILLS.map((p) => {
-          const on = p.key === mood
-          const c = MOODS[p.key].accent
-          return (
-            <button
-              key={p.key}
-              onClick={() => setMood(p.key)}
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 500,
-                fontSize: 13,
-                cursor: 'pointer',
-                padding: '9px 18px',
-                borderRadius: 100,
-                border: `2px solid ${on ? c : 'rgba(0,0,0,0.12)'}`,
-                background: on ? c : 'transparent',
-                color: on ? '#fff' : '#3D3D5C',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: on ? '#fff' : c }} />
-              {p.label}
-            </button>
-          )
-        })}
-      </div>
+        {/* Head gradient border — slightly larger rect in signature gradient */}
+        <rect
+          x={headX - borderPx} y={headY - borderPx}
+          width={headW + borderPx * 2} height={headH + borderPx * 2}
+          rx={headRx + borderPx} ry={headRx + borderPx}
+          fill={`url(#${sigGradId})`}
+        />
 
-      <div style={{ fontSize: 12, color: '#8585A0', maxWidth: 360, textAlign: 'center', lineHeight: 1.6 }}>
-        Drop-in usage: <code style={{ background: '#EFEDE7', padding: '2px 6px', borderRadius: 5 }}>{'<Pixel mood="idle" size={120} />'}</code>
-      </div>
-    </div>
+        {/* Head fill on top of border */}
+        <rect
+          x={headX} y={headY}
+          width={headW} height={headH}
+          rx={headRx} ry={headRx}
+          fill={`url(#${headFillId})`}
+        />
+
+        {/* Face */}
+        <Eyes />
+        <Mouth />
+      </g>
+    </svg>
   )
 }
-
-export { PixelShowcase }

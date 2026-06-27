@@ -43,6 +43,7 @@ export default function BusinessEvents({ workspaceId }) {
   }
 
   async function handleSave() {
+    if (!form.name.trim()) { setError('Event name is required.'); return }
     setSaving(true)
     setError(null)
     const { data: { user } } = await supabase.auth.getUser()
@@ -105,15 +106,15 @@ export default function BusinessEvents({ workspaceId }) {
   }
 
   return (
-    <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+    <div style={{ padding: '32px 40px', fontFamily: t.fonts.sans, maxWidth: '1100px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: 0 }}>
-            Business Events
-          </h2>
-          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' }}>
-            Track events you attend and host to grow your business
-          </p>
+          <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>
+            Team
+          </div>
+          <h1 style={{ fontFamily: t.fonts.heading, fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>
+            Networking
+          </h1>
         </div>
         <button onClick={() => setShowForm(true)} style={styles.addBtn}>
           + Add Event
@@ -121,24 +122,23 @@ export default function BusinessEvents({ workspaceId }) {
       </div>
 
       {/* KPI row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '28px' }}>
         {[
-          { label: 'Events attended', value: completedEvents, icon: '🎯', color: t.colors.primary },
-          { label: 'Total cost', value: `$${totalCost.toLocaleString()}`, icon: '💸', color: '#cc3333' },
-{ label: 'Leads generated', value: totalLeads, icon: '🤝', color: t.colors.primary },
-          { label: 'Revenue attributed', value: `$${totalRevenue.toLocaleString()}`, icon: '💵', color: '#10B981' },
+          { label: 'Events Attended', value: completedEvents },
+          { label: 'Total Cost', value: `$${totalCost.toLocaleString()}` },
+          { label: 'Leads Generated', value: totalLeads },
+          { label: 'Revenue Attributed', value: `$${totalRevenue.toLocaleString()}` },
         ].map(card => (
           <div key={card.label} style={{
             backgroundColor: t.colors.bgCard,
             borderRadius: t.radius.lg,
-            padding: '20px',
+            padding: '20px 22px',
             border: `1px solid ${t.colors.borderLight}`,
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{card.label}</span>
-              <span style={{ fontSize: '18px' }}>{card.icon}</span>
+            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.06em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '10px' }}>
+              {card.label}
             </div>
-            <div style={{ fontSize: '28px', fontWeight: '700', color: card.color, letterSpacing: '-0.5px' }}>
+            <div style={{ fontSize: '26px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.5px', fontFamily: t.fonts.heading }}>
               {card.value}
             </div>
           </div>
@@ -168,33 +168,11 @@ export default function BusinessEvents({ workspaceId }) {
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: '6px', marginLeft: '8px' }}>
-          {['all', 'attending', 'hosting'].map(type => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: t.radius.full,
-                border: `1px solid ${filterType === type ? '#8B5CF6' : t.colors.borderLight}`,
-                backgroundColor: filterType === type ? '#F5F3FF' : '#fff',
-                color: filterType === type ? '#8B5CF6' : t.colors.textSecondary,
-                fontSize: t.fontSizes.sm,
-                fontWeight: filterType === type ? '600' : '400',
-                cursor: 'pointer',
-                fontFamily: t.fonts.sans,
-              }}
-            >
-              {type === 'all' ? 'All types' : type.charAt(0).toUpperCase() + type.slice(1)}
-            </button>
-          ))}
-        </div>
       </div>
 
       {showForm && (
         <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Business Event</h3>
-          {error && <div style={styles.error}>{error}</div>}
+          <h3 style={styles.formTitle}>New Networking Event</h3>
 
           <div style={{ ...styles.formGrid, marginBottom: '16px' }}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -206,13 +184,6 @@ export default function BusinessEvents({ workspaceId }) {
               <select style={styles.input} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                 <option value="">Select type</option>
                 {eventTypes.map(type => <option key={type} value={type}>{type}</option>)}
-              </select>
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>I am</label>
-              <select style={styles.input} value={form.event_type} onChange={e => setForm({ ...form, event_type: e.target.value })}>
-                <option value="attending">Attending</option>
-                <option value="hosting">Hosting</option>
               </select>
             </div>
             <div style={styles.field}>
@@ -275,9 +246,10 @@ export default function BusinessEvents({ workspaceId }) {
             />
           </div>
 
+          {error && <div style={{ ...styles.error, marginBottom: '12px' }}>{error}</div>}
           <div style={styles.formActions}>
             <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
-            <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.name}>
+            <button onClick={handleSave} style={styles.saveBtn} disabled={saving}>
               {saving ? 'Saving...' : 'Save Event'}
             </button>
           </div>
@@ -315,9 +287,6 @@ export default function BusinessEvents({ workspaceId }) {
               <div key={event.id} style={styles.tableRow} onClick={() => setSelectedEvent(event)}>
                 <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
                   <div>{event.name}</div>
-                  <div style={{ fontSize: t.fontSizes.xs, color: '#8B5CF6', fontWeight: '500', marginTop: '2px' }}>
-                    {event.event_type === 'hosting' ? '🎤 Hosting' : '🎟 Attending'}
-                  </div>
                 </span>
                 <span style={styles.tableCell}>{event.type || '—'}</span>
                 <span style={styles.tableCell}>
@@ -448,7 +417,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <button onClick={onBack} style={styles.backBtn}>← Back to events</button>
+        <button onClick={onBack} style={styles.backBtn}>← Back to networking</button>
         <div style={{ display: 'flex', gap: '8px' }}>
           {!editMode && <button onClick={() => setEditMode(true)} style={styles.editBtn}>Edit</button>}
           <button onClick={() => onDelete(event.id)} style={styles.deleteBtn}>Delete</button>
@@ -468,13 +437,6 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
               <select style={styles.input} value={editForm.type || ''} onChange={e => setEditForm({ ...editForm, type: e.target.value })}>
                 <option value="">Select type</option>
                 {eventTypes.map(type => <option key={type} value={type}>{type}</option>)}
-              </select>
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>I am</label>
-              <select style={styles.input} value={editForm.event_type} onChange={e => setEditForm({ ...editForm, event_type: e.target.value })}>
-                <option value="attending">Attending</option>
-                <option value="hosting">Hosting</option>
               </select>
             </div>
             <div style={styles.field}>
@@ -531,9 +493,6 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                 </h1>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   {data.type && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{data.type}</span>}
-                  <span style={{ fontSize: t.fontSizes.sm, color: '#8B5CF6', fontWeight: '500' }}>
-                    {data.event_type === 'hosting' ? '🎤 Hosting' : '🎟 Attending'}
-                  </span>
                 </div>
               </div>
               <div style={{ display: 'inline-block', padding: '5px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '600', backgroundColor: sc.bg, color: sc.color }}>

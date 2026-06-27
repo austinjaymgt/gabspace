@@ -10,8 +10,8 @@ const allPages = [
   { path: 'allclients',        label: 'Clients',           icon: 'clients' },
   { path: 'projects',          label: 'Projects',          icon: 'projects' },
   { path: 'tasks',             label: 'Tasks',             icon: 'task-done' },
+  { path: 'client-portal-manager', label: 'Portals',       icon: 'portal' },
 
-  
 // Toolkit — Packages & Briefs hidden for now (kept for backup). Spark now lives under Creative Collective.
   // { path: 'packages',          label: 'Packages',          icon: 'book' },
   // { path: 'briefs',            label: 'Briefs',            icon: 'brief' },
@@ -30,7 +30,7 @@ const allPages = [
   // Team
   { path: 'team-goals',        label: 'Goals',        icon: 'team-goals' },
   { path: 'pro-dev',           label: 'Pro Dev',           icon: 'star' },
-  { path: 'business-events',   label: 'Events',  icon: 'events' },
+  { path: 'business-events',   label: 'Networking',  icon: 'events' },
 
 ]
 
@@ -81,7 +81,7 @@ const favorites = (settings?.favorites || ['dashboard', 'allclients', 'projects'
 const favoritePages = allPages.filter(p => favorites.includes(p.path))
   return (
 <div style={{
-      backgroundColor: '#FAFAF8',
+      backgroundColor: t.colors.bgCard,
       borderBottom: `1px solid ${t.colors.borderLight}`,
       padding: isMobile ? '0 12px' : '0 24px',
       height: '44px',

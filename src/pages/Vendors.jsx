@@ -277,6 +277,7 @@ const visibleVendors = activeTagFilter
     <div style={styles.page}>
       <div style={styles.header}>
         <div>
+          <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Operations</div>
           <h2 style={styles.title}>Vendors</h2>
           <p style={styles.subtitle}>{vendors.length} total vendors</p>
         </div>

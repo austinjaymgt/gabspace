@@ -48,6 +48,7 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
     label: '',
     projected_amount: '',
     actual_amount: '',
+    item_date: '',
     quarter: '',
     project_id: '',
     notes: '',
@@ -104,13 +105,14 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
 
   async function saveLineItem() {
     if (!lineForm.category || !lineForm.label) return
+    const quarter = lineForm.item_date ? quarterFromDate(lineForm.item_date) : (lineForm.quarter || null)
     const payload = {
       workspace_id: workspaceId,
       category: lineForm.category,
       label: lineForm.label,
       projected_amount: Number(lineForm.projected_amount) || 0,
       actual_amount: Number(lineForm.actual_amount) || 0,
-      quarter: lineForm.quarter || null,
+      quarter,
       project_id: lineForm.project_id || null,
       notes: lineForm.notes || null,
     }
@@ -129,9 +131,18 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
   }
 
   function resetLineForm() {
-    setLineForm({ category: '', label: '', projected_amount: '', actual_amount: '', quarter: '', project_id: '', notes: '' })
+    setLineForm({ category: '', label: '', projected_amount: '', actual_amount: '', item_date: '', quarter: '', project_id: '', notes: '' })
     setEditingLine(null)
     setShowLineForm(false)
+  }
+
+  function quarterFromDate(dateStr) {
+    if (!dateStr) return ''
+    const month = new Date(dateStr).getMonth() + 1
+    if (month <= 3) return 'Q1'
+    if (month <= 6) return 'Q2'
+    if (month <= 9) return 'Q3'
+    return 'Q4'
   }
 
   function startEditLine(item) {
@@ -140,6 +151,7 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
       label: item.label || '',
       projected_amount: item.projected_amount || '',
       actual_amount: item.actual_amount || '',
+      item_date: item.item_date || '',
       quarter: item.quarter || '',
       project_id: item.project_id || '',
       notes: item.notes || '',
@@ -197,9 +209,9 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Operations</div>
-          <h1 style={{ fontFamily: t.fonts.heading, fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>
+          <h2 style={{ fontFamily: t.fonts.heading, fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>
             Annual Budget
-          </h1>
+          </h2>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <select
@@ -292,15 +304,22 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
               <input type="number" value={lineForm.actual_amount} onChange={e => setLineForm(p => ({ ...p, actual_amount: e.target.value }))} placeholder="0" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
             </div>
             <div>
-              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Quarter</label>
-              <select value={lineForm.quarter} onChange={e => setLineForm(p => ({ ...p, quarter: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
-                <option value="">No quarter</option>
-                {QUARTERS.map(q => <option key={q} value={q}>{q}</option>)}
-              </select>
+              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>
+                Date {lineForm.item_date && <span style={{ color: t.colors.primary, fontWeight: '600' }}>→ {quarterFromDate(lineForm.item_date)}</span>}
+              </label>
+              <input
+                type="date"
+                value={lineForm.item_date}
+                onChange={e => setLineForm(p => ({ ...p, item_date: e.target.value }))}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
+              />
             </div>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Link to Event/Project</label>
-              <select value={lineForm.project_id} onChange={e => setLineForm(p => ({ ...p, project_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+              <select value={lineForm.project_id} onChange={e => {
+                const proj = projects.find(p => p.id === e.target.value)
+                setLineForm(p => ({ ...p, project_id: e.target.value, item_date: proj?.event_date || p.item_date }))
+              }} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                 <option value="">Unassigned</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
               </select>
@@ -376,6 +395,13 @@ export default function DepartmentBudget({ workspaceId, userRole, session }) {
                 </div>
               )
             })}
+          </div>
+
+          {/* Cost Breakdown subheader */}
+          <div style={{ borderTop: `1px solid ${t.colors.border}`, marginBottom: '24px' }} />
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '4px' }}>Budget</div>
+            <h3 style={{ fontFamily: t.fonts.heading, fontSize: '18px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, letterSpacing: '-0.01em' }}>Cost Breakdown</h3>
           </div>
 
           {/* View toggle */}

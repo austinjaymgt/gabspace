@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 import { supabase } from '../supabaseClient'
 import { Icon } from './Icon'
+import { useThemeMode } from '../ThemeContext'
 
 export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate }) {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const [firstName, setFirstName] = useState('')
+  const { isDark, toggleDark } = useThemeMode()
 
   useEffect(() => {
     function handle() { setIsDesktop(window.innerWidth >= 1024) }
@@ -81,6 +83,28 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleDark}
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            background: isDark ? 'var(--color-primary)' : 'var(--color-bg)',
+            border: `1px solid var(--color-border)`,
+            borderRadius: t.radius.full,
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: isDark ? '#fff' : t.colors.textSecondary,
+            flexShrink: 0,
+            transition: 'background 0.2s ease',
+          }}
+        >
+          <Icon name={isDark ? 'sun' : 'moon'} size="sm" />
+        </button>
+
         <div style={{
           display: 'flex',
           alignItems: 'center',

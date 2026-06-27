@@ -237,6 +237,7 @@ export default function Clients({ workspaceId }) {
     <div style={styles.page}>
       <div style={styles.header}>
         <div>
+          <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Client Management</div>
           <h2 style={styles.title}>Clients</h2>
           <p style={styles.subtitle}>
             {displayedClients.length} of {clients.length} clients

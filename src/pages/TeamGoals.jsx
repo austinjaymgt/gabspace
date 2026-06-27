@@ -46,6 +46,13 @@ function fmtDate(d, withYear = true) {
   return new Date(d + 'T00:00:00').toLocaleDateString('en-US', withYear ? { month: 'short', day: 'numeric', year: 'numeric' } : { month: 'short', day: 'numeric' })
 }
 
+function periodFromDate(dateStr) {
+  if (!dateStr) return null
+  const d = new Date(dateStr + 'T00:00:00')
+  const q = Math.ceil((d.getMonth() + 1) / 3)
+  return `Q${q} ${d.getFullYear()}`
+}
+
 // Smart due-date chip: overdue / today / soon get a colored tint; otherwise a plain date.
 function dueChip(goal) {
   if (!goal.due_date) return null
@@ -120,16 +127,15 @@ export default function TeamGoals({ workspaceId, userRole }) {
   const [activePeriod, setActivePeriod] = useState('Q2 2026')
   const [activeCategory, setActiveCategory] = useState('all')
   const [sortBy, setSortBy] = useState('created')
-  const [expanded, setExpanded] = useState({})       // card-level subtask expand, keyed by goal id
   const [statusMenuId, setStatusMenuId] = useState(null) // which card's status menu is open
 
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editing, setEditing] = useState(false)      // drawer view vs edit mode
-  const [activeGoalId, setActiveGoalId] = useState(null) // null = new goal
+  const [openGoalId, setOpenGoalId] = useState(null)  // which goal's detail is expanded inline
+  const [showNewForm, setShowNewForm] = useState(false) // inline new-goal form
+  const [editing, setEditing] = useState(false)        // view vs edit mode for expanded goal
   const [newSubtaskText, setNewSubtaskText] = useState('')
   const [formError, setFormError] = useState('')
   const [draft, setDraft] = useState({
-    title: '', description: '', owner: '', period: 'Q2 2026', status: 'not-started',
+    title: '', description: '', owner: '', status: 'not-started',
     category: 'team', categoryLabel: '', progress: 0, startDate: '', dueDate: '',
   })
 
@@ -141,13 +147,10 @@ export default function TeamGoals({ workspaceId, userRole }) {
   }, [workspaceId, activePeriod])
 
   useEffect(() => {
-    if (!drawerOpen) return
-    const onKey = e => { if (e.key === 'Escape') setDrawerOpen(false) }
+    const onKey = e => { if (e.key === 'Escape') { setOpenGoalId(null); setShowNewForm(false) } }
     document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
-  }, [drawerOpen])
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   async function fetchGoals() {
     setLoading(true)
@@ -165,46 +168,46 @@ export default function TeamGoals({ workspaceId, userRole }) {
     setLoading(false)
   }
 
-  const activeGoal = activeGoalId ? goals.find(g => g.id === activeGoalId) : null
+  const activeGoal = openGoalId ? goals.find(g => g.id === openGoalId) : null
   const activeSubs = activeGoal?.subtasks || []
-  const manualMode = activeSubs.length === 0 // manual progress slider only when no subtasks
+  const manualMode = activeSubs.length === 0
   const drawerProgress = activeGoal ? goalProgress(activeGoal) : draft.progress
 
   function draftFromGoal(goal) {
     return {
       title: goal.title, description: goal.description || '', owner: goal.owner || '',
-      period: goal.period, status: goal.status, category: goal.category || 'team',
+      status: goal.status, category: goal.category || 'team',
       categoryLabel: goal.category_label || '', progress: goal.progress || 0,
       startDate: goal.start_date || '', dueDate: goal.due_date || '',
     }
   }
 
   function openNew() {
-    setDraft({ title: '', description: '', owner: '', period: activePeriod, status: 'not-started', category: 'team', categoryLabel: '', progress: 0, startDate: '', dueDate: '' })
-    setActiveGoalId(null)
+    setDraft({ title: '', description: '', owner: '', status: 'not-started', category: 'team', categoryLabel: '', progress: 0, startDate: '', dueDate: '' })
+    setOpenGoalId(null)
     setNewSubtaskText('')
     setFormError('')
-    setEditing(true)
-    setDrawerOpen(true)
+    setShowNewForm(true)
   }
 
   function openGoal(goal) {
+    if (openGoalId === goal.id) { setOpenGoalId(null); return }
     setDraft(draftFromGoal(goal))
-    setActiveGoalId(goal.id)
+    setOpenGoalId(goal.id)
     setNewSubtaskText('')
     setFormError('')
-    setEditing(false) // open in view mode
-    setDrawerOpen(true)
+    setEditing(false)
+    setShowNewForm(false)
   }
 
   function startEditMode() {
-    if (activeGoal) setDraft(draftFromGoal(activeGoal)) // re-sync from latest persisted values
+    if (activeGoal) setDraft(draftFromGoal(activeGoal))
     setFormError('')
     setEditing(true)
   }
 
   function cancelEdit() {
-    if (!activeGoalId) { setDrawerOpen(false); return } // nothing to fall back to for a new goal
+    if (!openGoalId) { setShowNewForm(false); return }
     setDraft(draftFromGoal(activeGoal))
     setFormError('')
     setEditing(false)
@@ -219,7 +222,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
       title: draft.title.trim(),
       description: draft.description,
       owner: draft.owner,
-      period: draft.period,
+      period: periodFromDate(draft.dueDate) || activePeriod,
       status: draft.status,
       category: draft.category,
       category_label: draft.category === 'other' ? draft.categoryLabel.trim() : null,
@@ -229,10 +232,10 @@ export default function TeamGoals({ workspaceId, userRole }) {
     if (manualMode) payload.progress = draft.progress
 
     setFormError('')
-    if (activeGoalId) {
-      await supabase.from('team_goals').update(payload).eq('id', activeGoalId)
-      setGoals(prev => prev.map(g => g.id === activeGoalId ? { ...g, ...payload } : g))
-      setEditing(false) // back to view mode
+    if (openGoalId) {
+      await supabase.from('team_goals').update(payload).eq('id', openGoalId)
+      setGoals(prev => prev.map(g => g.id === openGoalId ? { ...g, ...payload } : g))
+      setEditing(false)
     } else {
       const { data, error } = await supabase
         .from('team_goals')
@@ -241,20 +244,21 @@ export default function TeamGoals({ workspaceId, userRole }) {
         .single()
       if (error || !data) { setFormError('Could not save — try again.'); return }
       setGoals(prev => [...prev, { ...data, subtasks: [] }])
-      setActiveGoalId(data.id) // stay in edit mode so subtasks can be added right away
+      setShowNewForm(false)
+      setOpenGoalId(data.id) // open the new goal's detail immediately
     }
   }
 
   async function handleDelete() {
-    if (!activeGoalId) return
-    await supabase.from('team_goals').delete().eq('id', activeGoalId) // subtasks cascade via FK
-    setGoals(prev => prev.filter(g => g.id !== activeGoalId))
-    setDrawerOpen(false)
+    if (!openGoalId) return
+    await supabase.from('team_goals').delete().eq('id', openGoalId)
+    setGoals(prev => prev.filter(g => g.id !== openGoalId))
+    setOpenGoalId(null)
   }
 
   async function setGoalStatus(goalId, status) {
     setGoals(prev => prev.map(g => g.id === goalId ? { ...g, status } : g))
-    if (activeGoalId === goalId) setDraft(d => ({ ...d, status }))
+    if (openGoalId === goalId) setDraft(d => ({ ...d, status }))
     await supabase.from('team_goals').update({ status }).eq('id', goalId)
   }
 
@@ -272,34 +276,30 @@ export default function TeamGoals({ workspaceId, userRole }) {
 
   async function addSubtask() {
     const text = newSubtaskText.trim()
-    if (!text || !activeGoalId) return
-    const goal = goals.find(g => g.id === activeGoalId)
+    if (!text || !openGoalId) return
+    const goal = goals.find(g => g.id === openGoalId)
     const sortOrder = goal.subtasks.length
     const { data, error } = await supabase
       .from('goal_subtasks')
-      .insert({ goal_id: activeGoalId, workspace_id: workspaceId, title: text, sort_order: sortOrder })
+      .insert({ goal_id: openGoalId, workspace_id: workspaceId, title: text, sort_order: sortOrder })
       .select()
       .single()
     if (error || !data) return
     const nextSubs = [...goal.subtasks, data]
     const derived = rollup(nextSubs)
-    setGoals(prev => prev.map(g => g.id === activeGoalId ? { ...g, subtasks: nextSubs, progress: derived } : g))
+    setGoals(prev => prev.map(g => g.id === openGoalId ? { ...g, subtasks: nextSubs, progress: derived } : g))
     setNewSubtaskText('')
-    await supabase.from('team_goals').update({ progress: derived }).eq('id', activeGoalId)
+    await supabase.from('team_goals').update({ progress: derived }).eq('id', openGoalId)
   }
 
   async function deleteSubtask(subtaskId) {
-    const goal = goals.find(g => g.id === activeGoalId)
+    const goal = goals.find(g => g.id === openGoalId)
     const nextSubs = goal.subtasks.filter(s => s.id !== subtaskId)
-    setGoals(prev => prev.map(g => g.id === activeGoalId
+    setGoals(prev => prev.map(g => g.id === openGoalId
       ? { ...g, subtasks: nextSubs, progress: nextSubs.length ? rollup(nextSubs) : g.progress }
       : g))
     await supabase.from('goal_subtasks').delete().eq('id', subtaskId)
-    if (nextSubs.length) await supabase.from('team_goals').update({ progress: rollup(nextSubs) }).eq('id', activeGoalId)
-  }
-
-  function toggleExpand(id) {
-    setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
+    if (nextSubs.length) await supabase.from('team_goals').update({ progress: rollup(nextSubs) }).eq('id', openGoalId)
   }
 
   const visibleGoals = (activeCategory === 'all' ? goals : goals.filter(g => g.category === activeCategory))
@@ -323,20 +323,19 @@ export default function TeamGoals({ workspaceId, userRole }) {
   }
   const labelStyle = { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }
 
-  // Subtask checklist used inside the drawer (toggle always; add/delete only when editing).
   function renderSubtasks() {
     return (
-      <div style={{ marginTop: '24px' }}>
-        <div style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '12px' }}>
+      <div style={{ marginTop: '20px' }}>
+        <div style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '10px' }}>
           Subtasks{activeSubs.length > 0 ? ` · ${activeSubs.filter(x => x.completed).length}/${activeSubs.length}` : ''}
         </div>
-        {!activeGoalId ? (
+        {!openGoalId ? (
           <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>Save this goal first to add subtasks.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {activeSubs.map(sub => (
               <div key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <CheckBox checked={sub.completed} disabled={ro} onClick={() => toggleSubtask(activeGoalId, sub.id)} />
+                <CheckBox checked={sub.completed} disabled={ro} onClick={() => toggleSubtask(openGoalId, sub.id)} />
                 <span style={{ flex: 1, fontSize: t.fontSizes.sm, color: sub.completed ? t.colors.textTertiary : t.colors.textPrimary, textDecoration: sub.completed ? 'line-through' : 'none' }}>{sub.title}</span>
                 {editing && !ro && (
                   <button onClick={() => deleteSubtask(sub.id)} aria-label="Delete subtask" style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, display: 'flex', alignItems: 'center', padding: '2px' }}>
@@ -380,10 +379,6 @@ export default function TeamGoals({ workspaceId, userRole }) {
           </h1>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <select value={activeCategory} onChange={e => setActiveCategory(e.target.value)} style={selectStyle}>
-            <option value="all">All Types</option>
-            {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{categoryStyles[c].label}</option>)}
-          </select>
           <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={selectStyle}>
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>Sort: {o.label}</option>)}
           </select>
@@ -413,6 +408,85 @@ export default function TeamGoals({ workspaceId, userRole }) {
         ))}
       </div>
 
+      {/* Type filter pills */}
+      <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px', marginBottom: '20px', flexWrap: 'wrap', width: 'fit-content' }}>
+        {['all', ...CATEGORY_OPTIONS].map(c => {
+          const active = activeCategory === c
+          const style = c !== 'all' ? categoryStyles[c] : null
+          return (
+            <button
+              key={c}
+              onClick={() => setActiveCategory(c)}
+              style={{
+                padding: '5px 14px', borderRadius: t.radius.sm, border: 'none', fontFamily: t.fonts.sans,
+                fontSize: t.fontSizes.xs, cursor: 'pointer', fontWeight: active ? '600' : '400',
+                background: active ? (style ? style.bg : t.colors.bgCard) : 'transparent',
+                color: active ? (style ? style.color : t.colors.textPrimary) : t.colors.textSecondary,
+                boxShadow: active ? t.shadows.sm : 'none',
+              }}
+            >
+              {c === 'all' ? 'All Types' : categoryStyles[c].label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Inline new-goal form */}
+      {showNewForm && (
+        <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px', marginBottom: '20px' }}>
+          <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px' }}>New Goal</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Goal Title *</label>
+              <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Deliver 12 flagship events this quarter" style={fieldStyle} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Description</label>
+              <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, resize: 'vertical' }} />
+            </div>
+            <div>
+              <label style={labelStyle}>Owner</label>
+              <input value={draft.owner} onChange={e => setDraft(d => ({ ...d, owner: e.target.value }))} placeholder="Who owns this?" style={fieldStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Type</label>
+              <select value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value }))} style={fieldStyle}>
+                {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{categoryStyles[c].label}</option>)}
+              </select>
+            </div>
+            {draft.category === 'other' && (
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Type label *</label>
+                <input value={draft.categoryLabel} onChange={e => setDraft(d => ({ ...d, categoryLabel: e.target.value }))} placeholder="Name this type (e.g. Community, Health)" style={fieldStyle} />
+              </div>
+            )}
+            <div>
+              <label style={labelStyle}>Status</label>
+              <select value={draft.status} onChange={e => setDraft(d => ({ ...d, status: e.target.value }))} style={fieldStyle}>
+                {STATUS_OPTIONS.map(st => <option key={st} value={st}>{statusStyles[st].label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Start date</label>
+              <input type="date" value={draft.startDate} onChange={e => setDraft(d => ({ ...d, startDate: e.target.value }))} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Due date</label>
+              <input type="date" value={draft.dueDate} onChange={e => setDraft(d => ({ ...d, dueDate: e.target.value }))} style={fieldStyle} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Progress — {draft.progress}%</label>
+              <input type="range" min="0" max="100" step="5" value={draft.progress} onChange={e => setDraft(d => ({ ...d, progress: Number(e.target.value) }))} style={{ width: '100%' }} />
+            </div>
+          </div>
+          {formError && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, marginTop: '10px' }}>{formError}</div>}
+          <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
+            <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Add Goal</button>
+            <button onClick={() => setShowNewForm(false)} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       {/* Goals list */}
       {loading ? (
         <div style={{ color: t.colors.textTertiary, fontSize: t.fontSizes.base, padding: '40px 0', textAlign: 'center' }}>Loading goals...</div>
@@ -433,90 +507,162 @@ export default function TeamGoals({ workspaceId, userRole }) {
             const subs = goal.subtasks || []
             const progress = goalProgress(goal)
             const chip = dueChip(goal)
-            const isOpen = !!expanded[goal.id]
+            const isDetailOpen = openGoalId === goal.id
             const menuOpen = statusMenuId === goal.id
 
             return (
-              <div key={goal.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '18px 22px' }}>
-                {/* Title row — the only click target that opens the drawer */}
-                <div
-                  onClick={() => openGoal(goal)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '10px', cursor: 'pointer' }}
-                  role="button"
-                >
-                  <span style={{ fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary }}>{goal.title}</span>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: t.colors.textTertiary }}>
-                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-
-                {/* Badges row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                  {/* Status — interactive pill for owner/admin, static otherwise */}
-                  {isOwnerOrAdmin ? (
-                    <div style={{ position: 'relative' }}>
-                      <button
-                        onClick={e => { e.stopPropagation(); setStatusMenuId(menuOpen ? null : goal.id) }}
-                        style={{ ...pillBase, letterSpacing: '0.06em', textTransform: 'uppercase', background: statusStyles[goal.status].bg, color: statusStyles[goal.status].color, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', fontFamily: t.fonts.sans }}
-                      >
-                        {statusStyles[goal.status].label}
-                        <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      </button>
-                      {menuOpen && (
-                        <>
-                          <div onClick={e => { e.stopPropagation(); setStatusMenuId(null) }} style={{ position: 'fixed', inset: 0, zIndex: 50 }} />
-                          <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 51, background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.md, boxShadow: '0 6px 20px rgba(0,0,0,0.12)', padding: '4px', minWidth: '150px' }}>
-                            {STATUS_OPTIONS.map(st => (
-                              <button
-                                key={st}
-                                onClick={e => { e.stopPropagation(); setGoalStatus(goal.id, st); setStatusMenuId(null) }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left', background: goal.status === st ? t.colors.bgSubtle || '#F7F5F0' : 'none', border: 'none', borderRadius: t.radius.sm, padding: '7px 10px', cursor: 'pointer', fontFamily: t.fonts.sans, fontSize: t.fontSizes.sm, color: t.colors.textPrimary }}
-                              >
-                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusStyles[st].color, flexShrink: 0 }} />
-                                {statusStyles[st].label}
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <StatusPill status={goal.status} />
-                  )}
-
-                  <span style={{ ...pillBase, letterSpacing: '0.04em', background: c.bg, color: c.color }}>{typeLabelOf(goal)}</span>
-                  {chip && <span style={{ ...pillBase, background: chip.bg, color: chip.color }}>{chip.text}</span>}
-
-                  {subs.length > 0 && (
-                    <button
-                      onClick={e => { e.stopPropagation(); toggleExpand(goal.id) }}
-                      style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontFamily: t.fonts.sans, fontSize: t.fontSizes.xs, padding: '2px 0' }}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
-                        <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      {subs.filter(x => x.completed).length}/{subs.length} subtasks
-                    </button>
-                  )}
-                </div>
-
-                {/* Progress bar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ flex: 1, height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${progress}%`, background: progress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+              <div key={goal.id} style={{ background: t.colors.bgCard, border: `1px solid ${isDetailOpen ? t.colors.primary : t.colors.border}`, borderRadius: t.radius.lg, overflow: 'hidden', transition: 'border-color 0.15s' }}>
+                {/* Summary row */}
+                <div style={{ padding: '18px 22px' }}>
+                  <div
+                    onClick={() => { openGoal(goal); setEditing(false) }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '10px', cursor: 'pointer' }}
+                    role="button"
+                  >
+                    <span style={{ fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary }}>{goal.title}</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: t.colors.textTertiary, transform: isDetailOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
+                      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
-                  <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textPrimary, minWidth: '34px', textAlign: 'right' }}>{progress}%</span>
+
+                  {/* Badges row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                    {isOwnerOrAdmin ? (
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          onClick={e => { e.stopPropagation(); setStatusMenuId(menuOpen ? null : goal.id) }}
+                          style={{ ...pillBase, letterSpacing: '0.06em', textTransform: 'uppercase', background: statusStyles[goal.status].bg, color: statusStyles[goal.status].color, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', fontFamily: t.fonts.sans }}
+                        >
+                          {statusStyles[goal.status].label}
+                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </button>
+                        {menuOpen && (
+                          <>
+                            <div onClick={e => { e.stopPropagation(); setStatusMenuId(null) }} style={{ position: 'fixed', inset: 0, zIndex: 50 }} />
+                            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 51, background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.md, boxShadow: '0 6px 20px rgba(0,0,0,0.12)', padding: '4px', minWidth: '150px' }}>
+                              {STATUS_OPTIONS.map(st => (
+                                <button
+                                  key={st}
+                                  onClick={e => { e.stopPropagation(); setGoalStatus(goal.id, st); setStatusMenuId(null) }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left', background: goal.status === st ? t.colors.bgSubtle || '#F7F5F0' : 'none', border: 'none', borderRadius: t.radius.sm, padding: '7px 10px', cursor: 'pointer', fontFamily: t.fonts.sans, fontSize: t.fontSizes.sm, color: t.colors.textPrimary }}
+                                >
+                                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusStyles[st].color, flexShrink: 0 }} />
+                                  {statusStyles[st].label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <StatusPill status={goal.status} />
+                    )}
+                    <span style={{ ...pillBase, letterSpacing: '0.04em', background: c.bg, color: c.color }}>{typeLabelOf(goal)}</span>
+                    {chip && <span style={{ ...pillBase, background: chip.bg, color: chip.color }}>{chip.text}</span>}
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ flex: 1, height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progress}%`, background: progress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+                    </div>
+                    <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textPrimary, minWidth: '34px', textAlign: 'right' }}>{progress}%</span>
+                  </div>
                 </div>
 
-                {/* Expanded subtask checklist (toggle only — adding/removing happens in the drawer) */}
-                {isOpen && subs.length > 0 && (
-                  <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '14px', borderTop: `1px solid ${t.colors.border}` }}>
-                    {subs.map(sub => (
-                      <div key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <CheckBox checked={sub.completed} disabled={ro} onClick={() => toggleSubtask(goal.id, sub.id)} />
-                        <span style={{ flex: 1, fontSize: t.fontSizes.sm, color: sub.completed ? t.colors.textTertiary : t.colors.textPrimary, textDecoration: sub.completed ? 'line-through' : 'none' }}>{sub.title}</span>
-                      </div>
-                    ))}
+                {/* Inline detail panel */}
+                {isDetailOpen && (
+                  <div style={{ borderTop: `1px solid ${t.colors.border}`, padding: '24px', background: t.colors.bg }}>
+                    {!editing ? (
+                      /* VIEW MODE */
+                      <>
+                        {activeGoal?.description && (
+                          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: '0 0 20px' }}>{activeGoal.description}</p>
+                        )}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '4px' }}>
+                          <ViewRow label="Owner">{activeGoal?.owner || '—'}</ViewRow>
+                          <ViewRow label="Start date">{fmtDate(activeGoal?.start_date) || '—'}</ViewRow>
+                          <ViewRow label="Due date">{fmtDate(activeGoal?.due_date) || '—'}</ViewRow>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Progress — {drawerProgress}%</div>
+                            <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+                            </div>
+                          </div>
+                        </div>
+                        {renderSubtasks()}
+                        {!ro && (
+                          <button onClick={startEditMode} style={{ marginTop: '20px', padding: '8px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+                            Edit
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      /* EDIT MODE */
+                      <>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={labelStyle}>Goal Title *</label>
+                            <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Deliver 12 flagship events this quarter" style={fieldStyle} />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={labelStyle}>Description</label>
+                            <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, resize: 'vertical' }} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Owner</label>
+                            <input value={draft.owner} onChange={e => setDraft(d => ({ ...d, owner: e.target.value }))} placeholder="Who owns this?" style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Type</label>
+                            <select value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value }))} style={fieldStyle}>
+                              {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{categoryStyles[c].label}</option>)}
+                            </select>
+                          </div>
+                          {draft.category === 'other' && (
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <label style={labelStyle}>Type label *</label>
+                              <input value={draft.categoryLabel} onChange={e => setDraft(d => ({ ...d, categoryLabel: e.target.value }))} placeholder="Name this type (e.g. Community, Health)" style={fieldStyle} />
+                            </div>
+                          )}
+                          <div>
+                            <label style={labelStyle}>Status</label>
+                            <select value={draft.status} onChange={e => setDraft(d => ({ ...d, status: e.target.value }))} style={fieldStyle}>
+                              {STATUS_OPTIONS.map(st => <option key={st} value={st}>{statusStyles[st].label}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Start date</label>
+                            <input type="date" value={draft.startDate} onChange={e => setDraft(d => ({ ...d, startDate: e.target.value }))} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Due date</label>
+                            <input type="date" value={draft.dueDate} onChange={e => setDraft(d => ({ ...d, dueDate: e.target.value }))} style={fieldStyle} />
+                          </div>
+                          {manualMode ? (
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <label style={labelStyle}>Progress — {draft.progress}%</label>
+                              <input type="range" min="0" max="100" step="5" value={draft.progress} onChange={e => setDraft(d => ({ ...d, progress: Number(e.target.value) }))} style={{ width: '100%' }} />
+                            </div>
+                          ) : (
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <label style={labelStyle}>Progress — {drawerProgress}%</label>
+                              <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+                              </div>
+                              <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '5px' }}>Calculated from subtasks below.</div>
+                            </div>
+                          )}
+                        </div>
+                        {renderSubtasks()}
+                        {formError && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, marginTop: '10px' }}>{formError}</div>}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '18px' }}>
+                          <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Save changes</button>
+                          <button onClick={cancelEdit} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={handleDelete} style={{ marginLeft: 'auto', padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -524,149 +670,6 @@ export default function TeamGoals({ workspaceId, userRole }) {
           })}
         </div>
       )}
-
-      {/* ── Detail drawer ──────────────────────────────────────────── */}
-      <div
-        onClick={() => setDrawerOpen(false)}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(20,20,40,0.35)', opacity: drawerOpen ? 1 : 0, pointerEvents: drawerOpen ? 'auto' : 'none', transition: 'opacity 0.22s ease', zIndex: 1000 }}
-      />
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          position: 'fixed', top: 0, right: 0, height: '100%', width: 'min(460px, 100%)',
-          background: t.colors.bgCard, boxShadow: '-8px 0 30px rgba(0,0,0,0.12)',
-          transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.22s ease', zIndex: 1001, display: 'flex', flexDirection: 'column',
-        }}
-      >
-        {/* Drawer header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '20px 24px', borderBottom: `1px solid ${t.colors.border}` }}>
-          <h2 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: 0, lineHeight: 1.2 }}>
-            {editing ? (draft.title.trim() || 'New Goal') : (activeGoal?.title || '')}
-          </h2>
-          <button onClick={() => setDrawerOpen(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textSecondary, display: 'flex', padding: '4px', flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-          </button>
-        </div>
-
-        {/* Drawer body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-          {!editing && activeGoal ? (
-            /* ── VIEW MODE ── */
-            <>
-              <div style={{ marginBottom: '20px', fontSize: t.fontSizes.base, color: t.colors.textSecondary, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                {activeGoal.description || <span style={{ color: t.colors.textTertiary }}>No description.</span>}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <ViewRow label="Status"><StatusPill status={activeGoal.status} /></ViewRow>
-                <ViewRow label="Type">{typeLabelOf(activeGoal)}</ViewRow>
-                <ViewRow label="Owner">{activeGoal.owner || '—'}</ViewRow>
-                <ViewRow label="Period">{activeGoal.period}</ViewRow>
-                <ViewRow label="Start date">{fmtDate(activeGoal.start_date) || '—'}</ViewRow>
-                <ViewRow label="Due date">{fmtDate(activeGoal.due_date) || '—'}</ViewRow>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Progress — {drawerProgress}%</div>
-                  <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
-                  </div>
-                </div>
-              </div>
-              {renderSubtasks()}
-            </>
-          ) : (
-            /* ── EDIT MODE ── */
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Goal Title *</label>
-                  <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Deliver 12 flagship events this quarter" style={fieldStyle} />
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Description</label>
-                  <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, resize: 'vertical' }} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Owner</label>
-                  <input value={draft.owner} onChange={e => setDraft(d => ({ ...d, owner: e.target.value }))} placeholder="Who owns this?" style={fieldStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Type</label>
-                  <select value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value }))} style={fieldStyle}>
-                    {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{categoryStyles[c].label}</option>)}
-                  </select>
-                </div>
-                {draft.category === 'other' && (
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Type label *</label>
-                    <input value={draft.categoryLabel} onChange={e => setDraft(d => ({ ...d, categoryLabel: e.target.value }))} placeholder="Name this type (e.g. Community, Health)" style={fieldStyle} />
-                  </div>
-                )}
-                <div>
-                  <label style={labelStyle}>Period</label>
-                  <select value={draft.period} onChange={e => setDraft(d => ({ ...d, period: e.target.value }))} style={fieldStyle}>
-                    {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Status</label>
-                  <select value={draft.status} onChange={e => setDraft(d => ({ ...d, status: e.target.value }))} style={fieldStyle}>
-                    {STATUS_OPTIONS.map(st => <option key={st} value={st}>{statusStyles[st].label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Start date</label>
-                  <input type="date" value={draft.startDate} onChange={e => setDraft(d => ({ ...d, startDate: e.target.value }))} style={fieldStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Due date</label>
-                  <input type="date" value={draft.dueDate} onChange={e => setDraft(d => ({ ...d, dueDate: e.target.value }))} style={fieldStyle} />
-                </div>
-                {manualMode ? (
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Progress — {draft.progress}%</label>
-                    <input type="range" min="0" max="100" step="5" value={draft.progress} onChange={e => setDraft(d => ({ ...d, progress: Number(e.target.value) }))} style={{ width: '100%' }} />
-                  </div>
-                ) : (
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Progress — {drawerProgress}%</label>
-                    <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
-                    </div>
-                    <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '5px' }}>Calculated from subtasks below.</div>
-                  </div>
-                )}
-              </div>
-              {renderSubtasks()}
-            </>
-          )}
-        </div>
-
-        {/* Drawer footer */}
-        {!ro && (
-          <div style={{ borderTop: `1px solid ${t.colors.border}`, padding: '16px 24px' }}>
-            {formError && editing && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, marginBottom: '10px' }}>{formError}</div>}
-            {!editing ? (
-              <button onClick={startEditMode} style={{ padding: '10px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
-                Edit
-              </button>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button onClick={handleSave} style={{ padding: '10px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
-                  {activeGoalId ? 'Save changes' : 'Add goal'}
-                </button>
-                <button onClick={cancelEdit} style={{ padding: '10px 18px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
-                  Cancel
-                </button>
-                {activeGoalId && (
-                  <button onClick={handleDelete} style={{ marginLeft: 'auto', padding: '10px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
-                    Delete
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
     </div>
   )
 }

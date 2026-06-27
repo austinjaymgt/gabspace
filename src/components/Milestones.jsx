@@ -62,6 +62,11 @@ export default function Milestones({ projectId, workspaceId }) {
     setItems(prev => prev.map(m => m.id === id ? { ...m, status } : m))
   }
 
+  async function togglePortal(id, current) {
+    await supabase.from('project_milestones').update({ show_in_portal: !current }).eq('id', id)
+    setItems(prev => prev.map(m => m.id === id ? { ...m, show_in_portal: !current } : m))
+  }
+
   async function deleteItem(id) {
     if (!confirm('Remove this milestone?')) return
     await supabase.from('project_milestones').delete().eq('id', id)
@@ -117,7 +122,7 @@ export default function Milestones({ projectId, workspaceId }) {
           {items.map(m => {
             const st = STATUSES[m.status] || STATUSES.upcoming
             return (
-              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center' }}>
+              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: m.show_in_portal ? '#f5f0fb' : '#fafaf8', borderRadius: '8px', alignItems: 'center', border: m.show_in_portal ? '1px solid #d4c5e2' : '1px solid transparent', transition: 'background 0.15s' }}>
                 <span style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E', textDecoration: m.status === 'done' ? 'line-through' : 'none' }}>{m.title}</span>
                 <span style={{ fontSize: '12px', color: m.target_date ? '#3D3D5C' : '#B0B0C0', fontStyle: m.target_date ? 'normal' : 'italic' }}>
                   {formatDate(m.target_date) || 'No date'}
@@ -127,6 +132,15 @@ export default function Milestones({ projectId, workspaceId }) {
                   <option value="in_progress">In progress</option>
                   <option value="done">Done</option>
                 </select>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!m.show_in_portal}
+                    onChange={() => togglePortal(m.id, !!m.show_in_portal)}
+                    style={{ accentColor: '#7F5793', width: 14, height: 14, cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '11px', color: m.show_in_portal ? '#7F5793' : '#aaa', fontWeight: m.show_in_portal ? 600 : 400 }}>Portal</span>
+                </label>
                 <button onClick={() => deleteItem(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#8585A0' }}>✕</button>
               </div>
             )

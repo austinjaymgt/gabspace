@@ -1,45 +1,52 @@
 export const theme = {
   colors: {
     // Core brand
-    primary: '#7C5CBF',         // Studio Violet (v2)
-    primaryLight: '#F0EBF9',    // Violet pale (v2)
-    primaryDark: '#5E3F9C',     // Darker violet for hover/active
-    accent: '#6B8F71',          // Soft-retired: was Lime, now Sage
-    accentLight: '#EAF2EA',     // Sage pale
-    accentDark: '#577559',      // Darker sage for hover/active
-    danger: '#C06B7A',          // Dusty Rose (v2)
-    dangerLight: '#FAF0F2',     // Rose pale
-    success: '#6B8F71',          // Sage (v2)
-    successLight: '#EAF2EA',    // Sage pale
-    warning: '#D4874E',          // Warm Amber (v2)
-    warningLight: '#FBF0E6',    // Amber pale
+    primary: 'var(--color-primary)',
+    primaryLight: 'var(--color-primary-light)',
+    primaryDark: 'var(--color-primary-dark)',
+    accent: 'var(--color-accent)',
+    accentLight: 'var(--color-accent-light)',
+    accentDark: 'var(--color-accent-dark)',
+    highlight: 'var(--color-highlight)',
+    highlightLight: 'var(--color-highlight-light)',
+    cyan: 'var(--color-cyan)',
+    danger: 'var(--color-danger)',
+    dangerLight: 'var(--color-danger-light)',
+    success: 'var(--color-success)',
+    successLight: 'var(--color-success-light)',
+    warning: 'var(--color-warning)',
+    warningLight: 'var(--color-warning-light)',
 
     // Neutrals
-    bg: '#F7F5F0',              // Canvas cream (v2) — was cool grey
-    bgCard: '#FFFFFF',
-    bgHover: '#F0EDE6',         // Warm hover to match Canvas
-    border: '#E8E8E8',
-    borderLight: '#F2F2F2',
+    bg: 'var(--color-bg)',
+    bgCard: 'var(--color-bg-card)',
+    bgHover: 'var(--color-bg-hover)',
+    border: 'var(--color-border)',
+    borderLight: 'var(--color-border-light)',
 
     // Nav (dark sidebar)
-    nav: '#1A1A2E',             // Deep Ink (v2) — navy, not pure black
-    navHover: 'rgba(255,255,255,0.07)',
-    navActive: '#7C5CBF',       // Studio Violet (v2)
-    navText: 'rgba(255,255,255,0.5)',
-    navTextActive: '#FFFFFF',
-    navAccent: '#6B8F71',       // Soft-retired: was Lime, now Sage
+    nav: 'var(--color-nav)',
+    navHover: 'var(--color-nav-hover)',
+    navActive: 'var(--color-nav-active)',
+    navText: 'var(--color-nav-text)',
+    navTextActive: 'var(--color-nav-text-active)',
+    navAccent: 'var(--color-nav-accent)',
 
     // Text
-    textPrimary: '#1A1A2E',     // Deep Ink (v2)
-    textSecondary: '#6B7280',
-    textTertiary: '#9CA3AF',
-    textInverse: '#FFFFFF',
+    textPrimary: 'var(--color-text-primary)',
+    textSecondary: 'var(--color-text-secondary)',
+    textTertiary: 'var(--color-text-tertiary)',
+    textInverse: 'var(--color-text-inverse)',
+
+    // Gradient
+    gradient: 'var(--gradient)',
+    gradientDiag: 'var(--gradient-diag)',
   },
 
   // Typography
   fonts: {
-    heading: '"Syne", sans-serif',
-    sans: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+    heading: '"Big Shoulders Display", sans-serif',
+    sans: '"Source Sans 3", -apple-system, BlinkMacSystemFont, sans-serif',
   },
 
   fontSizes: {

@@ -17,7 +17,7 @@ import {
   LayoutDashboard, Search, Menu, X, ArrowLeft, Settings, Bell,
   CircleUser, PanelLeft, MoreVertical, ExternalLink,
   ChevronDown, ChevronRight, LogOut, Building2, Wrench, BookOpen, UsersRound,
-  Store, Target, Megaphone, BarChart3, Library,
+  Store, Target, Megaphone, BarChart3, Library, Moon, Sun,
   // Events
   CalendarDays, Plus, Clock, Calendar, MapPin, Users, Lightbulb,
   FileText, Sparkles, ClipboardList, CheckCircle2, Radio, Archive,
@@ -157,6 +157,10 @@ const ICON_MAP = {
   'ai': Sparkles,
   'sparkles': Sparkles,
   'magic': Wand2,
+
+  // Theme
+  'moon': Moon,
+  'sun': Sun,
 };
 
 // Size scale — mirrors the brand kit Iconography section.

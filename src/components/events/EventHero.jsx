@@ -1,9 +1,4 @@
-// src/components/events/EventHero.jsx
-// Dark hero header for event-type projects.
-// Reusable: pass in the event data + status color info.
-
 function parseLocal(dateStr) {
-  // Treat stored dates as calendar dates, not UTC instants — avoids the ET off-by-one.
   return new Date(String(dateStr).slice(0, 10) + 'T00:00:00')
 }
 
@@ -20,14 +15,26 @@ function formatDateRange(start, end) {
 }
 
 export default function EventHero({ data, statusColor }) {
-  const es = statusColor || { bg: '#F0EBF9', color: '#7C5CBF', label: data.event_status }
-  const multiDay = data.end_date && String(data.end_date).slice(0, 10) !== String(data.event_date || '').slice(0, 10)
+  const es = statusColor || { bg: '#F0EBF9', color: '#7C5CBF' }
+
+  // Support both event_date (migrated events) and start_date (projects)
+  const dateField = data.event_date || data.start_date
+  const endField = data.end_date
+  const multiDay = endField && String(endField).slice(0, 10) !== String(dateField || '').slice(0, 10)
+
+  const metaItems = [
+    dateField && { icon: '📅', label: multiDay ? 'Dates' : 'Date', value: formatDateRange(dateField, endField) },
+    data.venue    && { icon: '📍', label: 'Venue',   value: data.venue },
+    data.headcount && { icon: '👥', label: 'Guests',  value: `${parseInt(data.headcount).toLocaleString()}` },
+    !data.venue && data.project_type && { icon: '🏷️', label: 'Type', value: data.project_type },
+    data.budget   && { icon: '💰', label: 'Budget',  value: `$${parseFloat(data.budget).toLocaleString()}` },
+  ].filter(Boolean)
 
   return (
     <div style={{ backgroundColor: '#1A1A2E', borderRadius: '16px', padding: '32px', marginBottom: '20px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', width: '240px', height: '240px', borderRadius: '50%', background: es.color, opacity: 0.1, top: '-60px', right: '-60px' }} />
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: metaItems.length ? '20px' : '0' }}>
           <div>
             <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', fontFamily: 'Syne, sans-serif', letterSpacing: '-0.3px' }}>{data.title}</h1>
             {data.clients?.name && (
@@ -36,25 +43,22 @@ export default function EventHero({ data, statusColor }) {
               </p>
             )}
           </div>
-          <div style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', backgroundColor: es.bg, color: es.color, textTransform: 'capitalize' }}>
-            {(es.label || data.event_status || '').replace(/_/g, ' ')}
+          <div style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', backgroundColor: es.bg, color: es.color, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
+            {(data.status || '').replace(/_/g, ' ').replace(/-/g, ' ')}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-          {[
-            data.event_date && { icon: '📅', label: multiDay ? 'Dates' : 'Date', value: formatDateRange(data.event_date, data.end_date) },
-            data.venue && { icon: '📍', label: 'Venue', value: data.venue },
-            data.headcount && { icon: '👥', label: 'Guests', value: `${data.headcount}` },
-            data.budget && { icon: '💰', label: 'Budget', value: `$${parseFloat(data.budget).toLocaleString()}` },
-          ].filter(Boolean).map(item => (
-            <div key={item.label} style={{ backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: '10px', padding: '10px 16px' }}>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>
-                {item.icon} {item.label}
+        {metaItems.length > 0 && (
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {metaItems.map(item => (
+              <div key={item.label} style={{ backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: '10px', padding: '10px 16px' }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>
+                  {item.icon} {item.label}
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>{item.value}</div>
               </div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>{item.value}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

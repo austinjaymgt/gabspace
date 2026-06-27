@@ -78,6 +78,7 @@ export default function EventBrainstorm({ workspaceId, session }) {
   const [concepts, setConcepts] = useState([])
   const [loadingConcepts, setLoadingConcepts] = useState(true)
   const [promoting, setPromoting] = useState(null)
+  const [captureTitle, setCaptureTitle] = useState('')
   const [captureText, setCaptureText] = useState('')
   const [captureSaving, setCaptureSaving] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -109,15 +110,17 @@ export default function EventBrainstorm({ workspaceId, session }) {
   async function handleCapture() {
     if (!captureText.trim() || !workspaceId) return
     setCaptureSaving(true)
+    const title = captureTitle.trim() || captureText.slice(0, 80)
     await supabase.from('projects').insert({
       workspace_id: workspaceId,
       user_id: session.user.id,
-      title: captureText.slice(0, 80),
+      title,
       type: 'event',
       event_status: 'concept',
       description: captureText,
       concept_data: null,
     }).select()
+    setCaptureTitle('')
     setCaptureText('')
     fetchConcepts()
     setCaptureSaving(false)
@@ -254,7 +257,40 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
 
   async function handlePromote(id) {
     setPromoting(id)
-    await supabase.from('projects').update({ event_status: 'planning' }).eq('id', id)
+    const c = concepts.find(x => x.id === id)
+    const brief = c?.concept_data?.brief || {}
+    const existing = c?.concept_data || {}
+
+    // Map spark fields into the ConceptForm concept_data shape
+    const productionLines = [
+      brief.eventType && `Event type: ${brief.eventType}`,
+      brief.budget && `Budget: ${brief.budget}`,
+      brief.headcount && `Headcount: ${brief.headcount}`,
+      brief.audience && `Audience: ${brief.audience}`,
+    ].filter(Boolean)
+
+    const concept_data = {
+      coreConcept: existing.coreConcept || brief.context || c?.description || '',
+      goals: existing.goals || brief.goal || '',
+      aestheticKeywords: existing.aestheticKeywords?.length ? existing.aestheticKeywords : (brief.vibes || []),
+      venueConsiderations: existing.venueConsiderations || '',
+      productionNotes: existing.productionNotes || productionLines.join('\n'),
+      vendorCategories: existing.vendorCategories?.length ? existing.vendorCategories : [],
+      experienceDesign: existing.experienceDesign?.filter(m => m.moment).length
+        ? existing.experienceDesign
+        : [{ moment: '', description: '' }],
+      successMetrics: existing.successMetrics?.filter(m => m.label).length
+        ? existing.successMetrics
+        : [{ label: '', value: '' }],
+    }
+
+    await supabase.from('projects').update({
+      event_status: 'planning',
+      type: 'project',
+      status: 'planning',
+      has_event_features: true,
+      concept_data,
+    }).eq('id', id)
     fetchConcepts()
     setPromoting(null)
   }
@@ -273,7 +309,8 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
 
       {/* Page header */}
       <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>Spark</h2>
+        <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Creative Collective</div>
+        <h2 style={{ fontSize: '20px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '0.01em' }}>Spark</h2>
         <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>Capture event ideas, generate full concepts, and move them into planning</p>
               </div>
 
@@ -283,6 +320,12 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         <p style={{ fontSize: '13px', color: t.colors.textTertiary, marginBottom: '12px', marginTop: '-4px' }}>
           Jot down a random thought, link, reference, or half-baked idea before it disappears
         </p>
+        <input
+          style={{ ...s.input, marginBottom: '10px' }}
+          placeholder="Title / working name (required to move to planning)"
+          value={captureTitle}
+          onChange={e => setCaptureTitle(e.target.value)}
+        />
         <textarea
           style={{ ...s.input, minHeight: '80px', resize: 'vertical', lineHeight: '1.55' }}
           placeholder="e.g. 'rooftop art show meets street food market — think Soho House but free and chaotic' or paste a link..."

@@ -378,6 +378,7 @@ function normalizeUrl(url) {
     <div style={styles.page}>
       <div style={styles.header}>
         <div>
+          <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Operations</div>
           <h2 style={styles.title}>Resources</h2>
           <p style={styles.subtitle}>Files and links your team can reference</p>
         </div>

@@ -434,30 +434,31 @@ export default function Dashboard({ session, onNavigate }) {
   return (
     <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
 
-      {/* Welcome message + attention strip */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div>
-            <h2 style={{ fontFamily: t.fonts.heading, fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-              {getGreeting()}, {settings?.first_name || session?.user?.email?.split('@')[0]} 👋
-            </h2>
-            <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
-              {subline}
-            </p>
-          </div>
-        </div>
+      {/* Welcome banner */}
+      <div style={{
+        backgroundColor: t.colors.bgCard,
+        border: `1px solid ${t.colors.borderLight}`,
+        borderRadius: t.radius.lg,
+        padding: '32px 24px',
+        textAlign: 'center',
+        marginBottom: '24px',
+      }}>
+        <h2 style={{ fontFamily: t.fonts.heading, fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+          {getGreeting()}, {settings?.first_name || session?.user?.email?.split('@')[0]} 👋
+        </h2>
+        <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 20px' }}>
+          {subline}
+        </p>
         {flags.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '20px' }}>
             {flags.map(f => <FlagChip key={f.key} icon={f.icon} label={f.label} color={f.color} bg={f.bg} onClick={f.onClick} />)}
           </div>
         )}
-      </div>
-
-      {/* Quick actions */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
-        <QuickAction label="New task" primary onClick={() => onNavigate('tasks')} />
-        <QuickAction label="New project" onClick={() => onNavigate('projects')} />
-        <QuickAction label="New client" onClick={() => onNavigate('allclients')} />
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <QuickAction label="New task" primary onClick={() => onNavigate('tasks')} />
+          <QuickAction label="New project" onClick={() => onNavigate('projects')} />
+          <QuickAction label="New client" onClick={() => onNavigate('allclients')} />
+        </div>
       </div>
 
       {/* Stat strip */}

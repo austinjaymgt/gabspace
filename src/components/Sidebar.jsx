@@ -4,7 +4,7 @@ import { Icon } from './Icon'
 
   const navItems = [
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
-  
+
     {
     label: 'Client Management', icon: 'clients', path: 'allclients', children: [
       { label: 'Clients', path: 'allclients' },
@@ -13,7 +13,8 @@ import { Icon } from './Icon'
   ]
   },
 
-  
+  { label: 'Portals', icon: 'portal', path: 'client-portal-manager', accent: true },
+
   /* Hidden for now — keeping for backup. Spark moved to Creative Collective.
   {
     label: 'Toolkit', icon: 'sparkles', path: 'packages', children: [
@@ -43,19 +44,14 @@ import { Icon } from './Icon'
     label: 'Team', icon: 'team', path: 'team', children: [
       { label: ' Goals', path: 'team-goals' },
       { label: 'Professional Development', path: 'pro-dev' },
-      { label: 'Events', path: 'business-events' },
-    ]
-  },
-  {
-    label: 'Intranet', icon: 'intranet', path: 'intranet', children: [
-      { label: 'Third Spot', path: 'intranet' },
-      { label: 'Manage content', path: 'intranet-manager' },
+      { label: 'Networking', path: 'business-events' },
     ]
   },
   { label: 'Settings', icon: 'settings', path: 'settings' },
 ]
 
 const SIDEBAR_WIDTH = 240
+const SIDEBAR_COLLAPSED_WIDTH = 56
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
@@ -67,7 +63,8 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout }) { const [expanded, setExpanded] = useState(['Client Management', 'Operations', 'Creative Collective', 'Team'])
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse }) {
+  const [expanded, setExpanded] = useState([])
   const isDesktop = useIsDesktop()
 
   function toggleExpand(label) {
@@ -81,62 +78,92 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
     if (!isDesktop) onClose()
   }
 
+  const width = isDesktop && collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
+
   const sidebarContent = (
     <div style={{
-      width: `${SIDEBAR_WIDTH}px`,
+      width: `${width}px`,
       height: '100vh',
       backgroundColor: t.colors.nav,
       borderRight: 'none',
       display: 'flex',
       flexDirection: 'column',
       overflowY: 'auto',
+      overflowX: 'hidden',
       flexShrink: 0,
+      transition: 'width 0.2s ease',
     }}>
-      {/* Logo */}
+      {/* Logo / Header */}
       <div style={{
-        padding: '20px 20px 16px',
+        padding: collapsed ? '20px 0 16px' : '20px 20px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: collapsed ? 'center' : 'space-between',
+        flexShrink: 0,
       }}>
-        <div>
-          <div style={{
-            fontSize: '22px',
-            fontWeight: '800',
-            color: '#FFFFFF',
-            letterSpacing: '-0.5px',
-            fontFamily: t.fonts.heading,
-            lineHeight: 1,
-          }}>
-            gabspace
+        {!collapsed && (
+          <div>
+            <div style={{
+              fontSize: '22px',
+              fontWeight: '800',
+              color: '#FFFFFF',
+              letterSpacing: '-0.5px',
+              fontFamily: t.fonts.heading,
+              lineHeight: 1,
+            }}>
+              gabspace
+            </div>
+            <div style={{
+              fontSize: t.fontSizes.xs,
+              color: 'rgba(255,255,255,0.35)',
+              marginTop: '4px',
+              fontFamily: t.fonts.sans,
+            }}>
+              creativity meets clarity
+            </div>
           </div>
-          <div style={{
-            fontSize: t.fontSizes.xs,
-            color: 'rgba(255,255,255,0.35)',
-            marginTop: '4px',
-            fontFamily: t.fonts.sans,
-          }}>
-            creativity meets clarity
-          </div>
-        </div>
+        )}
+
+        {/* Desktop collapse toggle */}
+        {isDesktop && (
+          <button
+            onClick={onToggleCollapse}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'rgba(255,255,255,0.4)',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <Icon name="sidebar-toggle" size="md" />
+          </button>
+        )}
+
+        {/* Mobile close button */}
         {!isDesktop && (
-  <button
-    onClick={onClose}
-    style={{
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      color: 'rgba(255,255,255,0.4)',
-      padding: '4px',
-      display: 'flex',
-      alignItems: 'center',
-    }}
-    aria-label="Close sidebar"
-  >
-    <Icon name="close" size="md" />
-  </button>
-)}
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'rgba(255,255,255,0.4)',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            aria-label="Close sidebar"
+          >
+            <Icon name="close" size="md" />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -148,20 +175,24 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
           return (
             <div key={item.label}>
               <div
+                title={collapsed ? item.label : undefined}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  padding: '9px 16px',
+                  gap: collapsed ? '0' : '10px',
+                  padding: collapsed ? '9px 0' : '9px 16px',
                   margin: '1px 8px',
                   borderRadius: t.radius.md,
                   cursor: 'pointer',
                   backgroundColor: isActive ? t.colors.navActive : 'transparent',
                   color: isActive ? t.colors.navTextActive : t.colors.navText,
                   fontSize: t.fontSizes.base,
-                  fontWeight: '500',
+                  fontWeight: item.accent ? '600' : '500',
                   fontFamily: t.fonts.sans,
                   transition: 'background 0.15s',
+                  justifyContent: collapsed ? 'center' : 'flex-start',
+                  border: '1px solid transparent',
+                  overflow: 'hidden',
                 }}
                 onMouseEnter={e => {
                   if (!isActive) e.currentTarget.style.backgroundColor = t.colors.navHover
@@ -170,22 +201,32 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
                   if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'
                 }}
                 onClick={() => {
-                  if (item.children) toggleExpand(item.label)
-                  else handleNav(item.path)
+                  if (collapsed && isDesktop) {
+                    // expand sidebar on click when collapsed
+                    onToggleCollapse()
+                  } else if (item.children) {
+                    toggleExpand(item.label)
+                  } else {
+                    handleNav(item.path)
+                  }
                 }}
               >
-<span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-  <Icon name={item.icon} size="sm" />
-</span>
-                <span style={{ flex: 1 }}>{item.label}</span>
-                {item.children && (
-  <span style={{ display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.25)' }}>
-    <Icon name={expanded.includes(item.label) ? 'expand' : 'collapse'} size="sm" />
-  </span>
-)}
+                <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  <Icon name={item.icon} size="sm" />
+                </span>
+                {!collapsed && (
+                  <>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {item.children && (
+                      <span style={{ display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.25)' }}>
+                        <Icon name={expanded.includes(item.label) ? 'expand' : 'collapse'} size="sm" />
+                      </span>
+                    )}
+                  </>
+                )}
               </div>
 
-              {item.children && expanded.includes(item.label) && (
+              {!collapsed && item.children && expanded.includes(item.label) && (
                 <div style={{ paddingLeft: '41px', paddingBottom: '4px' }}>
                   {item.children.map(child => (
                     <div
@@ -221,86 +262,101 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
         })}
       </nav>
 
-      {/* Bottom — New Event CTA */}
+      {/* Bottom */}
       <div style={{
-        padding: '12px 16px 20px',
+        padding: collapsed ? '12px 0 20px' : '12px 16px 20px',
         borderTop: '1px solid rgba(255,255,255,0.07)',
         display: 'flex',
         flexDirection: 'column',
         gap: '8px',
+        alignItems: collapsed ? 'center' : 'stretch',
       }}>
         <button
-  onClick={() => handleNav('settings')}
-  style={{
-    width: '100%',
-    padding: '9px',
-    background: 'transparent',
-    border: 'none',
-    borderRadius: t.radius.md,
-    color: 'rgba(255,255,255,0.35)',
-    fontSize: t.fontSizes.sm,
-    fontFamily: t.fonts.sans,
-    cursor: 'pointer',
-    textAlign: 'left',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  }}
->
-  <Icon name="settings" size="sm" />
-  Settings
-</button>
-       <button
-  onClick={onLogout}
-  style={{
-    width: '100%',
-    padding: '9px',
-    background: 'transparent',
-    border: 'none',
-    borderRadius: t.radius.md,
-    color: 'rgba(255,255,255,0.35)',
-    fontSize: t.fontSizes.sm,
-    fontFamily: t.fonts.sans,
-    cursor: 'pointer',
-    textAlign: 'left',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  }}
->
-  <Icon name="signout" size="sm" />
-  Sign out
-</button>
+          onClick={() => handleNav('settings')}
+          title={collapsed ? 'Settings' : undefined}
+          style={{
+            width: collapsed ? 'auto' : '100%',
+            padding: '9px',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: t.radius.md,
+            color: 'rgba(255,255,255,0.35)',
+            fontSize: t.fontSizes.sm,
+            fontFamily: t.fonts.sans,
+            cursor: 'pointer',
+            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            gap: collapsed ? '0' : '10px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+          }}
+        >
+          <Icon name="settings" size="sm" />
+          {!collapsed && 'Settings'}
+        </button>
         <button
-    onClick={() => handleNav('projects')}
-  style={{
-    width: '100%',
-    padding: '10px',
-    background: 'transparent',
-    border: `1.5px solid ${t.colors.navAccent}`,
-    borderRadius: t.radius.md,
-    color: t.colors.navAccent,
-    fontSize: t.fontSizes.base,
-    fontWeight: '600',
-    fontFamily: t.fonts.sans,
-    cursor: 'pointer',
-    letterSpacing: '0.02em',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-  }}
->
-  <Icon name="add" size="sm" />
-  New Event
-</button>
+          onClick={onLogout}
+          title={collapsed ? 'Sign out' : undefined}
+          style={{
+            width: collapsed ? 'auto' : '100%',
+            padding: '9px',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: t.radius.md,
+            color: 'rgba(255,255,255,0.35)',
+            fontSize: t.fontSizes.sm,
+            fontFamily: t.fonts.sans,
+            cursor: 'pointer',
+            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            gap: collapsed ? '0' : '10px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+          }}
+        >
+          <Icon name="signout" size="sm" />
+          {!collapsed && 'Sign out'}
+        </button>
+        {!collapsed && (
+          <button
+            onClick={() => handleNav('projects')}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: 'transparent',
+              border: `1.5px solid ${t.colors.navAccent}`,
+              borderRadius: t.radius.md,
+              color: t.colors.navAccent,
+              fontSize: t.fontSizes.base,
+              fontWeight: '600',
+              fontFamily: t.fonts.sans,
+              cursor: 'pointer',
+              letterSpacing: '0.02em',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            <Icon name="add" size="sm" />
+            New Event
+          </button>
+        )}
       </div>
     </div>
   )
 
   if (isDesktop) {
     return (
-      <div style={{ position: 'sticky', top: 0, alignSelf: 'flex-start', height: '100vh', flexShrink: 0 }}>
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        alignSelf: 'flex-start',
+        height: '100vh',
+        flexShrink: 0,
+        width: `${width}px`,
+        transition: 'width 0.2s ease',
+      }}>
         {sidebarContent}
       </div>
     )

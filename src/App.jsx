@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Gabi from './components/Gabi'
 import { supabase } from './supabaseClient'
 import { Icon } from './components/Icon'
 import IntranetManager from './pages/IntranetManager'
@@ -29,11 +30,14 @@ import MyEvents from './pages/MyEvents'
 import EventBrainstorm from './pages/EventBrainstorm'
 import Intranet from './pages/Intranet'
 import TeamGoals from './pages/TeamGoals'
+import ClientPortalManager from './pages/ClientPortalManager'
+import ClientPortalView from './pages/ClientPortalView'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
 import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
+import BetaWelcomeModal from './components/BetaWelcomeModal'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -46,30 +50,31 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
-
   const [workspaceId, setWorkspaceId] = useState(null)
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
+const [showBetaWelcome, setShowBetaWelcome] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
   }, [])
 
-  useEffect(() => {
-    if (!session) return
-    supabase
-      .from('user_settings')
-      .select('onboarding_completed')
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data && !data.onboarding_completed) setShowOnboarding(true)
-      })
-  }, [session])
+ // useEffect(() => {
+//   if (!session) return
+//   supabase
+//     .from('user_settings')
+//     .select('onboarding_completed')
+//     .eq('user_id', session.user.id)
+//     .maybeSingle()
+//     .then(({ data }) => {
+//       if (data && !data.onboarding_completed) setShowOnboarding(true)
+//     })
+// }, [session])
 
   useEffect(() => {
     if (!session) {
@@ -82,18 +87,33 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
 
     supabase
       .from('user_profiles')
-      .select('workspace_id, role')
+.select('workspace_id, role, onboarding_complete')
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(async ({ data, error }) => {
       
     console.log('profile data:', data, 'error:', error)
     if (data) {
-      setWorkspaceId(data.workspace_id)
-          setUserRole(data.role)
-          setWorkspaceLoading(false)
-          return
-        }
+  setWorkspaceId(data.workspace_id)
+  setUserRole(data.role)
+
+  // Beta welcome check
+  const { data: betaRow } = await supabase
+    .from('beta_requests')
+.select('status')
+.eq('email', session.user.email)
+    .maybeSingle()
+  if (betaRow?.status === 'approved' && !data.onboarding_complete) {
+  setShowBetaWelcome(true)
+  await supabase
+    .from('user_profiles')
+    .update({ is_beta: true })
+    .eq('user_id', session.user.id)
+}
+
+  setWorkspaceLoading(false)
+  return
+}
 
         const { data: invite } = await supabase
           .from('invites')
@@ -117,6 +137,7 @@ const [workspaceLoading, setWorkspaceLoading] = useState(true)
         setWorkspaceLoading(false)
       })
   }, [session])
+
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -252,6 +273,9 @@ function renderPage() {
 
       case 'intranet-manager':
         return isOwnerOrAdmin ? <IntranetManager {...pageProps} /> : <AccessDenied />
+
+      case 'client-portal-manager':
+        return isStaff ? <ClientPortalManager {...pageProps} /> : <AccessDenied />
       
         default:
         return (
@@ -263,6 +287,11 @@ function renderPage() {
         )
     }
   }
+// Client portal public view — token in URL, no auth required
+  if (new URLSearchParams(window.location.search).get('portal')) {
+    return <ClientPortalView />
+  }
+
 // Login / Signup screen
   if (!session) {
     const isSignup = mode === 'signup'
@@ -388,6 +417,48 @@ function renderPage() {
     )
   }
 
+  // Temporary GABi visual test — visit /?gabi to see all moods
+  if (new URLSearchParams(window.location.search).has('gabi')) {
+    const moods = ['idle', 'working', 'thinking', 'celebrating']
+    return (
+      <div style={{ minHeight: '100vh', fontFamily: 'sans-serif', padding: '40px 24px', boxSizing: 'border-box' }}>
+        {/* Light background section */}
+        <div style={{ backgroundColor: '#F7F5F0', borderRadius: 16, padding: '32px', marginBottom: 32 }}>
+          <p style={{ margin: '0 0 24px', fontWeight: 600, color: '#414042', fontSize: 14 }}>Light background — all 4 moods</p>
+          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            {moods.map(m => (
+              <div key={m} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
+                  <Gabi mood={m} size={40} theme="light" />
+                  <Gabi mood={m} size={56} theme="light" />
+                  <Gabi mood={m} size={80} theme="light" />
+                </div>
+                <span style={{ fontSize: 12, color: '#7F5793', fontWeight: 600 }}>{m}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Dark background section */}
+        <div style={{ backgroundColor: '#414042', borderRadius: 16, padding: '32px' }}>
+          <p style={{ margin: '0 0 24px', fontWeight: 600, color: '#B8B0E8', fontSize: 14 }}>Dark background — all 4 moods</p>
+          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            {moods.map(m => (
+              <div key={m} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
+                  <Gabi mood={m} size={40} theme="dark" />
+                  <Gabi mood={m} size={56} theme="dark" />
+                  <Gabi mood={m} size={80} theme="dark" />
+                </div>
+                <span style={{ fontSize: 12, color: '#B8B0E8', fontWeight: 600 }}>{m}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (workspaceLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans }}>
@@ -398,20 +469,31 @@ function renderPage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, display: 'flex' }}>
-      {showOnboarding && (
-        <OnboardingModal
-          userId={session.user.id}
-          onComplete={() => setShowOnboarding(false)}
-          onSkip={() => setShowOnboarding(false)}
-          onNavigate={(page) => setCurrentPage(page)}
-        />
-      )}
-<Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
+      {/* showOnboarding && (
+  <OnboardingModal
+    userId={session.user.id}
+    onComplete={() => setShowOnboarding(false)}
+    onSkip={() => setShowOnboarding(false)}
+    onNavigate={(page) => setCurrentPage(page)}
+  />
+) */}
+
+      {showBetaWelcome && (
+  <BetaWelcomeModal
+    session={session}
+    workspaceId={workspaceId}
+    onComplete={() => setShowBetaWelcome(false)}
+  />
+)}
+<Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
         <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} />
         <div style={{ flex: 1 }}>
           {renderPage()}
         </div>
+      </div>
+      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 999 }}>
+        <Gabi size={80} />
       </div>
     </div>
   )
