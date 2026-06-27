@@ -96,6 +96,7 @@ export default function Projects({ workspaceId }) {
   const [error, setError] = useState(null)
   const [showCompleted, setShowCompleted] = useState(false)
   const [showCancelled, setShowCancelled] = useState(false)
+  const [collapsedStatuses, setCollapsedStatuses] = useState({})
 
   const [projectForm, setProjectForm] = useState({
     title: '', client_id: '', status: 'planning',
@@ -181,6 +182,17 @@ export default function Projects({ workspaceId }) {
     : records.filter(r => r.status !== 'completed' && r.status !== 'cancelled').sort(sortFn)
   const completedRecords = isFiltered ? [] : records.filter(r => r.status === 'completed').sort(sortFn)
   const cancelledRecords = isFiltered ? [] : records.filter(r => r.status === 'cancelled').sort(sortFn)
+
+  const STATUS_GROUP_ORDER = ['planning', 'active', 'on-hold']
+  const STATUS_GROUP_LABELS = { planning: 'Planning', active: 'Active', 'on-hold': 'On Hold' }
+  const STATUS_GROUP_COLORS = { planning: '#534AB7', active: '#6B8F71', 'on-hold': '#BA7517' }
+
+  const groupedByStatus = !isFiltered && sortBy !== 'category'
+    ? STATUS_GROUP_ORDER.map(status => ({
+        status,
+        records: filteredRecords.filter(r => r.status === status),
+      })).filter(g => g.records.length > 0)
+    : null
 
   const groupedByType = sortBy === 'category' ? (() => {
     const groups = {}
@@ -340,30 +352,55 @@ export default function Projects({ workspaceId }) {
         </div>
       ) : (
         <>
-          {filteredRecords.length > 0 ? (
-            groupedByType ? (
-              groupedByType.map(([type, recs]) => (
-                <div key={type} style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: t.fontSizes.xs, fontWeight: '700', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{type} · {recs.length}</span>
-                    <div style={{ flex: 1, height: '1px', backgroundColor: t.colors.border }} />
-                  </div>
-                  <div style={styles.table}>
-                    <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
-                      <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
-                    </div>
-                    {recs.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
-                  </div>
+          {groupedByType ? (
+            groupedByType.map(([type, recs]) => (
+              <div key={type} style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: t.fontSizes.xs, fontWeight: '700', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{type} · {recs.length}</span>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: t.colors.border }} />
                 </div>
-              ))
-            ) : (
+                <div style={styles.table}>
+                  <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
+                    <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
+                  </div>
+                  {recs.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
+                </div>
+              </div>
+            ))
+          ) : groupedByStatus ? (
+            groupedByStatus.map(({ status, records: recs }) => {
+              const isCollapsed = collapsedStatuses[status]
+              const color = STATUS_GROUP_COLORS[status]
+              return (
+                <div key={status} style={{ marginBottom: '16px' }}>
+                  <button
+                    onClick={() => setCollapsedStatuses(prev => ({ ...prev, [status]: !prev[status] }))}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', background: 'none', border: 'none', padding: '10px 0', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <span style={{ fontSize: t.fontSizes.xs, fontWeight: '700', color, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                      {STATUS_GROUP_LABELS[status]} · {recs.length}
+                    </span>
+                    <div style={{ flex: 1, height: '1px', backgroundColor: t.colors.border }} />
+                    <span style={{ fontSize: '11px', color: t.colors.textTertiary, fontWeight: '600' }}>{isCollapsed ? '▼' : '▲'}</span>
+                  </button>
+                  {!isCollapsed && (
+                    <div style={styles.table}>
+                      <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
+                        <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
+                      </div>
+                      {recs.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          ) : filteredRecords.length > 0 ? (
             <div style={styles.table}>
               <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
                 <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
               </div>
               {filteredRecords.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
             </div>
-            )
           ) : !isFiltered ? (
             <div style={styles.emptyState}>
               <div style={{ fontSize: '40px', marginBottom: '16px' }}>📋</div>
