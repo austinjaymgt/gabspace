@@ -19,7 +19,7 @@ const STATUS_COLORS = {
 
 const PROJECT_STATUS_CARDS = [
   { key: 'planning',  label: 'Planning',  color: '#534AB7' },
-  { key: 'active',    label: 'Active',    color: '#6B8F71' },
+  { key: 'active',    label: 'In Progress',    color: '#6B8F71' },
   { key: 'on-hold',   label: 'On hold',   color: '#BA7517' },
   { key: 'completed', label: 'Completed', color: '#378ADD' },
 ]
@@ -41,7 +41,7 @@ function StatusBadge({ status }) {
       color: sc.color,
       textTransform: 'capitalize',
     }}>
-      {(status || '').replace(/-/g, ' ')}
+      {status === 'active' ? 'In Progress' : (status || '').replace(/-/g, ' ')}
     </div>
   )
 }
@@ -74,7 +74,7 @@ function ProjectRow({ record, onClick }) {
       </span>
       <span>
         <div style={{ display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: sc.bg, color: sc.color, textTransform: 'capitalize' }}>
-          {(record.status || '').replace(/-/g, ' ')}
+          {record.status === 'active' ? 'In Progress' : (record.status || '').replace(/-/g, ' ')}
         </div>
       </span>
       <span style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>→</span>
@@ -184,7 +184,7 @@ export default function Projects({ workspaceId }) {
   const cancelledRecords = isFiltered ? [] : records.filter(r => r.status === 'cancelled').sort(sortFn)
 
   const STATUS_GROUP_ORDER = ['planning', 'active', 'on-hold']
-  const STATUS_GROUP_LABELS = { planning: 'Planning', active: 'Active', 'on-hold': 'On Hold' }
+  const STATUS_GROUP_LABELS = { planning: 'Planning', active: 'In Progress', 'on-hold': 'On Hold' }
   const STATUS_GROUP_COLORS = { planning: '#534AB7', active: '#6B8F71', 'on-hold': '#BA7517' }
 
   const groupedByStatus = !isFiltered && sortBy !== 'category'
@@ -298,7 +298,7 @@ export default function Projects({ workspaceId }) {
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={projectForm.status} onChange={e => setProjectForm({ ...projectForm, status: e.target.value })}>
                 <option value="planning">Planning</option>
-                <option value="active">Active</option>
+                <option value="active">In Progress</option>
                 <option value="on-hold">On hold</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
@@ -404,7 +404,7 @@ export default function Projects({ workspaceId }) {
           ) : !isFiltered ? (
             <div style={styles.emptyState}>
               <div style={{ fontSize: '40px', marginBottom: '16px' }}>📋</div>
-              <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>No active projects</h3>
+              <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>No projects yet</h3>
               <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>Add your first project to get started</p>
               <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Project</button>
             </div>
@@ -721,7 +721,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
                 <option value="planning">Planning</option>
-                <option value="active">Active</option>
+                <option value="active">In Progress</option>
                 <option value="on-hold">On hold</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
@@ -801,7 +801,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
                     cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'all 0.15s',
                     textTransform: 'capitalize',
                   }}>
-                    {step.replace(/-/g, ' ')}
+                    {step === 'active' ? 'In Progress' : step.replace(/-/g, ' ')}
                   </button>
                 )
               })}
