@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { theme as t } from '../theme'
+import { theme as t, taskStatusConfig } from '../theme'
 import EventHero from '../components/events/EventHero'
 import RunOfShow from '../components/events/RunOfShow'
 import Staffing from '../components/events/Staffing'
@@ -285,7 +285,7 @@ export default function Projects({ workspaceId }) {
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Project title *</label>
-              <input style={styles.input} placeholder="e.g. Brooklen Wedding 2026" value={projectForm.title} onChange={e => setProjectForm({ ...projectForm, title: e.target.value })} />
+              <input style={styles.input} placeholder="e.g. Spring Portrait Series 2026" value={projectForm.title} onChange={e => setProjectForm({ ...projectForm, title: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Client</label>
@@ -306,7 +306,7 @@ export default function Projects({ workspaceId }) {
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Project type</label>
-              <input style={styles.input} placeholder="e.g. Wedding, Portrait, Brand" value={projectForm.project_type} onChange={e => setProjectForm({ ...projectForm, project_type: e.target.value })} />
+              <input style={styles.input} placeholder="e.g. Portrait, Branding, Commission" value={projectForm.project_type} onChange={e => setProjectForm({ ...projectForm, project_type: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Budget ($)</label>
@@ -344,7 +344,7 @@ export default function Projects({ workspaceId }) {
             {filterStatus === 'all' ? 'No projects yet' : `No ${filterStatus} projects`}
           </h3>
           <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>
-            {filterStatus === 'all' ? 'Add your first project to get started' : 'Try a different filter'}
+            {filterStatus === 'all' ? 'Add your first project to start bringing your ideas to life' : 'Try a different filter'}
           </p>
           {filterStatus === 'all' && (
             <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Project</button>
@@ -568,10 +568,9 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
     setTimeout(() => setNotesSaved(false), 2000)
   }
 
-  async function toggleTask(task) {
-    const newStatus = task.status === 'done' ? 'todo' : 'done'
-    await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
+  async function updateTaskStatus(task, newStatus) {
     setTasks(prev => prev.map(tk => tk.id === task.id ? { ...tk, status: newStatus } : tk))
+    await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
   }
 
   async function addTask() {
@@ -1002,16 +1001,27 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
                         </div>
                       )}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-                        {tasks.map(task => (
-                          <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
-                            <button onClick={() => toggleTask(task)} style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, border: `2px solid ${task.status === 'done' ? t.colors.primary : t.colors.border}`, backgroundColor: task.status === 'done' ? t.colors.primary : t.colors.bgCard, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              {task.status === 'done' && <span style={{ color: '#fff', fontSize: '10px', fontWeight: '700' }}>✓</span>}
-                            </button>
-                            <span style={{ flex: 1, fontSize: t.fontSizes.base, color: task.status === 'done' ? t.colors.textTertiary : t.colors.textPrimary, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>{task.title}</span>
-                            {task.due_date && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
-                            <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '12px' }}>✕</button>
-                          </div>
-                        ))}
+                        {tasks.map(task => {
+                          const sc = taskStatusConfig[task.status] || taskStatusConfig.todo
+                          return (
+                            <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
+                              <span style={{ flex: 1, fontSize: t.fontSizes.base, color: task.status === 'done' ? t.colors.textTertiary : t.colors.textPrimary, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>{task.title}</span>
+                              {task.due_date && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+                              <select
+                                value={task.status}
+                                onChange={e => updateTaskStatus(task, e.target.value)}
+                                className="status-select"
+                                style={{ ...styles.statusSelect, '--status-bg': sc.bg, '--status-color': sc.color }}
+                                title="Change status"
+                              >
+                                <option value="todo">To do</option>
+                                <option value="in-progress">In progress</option>
+                                <option value="done">Done</option>
+                              </select>
+                              <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '12px' }}>✕</button>
+                            </div>
+                          )
+                        })}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <input style={{ ...styles.input, flex: 1 }} placeholder="Add a task..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} />
@@ -1142,6 +1152,22 @@ const styles = {
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
   cancelBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
   saveBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  statusSelect: {
+    padding: '3px 24px 3px 10px',
+    borderRadius: t.radius.full,
+    fontSize: t.fontSizes.sm,
+    fontWeight: '500',
+    flexShrink: 0,
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\' viewBox=\'0 0 10 6\'><path d=\'M1 1l4 4 4-4\' stroke=\'%23888\' stroke-width=\'1.5\' fill=\'none\'/></svg>")',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 8px center',
+  },
   error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
   table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
   tableHeader: { display: 'grid', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },

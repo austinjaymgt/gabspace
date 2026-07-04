@@ -38,19 +38,19 @@ function ConceptSection({ label, children }) {
 }
 
 const s = {
-  card: { backgroundColor: '#fff', borderRadius: '12px', border: '0.5px solid rgba(0,0,0,0.09)', padding: '22px 24px', marginBottom: '16px' },
-  sectionLabel: { fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8585A0', marginBottom: '12px' },
+  card: { backgroundColor: t.colors.bgCard, borderRadius: '12px', border: `0.5px solid ${t.colors.border}`, padding: '22px 24px', marginBottom: '16px' },
+  sectionLabel: { fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '12px' },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#3D3D5C' },
-  input: { fontFamily: 'inherit', fontSize: '14px', color: '#1A1A2E', background: '#F7F5F0', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: '8px', padding: '10px 12px', outline: 'none', width: '100%', boxSizing: 'border-box' },
+  label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
+  input: { fontFamily: 'inherit', fontSize: '14px', color: t.colors.textPrimary, background: t.colors.bgHover, border: `0.5px solid ${t.colors.border}`, borderRadius: '8px', padding: '10px 12px', outline: 'none', width: '100%', boxSizing: 'border-box' },
   chip: { fontSize: '12px', fontWeight: '500', padding: '6px 14px', borderRadius: '100px', border: '0.5px solid', cursor: 'pointer', fontFamily: 'inherit' },
   primaryBtn: { fontFamily: 'inherit', fontSize: '14px', fontWeight: '500', background: '#1A1A2E', color: '#fff', border: 'none', borderRadius: '100px', padding: '13px 24px', cursor: 'pointer' },
-  secondaryBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#fff', color: '#3D3D5C', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
+  secondaryBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: t.colors.bgCard, color: t.colors.textSecondary, border: `0.5px solid ${t.colors.border}`, borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
   promoteBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#7C5CBF', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
   editBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#D4874E', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
   cancelBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#8585A0', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
-  generateBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#fff', color: '#3D3D5C', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
+  generateBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: t.colors.bgCard, color: t.colors.textSecondary, border: `0.5px solid ${t.colors.border}`, borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
   deleteBtn: { fontFamily: 'inherit', fontSize: '12px', background: '#fff0f0', color: '#cc3333', border: 'none', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer' },
   metaPill: { fontSize: '11px', fontWeight: '500', padding: '4px 12px', borderRadius: '100px', border: '0.5px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' },
   divider: { border: 'none', borderTop: '0.5px solid rgba(0,0,0,0.08)', margin: '18px 0' },
@@ -78,6 +78,7 @@ export default function EventBrainstorm({ workspaceId, session }) {
   const [concepts, setConcepts] = useState([])
   const [loadingConcepts, setLoadingConcepts] = useState(true)
   const [promoting, setPromoting] = useState(null)
+  const [movingToContent, setMovingToContent] = useState(null)
   const [captureTitle, setCaptureTitle] = useState('')
   const [captureText, setCaptureText] = useState('')
   const [captureSaving, setCaptureSaving] = useState(false)
@@ -295,6 +296,22 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
     setPromoting(null)
   }
 
+  async function handleMoveToContent(id) {
+    setMovingToContent(id)
+    const c = concepts.find(x => x.id === id)
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.from('content_calendar').insert({
+      title: c.title,
+      notes: c.description || null,
+      status: 'idea',
+      user_id: user.id,
+      workspace_id: workspaceId,
+    })
+    await supabase.from('projects').delete().eq('id', id)
+    fetchConcepts()
+    setMovingToContent(null)
+  }
+
   async function handleDeleteConcept(id) {
     if (!confirm('Delete this concept?')) return
     await supabase.from('projects').delete().eq('id', id)
@@ -311,7 +328,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
       <div style={{ marginBottom: '28px' }}>
         <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Creative Collective</div>
         <h2 style={{ fontSize: '20px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '0.01em' }}>Spark</h2>
-        <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>Capture event ideas, generate full concepts, and move them into planning</p>
+        <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>Capture event ideas, generate full concepts, and move them into projects or content</p>
               </div>
 
       {/* Quick capture */}
@@ -322,7 +339,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         </p>
         <input
           style={{ ...s.input, marginBottom: '10px' }}
-          placeholder="Title / working name (required to move to planning)"
+          placeholder="Title / working name (required to move to projects)"
           value={captureTitle}
           onChange={e => setCaptureTitle(e.target.value)}
         />
@@ -345,7 +362,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
         <div style={{ marginBottom: '14px' }}>
           <div style={{ fontSize: '15px', fontWeight: '600', color: t.colors.textPrimary }}>Saved Concepts & Ideas</div>
           <div style={{ fontSize: '12px', color: t.colors.textTertiary, marginTop: '2px' }}>
-            Edit ideas to add structure, or promote a full concept into active planning
+            Edit ideas to add structure, or move a concept into projects or content
           </div>
         </div>
 
@@ -364,9 +381,9 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                 <div key={c.id}>
                   {/* Card row */}
                   <div style={{
-                    backgroundColor: '#fff',
+                    backgroundColor: t.colors.bgCard,
                     borderRadius: isEditing ? '12px 12px 0 0' : '12px',
-                    border: '0.5px solid rgba(0,0,0,0.09)',
+                    border: `0.5px solid ${t.colors.border}`,
                     borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
                     padding: '18px 20px',
                     display: 'flex',
@@ -405,18 +422,22 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
     </button>
     <button onClick={() => handlePromote(c.id)} disabled={promoting === c.id}
       style={{ ...s.promoteBtn, opacity: promoting === c.id ? 0.6 : 1 }}>
-      {promoting === c.id ? 'Moving…' : 'Move to Planning →'}
+      {promoting === c.id ? 'Moving…' : 'Move to Projects →'}
+    </button>
+    <button onClick={() => handleMoveToContent(c.id)} disabled={movingToContent === c.id}
+      style={{ ...s.promoteBtn, background: '#3D8C6E', opacity: movingToContent === c.id ? 0.6 : 1 }}>
+      {movingToContent === c.id ? 'Moving…' : 'Move to Content →'}
     </button>
   </>
                       ) : (
                         <>
                           <button onClick={() => openEdit(c)}
-                            style={{ ...s.generateBtn, background: isEditing ? '#F0EBF9' : '#fff', color: isEditing ? '#7C5CBF' : '#3D3D5C' }}>
+                            style={{ ...s.generateBtn, background: isEditing ? t.colors.primaryLight : t.colors.bgCard, color: isEditing ? '#7C5CBF' : t.colors.textSecondary }}>
                             {isEditing ? 'Cancel' : 'Edit'}
                           </button>
                           <button onClick={() => handlePromote(c.id)} disabled={promoting === c.id}
                             style={{ ...s.promoteBtn, opacity: promoting === c.id ? 0.6 : 1 }}>
-                            {promoting === c.id ? 'Moving…' : 'Move to Planning →'}
+                            {promoting === c.id ? 'Moving…' : 'Move to Projects →'}
                           </button>
                         </>
                       )}
@@ -427,8 +448,8 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                   {/* Inline edit form */}
                   {isEditing && (
                     <div style={{
-                      backgroundColor: '#F7F5F0',
-                      border: '0.5px solid rgba(0,0,0,0.09)',
+                      backgroundColor: t.colors.bgHover,
+                      border: `0.5px solid ${t.colors.border}`,
                       borderTop: 'none',
                       borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
                       borderRadius: '0 0 12px 12px',
@@ -441,12 +462,12 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                       <div style={s.grid2}>
                         <div style={s.field}>
                           <label style={s.label}>Event name or working title</label>
-                          <input style={s.input} placeholder="e.g. Spring Gala"
+                          <input style={s.input} placeholder="e.g. Gallery Opening Night"
                             value={editForm.eventName} onChange={e => setEditForm({ ...editForm, eventName: e.target.value })} />
                         </div>
                         <div style={s.field}>
                           <label style={s.label}>Client / brand</label>
-                          <input style={s.input} placeholder="e.g. Solis Studio"
+                          <input style={s.input} placeholder="e.g. Wildflower Creative Co."
                             value={editForm.clientName} onChange={e => setEditForm({ ...editForm, clientName: e.target.value })} />
                         </div>
                         <div style={s.field}>
@@ -509,12 +530,12 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
           <div style={s.grid2}>
             <div style={s.field}>
               <label style={s.label}>Event name or working title</label>
-              <input style={s.input} placeholder="e.g. Spring Gala, Brand Launch…"
+              <input style={s.input} placeholder="e.g. Gallery Opening, Album Release Party…"
                 value={form.eventName} onChange={e => setForm({ ...form, eventName: e.target.value })} />
             </div>
             <div style={s.field}>
               <label style={s.label}>Client / brand</label>
-              <input style={s.input} placeholder="e.g. Solis Studio"
+              <input style={s.input} placeholder="e.g. Wildflower Creative Co."
                 value={form.clientName} onChange={e => setForm({ ...form, clientName: e.target.value })} />
             </div>
             <div style={s.field}>
@@ -559,7 +580,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
             {VIBES.map(v => (
               <button key={v} onClick={() => toggleVibe(v)} style={{
                 ...s.chip,
-                backgroundColor: vibes.includes(v) ? '#7C5CBF' : '#fff',
+                backgroundColor: vibes.includes(v) ? '#7C5CBF' : t.colors.bgCard,
                 color: vibes.includes(v) ? '#fff' : t.colors.textSecondary,
                 borderColor: vibes.includes(v) ? '#7C5CBF' : t.colors.border,
               }}>
@@ -624,7 +645,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
             <ConceptSection label="Success Metrics">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                 {concept.successMetrics.map((m, i) => (
-                  <div key={i} style={{ background: '#F7F5F0', borderRadius: '8px', padding: '12px 14px', border: '0.5px solid rgba(0,0,0,0.07)' }}>
+                  <div key={i} style={{ background: t.colors.bgHover, borderRadius: '8px', padding: '12px 14px', border: `0.5px solid ${t.colors.border}` }}>
                     <div style={{ fontSize: '11px', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{m.label}</div>
                     <div style={{ fontSize: '14px', fontWeight: '500', color: t.colors.textPrimary }}>{m.value}</div>
                   </div>

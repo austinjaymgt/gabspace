@@ -181,12 +181,12 @@ export default function ClientPortal() {
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>🔗</div>
           <h3 style={styles.emptyTitle}>No portals yet</h3>
-          <p style={styles.emptyText}>Go to a client's detail page and generate their portal link to get started</p>
+          <p style={styles.emptyText}>Head to a client's detail page to generate their portal link and give them a home base</p>
         </div>
       ) : displayedPortals.length === 0 ? (
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>🔍</div>
-          <h3 style={styles.emptyTitle}>No results</h3>
+          <h3 style={styles.emptyTitle}>No results — try a different search</h3>
           <p style={styles.emptyText}>Try a different search term</p>
         </div>
       ) : (

@@ -1,11 +1,12 @@
 // src/components/events/ConceptForm.jsx
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
+import { theme as t } from '../../theme'
 
 const btnStyles = {
   primary:   { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#3D3D5C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel:    { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+  secondary: { padding: '7px 14px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel:    { padding: '9px 16px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
 }
 
 export default function ConceptForm({ event, onSave }) {
@@ -53,8 +54,8 @@ export default function ConceptForm({ event, onSave }) {
   }
 
   const sectionLabel = { fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5CBF', marginBottom: '10px' }
-  const card = { backgroundColor: '#fff', borderRadius: '14px', padding: '22px 24px', border: '1px solid #f0f0eb', marginBottom: '16px' }
-  const inp = { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff', width: '100%', boxSizing: 'border-box', fontFamily: 'DM Sans, sans-serif' }
+  const card = { backgroundColor: t.colors.bgCard, borderRadius: '14px', padding: '22px 24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '16px' }
+  const inp = { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, width: '100%', boxSizing: 'border-box', fontFamily: 'DM Sans, sans-serif' }
 
   if (!editMode && event.concept_data) {
     const c = event.concept_data
@@ -71,11 +72,11 @@ export default function ConceptForm({ event, onSave }) {
         {c.coreConcept && (
           <div style={card}>
             <div style={sectionLabel}>Core Concept</div>
-            <p style={{ fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 }}>{c.coreConcept}</p>
+            <p style={{ fontSize: '14px', color: t.colors.textSecondary, lineHeight: '1.65', margin: 0 }}>{c.coreConcept}</p>
             {c.goals && <>
-              <hr style={{ border: 'none', borderTop: '1px solid #f0f0eb', margin: '16px 0' }} />
+              <hr style={{ border: 'none', borderTop: `1px solid ${t.colors.borderLight}`, margin: '16px 0' }} />
               <div style={sectionLabel}>Goals</div>
-              <p style={{ fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 }}>{c.goals}</p>
+              <p style={{ fontSize: '14px', color: t.colors.textSecondary, lineHeight: '1.65', margin: 0 }}>{c.goals}</p>
             </>}
           </div>
         )}
@@ -84,8 +85,8 @@ export default function ConceptForm({ event, onSave }) {
             <div style={sectionLabel}>Key Moments</div>
             {c.experienceDesign.filter(m => m.moment).map((m, i) => (
               <div key={i} style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E', marginBottom: '2px' }}>{m.moment}</div>
-                {m.description && <div style={{ fontSize: '13px', color: '#8585A0', lineHeight: '1.55' }}>{m.description}</div>}
+                <div style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, marginBottom: '2px' }}>{m.moment}</div>
+                {m.description && <div style={{ fontSize: '13px', color: t.colors.textTertiary, lineHeight: '1.55' }}>{m.description}</div>}
               </div>
             ))}
           </div>
@@ -96,17 +97,17 @@ export default function ConceptForm({ event, onSave }) {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
               {c.aestheticKeywords.map((k, i) => <span key={i} style={{ ...tag, ...tagStyles[i % tagStyles.length] }}>{k}</span>)}
             </div>
-            <hr style={{ border: 'none', borderTop: '1px solid #f0f0eb', margin: '0 0 16px' }} />
+            <hr style={{ border: 'none', borderTop: `1px solid ${t.colors.borderLight}`, margin: '0 0 16px' }} />
           </>}
           {c.venueConsiderations && <>
             <div style={sectionLabel}>Venue Considerations</div>
-            <p style={{ fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: '0 0 16px' }}>{c.venueConsiderations}</p>
-            <hr style={{ border: 'none', borderTop: '1px solid #f0f0eb', margin: '0 0 16px' }} />
+            <p style={{ fontSize: '14px', color: t.colors.textSecondary, lineHeight: '1.65', margin: '0 0 16px' }}>{c.venueConsiderations}</p>
+            <hr style={{ border: 'none', borderTop: `1px solid ${t.colors.borderLight}`, margin: '0 0 16px' }} />
           </>}
           {c.productionNotes && <>
             <div style={sectionLabel}>Production Notes</div>
-            <p style={{ fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: '0 0 16px' }}>{c.productionNotes}</p>
-            <hr style={{ border: 'none', borderTop: '1px solid #f0f0eb', margin: '0 0 16px' }} />
+            <p style={{ fontSize: '14px', color: t.colors.textSecondary, lineHeight: '1.65', margin: '0 0 16px' }}>{c.productionNotes}</p>
+            <hr style={{ border: 'none', borderTop: `1px solid ${t.colors.borderLight}`, margin: '0 0 16px' }} />
           </>}
           {c.vendorCategories?.length > 0 && <>
             <div style={sectionLabel}>Vendor Categories</div>
@@ -120,9 +121,9 @@ export default function ConceptForm({ event, onSave }) {
             <div style={sectionLabel}>Success Metrics</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
               {c.successMetrics.filter(m => m.label).map((m, i) => (
-                <div key={i} style={{ background: '#F7F5F0', borderRadius: '8px', padding: '12px 14px' }}>
-                  <div style={{ fontSize: '11px', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{m.label}</div>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#1A1A2E' }}>{m.value}</div>
+                <div key={i} style={{ background: t.colors.bgHover, borderRadius: '8px', padding: '12px 14px' }}>
+                  <div style={{ fontSize: '11px', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{m.label}</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: t.colors.textPrimary }}>{m.value}</div>
                 </div>
               ))}
             </div>
@@ -137,8 +138,8 @@ export default function ConceptForm({ event, onSave }) {
       {!event.concept_data && (
         <div style={{ ...card, textAlign: 'center', marginBottom: '24px' }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>💡</div>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: '#1A1A2E', marginBottom: '4px' }}>Build your event concept</div>
-          <div style={{ fontSize: '13px', color: '#8585A0' }}>Capture the core idea, goals, and experience design — perfect for intake calls and client alignment.</div>
+          <div style={{ fontSize: '15px', fontWeight: '600', color: t.colors.textPrimary, marginBottom: '4px' }}>Build your event concept</div>
+          <div style={{ fontSize: '13px', color: t.colors.textTertiary }}>Capture the core idea, goals, and experience design — perfect for intake calls and client alignment.</div>
         </div>
       )}
 
@@ -160,7 +161,7 @@ export default function ConceptForm({ event, onSave }) {
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '10px', marginBottom: '10px', alignItems: 'start' }}>
             <input value={m.moment} onChange={e => updateMoment(i, 'moment', e.target.value)} placeholder="Moment name" style={inp} />
             <input value={m.description} onChange={e => updateMoment(i, 'description', e.target.value)} placeholder="What happens, how it feels..." style={inp} />
-            {form.experienceDesign.length > 1 && <button onClick={() => removeMoment(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8585A0', fontSize: '14px', paddingTop: '8px' }}>✕</button>}
+            {form.experienceDesign.length > 1 && <button onClick={() => removeMoment(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '14px', paddingTop: '8px' }}>✕</button>}
           </div>
         ))}
       </div>
@@ -187,7 +188,7 @@ export default function ConceptForm({ event, onSave }) {
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
             <input value={m.label} onChange={e => updateMetric(i, 'label', e.target.value)} placeholder="Metric (e.g. Attendance)" style={inp} />
             <input value={m.value} onChange={e => updateMetric(i, 'value', e.target.value)} placeholder="Target (e.g. 500 guests)" style={inp} />
-            {form.successMetrics.length > 1 && <button onClick={() => removeMetric(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8585A0', fontSize: '14px' }}>✕</button>}
+            {form.successMetrics.length > 1 && <button onClick={() => removeMetric(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '14px' }}>✕</button>}
           </div>
         ))}
       </div>

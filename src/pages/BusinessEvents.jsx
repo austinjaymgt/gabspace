@@ -7,8 +7,19 @@ const eventTypes = [
   'Speaking gig', 'Styled shoot', 'Vendor fair', 'Conference', 'Other'
 ]
 
+const eventStatuses = [
+  { key: 'upcoming', label: 'Idea' },
+  { key: 'registered', label: 'Registered' },
+  { key: 'attending', label: 'Attending' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'cancelled', label: 'Cancelled' },
+]
+
+const statusLabels = Object.fromEntries(eventStatuses.map(s => [s.key, s.label]))
+
 const statusColors = {
   upcoming: { bg: '#F0EBF9', color: '#7C5CBF' },
+  registered: { bg: '#E8F4F8', color: '#4A90A4' },
   attending: { bg: '#FBF0E6', color: '#D4874E' },
   completed: { bg: '#EAF2EA', color: '#6B8F71' },
   cancelled: { bg: '#FAF0F2', color: '#C06B7A' },
@@ -148,7 +159,7 @@ export default function BusinessEvents({ workspaceId }) {
       {/* Filters */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
-          {['all', 'upcoming', 'attending', 'completed', 'cancelled'].map(status => (
+          {['all', ...eventStatuses.map(s => s.key)].map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
@@ -164,7 +175,7 @@ export default function BusinessEvents({ workspaceId }) {
                 fontFamily: t.fonts.sans,
               }}
             >
-              {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+              {status === 'all' ? 'All' : statusLabels[status]}
             </button>
           ))}
         </div>
@@ -177,7 +188,7 @@ export default function BusinessEvents({ workspaceId }) {
           <div style={{ ...styles.formGrid, marginBottom: '16px' }}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Event name *</label>
-              <input style={styles.input} placeholder="e.g. Atlanta Wedding Summit 2026" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              <input style={styles.input} placeholder="e.g. Creative Business Summit 2026" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Event type</label>
@@ -201,10 +212,7 @@ export default function BusinessEvents({ workspaceId }) {
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                <option value="upcoming">Upcoming</option>
-                <option value="attending">Attending</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                {eventStatuses.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
             </div>
           </div>
@@ -265,7 +273,7 @@ export default function BusinessEvents({ workspaceId }) {
             No events yet
           </h3>
           <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>
-            Start tracking the events you attend and host to grow your business
+            Add your first one to start tracking the events you attend and host
           </p>
           <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Event</button>
         </div>
@@ -301,7 +309,7 @@ export default function BusinessEvents({ workspaceId }) {
                 </span>
                 <span>
                   <div style={{ display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: sc.bg, color: sc.color }}>
-                    {event.status}
+                    {statusLabels[event.status] || event.status}
                   </div>
                 </span>
                 <span style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>→</span>
@@ -454,10 +462,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select style={styles.input} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
-                <option value="upcoming">Upcoming</option>
-                <option value="attending">Attending</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                {eventStatuses.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
             </div>
             <div style={styles.field}>
@@ -496,7 +501,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                 </div>
               </div>
               <div style={{ display: 'inline-block', padding: '5px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '600', backgroundColor: sc.bg, color: sc.color }}>
-                {data.status}
+                {statusLabels[data.status] || data.status}
               </div>
             </div>
 
@@ -506,7 +511,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                 Update status
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
-                {['upcoming', 'attending', 'completed', 'cancelled'].map(status => {
+                {eventStatuses.map(({ key: status, label }) => {
                   const ssc = statusColors[status]
                   const isActive = data.status === status
                   return (
@@ -522,7 +527,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                         cursor: 'pointer', fontFamily: t.fonts.sans,
                       }}
                     >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      {label}
                     </button>
                   )
                 })}
@@ -667,7 +672,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                 ))}
                 {prepItems.length === 0 && (
                   <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, textAlign: 'center', padding: '12px 0' }}>
-                    No prep items yet
+                    No prep items yet — add what needs to get done before the big day
                   </p>
                 )}
               </div>

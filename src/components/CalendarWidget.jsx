@@ -11,9 +11,9 @@ const SOURCES = {
 const navBtn = {
   width: '28px', height: '28px',
   borderRadius: '6px',
-  border: '1px solid #e0e0e0',
-  backgroundColor: '#fff',
-  color: '#555',
+  border: `1px solid ${t.colors.border}`,
+  backgroundColor: t.colors.bgCard,
+  color: t.colors.textSecondary,
   fontSize: '16px',
   cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -159,7 +159,7 @@ export default function CalendarWidget() {
       })()
 
   return (
-    <div style={{ backgroundColor: '#fff', borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
+    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
 
       {/* Header */}
       <div style={{ padding: '18px 24px', borderBottom: `1px solid ${t.colors.borderLight}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
@@ -174,7 +174,7 @@ export default function CalendarWidget() {
           </span>
           <button
             onClick={() => { setCursor(new Date()); setSelected(null) }}
-            style={{ padding: '4px 10px', borderRadius: '100px', border: `1px solid ${t.colors.borderLight}`, backgroundColor: '#fff', color: t.colors.textTertiary, fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+            style={{ padding: '4px 10px', borderRadius: '100px', border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textTertiary, fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
           >
             Today
           </button>
@@ -192,9 +192,9 @@ export default function CalendarWidget() {
                   style={{
                     padding: '4px 10px',
                     borderRadius: '100px',
-                    border: `1.5px solid ${active ? cfg.color : '#e0e0e0'}`,
-                    backgroundColor: active ? cfg.bg : '#fff',
-                    color: active ? cfg.color : '#bbb',
+                    border: `1.5px solid ${active ? cfg.color : t.colors.border}`,
+                    backgroundColor: active ? cfg.bg : t.colors.bgCard,
+                    color: active ? cfg.color : t.colors.textTertiary,
                     fontSize: '11px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -209,7 +209,7 @@ export default function CalendarWidget() {
           </div>
 
           {/* View toggle */}
-          <div style={{ display: 'flex', backgroundColor: '#f0f0eb', borderRadius: '8px', padding: '3px', gap: '2px' }}>
+          <div style={{ display: 'flex', backgroundColor: t.colors.bgHover, borderRadius: '8px', padding: '3px', gap: '2px' }}>
             {['month', 'week'].map(v => (
               <button
                 key={v}
@@ -222,7 +222,7 @@ export default function CalendarWidget() {
                   fontWeight: '600',
                   cursor: 'pointer',
                   fontFamily: t.fonts.sans,
-                  backgroundColor: calView === v ? '#fff' : 'transparent',
+                  backgroundColor: calView === v ? t.colors.bgCard : 'transparent',
                   color: calView === v ? t.colors.textPrimary : t.colors.textTertiary,
                   boxShadow: calView === v ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                   transition: 'all 0.15s',
@@ -257,7 +257,7 @@ export default function CalendarWidget() {
             {calView === 'month' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
                 {monthDays.map((date, i) => {
-                  if (!date) return <div key={`empty-${i}`} style={{ minHeight: '80px', borderRight: `1px solid ${t.colors.borderLight}`, borderBottom: `1px solid ${t.colors.borderLight}`, backgroundColor: '#fafaf8' }} />
+                  if (!date) return <div key={`empty-${i}`} style={{ minHeight: '80px', borderRight: `1px solid ${t.colors.borderLight}`, borderBottom: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgHover }} />
                   const key = toDateKey(date.toISOString())
                   const dayEvents = eventsByDate[key] || []
                   const isToday = key === today
@@ -272,11 +272,11 @@ export default function CalendarWidget() {
                         borderRight: `1px solid ${t.colors.borderLight}`,
                         borderBottom: `1px solid ${t.colors.borderLight}`,
                         cursor: 'pointer',
-                        backgroundColor: isSelected ? '#f5f0fc' : 'transparent',
+                        backgroundColor: isSelected ? t.colors.primaryLight : 'transparent',
                         transition: 'background 0.1s',
                         position: 'relative',
                       }}
-                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.backgroundColor = '#fafaf8' }}
+                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)' }}
                       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent' }}
                     >
                       <div style={{
@@ -339,10 +339,10 @@ export default function CalendarWidget() {
                         padding: '10px 8px',
                         borderRight: `1px solid ${t.colors.borderLight}`,
                         cursor: 'pointer',
-                        backgroundColor: isSelected ? '#f5f0fc' : 'transparent',
+                        backgroundColor: isSelected ? t.colors.primaryLight : 'transparent',
                         transition: 'background 0.1s',
                       }}
-                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.backgroundColor = '#fafaf8' }}
+                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)' }}
                       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent' }}
                     >
                       <div style={{
@@ -391,7 +391,7 @@ export default function CalendarWidget() {
               flexShrink: 0,
               borderLeft: `1px solid ${t.colors.borderLight}`,
               padding: '16px',
-              backgroundColor: '#fafaf8',
+              backgroundColor: t.colors.bgHover,
             }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: t.colors.textPrimary, marginBottom: '12px' }}>
                 {new Date(selected + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -400,7 +400,7 @@ export default function CalendarWidget() {
                 {selectedEvents.map(ev => {
                   const src = SOURCES[ev.type] || SOURCES.event
                   return (
-                    <div key={ev.id} style={{ padding: '8px 10px', backgroundColor: '#fff', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}` }}>
+                    <div key={ev.id} style={{ padding: '8px 10px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}` }}>
                       <div style={{ fontSize: '10px', fontWeight: '700', color: src.color, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>
                         {src.label}
                       </div>

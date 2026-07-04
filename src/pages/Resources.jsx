@@ -477,7 +477,7 @@ function normalizeUrl(url) {
             <Icon name="resources" size="xl" />
           </div>
           <h3 style={styles.emptyTitle}>No resources yet</h3>
-          <p style={styles.emptyText}>Add files or links your team can reference</p>
+          <p style={styles.emptyText}>Add files or links your team can reference whenever they need them</p>
           <button onClick={openAddForm} style={styles.addBtn}>
             <Icon name="add" size="sm" />
             Add resource

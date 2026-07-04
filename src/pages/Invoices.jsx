@@ -301,7 +301,7 @@ export default function Invoices() {
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>💵</div>
           <h3 style={styles.emptyTitle}>No invoices yet</h3>
-          <p style={styles.emptyText}>Create your first invoice to start tracking revenue</p>
+          <p style={styles.emptyText}>Create your first invoice to start getting paid for your work</p>
           <button onClick={() => setShowForm(true)} style={styles.addBtn}>
             + New invoice
           </button>

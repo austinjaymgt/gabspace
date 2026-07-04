@@ -195,7 +195,7 @@ export default function Inquiries({ session }) {
             No {filter} inquiries
           </div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>
-            {filter === 'new' ? 'New inquiries from your form will appear here' : `No ${filter} inquiries yet`}
+            {filter === 'new' ? 'New inquiries from your form will appear here' : `No ${filter} inquiries yet — new ones will show up here`}
           </div>
         </div>
       ) : (

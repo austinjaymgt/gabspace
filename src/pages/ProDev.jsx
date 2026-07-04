@@ -192,7 +192,7 @@ export default function ProDev({ workspaceId, userRole, session }) {
               <input
                 value={form.member_name}
                 onChange={e => setForm(f => ({ ...f, member_name: e.target.value }))}
-                placeholder="e.g. Ostyn McCarty"
+                placeholder="e.g. Alex Rivera"
                 style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
               />
             </div>
@@ -208,7 +208,7 @@ export default function ProDev({ workspaceId, userRole, session }) {
               <input
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="e.g. Event Marketer Certification, SXSW 2026"
+                placeholder="e.g. Professional Certification, Industry Conference 2026"
                 style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
               />
             </div>

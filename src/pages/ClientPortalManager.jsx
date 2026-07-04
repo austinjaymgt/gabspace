@@ -348,7 +348,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
 
       {portals.length === 0 && !showNewPortal && (
         <div style={{ textAlign: 'center', padding: `${t.space['3xl']} 0`, color: t.colors.textTertiary, fontSize: t.fontSizes.md }}>
-          No portals yet. Create one to get started.
+          No portals yet — create one to give your client a home base.
         </div>
       )}
 
@@ -410,7 +410,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
 
                   {linkedProjects.length === 0 && (
                     <div style={{ padding: `${t.space.md} ${t.space.lg}`, color: t.colors.textTertiary, fontSize: t.fontSizes.md }}>
-                      No projects added yet.
+                      No projects added yet — add one so your client can follow along.
                     </div>
                   )}
 
@@ -508,7 +508,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
 
                                       {/* Comment thread */}
                                       {cmts.length === 0 && (
-                                        <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: t.space.sm }}>No comments yet.</div>
+                                        <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: t.space.sm }}>No comments yet — this is where client feedback will show up.</div>
                                       )}
                                       {cmts.map(c => (
                                         <div key={c.id} style={{ display: 'flex', gap: t.space.sm, marginBottom: t.space.sm, alignItems: 'flex-start' }}>

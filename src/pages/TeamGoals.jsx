@@ -345,7 +345,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
               </div>
             ))}
             {activeSubs.length === 0 && !editing && (
-              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>No subtasks yet.</div>
+              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>No subtasks yet — break this down into smaller steps.</div>
             )}
             {editing && !ro && (
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px' }}>
@@ -438,7 +438,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Goal Title *</label>
-              <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Deliver 12 flagship events this quarter" style={fieldStyle} />
+              <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Book 12 new clients this quarter" style={fieldStyle} />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Description</label>
@@ -497,7 +497,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
             No goals yet for {activePeriod}{activeCategory !== 'all' ? ` · ${categoryStyles[activeCategory].label}` : ''}
           </div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>
-            {isOwnerOrAdmin ? 'Add your first goal to get started.' : 'No goals have been set for this period yet.'}
+            {isOwnerOrAdmin ? 'Add your first goal to start rallying the team.' : 'No goals set for this period yet — check back soon.'}
           </div>
         </div>
       ) : (
@@ -603,7 +603,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                           <div style={{ gridColumn: '1 / -1' }}>
                             <label style={labelStyle}>Goal Title *</label>
-                            <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Deliver 12 flagship events this quarter" style={fieldStyle} />
+                            <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Book 12 new clients this quarter" style={fieldStyle} />
                           </div>
                           <div style={{ gridColumn: '1 / -1' }}>
                             <label style={labelStyle}>Description</label>

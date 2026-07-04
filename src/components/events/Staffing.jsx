@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
+import { theme as t } from '../../theme'
 
 const STAFF_STATUSES = {
   confirmed:  { label: 'Confirmed',  color: '#1D9E75', bg: '#f0faf6' },
@@ -9,14 +10,14 @@ const STAFF_STATUSES = {
 
 const btnStyles = {
   primary: { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#3D3D5C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel: { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+  secondary: { padding: '7px 14px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel: { padding: '9px 16px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
 }
 
 const fStyles = {
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
+  label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
+  input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
 export default function Staffing({ eventId, workspaceId }) {
@@ -71,9 +72,9 @@ export default function Staffing({ eventId, workspaceId }) {
   const needed = staff.filter(s => s.status === 'needed').length
 
   return (
-    <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
+    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: '14px', padding: '24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: staff.length > 0 ? '10px' : '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Staffing</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: 'Syne, sans-serif' }}>Staffing</h3>
         <button onClick={() => setShowForm(true)} style={btnStyles.secondary}>+ Add staff</button>
       </div>
 
@@ -90,7 +91,7 @@ export default function Staffing({ eventId, workspaceId }) {
       )}
 
       {showForm && (
-        <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: t.colors.bgHover, borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div style={fStyles.field}>
               <label style={fStyles.label}>Role *</label>
@@ -121,28 +122,28 @@ export default function Staffing({ eventId, workspaceId }) {
       )}
 
       {loading ? (
-        <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '20px 0' }}>Loading...</p>
+        <p style={{ fontSize: '13px', color: t.colors.textTertiary, textAlign: 'center', padding: '20px 0' }}>Loading...</p>
       ) : staff.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>👥</div>
-          <p style={{ fontSize: '13px', color: '#8585A0', margin: 0 }}>No staff added yet — build your event roster</p>
+          <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>No staff added yet — build your event roster</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.3fr', gap: '8px', padding: '6px 12px' }}>
             {['Role', 'Person', 'Status', ''].map(h => (
-              <span key={h} style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>
+              <span key={h} style={{ fontSize: '11px', fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>
             ))}
           </div>
           {staff.map(s => {
             const st = STAFF_STATUSES[s.status]
             return (
-              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center' }}>
+              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: t.colors.bgHover, borderRadius: '8px', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E' }}>{s.role}</div>
-                  {s.notes && <div style={{ fontSize: '11px', color: '#8585A0' }}>{s.notes}</div>}
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary }}>{s.role}</div>
+                  {s.notes && <div style={{ fontSize: '11px', color: t.colors.textTertiary }}>{s.notes}</div>}
                 </div>
-                <span style={{ fontSize: '13px', color: s.person_name ? '#3D3D5C' : '#B0B0C0', fontStyle: s.person_name ? 'normal' : 'italic' }}>
+                <span style={{ fontSize: '13px', color: s.person_name ? t.colors.textSecondary : t.colors.textTertiary, fontStyle: s.person_name ? 'normal' : 'italic' }}>
                   {s.person_name || 'TBD'}
                 </span>
                 <select value={s.status} onChange={e => updateStatus(s.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
@@ -150,7 +151,7 @@ export default function Staffing({ eventId, workspaceId }) {
                   <option value="tentative">Tentative</option>
                   <option value="confirmed">Confirmed</option>
                 </select>
-                <button onClick={() => deleteStaff(s.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#8585A0' }}>✕</button>
+                <button onClick={() => deleteStaff(s.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.colors.textTertiary }}>✕</button>
               </div>
             )
           })}

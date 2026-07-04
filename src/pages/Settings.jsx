@@ -167,6 +167,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
   async function handleLogoUpload(e) {
     const file = e.target.files[0]
     if (!file) return
+    if (file.size > 2 * 1024 * 1024) { setError('Logo must be under 2MB.'); return }
     setUploading(true)
     setError(null)
     const fileExt = file.name.split('.').pop()
@@ -180,7 +181,9 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
       return
     }
     const { data: urlData } = supabase.storage.from('logos').getPublicUrl(fileName)
-    setForm(prev => ({ ...prev, logo_url: urlData.publicUrl }))
+    const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`
+    setForm(prev => ({ ...prev, logo_url: newLogoUrl }))
+    await supabase.from('user_settings').update({ logo_url: newLogoUrl }).eq('user_id', session.user.id)
     setUploading(false)
   }
 
@@ -286,21 +289,21 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={fieldStyle}>
             <label style={labelStyle}>Your first name</label>
-            <input style={inputStyle} placeholder="e.g. Ostyn" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} />
+            <input style={inputStyle} placeholder="e.g. Alex" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} />
           </div>
           <div style={fieldStyle}>
             <label style={labelStyle}>Business name</label>
-            <input style={inputStyle} placeholder="e.g. Brookwaven Studio" value={form.business_name} onChange={e => setForm({ ...form, business_name: e.target.value })} />
+            <input style={inputStyle} placeholder="e.g. Wildflower Creative Co." value={form.business_name} onChange={e => setForm({ ...form, business_name: e.target.value })} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div style={fieldStyle}>
               <label style={labelStyle}>Display name</label>
-              <input style={inputStyle} placeholder="e.g. Ostyn McCarty" value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} />
+              <input style={inputStyle} placeholder="e.g. Alex Rivera" value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} />
               <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Used on proposals and documents</span>
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Job title</label>
-              <input style={inputStyle} placeholder="e.g. Director of Events" value={form.job_title} onChange={e => setForm({ ...form, job_title: e.target.value })} />
+              <input style={inputStyle} placeholder="e.g. Founder & Creative Director" value={form.job_title} onChange={e => setForm({ ...form, job_title: e.target.value })} />
               <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Appears under your name on proposals</span>
             </div>
           </div>
@@ -318,6 +321,14 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                   <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
                 </label>
                 <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>PNG, JPG up to 2MB</span>
+                {form.logo_url && (
+                  <button onClick={async () => {
+                    setForm(prev => ({ ...prev, logo_url: '' }))
+                    await supabase.from('user_settings').update({ logo_url: '' }).eq('user_id', session.user.id)
+                  }} style={{ fontSize: t.fontSizes.xs, color: t.colors.danger, background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, textAlign: 'left', padding: 0 }}>
+                    Remove logo
+                  </button>
+                )}
               </div>
             </div>
             {error && (
@@ -343,8 +354,8 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
         </div>
       </div>
 
-      {/* ── Team — owner/admin only ── */}
-      {isOwnerOrAdmin && (
+      {/* ── Team — hidden for v1 ── */}
+      {false && isOwnerOrAdmin && (
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
           <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
             <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Team</h3>

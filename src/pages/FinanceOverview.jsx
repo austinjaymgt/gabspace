@@ -46,10 +46,11 @@ export default function FinanceOverview({ onNavigate }) {
   const recurringExpenses = expenses.filter(e => e.recurrence && e.recurrence !== 'One-time' && e.recurrence !== '')
   const monthlyCommitted = recurringExpenses.reduce((sum, e) => {
     const amount = parseFloat(e.amount) || 0
-    if (e.recurrence === 'weekly') return sum + (amount * 4)
-    if (e.recurrence === 'monthly') return sum + amount
-    if (e.recurrence === 'quarterly') return sum + (amount / 3)
-    if (e.recurrence === 'annually') return sum + (amount / 12)
+    const recurrence = e.recurrence?.toLowerCase()
+    if (recurrence === 'weekly') return sum + (amount * 4)
+    if (recurrence === 'monthly') return sum + amount
+    if (recurrence === 'quarterly') return sum + (amount / 3)
+    if (recurrence === 'annually') return sum + (amount / 12)
     return sum
   }, 0)
 
@@ -209,7 +210,7 @@ export default function FinanceOverview({ onNavigate }) {
           <div style={{ fontSize: '40px', marginBottom: '16px' }}>💵</div>
           <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>No financial data yet</h3>
           <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 20px' }}>
-            Add revenue and expenses to see your financial overview
+            It'll show up here once you start logging revenue and expenses
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button onClick={() => onNavigate('revenue')} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer' }}>

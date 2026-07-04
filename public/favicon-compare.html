@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Favicon comparison</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #F7F5F0; margin: 0; padding: 40px; color: #26211C; }
+    h1 { font-size: 20px; margin: 0 0 24px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 900px; }
+    .card { background: #fff; border: 1px solid #E5E1D8; border-radius: 12px; padding: 20px; }
+    .card p.label { font-size: 13px; color: #888; margin: 0 0 16px; }
+    .tab { background: #E5E1D8; border-radius: 8px 8px 0 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+    .tab img { width: 16px; height: 16px; border-radius: 3px; }
+    .tab span { font-size: 12px; }
+    .bookmark { background: #fff; border: 1px solid #E5E1D8; border-radius: 0 0 8px 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .bookmark img { width: 14px; height: 14px; border-radius: 3px; }
+    .bookmark span { font-size: 11px; color: #666; }
+    .dock { display: flex; justify-content: center; }
+    .dock img { width: 72px; height: 72px; border-radius: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .links { margin-top: 32px; font-size: 13px; }
+    .links a { display: block; margin-bottom: 6px; color: #7C5CBF; }
+  </style>
+</head>
+<body>
+  <h1>Favicon candidates — side by side</h1>
+  <div class="grid">
+
+    <div class="card">
+      <p class="label">G mark</p>
+      <div class="tab"><img src="/favicon-candidates/ohg1.png" alt="" /><span>Gabspace</span></div>
+      <div class="bookmark"><img src="/favicon-candidates/ohg1.png" alt="" /><span>Gabspace</span></div>
+      <div class="dock"><img src="/favicon-candidates/ohg1.png" alt="G mark" /></div>
+    </div>
+
+    <div class="card">
+      <p class="label">Robot face</p>
+      <div class="tab"><img src="/favicon-candidates/g3.png" alt="" /><span>Gabspace</span></div>
+      <div class="bookmark"><img src="/favicon-candidates/g3.png" alt="" /><span>Gabspace</span></div>
+      <div class="dock"><img src="/favicon-candidates/g3.png" alt="Robot face" /></div>
+    </div>
+
+    <div class="card">
+      <p class="label">Full logo</p>
+      <div class="tab"><img src="/favicon-candidates/alt3.png" alt="" /><span>Gabspace</span></div>
+      <div class="bookmark"><img src="/favicon-candidates/alt3.png" alt="" /><span>Gabspace</span></div>
+      <div class="dock"><img src="/favicon-candidates/alt3.png" alt="Full logo" /></div>
+    </div>
+
+  </div>
+  <div class="links">
+    <p>Open each of these in its own tab to see the real browser-tab favicon (not a mockup):</p>
+    <a href="/favicon-preview-g.html">/favicon-preview-g.html — G mark</a>
+    <a href="/favicon-preview-face.html">/favicon-preview-face.html — Robot face</a>
+    <a href="/favicon-preview-logo.html">/favicon-preview-logo.html — Full logo</a>
+  </div>
+</body>
+</html>

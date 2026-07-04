@@ -9,7 +9,7 @@ export default function ContentCalendar({ workspaceId }) {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [view, setView] = useState('calendar')
+  const [view, setView] = useState('list')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [form, setForm] = useState({
     title: '',
@@ -198,7 +198,7 @@ export default function ContentCalendar({ workspaceId }) {
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Title *</label>
-              <input style={styles.input} placeholder="e.g. Spring wedding BTS reel" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+              <input style={styles.input} placeholder="e.g. Studio BTS reel" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Platform</label>

@@ -1,3 +1,9 @@
+export const taskStatusConfig = {
+  'todo':        { label: 'To do',       color: '#999',    bg: '#F3F3F3' },
+  'in-progress': { label: 'In progress', color: '#D4874E', bg: '#FBF0E6' },
+  'done':        { label: 'Done',        color: '#6B8F71', bg: '#EAF2EA' },
+}
+
 export const theme = {
   colors: {
     // Core brand

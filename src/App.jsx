@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Gabi from './components/Gabi'
+import gabspaceWordmark from './assets/gabspace-wordmark.png'
 import { supabase } from './supabaseClient'
 import { Icon } from './components/Icon'
 import IntranetManager from './pages/IntranetManager'
@@ -298,24 +299,14 @@ function renderPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.nav, fontFamily: t.fonts.sans }}>
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.xl, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-            <div style={{ width: '44px', height: '44px', background: 'linear-gradient(135deg, #7C5CBF, #6B8F71)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg viewBox="0 0 28 28" width="24" height="24" fill="none">
-                <rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.9"/>
-                <rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.55"/>
-                <rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.55"/>
-                <rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" fillOpacity="0.9"/>
-              </svg>
-            </div>
-            <h1 style={{ fontSize: '32px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, letterSpacing: '-0.02em', fontFamily: t.fonts.heading, lineHeight: 1 }}>
-              gabspace
-            </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+            <img src={gabspaceWordmark} alt="Gabspace" style={{ height: '72px', width: 'auto' }} />
           </div>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
             {isSignup ? 'create your space.' : 'welcome back.'}
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={isSignup ? handleSignUp : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
               <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
                 {error}
@@ -370,6 +361,7 @@ function renderPage() {
                   onChange={e => setPassword(e.target.value)}
                 />
                 <button
+                  type="button"
                   onClick={() => setShowPassword(prev => !prev)}
                   style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: t.colors.textTertiary, padding: '2px', lineHeight: 1 }}
                 >
@@ -379,7 +371,7 @@ function renderPage() {
             </div>
 
             <button
-              onClick={isSignup ? handleSignUp : handleLogin}
+              type="submit"
               disabled={loading}
               style={{ padding: '12px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
             >
@@ -393,6 +385,7 @@ function renderPage() {
                 </div>
               ) : (
                 <button
+                  type="button"
                   onClick={handleForgotPassword}
                   disabled={loading}
                   style={{ background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.sm, cursor: 'pointer', textAlign: 'center', fontFamily: t.fonts.sans, textDecoration: 'underline', padding: 0 }}
@@ -405,13 +398,14 @@ function renderPage() {
             <div style={{ textAlign: 'center', marginTop: '8px', paddingTop: '16px', borderTop: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontFamily: t.fonts.sans }}>
               {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button
+                type="button"
                 onClick={() => { setMode(isSignup ? 'signin' : 'signup'); setError(null); }}
                 style={{ background: 'none', border: 'none', color: t.colors.primary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, padding: 0 }}
               >
                 {isSignup ? 'Sign in' : 'Sign up'}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     )
@@ -486,7 +480,7 @@ function renderPage() {
   />
 )}
 <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} />
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} workspaceId={workspaceId} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} />
         <div style={{ flex: 1 }}>
           {renderPage()}

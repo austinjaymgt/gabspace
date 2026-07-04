@@ -150,7 +150,7 @@ export default function Events() {
               <label style={styles.label}>Event name *</label>
               <input
                 style={styles.input}
-                placeholder="e.g. Brooklen & Jay Wedding"
+                placeholder="e.g. Studio Open House"
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
               />
@@ -236,7 +236,7 @@ export default function Events() {
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>📅</div>
           <h3 style={styles.emptyTitle}>No events yet</h3>
-          <p style={styles.emptyText}>Add your first event to get started</p>
+          <p style={styles.emptyText}>Add your first event to start building your calendar</p>
           <button onClick={() => setShowForm(true)} style={styles.addBtn}>
             + Add Event
           </button>

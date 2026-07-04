@@ -3,8 +3,9 @@ import { theme as t } from '../theme'
 import { supabase } from '../supabaseClient'
 import { Icon } from './Icon'
 import { useThemeMode } from '../ThemeContext'
+import GlobalSearch from './GlobalSearch'
 
-export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate }) {
+export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, workspaceId }) {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const [firstName, setFirstName] = useState('')
   const { isDark, toggleDark } = useThemeMode()
@@ -105,31 +106,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
           <Icon name={isDark ? 'sun' : 'moon'} size="sm" />
         </button>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          backgroundColor: t.colors.bg,
-          borderRadius: t.radius.xl,
-          padding: '8px 14px',
-          border: `1px solid ${t.colors.borderLight}`,
-        }}>
-<span style={{ display: 'flex', alignItems: 'center', color: t.colors.textTertiary }}>
-  <Icon name="search" size="sm" />
-</span>
-          <input
-            style={{
-              border: 'none',
-              background: 'none',
-              outline: 'none',
-              fontSize: t.fontSizes.base,
-              color: t.colors.textSecondary,
-              width: '160px',
-              fontFamily: t.fonts.sans,
-            }}
-            placeholder="Search..."
-          />
-        </div>
+        <GlobalSearch workspaceId={workspaceId} onNavigate={onNavigate} />
 
         <div
           onClick={() => onNavigate('settings')}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import CurrencyInput from '../components/CurrencyInput'
+import { formatDate, quarterInfoFromDate } from '../utils/dates'
 
 const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4']
 const CURRENT_YEAR = new Date().getFullYear()
@@ -43,8 +44,6 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
     name: '',
     overall_goal: '',
     strategy_notes: '',
-    quarter: '',
-    year: CURRENT_YEAR,
     status: 'draft',
     start_date: '',
     end_date: '',
@@ -76,14 +75,15 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
   async function saveCampaign() {
     if (!form.name) return
     const { data: user } = await supabase.auth.getUser()
+    const qy = quarterInfoFromDate(form.start_date) || quarterInfoFromDate(form.end_date)
     const payload = {
       workspace_id: workspaceId,
       user_id: user.user?.id,
       name: form.name,
       overall_goal: form.overall_goal,
       strategy_notes: form.strategy_notes,
-      quarter: form.quarter,
-      year: Number(form.year) || CURRENT_YEAR,
+      quarter: qy?.quarter || null,
+      year: qy?.year || null,
       status: form.status,
       start_date: form.start_date || null,
       end_date: form.end_date || null,
@@ -129,8 +129,6 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
       name: campaign.name || '',
       overall_goal: campaign.overall_goal || '',
       strategy_notes: campaign.strategy_notes || '',
-      quarter: campaign.quarter || '',
-      year: campaign.year || CURRENT_YEAR,
       status: campaign.status || 'draft',
       start_date: campaign.start_date || '',
       end_date: campaign.end_date || '',
@@ -147,8 +145,8 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
   function startNew() {
     setEditingCampaign(null)
     setForm({
-      name: '', overall_goal: '', strategy_notes: '', quarter: '',
-      year: CURRENT_YEAR, status: 'draft', start_date: '', end_date: '',
+      name: '', overall_goal: '', strategy_notes: '',
+      status: 'draft', start_date: '', end_date: '',
       budget: '', channel: '', platform: '', description: '', goal: '', project_id: '',
     })
     setView('form')
@@ -192,7 +190,7 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Campaign Name *</label>
-                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. NBA Finals 2026 Campaign" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Spring Product Launch Campaign" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Overall Goal</label>
@@ -205,19 +203,6 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Status</label>
                 <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   {STATUS_OPTIONS.map(s => <option key={s} value={s}>{statusStyles[s].label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Quarter</label>
-                <select value={form.quarter} onChange={e => setForm(f => ({ ...f, quarter: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
-                  <option value="">No quarter</option>
-                  {QUARTERS.map(q => <option key={q} value={q}>{q}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Year</label>
-                <select value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
-                  {[CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1].map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
@@ -248,6 +233,14 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
                 <CurrencyInput value={form.budget} onChange={val => setForm(f => ({ ...f, budget: val }))} />
               </div>
             </div>
+            {(() => {
+              const qy = quarterInfoFromDate(form.start_date) || quarterInfoFromDate(form.end_date)
+              return (
+                <div style={{ marginTop: '12px', fontSize: t.fontSizes.sm, color: qy ? t.colors.primary : t.colors.textTertiary }}>
+                  {qy ? `📌 Falls under ${qy.quarter} ${qy.year} — set automatically from the dates above` : 'Add a start date to place this campaign in a quarter'}
+                </div>
+              )
+            })()}
           </div>
 
           {/* Channels */}
@@ -352,7 +345,7 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
         <div style={{ textAlign: 'center', padding: '60px 20px', background: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` }}>
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎨</div>
           <div style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' }}>No campaigns yet</div>
-          <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginBottom: '16px' }}>Start building your creative strategy by adding your first campaign.</div>
+          <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginBottom: '16px' }}>Create one to start shaping your creative strategy.</div>
           {isCreativeOrDirector && (
             <button onClick={startNew} style={{ padding: '10px 24px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               New Campaign
@@ -408,10 +401,15 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
               <span style={{ fontSize: '10px', fontWeight: '500', background: s.bg, color: s.color, padding: '3px 8px', borderRadius: '100px', flexShrink: 0 }}>{s.label}</span>
             </div>
 
-            {/* Goal */}
-            {campaign.overall_goal && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-<span style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: t.colors.primary, background: t.colors.primaryLight, padding: '3px 8px', borderRadius: t.radius.full }}>{campaign.overall_goal}</span>
+            {/* Goal + Quarter */}
+            {(campaign.overall_goal || (campaign.quarter && campaign.year)) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                {campaign.overall_goal && (
+                  <span style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: t.colors.primary, background: t.colors.primaryLight, padding: '3px 8px', borderRadius: t.radius.full }}>{campaign.overall_goal}</span>
+                )}
+                {campaign.quarter && campaign.year && (
+                  <span style={{ fontSize: '11px', fontWeight: '600', color: t.colors.textSecondary, background: t.colors.bg, padding: '3px 8px', borderRadius: t.radius.full }}>{campaign.quarter} {campaign.year}</span>
+                )}
               </div>
             )}
 
@@ -429,9 +427,11 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
 
             {/* Meta */}
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              {campaign.start_date && campaign.end_date && (
+              {(campaign.start_date || campaign.end_date) && (
                <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
-                  📅 {new Date(campaign.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} → {new Date(campaign.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  📅 {campaign.start_date && campaign.end_date
+                    ? `${formatDate(campaign.start_date)} → ${formatDate(campaign.end_date)}`
+                    : formatDate(campaign.start_date || campaign.end_date)}
                 </div>
               )}
               {campaign.budget > 0 && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>💰 {Number(campaign.budget).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</div>}

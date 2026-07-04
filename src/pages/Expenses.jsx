@@ -352,7 +352,7 @@ if (selectedExpense) {
             No expenses yet
           </h3>
           <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>
-            Track your business overhead and operating costs here
+            Log your first one to start tracking what it costs to run your business
           </p>
           <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Expense</button>
         </div>

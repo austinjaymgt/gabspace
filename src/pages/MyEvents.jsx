@@ -125,7 +125,7 @@ function EventForm({ clients, onSave, onCancel, saving, error, initial }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
         <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
           <label style={fStyles.label}>Event name *</label>
-          <input style={fStyles.input} placeholder="e.g. Johnson & Smith Wedding" value={form.title} onChange={e => f('title', e.target.value)} />
+          <input style={fStyles.input} placeholder="e.g. Studio Open House" value={form.title} onChange={e => f('title', e.target.value)} />
         </div>
         <div style={fStyles.field}>
           <label style={fStyles.label}>Client</label>
@@ -892,7 +892,7 @@ function ProposalGenerator({ event, onClose }) {
               </div>
               <div style={fStyles.field}>
                 <label style={fStyles.label}>Your title</label>
-                <input style={fStyles.input} value={senderTitle} onChange={e => setSenderTitle(e.target.value)} placeholder="e.g. Director of Events" />
+                <input style={fStyles.input} value={senderTitle} onChange={e => setSenderTitle(e.target.value)} placeholder="e.g. Founder & Creative Director" />
               </div>
             </div>
           </div>
@@ -1191,7 +1191,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, workspaceId 
             </div>
           )}
           {budgetItems.length === 0 ? (
-            <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '24px 0' }}>No budget categories yet</p>
+            <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '24px 0' }}>No budget categories yet — add one to start tracking spend</p>
           ) : (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.4fr', gap: '8px', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', marginBottom: '6px' }}>

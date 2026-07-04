@@ -1,6 +1,7 @@
 // src/components/events/ProposalGenerator.jsx
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
+import { theme as t } from '../../theme'
 
 function formatDateLong(dateStr) {
   if (!dateStr) return '—'
@@ -9,14 +10,14 @@ function formatDateLong(dateStr) {
 
 const btnStyles = {
   primary:   { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#3D3D5C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel:    { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+  secondary: { padding: '7px 14px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel:    { padding: '9px 16px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
 }
 
 const fStyles = {
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
+  label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
+  input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
 export default function ProposalGenerator({ event, onClose }) {
@@ -123,14 +124,14 @@ export default function ProposalGenerator({ event, onClose }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', overflowY: 'auto' }}>
-      <div style={{ backgroundColor: '#fff', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '600px', fontFamily: 'DM Sans, sans-serif' }}>
+      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '600px', fontFamily: 'DM Sans, sans-serif' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Generate Proposal</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#8585A0' }}>✕</button>
+          <h2 style={{ fontSize: '18px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, fontFamily: 'Syne, sans-serif' }}>Generate Proposal</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: t.colors.textTertiary }}>✕</button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px' }}>
-            <div style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Sender (you)</div>
+          <div style={{ backgroundColor: t.colors.bgHover, borderRadius: '10px', padding: '16px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Sender (you)</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div style={fStyles.field}>
                 <label style={fStyles.label}>Your name</label>
@@ -138,7 +139,7 @@ export default function ProposalGenerator({ event, onClose }) {
               </div>
               <div style={fStyles.field}>
                 <label style={fStyles.label}>Your title</label>
-                <input style={fStyles.input} value={senderTitle} onChange={e => setSenderTitle(e.target.value)} placeholder="e.g. Director of Events" />
+                <input style={fStyles.input} value={senderTitle} onChange={e => setSenderTitle(e.target.value)} placeholder="e.g. Founder & Creative Director" />
               </div>
             </div>
           </div>
@@ -157,7 +158,7 @@ export default function ProposalGenerator({ event, onClose }) {
                 <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input style={{ ...fStyles.input, flex: 2 }} placeholder="e.g. Contract signed" value={m.label} onChange={e => updateMilestone(i, 'label', e.target.value)} />
                   <input style={{ ...fStyles.input, flex: 1 }} type="date" value={m.date} onChange={e => updateMilestone(i, 'date', e.target.value)} />
-                  {milestones.length > 1 && <button onClick={() => removeMilestone(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8585A0', fontSize: '14px' }}>✕</button>}
+                  {milestones.length > 1 && <button onClick={() => removeMilestone(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '14px' }}>✕</button>}
                 </div>
               ))}
             </div>
@@ -174,7 +175,7 @@ export default function ProposalGenerator({ event, onClose }) {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #f0f0eb' }}>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '20px', borderTop: `1px solid ${t.colors.borderLight}` }}>
           <button onClick={onClose} style={btnStyles.cancel}>Cancel</button>
           <button onClick={() => handleGenerate('share')} disabled={generating} style={btnStyles.secondary}>{generating ? 'Saving...' : '🔗 Save & share link'}</button>
           <button onClick={() => handleGenerate('print')} disabled={generating} style={btnStyles.primary}>{generating ? 'Generating...' : '🖨 Download / Print'}</button>

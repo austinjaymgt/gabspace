@@ -267,7 +267,7 @@ export default function ClientPortalView() {
 
           {projects.length === 0 && (
             <div style={{ background: '#fff', border: '1px solid #e2e2e2', borderRadius: 8, padding: 32, textAlign: 'center', color: PLUM, fontFamily: '"Source Sans 3", sans-serif', fontSize: 14 }}>
-              No projects have been shared with you yet.
+              Nothing's been shared with you yet — check back soon.
             </div>
           )}
 
@@ -324,7 +324,7 @@ export default function ClientPortalView() {
 
           {deliverables.length === 0 && activeProject && (
             <div style={{ background: '#fff', border: '1px solid #e2e2e2', borderRadius: 8, padding: 32, textAlign: 'center', color: PLUM, fontFamily: '"Source Sans 3", sans-serif', fontSize: 14 }}>
-              No deliverables yet for <strong>{activeProj?.title}</strong>.
+              No deliverables yet for <strong>{activeProj?.title}</strong> — they'll show up here as soon as they're ready.
             </div>
           )}
 

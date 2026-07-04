@@ -351,7 +351,7 @@ export default function Clients({ workspaceId }) {
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>👥</div>
           <h3 style={styles.emptyTitle}>{search ? 'No results found' : 'No clients yet'}</h3>
-          <p style={styles.emptyText}>{search ? 'Try a different search term' : 'Add your first client to get started'}</p>
+          <p style={styles.emptyText}>{search ? 'Try a different search term' : 'Add your first client to start building your book of business'}</p>
           {!search && <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add client</button>}
         </div>
       ) : (

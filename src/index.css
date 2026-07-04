@@ -93,6 +93,11 @@ input, select, textarea {
   color: var(--color-text-primary) !important;
 }
 
+select.status-select {
+  background-color: var(--status-bg) !important;
+  color: var(--status-color) !important;
+}
+
 #root {
   background-color: var(--color-bg);
   min-height: 100vh;

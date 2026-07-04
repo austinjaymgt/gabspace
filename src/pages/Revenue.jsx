@@ -148,11 +148,11 @@ if (selectedEntry) {
         </div>
       </div>
 
-      <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '32px', border: '1px solid #f0f0eb' }}>
+      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: '12px', padding: '32px', border: `1px solid ${t.colors.borderLight}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
           <div>
-            <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1a1a1a', margin: '0 0 6px' }}>{selectedEntry.income_stream}</h2>
-            {selectedEntry.notes && <p style={{ fontSize: '14px', color: '#999', margin: 0 }}>{selectedEntry.notes}</p>}
+            <h2 style={{ fontSize: '22px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 6px' }}>{selectedEntry.income_stream}</h2>
+            {selectedEntry.notes && <p style={{ fontSize: '14px', color: t.colors.textTertiary, margin: 0 }}>{selectedEntry.notes}</p>}
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#10B981' }}>${parseFloat(selectedEntry.amount).toLocaleString()}</div>
@@ -178,9 +178,9 @@ if (selectedEntry) {
             { label: 'Client', value: selectedEntry.clients?.name || '—' },
             { label: 'Project', value: selectedEntry.projects?.title || '—' },
           ].map(field => (
-            <div key={field.label} style={{ backgroundColor: '#fafaf8', borderRadius: '8px', padding: '14px 16px' }}>
-              <div style={{ fontSize: '11px', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px' }}>{field.label}</div>
-              <div style={{ fontSize: '14px', color: '#1a1a1a' }}>{field.value}</div>
+            <div key={field.label} style={{ backgroundColor: t.colors.bgHover, borderRadius: '8px', padding: '14px 16px' }}>
+              <div style={{ fontSize: '11px', color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px' }}>{field.label}</div>
+              <div style={{ fontSize: '14px', color: t.colors.textPrimary }}>{field.value}</div>
             </div>
           ))}
        </div>
@@ -190,16 +190,16 @@ if (selectedEntry) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '20px' }}>📎</span>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a1a' }}>File attached</div>
-                <div style={{ fontSize: '12px', color: '#999' }}>Receipt or proof of payment</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary }}>File attached</div>
+                <div style={{ fontSize: '12px', color: t.colors.textTertiary }}>Receipt or proof of payment</div>
               </div>
             </div>
 <a href={selectedEntry.receipt_url} target="_blank" rel="noreferrer" style={{ padding: '7px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.primary}`, backgroundColor: t.colors.bgCard, color: t.colors.primary, fontSize: t.fontSizes.sm, fontWeight: '600', textDecoration: 'none' }}>View file</a>
           </div>
         ) : (
-          <div style={{ marginTop: '24px', padding: '16px 20px', backgroundColor: '#fafaf8', borderRadius: '10px', border: '1px dashed #e0e0e0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ marginTop: '24px', padding: '16px 20px', backgroundColor: t.colors.bgHover, borderRadius: '10px', border: `1px dashed ${t.colors.border}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '18px' }}>📎</span>
-            <div style={{ fontSize: '13px', color: '#bbb' }}>No file attached — click Edit to add one</div>
+            <div style={{ fontSize: '13px', color: t.colors.textTertiary }}>No file attached — click Edit to add one</div>
           </div>
         )}
       </div>
@@ -240,7 +240,7 @@ if (selectedEntry) {
           <button key={s} onClick={() => setFilterStatus(s)} style={{
             padding: '6px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm,
             border: `1px solid ${filterStatus === s ? t.colors.primary : t.colors.borderLight}`,
-            backgroundColor: filterStatus === s ? t.colors.primaryLight : '#fff',
+            backgroundColor: filterStatus === s ? t.colors.primaryLight : t.colors.bgCard,
             color: filterStatus === s ? t.colors.primary : t.colors.textSecondary,
             fontWeight: filterStatus === s ? '600' : '400', cursor: 'pointer', fontFamily: t.fonts.sans,
           }}>
@@ -252,7 +252,7 @@ if (selectedEntry) {
           <button key={cat} onClick={() => setFilterCategory(cat)} style={{
             padding: '6px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm,
             border: `1px solid ${filterCategory === cat ? '#8B5CF6' : t.colors.borderLight}`,
-            backgroundColor: filterCategory === cat ? '#F5F3FF' : '#fff',
+            backgroundColor: filterCategory === cat ? t.colors.primaryLight : t.colors.bgCard,
             color: filterCategory === cat ? '#8B5CF6' : t.colors.textSecondary,
             fontWeight: filterCategory === cat ? '600' : '400', cursor: 'pointer', fontFamily: t.fonts.sans,
           }}>
@@ -268,7 +268,7 @@ if (selectedEntry) {
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Income stream *</label>
-              <input style={styles.input} placeholder="e.g. Wedding photography — Smith wedding, Lightroom preset pack" value={form.income_stream} onChange={e => setForm({ ...form, income_stream: e.target.value })} />
+              <input style={styles.input} placeholder="e.g. Portrait session package, custom mural commission, digital preset pack" value={form.income_stream} onChange={e => setForm({ ...form, income_stream: e.target.value })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Amount ($) *</label>
@@ -311,20 +311,20 @@ if (selectedEntry) {
   <input style={styles.input} placeholder="Any additional details" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
 </div>
 <div style={{ ...styles.field, gridColumn: 'span 2' }}>
-  <label style={styles.label}>Receipt / proof of payment <span style={{ color: '#bbb', fontWeight: '400' }}>(optional)</span></label>
+  <label style={styles.label}>Receipt / proof of payment <span style={{ color: t.colors.textTertiary, fontWeight: '400' }}>(optional)</span></label>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
     {editingEntry?.receipt_url && !receiptFile && (
 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', backgroundColor: t.colors.successLight, borderRadius: t.radius.sm, border: `1px solid ${t.colors.success}` }}>
           <span style={{ fontSize: '13px' }}>📎</span>
-<a href={editingEntry.receipt_url} target="_blank" rel="noreferrer" style={{ fontSize: t.fontSizes.sm, color: t.colors.primary, textDecoration: 'none', fontWeight: '500' }}>View current file</a>        <span style={{ fontSize: '12px', color: '#bbb' }}>· Upload new to replace</span>
+<a href={editingEntry.receipt_url} target="_blank" rel="noreferrer" style={{ fontSize: t.fontSizes.sm, color: t.colors.primary, textDecoration: 'none', fontWeight: '500' }}>View current file</a>        <span style={{ fontSize: '12px', color: t.colors.textTertiary }}>· Upload new to replace</span>
       </div>
     )}
-    <label style={{ padding: '7px 14px', borderRadius: '8px', border: '1px dashed #e0e0e0', backgroundColor: '#fafaf8', color: '#888', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
+    <label style={{ padding: '7px 14px', borderRadius: '8px', border: `1px dashed ${t.colors.border}`, backgroundColor: t.colors.bgHover, color: t.colors.textSecondary, fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
       {receiptFile ? `📎 ${receiptFile.name}` : editingEntry?.receipt_url ? 'Replace file...' : '+ Attach file'}
       <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setReceiptFile(e.target.files[0] || null)} />
     </label>
     {receiptFile && (
-      <button onClick={() => setReceiptFile(null)} style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: '12px' }}>✕ Remove</button>
+      <button onClick={() => setReceiptFile(null)} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, cursor: 'pointer', fontSize: '12px' }}>✕ Remove</button>
     )}
   </div>
 </div>
@@ -344,7 +344,7 @@ if (selectedEntry) {
         <div style={styles.emptyState}>
           <div style={{ fontSize: '40px', marginBottom: '16px' }}>💵</div>
           <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px' }}>No revenue entries yet</h3>
-          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>Add your first income entry to start tracking</p>
+          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' }}>Add your first income entry to start tracking what's coming in</p>
           <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Revenue</button>
         </div>
       ) : (

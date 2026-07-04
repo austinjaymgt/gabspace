@@ -1,6 +1,7 @@
 // src/components/events/RunOfShow.jsx
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
+import { theme as t } from '../../theme'
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
@@ -23,14 +24,14 @@ function sortItems(a, b) {
 
 const btnStyles = {
   primary:   { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#3D3D5C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel:    { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+  secondary: { padding: '7px 14px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel:    { padding: '9px 16px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
 }
 
 const fStyles = {
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
+  label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
+  input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
 export default function RunOfShow({ eventId, eventTitle, eventDate, venue, workspaceId }) {
@@ -120,9 +121,9 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue, works
   }
 
   return (
-    <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
+    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: '14px', padding: '24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Run of Show</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: 'Syne, sans-serif' }}>Run of Show</h3>
         <div style={{ display: 'flex', gap: '8px' }}>
           {items.length > 0 && <>
             <button onClick={handlePrint} style={btnStyles.secondary}>🖨 Print</button>
@@ -133,14 +134,14 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue, works
       </div>
 
       {showForm && (
-        <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: t.colors.bgHover, borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
               <label style={fStyles.label}>Item title *</label>
               <input style={fStyles.input} placeholder="e.g. Guest Arrival, Dinner Service, Speeches" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             </div>
             <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
-              <label style={fStyles.label}>Day <span style={{ color: '#8585A0', fontWeight: '400' }}>(for multi-day events)</span></label>
+              <label style={fStyles.label}>Day <span style={{ color: t.colors.textTertiary, fontWeight: '400' }}>(for multi-day events)</span></label>
               <input style={fStyles.input} type="date" value={form.item_date} onChange={e => setForm({ ...form, item_date: e.target.value })} />
             </div>
             <div style={fStyles.field}>
@@ -168,11 +169,11 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue, works
       )}
 
       {loading ? (
-        <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '20px 0' }}>Loading...</p>
+        <p style={{ fontSize: '13px', color: t.colors.textTertiary, textAlign: 'center', padding: '20px 0' }}>Loading...</p>
       ) : items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
           <div style={{ fontSize: '28px', marginBottom: '10px' }}>🕐</div>
-          <p style={{ fontSize: '13px', color: '#8585A0', margin: 0 }}>No items yet — add your first timeline entry</p>
+          <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>No items yet — add your first timeline entry</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -180,20 +181,20 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue, works
             <div key={item.id} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, paddingTop: '14px' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#7C5CBF', flexShrink: 0 }} />
-                {index < items.length - 1 && <div style={{ width: '2px', flex: 1, minHeight: '24px', backgroundColor: '#f0f0eb', margin: '4px 0' }} />}
+                {index < items.length - 1 && <div style={{ width: '2px', flex: 1, minHeight: '24px', backgroundColor: t.colors.borderLight, margin: '4px 0' }} />}
               </div>
               <div style={{ flex: 1, paddingBottom: index < items.length - 1 ? '8px' : '0', paddingTop: '8px' }}>
-                <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ backgroundColor: t.colors.bgHover, borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: item.notes ? '4px' : '0', flexWrap: 'wrap' }}>
                       {item.item_date && <span style={{ fontSize: '11px', fontWeight: '600', backgroundColor: '#EAF2EA', color: '#6B8F71', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{formatDate(item.item_date)}</span>}
                       <span style={{ fontSize: '12px', fontWeight: '700', color: '#7C5CBF', whiteSpace: 'nowrap' }}>{formatTime(item.start_time)} → {formatTime(item.end_time)}</span>
                       {item.role_label && <span style={{ fontSize: '11px', fontWeight: '600', backgroundColor: '#F0EBF9', color: '#7C5CBF', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{item.role_label}</span>}
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E' }}>{item.title}</div>
-                    {item.notes && <div style={{ fontSize: '12px', color: '#8585A0', marginTop: '3px' }}>{item.notes}</div>}
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary }}>{item.title}</div>
+                    {item.notes && <div style={{ fontSize: '12px', color: t.colors.textTertiary, marginTop: '3px' }}>{item.notes}</div>}
                   </div>
-                  <button onClick={() => deleteItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#8585A0', flexShrink: 0 }}>✕</button>
+                  <button onClick={() => deleteItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.colors.textTertiary, flexShrink: 0 }}>✕</button>
                 </div>
               </div>
             </div>

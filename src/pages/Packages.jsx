@@ -4,12 +4,12 @@ import { theme as t } from '../theme'
 import CurrencyInput from '../components/CurrencyInput'
 
 const PRESET_TYPES = [
-  'PrizePicks House',
-  'PPWC',
-  'Game Watch / LCS',
-  'All Pack',
+  'Client Event',
+  'Brand Activation',
+  'Product Launch',
+  'Workshop',
   'Internal All Hands',
-  'F&F Event',
+  'Friends & Family Event',
   'External Activation',
   'Hackathon',
   'Custom',
@@ -320,7 +320,7 @@ export default function Packages({ workspaceId, userRole }) {
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Display Label</label>
-                <input value={form.inspo_deck_label} onChange={e => setForm(f => ({ ...f, inspo_deck_label: e.target.value }))} placeholder="e.g. 2024 House Deck" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.inspo_deck_label} onChange={e => setForm(f => ({ ...f, inspo_deck_label: e.target.value }))} placeholder="e.g. 2024 Portfolio Deck" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>
@@ -526,7 +526,7 @@ export default function Packages({ workspaceId, userRole }) {
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>📦</div>
           <div style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' }}>No packages yet</div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginBottom: '16px' }}>
-            {isDirector ? 'Create your first event package to get started.' : 'No packages have been created yet.'}
+            {isDirector ? 'Create your first package to make booking easier for your clients.' : 'No packages here yet — check back soon.'}
           </div>
           {isDirector && (
             <button onClick={startNew} style={{ padding: '10px 24px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>

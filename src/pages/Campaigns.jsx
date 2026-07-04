@@ -162,7 +162,7 @@ export default function Campaigns() {
           <label style={styles.label}>Campaign name *</label>
           <input
             style={styles.input}
-            placeholder="e.g. Spring Wedding Season Push"
+            placeholder="e.g. Spring Booking Push"
             value={form.name}
             onChange={e => setForm({ ...form, name: e.target.value })}
           />
@@ -398,7 +398,7 @@ backgroundColor: spendPct > 90 ? t.colors.danger : t.colors.primary,
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>📣</div>
           <h3 style={styles.emptyTitle}>No campaigns yet</h3>
-          <p style={styles.emptyText}>Create your first campaign to start tracking marketing efforts</p>
+          <p style={styles.emptyText}>Create your first campaign to start tracking what's working</p>
           <button onClick={openAddForm} style={styles.addBtn}>+ New Campaign</button>
         </div>
       ) : (

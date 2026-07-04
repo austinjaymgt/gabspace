@@ -295,7 +295,7 @@ const visibleVendors = activeTagFilter
               <label style={styles.label}>Vendor name *</label>
               <input
                 style={styles.input}
-                placeholder="e.g. John's Photography"
+                placeholder="e.g. Bright Lens Photography"
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
               />

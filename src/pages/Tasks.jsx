@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { theme as t } from '../theme'
-
-const statusConfig = {
-  'todo':        { bg: t.colors.bg,           color: t.colors.textTertiary, label: 'To do' },
-  'in-progress': { bg: t.colors.warningLight, color: t.colors.warning,      label: 'In progress' },
-  'done':        { bg: t.colors.successLight, color: t.colors.success,      label: 'Done' },
-}
+import { theme as t, taskStatusConfig as statusConfig } from '../theme'
 
 const sortOptions = [
   { value: 'default',      label: 'Sort: manual' },
@@ -143,8 +137,13 @@ export default function Tasks({ workspaceId }) {
 
   async function toggleStatus(task) {
     const nextStatus = task.status === 'todo' ? 'done' : 'todo'
-    await supabase.from('tasks').update({ status: nextStatus }).eq('id', task.id)
-    fetchTasks()
+    await updateStatus(task, nextStatus)
+  }
+
+  async function updateStatus(task, nextStatus) {
+    setTasks(prev => prev.map(tk => tk.id === task.id ? { ...tk, status: nextStatus } : tk))
+    const { error } = await supabase.from('tasks').update({ status: nextStatus }).eq('id', task.id)
+    if (error) fetchTasks()
   }
 
   async function handleDelete(id) {
@@ -202,9 +201,18 @@ export default function Tasks({ workspaceId }) {
             )}
           </div>
         </div>
-        <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
-          {sc.label}
-        </div>
+        <select
+          value={task.status}
+          onChange={e => updateStatus(task, e.target.value)}
+          onClick={e => e.stopPropagation()}
+          className="status-select"
+          style={{ ...styles.statusBadge, '--status-bg': sc.bg, '--status-color': sc.color }}
+          title="Change status"
+        >
+          <option value="todo">To do</option>
+          <option value="in-progress">In progress</option>
+          <option value="done">Done</option>
+        </select>
         <button
           onClick={() => openEdit(task)}
           style={styles.editBtn}
@@ -239,15 +247,15 @@ export default function Tasks({ workspaceId }) {
       <div style={styles.summaryRow}>
         <div style={styles.summaryCard} onClick={() => setFilter('todo')}>
           <div style={styles.summaryLabel}>To do</div>
-          <div style={{ ...styles.summaryValue, color: t.colors.textTertiary }}>{todoCount}</div>
+          <div style={{ ...styles.summaryValue, color: statusConfig.todo.color }}>{todoCount}</div>
         </div>
         <div style={styles.summaryCard} onClick={() => setFilter('in-progress')}>
           <div style={styles.summaryLabel}>In progress</div>
-          <div style={{ ...styles.summaryValue, color: t.colors.warning }}>{inProgressCount}</div>
+          <div style={{ ...styles.summaryValue, color: statusConfig['in-progress'].color }}>{inProgressCount}</div>
         </div>
         <div style={styles.summaryCard} onClick={() => setFilter('done')}>
           <div style={styles.summaryLabel}>Done</div>
-          <div style={{ ...styles.summaryValue, color: t.colors.success }}>{doneCount}</div>
+          <div style={{ ...styles.summaryValue, color: statusConfig.done.color }}>{doneCount}</div>
         </div>
       </div>
 
@@ -289,7 +297,7 @@ export default function Tasks({ workspaceId }) {
               <label style={styles.label}>Task title *</label>
               <input
                 style={styles.input}
-                placeholder="e.g. Confirm catering order"
+                placeholder="e.g. Send client proofs"
                 value={form.title}
                 onChange={e => setForm({ ...form, title: e.target.value })}
               />
@@ -374,7 +382,7 @@ export default function Tasks({ workspaceId }) {
             {filter === 'all' ? 'No tasks yet' : `No ${filter === 'in-progress' ? 'in-progress' : filter} tasks`}
           </h3>
           <p style={styles.emptyText}>
-            {filter === 'all' ? 'Add your first task to get started' : 'Try a different filter'}
+            {filter === 'all' ? 'Add your first task to start crossing things off your list' : 'Try a different filter'}
           </p>
           {filter === 'all' && (
             <button onClick={openCreate} style={styles.addBtn}>
@@ -603,11 +611,20 @@ const styles = {
     color: t.colors.textTertiary,
   },
   statusBadge: {
-    padding: '3px 10px',
+    padding: '3px 24px 3px 10px',
     borderRadius: t.radius.full,
     fontSize: t.fontSizes.sm,
     fontWeight: '500',
     flexShrink: 0,
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\' viewBox=\'0 0 10 6\'><path d=\'M1 1l4 4 4-4\' stroke=\'%23888\' stroke-width=\'1.5\' fill=\'none\'/></svg>")',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 8px center',
   },
   editBtn: {
     background: 'none',
