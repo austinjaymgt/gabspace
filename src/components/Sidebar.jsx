@@ -83,7 +83,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
   const sidebarContent = (
     <div style={{
       width: `${width}px`,
-      height: '100vh',
+      height: '100dvh',
       backgroundColor: t.colors.nav,
       borderRight: 'none',
       display: 'flex',
@@ -352,7 +352,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
         position: 'sticky',
         top: 0,
         alignSelf: 'flex-start',
-        height: '100vh',
+        height: '100dvh',
         flexShrink: 0,
         width: `${width}px`,
         transition: 'width 0.2s ease',

@@ -3,18 +3,14 @@ import { theme as t } from '../theme'
 import { supabase } from '../supabaseClient'
 import { Icon } from './Icon'
 import { useThemeMode } from '../ThemeContext'
+import { useIsNotDesktop } from '../hooks/useMediaQuery'
 import GlobalSearch from './GlobalSearch'
 
 export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, workspaceId }) {
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
+  const isMobile = useIsNotDesktop()
+  const isDesktop = !isMobile
   const [firstName, setFirstName] = useState('')
   const { isDark, toggleDark } = useThemeMode()
-
-  useEffect(() => {
-    function handle() { setIsDesktop(window.innerWidth >= 1024) }
-    window.addEventListener('resize', handle)
-    return () => window.removeEventListener('resize', handle)
-  }, [])
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -33,7 +29,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 24px',
+      padding: isMobile ? '0 12px' : '0 24px',
       height: '60px',
       backgroundColor: t.colors.bgCard,
       borderBottom: `1px solid ${t.colors.borderLight}`,
@@ -43,7 +39,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       top: 0,
       zIndex: 30,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px', minWidth: 0 }}>
         {!isDesktop && (
   <button
     onClick={onMenuClick}
@@ -62,28 +58,32 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
     <Icon name="menu" size="lg" />
   </button>
 )}
-        <div>
+        <div style={{ minWidth: 0, overflow: 'hidden' }}>
           <div style={{
-            fontSize: '17px',
+            fontSize: isMobile ? '15px' : '17px',
             fontWeight: '800',
             color: t.colors.textPrimary,
             letterSpacing: '-0.4px',
             lineHeight: 1.2,
             fontFamily: t.fonts.heading,
+            whiteSpace: 'nowrap',
           }}>
             gabspace
           </div>
-          <div style={{
-            fontSize: t.fontSizes.xs,
-            color: t.colors.textTertiary,
-            fontFamily: t.fonts.sans,
-          }}>
-            creativity meets clarity
-          </div>
+          {!isMobile && (
+            <div style={{
+              fontSize: t.fontSizes.xs,
+              color: t.colors.textTertiary,
+              fontFamily: t.fonts.sans,
+              whiteSpace: 'nowrap',
+            }}>
+              creativity meets clarity
+            </div>
+          )}
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '12px', flexShrink: 0 }}>
         {/* Dark mode toggle */}
         <button
           onClick={toggleDark}
@@ -106,7 +106,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
           <Icon name={isDark ? 'sun' : 'moon'} size="sm" />
         </button>
 
-        <GlobalSearch workspaceId={workspaceId} onNavigate={onNavigate} />
+        <GlobalSearch workspaceId={workspaceId} onNavigate={onNavigate} isMobile={isMobile} />
 
         <div
           onClick={() => onNavigate('settings')}

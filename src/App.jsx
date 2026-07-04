@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useIsMobile } from './hooks/useMediaQuery'
 import Gabi from './components/Gabi'
 import gabspaceWordmark from './assets/gabspace-wordmark.png'
+import SplashScreen from './components/SplashScreen'
+import gabbyIdleGif from './assets/GABBY2.gif'
+import gabbyCelebrateGif from './assets/Gabby 4 tasks.gif'
 import { supabase } from './supabaseClient'
 import { Icon } from './components/Icon'
 import IntranetManager from './pages/IntranetManager'
@@ -41,6 +45,7 @@ import Resources from './pages/Resources'
 import BetaWelcomeModal from './components/BetaWelcomeModal'
 
 export default function App() {
+  const isMobile = useIsMobile()
   const [session, setSession] = useState(null)
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [mode, setMode] = useState('signin') // 'signin' | 'signup'
@@ -59,11 +64,61 @@ export default function App() {
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
 const [showBetaWelcome, setShowBetaWelcome] = useState(false)
+const [authChecked, setAuthChecked] = useState(false)
+const [authSplashDone, setAuthSplashDone] = useState(false)
+const [showDailySplash, setShowDailySplash] = useState(false)
+const [showWelcomeSplash, setShowWelcomeSplash] = useState(false)
+const splashStartRef = useRef(null)
+const authStartRef = useRef(null)
+const DAILY_SPLASH_KEY = 'gabspace_splash_last_shown'
+const COLD_SPLASH_MIN_MS = 1600
+const DAILY_SPLASH_MIN_MS = 1800
+const WELCOME_SPLASH_MS = 2600
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+    authStartRef.current = Date.now()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setAuthChecked(true)
+    })
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
   }, [])
+
+  // Hold the cold-auth splash for a minimum stretch so the gif/tagline are
+  // actually visible, even when Supabase resolves the session instantly.
+  useEffect(() => {
+    if (!authChecked) return
+    const elapsed = Date.now() - (authStartRef.current ?? Date.now())
+    const timer = setTimeout(() => setAuthSplashDone(true), Math.max(0, COLD_SPLASH_MIN_MS - elapsed))
+    return () => clearTimeout(timer)
+  }, [authChecked])
+
+  // Daily first-open splash — gated once per calendar day, using the same
+  // gap that's already spent fetching the user's workspace/profile.
+  useEffect(() => {
+    if (!authChecked || !session) return
+    const today = new Date().toDateString()
+    if (localStorage.getItem(DAILY_SPLASH_KEY) !== today) {
+      splashStartRef.current = Date.now()
+      setShowDailySplash(true)
+    }
+  }, [authChecked, session])
+
+  useEffect(() => {
+    if (!showDailySplash || workspaceLoading) return
+    const elapsed = Date.now() - splashStartRef.current
+    const timer = setTimeout(() => {
+      localStorage.setItem(DAILY_SPLASH_KEY, new Date().toDateString())
+      setShowDailySplash(false)
+    }, Math.max(0, DAILY_SPLASH_MIN_MS - elapsed))
+    return () => clearTimeout(timer)
+  }, [showDailySplash, workspaceLoading])
+
+  useEffect(() => {
+    if (!showWelcomeSplash) return
+    const timer = setTimeout(() => setShowWelcomeSplash(false), WELCOME_SPLASH_MS)
+    return () => clearTimeout(timer)
+  }, [showWelcomeSplash])
 
  // useEffect(() => {
 //   if (!session) return
@@ -293,11 +348,16 @@ function renderPage() {
     return <ClientPortalView />
   }
 
+// Cold auth check — brands the gap while Supabase confirms the session
+  if (!authChecked || !authSplashDone) {
+    return <SplashScreen gif={gabbyIdleGif} tagline="loading your space…" />
+  }
+
 // Login / Signup screen
   if (!session) {
     const isSignup = mode === 'signup'
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.nav, fontFamily: t.fonts.sans }}>
+      <div className="force-light-theme" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.nav, fontFamily: t.fonts.sans }}>
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.xl, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
             <img src={gabspaceWordmark} alt="Gabspace" style={{ height: '72px', width: 'auto' }} />
@@ -453,12 +513,8 @@ function renderPage() {
     )
   }
 
-  if (workspaceLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans }}>
-        <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>Loading workspace…</p>
-      </div>
-    )
+  if (workspaceLoading || showDailySplash) {
+    return <SplashScreen gif={gabbyIdleGif} tagline="welcome back." />
   }
 
   return (
@@ -476,8 +532,18 @@ function renderPage() {
   <BetaWelcomeModal
     session={session}
     workspaceId={workspaceId}
-    onComplete={() => setShowBetaWelcome(false)}
+    onComplete={() => {
+      setShowBetaWelcome(false)
+      // Onboarding just finished — this is a once-per-user "you've arrived" moment,
+      // not the daily splash, so mark today as seen to avoid showing both back to back.
+      localStorage.setItem(DAILY_SPLASH_KEY, new Date().toDateString())
+      setShowWelcomeSplash(true)
+    }}
   />
+)}
+
+      {showWelcomeSplash && (
+  <SplashScreen gif={gabbyCelebrateGif} tagline="you're all set — welcome to your space." />
 )}
 <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
         <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} workspaceId={workspaceId} />
@@ -486,8 +552,8 @@ function renderPage() {
           {renderPage()}
         </div>
       </div>
-      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 999 }}>
-        <Gabi size={80} />
+      <div style={{ position: 'fixed', bottom: isMobile ? 12 : 24, right: isMobile ? 12 : 24, zIndex: 999 }}>
+        <Gabi size={isMobile ? 52 : 80} />
       </div>
     </div>
   )

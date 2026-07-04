@@ -75,6 +75,45 @@
   --color-text-inverse:   #FFFFFF;
 }
 
+/* ── Forced light (pre-auth screens: login/signup, splash) ─────────────
+   These render before we know who the user is, so they should look the
+   same regardless of the device's saved/OS dark-mode preference. ────── */
+.force-light-theme {
+  --color-primary:        #7F5793;
+  --color-primary-light:  #EDE5F4;
+  --color-primary-dark:   #5E3F6E;
+  --color-accent:         #09ACEF;
+  --color-accent-light:   #FDEAFC;
+  --color-accent-dark:    #D930C7;
+  --color-highlight:      #09ACEF;
+  --color-highlight-light:#E0F5FD;
+  --color-cyan:           #6EFFFF;
+  --color-danger:         #09ACEF;
+  --color-danger-light:   #FDEAFC;
+  --color-success:        #09ACEF;
+  --color-success-light:  #E0F5FD;
+  --color-warning:        #09ACEF;
+  --color-warning-light:  #FDEAFC;
+
+  --color-bg:             #F5F5F7;
+  --color-bg-card:        #FFFFFF;
+  --color-bg-hover:       #EFEFEF;
+  --color-border:         #E2E2E4;
+  --color-border-light:   #F0F0F2;
+
+  --color-nav:            #414042;
+  --color-nav-hover:      rgba(255,255,255,0.07);
+  --color-nav-active:     #7F5793;
+  --color-nav-text:       rgba(255,255,255,0.5);
+  --color-nav-text-active:#FFFFFF;
+  --color-nav-accent:     #09ACEF;
+
+  --color-text-primary:   #414042;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary:  #9CA3AF;
+  --color-text-inverse:   #FFFFFF;
+}
+
 /* ── Base reset ──────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;

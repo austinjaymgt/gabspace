@@ -113,12 +113,13 @@ const SOURCES = [
   },
 ]
 
-export default function GlobalSearch({ workspaceId, onNavigate }) {
+export default function GlobalSearch({ workspaceId, onNavigate, isMobile = false }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
+  const inputRef = useRef(null)
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -173,6 +174,146 @@ export default function GlobalSearch({ workspaceId, onNavigate }) {
   }
 
   const totalCount = results.reduce((sum, g) => sum + g.items.length, 0)
+
+  if (isMobile) {
+    return (
+      <div ref={containerRef} style={{ position: 'static' }}>
+        <button
+          onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 0) }}
+          aria-label="Search"
+          style={{
+            background: 'none',
+            border: `1px solid ${t.colors.borderLight}`,
+            borderRadius: t.radius.full,
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: t.colors.textSecondary,
+            flexShrink: 0,
+          }}
+        >
+          <Icon name="search" size="sm" />
+        </button>
+
+        {open && (
+          <div style={{
+            position: 'fixed',
+            top: '68px',
+            left: '12px',
+            right: '12px',
+            maxHeight: 'calc(100dvh - 92px)',
+            overflowY: 'auto',
+            backgroundColor: t.colors.bgCard,
+            borderRadius: t.radius.lg,
+            border: `1px solid ${t.colors.borderLight}`,
+            boxShadow: t.shadows.lg,
+            zIndex: 100,
+            fontFamily: t.fonts.sans,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 14px',
+              borderBottom: `1px solid ${t.colors.borderLight}`,
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', color: t.colors.textTertiary }}>
+                <Icon name="search" size="sm" />
+              </span>
+              <input
+                ref={inputRef}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  outline: 'none',
+                  fontSize: t.fontSizes.base,
+                  color: t.colors.textSecondary,
+                  width: '100%',
+                  fontFamily: t.fonts.sans,
+                }}
+                placeholder="Search..."
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+              />
+            </div>
+
+            {query.trim().length >= 2 && (
+              <>
+                {loading && (
+                  <div style={{ padding: '16px', fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
+                    Searching…
+                  </div>
+                )}
+
+                {!loading && totalCount === 0 && (
+                  <div style={{ padding: '16px', fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
+                    No results for "{query}"
+                  </div>
+                )}
+
+                {!loading && results.map(({ source, items }) => (
+                  <div key={source.table + source.label}>
+                    <div style={{
+                      padding: '8px 14px 4px',
+                      fontSize: t.fontSizes.xs,
+                      fontWeight: '700',
+                      color: t.colors.textTertiary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}>
+                      {source.label}s
+                    </div>
+                    {items.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleSelect(source.page)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 14px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', color: t.colors.textTertiary, flexShrink: 0 }}>
+                          <Icon name={source.icon} size="sm" />
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{
+                            fontSize: t.fontSizes.sm,
+                            color: t.colors.textPrimary,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}>
+                            {source.title(item)}
+                          </div>
+                          {source.subtitle(item) && (
+                            <div style={{
+                              fontSize: t.fontSizes.xs,
+                              color: t.colors.textTertiary,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}>
+                              {source.subtitle(item)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>

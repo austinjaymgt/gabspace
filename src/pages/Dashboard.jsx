@@ -112,11 +112,6 @@ function TaskRow({ task, dueLabelColor, onComplete }) {
       <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', padding: '2px 8px', borderRadius: t.radius.full, backgroundColor: sc.bg, color: sc.color, whiteSpace: 'nowrap' }}>
         {sc.label}
       </span>
-      {task.projects?.title && (
-        <span style={{ fontSize: t.fontSizes.xs, padding: '2px 8px', borderRadius: t.radius.md, backgroundColor: t.colors.bg, color: t.colors.textSecondary, whiteSpace: 'nowrap' }}>
-          {task.projects.title}
-        </span>
-      )}
       {task.due_date && (
         <span style={{ fontSize: t.fontSizes.xs, color, fontWeight: '500', whiteSpace: 'nowrap' }}>
           {dueLabel(task.due_date)}
