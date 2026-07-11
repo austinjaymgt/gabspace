@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
-import gabspaceWordmark from '../assets/gabspace-wordmark.png'
+import gabspaceWordmark from '../assets/gabspace-wordmark-v2.png'
 
 // ── Brand tokens — matches the in-app theme (src/theme.js / src/index.css)
 // so the landing page looks like the same product. ─────────────────────────
