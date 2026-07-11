@@ -104,60 +104,13 @@ async function notifySlack(text: string) {
   }
 }
 
+// Supabase's Edge Runtime sandboxes HTML served directly from *.supabase.co
+// (forces Content-Type: text/plain + a CSP that blocks rendering), so instead
+// of inlining a confirmation page here, redirect to one on our own domain.
 function htmlResponse(title: string, message: string) {
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title} — Gabspace</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #F7F5F0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 48px 40px;
-      text-align: center;
-      max-width: 400px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-    }
-    h1 { font-size: 24px; color: #1A1A2E; margin: 0 0 12px; }
-    p  { font-size: 15px; color: #8585A0; margin: 0; line-height: 1.6; }
-    .logo {
-      width: 48px; height: 48px;
-      background: linear-gradient(135deg, #7C5CBF, #6B8F71);
-      border-radius: 12px;
-      margin: 0 auto 24px;
-      display: flex; align-items: center; justify-content: center;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="logo">
-      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
-        <rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/>
-        <rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/>
-        <rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/>
-        <rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/>
-      </svg>
-    </div>
-    <h1>${title}</h1>
-    <p>${message}</p>
-  </div>
-</body>
-</html>`
-
-  return new Response(html, {
-  status:  200,
-  headers: { 'Content-Type': 'text/html; charset=utf-8' },
-})
+  const url = new URL('https://app.gabspace.io/')
+  url.searchParams.set('beta-status', '1')
+  url.searchParams.set('title', title)
+  url.searchParams.set('message', message)
+  return Response.redirect(url.toString(), 302)
 }

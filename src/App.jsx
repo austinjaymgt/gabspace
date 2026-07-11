@@ -43,6 +43,7 @@ import Settings from './pages/Settings'
 import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
 import BetaWelcomeModal from './components/BetaWelcomeModal'
+import BetaStatusScreen from './components/BetaStatusScreen'
 
 export default function App() {
   const isMobile = useIsMobile()
@@ -356,6 +357,12 @@ function renderPage() {
 // Client portal public view — token in URL, no auth required
   if (new URLSearchParams(window.location.search).get('portal')) {
     return <ClientPortalView />
+  }
+
+// Beta approve/deny confirmation — redirected here from the approve-beta-request
+// edge function, since Supabase sandboxes HTML served directly from *.supabase.co.
+  if (new URLSearchParams(window.location.search).has('beta-status')) {
+    return <BetaStatusScreen />
   }
 
 // Cold auth check — brands the gap while Supabase confirms the session

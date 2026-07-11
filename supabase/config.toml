@@ -1,4 +1,9 @@
 
+[functions.approve-beta-request]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/approve-beta-request/index.ts"
+
 [functions.invite-user]
 enabled = true
 verify_jwt = true
