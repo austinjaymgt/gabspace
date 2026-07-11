@@ -465,6 +465,7 @@ export default function Landing() {
             { label: 'Features', onClick: () => scrollToId('features') },
             { label: 'How it works', onClick: () => scrollToId('how-it-works') },
             { label: 'Early access', onClick: () => scrollToId('apply') },
+            { label: 'Terms', href: '/terms.html' },
             { label: 'Privacy', href: '/privacy.html' },
             { label: 'Cookies', href: '/cookies.html' },
             { label: 'Acceptable Use', href: '/acceptable-use.html' },
