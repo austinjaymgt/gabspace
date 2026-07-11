@@ -209,6 +209,16 @@ const WELCOME_SPLASH_MS = 2600
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    const { data: betaCheck, error: betaCheckError } = await supabase.functions.invoke('check-beta-access', {
+      body: { email },
+    })
+    if (betaCheckError || !betaCheck?.approved) {
+      setError("This email isn't approved for beta access yet — request access at gabspace.io.")
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
