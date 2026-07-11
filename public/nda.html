@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beta Tester NDA — Gabspace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #1A1A2E;
+      --ink2:   #3D3D5C;
+      --ink3:   #8585A0;
+      --cream:  #F7F5F0;
+      --violet: #7C5CBF;
+      --sage:   #6B8F71;
+      --border: rgba(0,0,0,0.08);
+    }
+
+    body {
+      background: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink2);
+      line-height: 1.7;
+      font-size: 15px;
+      padding: 0 16px;
+    }
+
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 64px 0 96px;
+    }
+
+    /* Header */
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 56px;
+    }
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--violet), var(--sage));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { display: block; }
+    .wordmark {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    /* Doc header */
+    .doc-eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin-bottom: 12px;
+    }
+    .doc-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .doc-meta {
+      font-size: 13px;
+      color: var(--ink3);
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Body */
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 40px 0 10px;
+      letter-spacing: -0.01em;
+    }
+    p { margin-bottom: 14px; }
+    ol, ul {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+    li { margin-bottom: 6px; }
+
+    .placeholder-note {
+      background: #FBF0E6;
+      border-left: 3px solid #D4874E;
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #8a5a2e;
+      margin: 6px 0 20px;
+      font-style: italic;
+    }
+
+    .signature-block {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .sig-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 8px;
+    }
+    .sig-line {
+      border-bottom: 1px solid var(--ink3);
+      height: 32px;
+      margin-bottom: 8px;
+    }
+    .sig-name { font-size: 13px; color: var(--ink2); }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--ink3);
+      text-align: center;
+    }
+    footer a { color: var(--violet); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .doc-title { font-size: 26px; }
+      .signature-block { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="site-nav">
+    <div class="logo-mark">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="2" y="2" width="6" height="6" rx="1.5" fill="white" opacity="0.9"/>
+        <rect x="12" y="2" width="6" height="6" rx="1.5" fill="white" opacity="0.5"/>
+        <rect x="2" y="12" width="6" height="6" rx="1.5" fill="white" opacity="0.5"/>
+        <rect x="12" y="12" width="6" height="6" rx="1.5" fill="white" opacity="0.9"/>
+      </svg>
+    </div>
+    <a href="https://gabspace.io" class="wordmark">gabspace</a>
+  </nav>
+
+  <div class="doc-eyebrow">Legal</div>
+  <h1 class="doc-title">Beta Tester Non-Disclosure Agreement</h1>
+  <p class="doc-meta">
+    Effective upon acceptance in the app &nbsp;·&nbsp; Austin Jay Management LLC (DBA Gabspace) &nbsp;·&nbsp; Version 1.0
+  </p>
+
+  <div class="placeholder-note">
+    ⚠️ This is a draft template. Have a licensed attorney review before publishing. Bracketed sections [LIKE THIS] need to be filled in or confirmed.
+  </div>
+
+  <p>
+    This Beta Tester Non-Disclosure Agreement ("Agreement") is entered into between <strong>Austin Jay Management LLC</strong>, a Georgia limited liability company doing business as <strong>Gabspace</strong> ("Company"), and the individual who accepts this Agreement electronically ("Beta Tester").
+  </p>
+  <p>
+    By checking the acknowledgment box in the Gabspace application, Beta Tester agrees to be bound by the terms of this Agreement as of the date of acceptance ("Effective Date").
+  </p>
+
+  <h2>1. Purpose</h2>
+  <p>
+    Company is developing Gabspace, a business management platform for creative entrepreneurs (the "Product"). Beta Tester has been invited to access a pre-release version of the Product for the purpose of testing and providing feedback ("Beta Program"). In connection with participation in the Beta Program, Beta Tester may receive or be exposed to Confidential Information as defined below.
+  </p>
+
+  <h2>2. Confidential Information</h2>
+  <p>
+    "Confidential Information" means any non-public information disclosed by Company to Beta Tester in connection with the Beta Program, including but not limited to:
+  </p>
+  <ul>
+    <li>The Product's features, functionality, design, and roadmap</li>
+    <li>Unreleased screenshots, videos, or demonstrations of the Product</li>
+    <li>Pricing, business strategy, and go-to-market plans</li>
+    <li>Technical architecture, code, or infrastructure details</li>
+    <li>Any other information designated as confidential or that a reasonable person would understand to be confidential given the nature of the disclosure</li>
+  </ul>
+  <p>
+    Confidential Information does not include information that: (a) is or becomes publicly known through no breach of this Agreement; (b) was already known to Beta Tester prior to disclosure; (c) is independently developed by Beta Tester without reference to Confidential Information; or (d) is required to be disclosed by law or court order, provided Beta Tester gives Company reasonable prior notice.
+  </p>
+
+  <h2>3. Beta Tester Obligations</h2>
+  <p>Beta Tester agrees to:</p>
+  <ol>
+    <li>Keep all Confidential Information strictly confidential and not disclose it to any third party</li>
+    <li>Use Confidential Information solely for the purpose of participating in the Beta Program</li>
+    <li>Not reproduce, publish, or distribute screenshots, recordings, or descriptions of the Product without prior written consent from Company</li>
+    <li>Notify Company promptly upon becoming aware of any unauthorized disclosure or use of Confidential Information</li>
+    <li>Return or destroy Confidential Information upon Company's written request or upon termination of this Agreement</li>
+  </ol>
+
+  <h2>4. Feedback</h2>
+  <p>
+    Beta Tester may voluntarily provide suggestions, ideas, bug reports, or other feedback regarding the Product ("Feedback"). Beta Tester agrees that Company may freely use, disclose, reproduce, license, distribute, and otherwise exploit any Feedback without restriction and without any obligation, royalty, or additional consideration to Beta Tester. Beta Tester hereby assigns to Company all rights in and to such Feedback.
+  </p>
+
+  <h2>5. No License or Ownership Rights</h2>
+  <p>
+    Nothing in this Agreement grants Beta Tester any ownership interest in or license to the Product, Company's intellectual property, or any Confidential Information beyond the limited right to use the Product during the Beta Program solely for evaluation purposes.
+  </p>
+
+  <h2>6. No Reverse Engineering</h2>
+  <p>
+    Beta Tester agrees not to reverse engineer, decompile, disassemble, or otherwise attempt to derive the source code or underlying structure of the Product or any component thereof.
+  </p>
+
+  <h2>7. Term and Termination</h2>
+  <p>
+    This Agreement begins on the Effective Date and continues until the earlier of: (a) Company's public release of the Product; (b) written notice of termination by either party; or (c) [INSERT SPECIFIC END DATE IF APPLICABLE]. Beta Tester's confidentiality obligations survive termination for a period of <strong>two (2) years</strong>.
+  </p>
+
+  <h2>8. Disclaimer of Warranties</h2>
+  <p>
+    THE PRODUCT IS PROVIDED "AS IS" FOR BETA TESTING PURPOSES ONLY. COMPANY MAKES NO WARRANTIES, EXPRESS OR IMPLIED, REGARDING THE PRODUCT, INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. THE PRODUCT MAY CONTAIN BUGS, ERRORS, OR OTHER ISSUES AND IS NOT INTENDED FOR PRODUCTION USE.
+  </p>
+
+  <h2>9. Limitation of Liability</h2>
+  <p>
+    TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, COMPANY SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATED TO BETA TESTER'S PARTICIPATION IN THE BETA PROGRAM OR USE OF THE PRODUCT, EVEN IF COMPANY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. COMPANY'S TOTAL LIABILITY TO BETA TESTER SHALL NOT EXCEED [ONE HUNDRED DOLLARS ($100.00)].
+  </p>
+
+  <h2>10. Data and Privacy</h2>
+  <p>
+    Beta Tester's use of the Product is subject to Company's <a href="https://gabspace.io/privacy.html" style="color: #7C5CBF;">Privacy Policy</a>. Beta Tester acknowledges that data entered into the Product during the Beta Program may be used by Company to improve the Product, subject to the Privacy Policy. Company will make reasonable efforts to protect Beta Tester's data but cannot guarantee the security of a pre-release product.
+  </p>
+
+  <h2>11. General</h2>
+  <ul>
+    <li><strong>Governing Law.</strong> This Agreement is governed by the laws of the State of Georgia, without regard to its conflict of laws principles.</li>
+    <li><strong>Entire Agreement.</strong> This Agreement constitutes the entire agreement between the parties with respect to its subject matter and supersedes all prior agreements, representations, and understandings.</li>
+    <li><strong>Amendment.</strong> Company may update this Agreement with reasonable notice to Beta Tester. Continued participation in the Beta Program after notice constitutes acceptance of the updated terms.</li>
+    <li><strong>Severability.</strong> If any provision of this Agreement is found unenforceable, the remaining provisions continue in full force.</li>
+    <li><strong>No Waiver.</strong> Failure to enforce any provision of this Agreement shall not be deemed a waiver of future enforcement of that provision.</li>
+    <li><strong>Electronic Acceptance.</strong> Beta Tester's electronic acceptance via the in-app acknowledgment checkbox constitutes a valid, binding signature for purposes of this Agreement.</li>
+  </ul>
+
+  <div class="signature-block">
+    <div>
+      <div class="sig-label">Austin Jay Management LLC (DBA Gabspace)</div>
+      <div class="sig-line"></div>
+      <div class="sig-name">Ostyn McCarty, Founder</div>
+    </div>
+    <div>
+      <div class="sig-label">Beta Tester — accepted electronically</div>
+      <div class="sig-line"></div>
+      <div class="sig-name">Name &amp; date recorded at time of acceptance</div>
+    </div>
+  </div>
+
+</div>
+<footer>
+  <p>© 2026 Austin Jay Management LLC DBA Gabspace &nbsp;·&nbsp;
+    <a href="https://gabspace.io/privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+    <a href="https://gabspace.io">gabspace.io</a>
+  </p>
+</footer>
+</body>
+</html>

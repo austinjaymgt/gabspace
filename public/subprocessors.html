@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Subprocessors — Gabspace</title>
+  <meta name="description" content="Third-party service providers Gabspace uses to operate the service."/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1A1A2E;
+      --ink2: #3D3D5C;
+      --ink3: #8585A0;
+      --cream: #F7F5F0;
+      --white: #FFFFFF;
+      --sage: #6B8F71;
+      --sage-pale: #EAF2EA;
+      --violet: #7C5CBF;
+      --violet-pale: #F0EBF9;
+      --amber: #D4874E;
+      --amber-pale: #FBF0E6;
+      --border: rgba(26,26,46,0.09);
+      --border-soft: rgba(26,26,46,0.06);
+      --radius: 12px;
+      --radius-pill: 100px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; color: inherit; }
+    a.link { color: var(--violet); }
+    a.link:hover { text-decoration: underline; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 2.5rem; border-bottom: 0.5px solid var(--border-soft); background: var(--cream); position: sticky; top: 0; z-index: 100; }
+    .logo-wrap { display: flex; align-items: center; gap: 10px; }
+    .logo-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--violet), var(--sage)); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-mark svg { width: 18px; height: 18px; }
+    .logo-name { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a { font-size: 0.875rem; color: var(--ink3); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .btn { font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; border-radius: var(--radius-pill); padding: 0.6rem 1.35rem; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-primary { background: var(--ink); color: var(--white); }
+    .btn-primary:hover { background: var(--ink2); transform: translateY(-1px); }
+
+    .page { max-width: 920px; margin: 0 auto; padding: 4rem 2.5rem 3rem; }
+    .page-eye { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--violet); margin-bottom: 0.9rem; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: clamp(2.2rem, 4.5vw, 3rem); font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 0.75rem; color: var(--ink); }
+    .page-sub { font-size: 1rem; color: var(--ink3); font-weight: 300; line-height: 1.7; max-width: 620px; }
+    .updated { font-size: 0.8rem; color: var(--ink3); margin-top: 1rem; font-style: italic; }
+    .divider-thin { height: 0.5px; background: var(--border-soft); margin: 2.5rem 0; }
+
+    .content { color: var(--ink2); }
+    .content h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--ink); margin: 2.5rem 0 1rem; letter-spacing: -0.02em; }
+    .content p { margin-bottom: 1rem; line-height: 1.75; }
+    .content strong { color: var(--ink); font-weight: 600; }
+
+    .sub-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--white); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 1.5rem 0; }
+    .sub-table thead th { background: var(--cream); font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink3); text-align: left; padding: 0.85rem 1.1rem; border-bottom: 0.5px solid var(--border-soft); }
+    .sub-table tbody td { padding: 1.1rem; border-bottom: 0.5px solid var(--border-soft); vertical-align: top; font-size: 0.88rem; color: var(--ink2); line-height: 1.55; }
+    .sub-table tbody tr:last-child td { border-bottom: none; }
+    .sub-name { font-weight: 600; color: var(--ink); font-size: 0.95rem; }
+    .sub-name small { display: block; font-weight: 400; color: var(--ink3); font-size: 0.78rem; margin-top: 2px; }
+    .loc-tag { display: inline-flex; align-items: center; gap: 5px; background: var(--sage-pale); color: var(--sage); font-size: 0.72rem; font-weight: 500; padding: 3px 9px; border-radius: var(--radius-pill); letter-spacing: 0.02em; }
+
+    footer { border-top: 0.5px solid var(--border-soft); padding: 1.75rem 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .foot-logo { display: flex; align-items: center; gap: 8px; }
+    .foot-logo-mark { width: 22px; height: 22px; background: linear-gradient(135deg, var(--violet), var(--sage)); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .foot-logo-mark svg { width: 12px; height: 12px; }
+    .foot-name { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+    .foot-links { display: flex; gap: 1.5rem; list-style: none; flex-wrap: wrap; }
+    .foot-links a { font-size: 0.78rem; color: var(--ink3); transition: color 0.2s; }
+    .foot-links a:hover { color: var(--ink); }
+    .foot-copy { font-size: 0.72rem; color: var(--ink3); }
+
+    @media (max-width: 720px) {
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { display: none; }
+      .page { padding: 2.5rem 1.25rem 2rem; }
+      .sub-table { display: block; overflow-x: auto; white-space: nowrap; }
+      .sub-table tbody td { white-space: normal; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo-wrap">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/>
+        <rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/>
+        <rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/>
+        <rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/>
+      </svg>
+    </div>
+    <span class="logo-name">gabspace</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/#features">Features</a></li>
+    <li><a href="/#how-it-works">How it works</a></li>
+    <li><a href="/#apply">Early access</a></li>
+  </ul>
+  <a href="/#apply" class="btn btn-primary">Request access</a>
+</nav>
+
+<main class="page">
+  <div class="page-eye">Legal</div>
+  <h1 class="page-title">Subprocessors</h1>
+  <p class="page-sub">The third-party service providers Gabspace uses to operate the platform. Each is bound by contract to protect your information consistent with our Privacy Policy.</p>
+  <p class="updated">Last updated: May 14, 2026</p>
+  <div class="divider-thin"></div>
+
+  <div class="content">
+    <p>Gabspace, a product of Austin Jay Management LLC, uses the following third-party service providers ("subprocessors") to operate the Service. We update this page when subprocessors change. To be notified of changes, email <a href="mailto:privacy@gabspace.io" class="link">privacy@gabspace.io</a> and ask to be added to our subprocessor notification list.</p>
+
+    <h2>Current subprocessors</h2>
+
+    <table class="sub-table">
+      <thead>
+        <tr>
+          <th>Subprocessor</th>
+          <th>Purpose</th>
+          <th>Data processed</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="sub-name">Supabase, Inc.<small>supabase.com</small></span></td>
+          <td>Database, authentication, file storage, edge functions</td>
+          <td>Account information, workspace content, uploaded files, authentication tokens</td>
+          <td><span class="loc-tag">United States</span></td>
+        </tr>
+        <tr>
+          <td><span class="sub-name">Vercel Inc.<small>vercel.com</small></span></td>
+          <td>Application hosting and content delivery network</td>
+          <td>All data transmitted to and from the Service, IP addresses, request logs</td>
+          <td><span class="loc-tag">US + Global edge</span></td>
+        </tr>
+        <tr>
+          <td><span class="sub-name">Resend<small>resend.com</small></span></td>
+          <td>Transactional and marketing email delivery</td>
+          <td>Recipient email addresses, names, email content</td>
+          <td><span class="loc-tag">United States</span></td>
+        </tr>
+        <tr>
+          <td><span class="sub-name">Anthropic, PBC<small>anthropic.com</small></span></td>
+          <td>AI-powered features (brainstorm and concept generation). Per Anthropic's commercial API terms, customer data is not used to train Anthropic's models.</td>
+          <td>Content you submit to AI features</td>
+          <td><span class="loc-tag">United States</span></td>
+        </tr>
+        <tr>
+          <td><span class="sub-name">Zapier, Inc.<small>zapier.com</small></span></td>
+          <td>Internal workflow notifications for the Gabspace team</td>
+          <td>Limited account event data (new accounts, key activity)</td>
+          <td><span class="loc-tag">United States</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Hosting and storage location</h2>
+    <p>Gabspace primarily stores and processes data in the <strong>United States</strong>. Some data may transit through global edge networks (e.g., Vercel's CDN) for performance reasons.</p>
+    <p>For users in the EU, UK, or Switzerland: transfers of personal information to the United States are made under <strong>Standard Contractual Clauses</strong> approved by the European Commission (and the UK International Data Transfer Addendum where applicable), as described in our <a href="/privacy.html" class="link">Privacy Policy</a>.</p>
+
+    <h2>Changes to this list</h2>
+    <p>When we add a new subprocessor, we'll update this page and (where required by law or by our customer contracts) give advance notice. If you have any questions or concerns about a new subprocessor, email <a href="mailto:privacy@gabspace.io" class="link">privacy@gabspace.io</a>.</p>
+
+    <h2>Contact</h2>
+    <p><a href="mailto:privacy@gabspace.io" class="link">privacy@gabspace.io</a></p>
+  </div>
+</main>
+
+<footer>
+  <div class="foot-logo">
+    <div class="foot-logo-mark">
+      <svg viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/><rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/><rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/><rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/></svg>
+    </div>
+    <span class="foot-name">gabspace</span>
+  </div>
+  <ul class="foot-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/privacy.html">Privacy</a></li>
+    <li><a href="/cookies.html">Cookies</a></li>
+    <li><a href="/acceptable-use.html">Acceptable Use</a></li>
+    <li><a href="/subprocessors.html">Subprocessors</a></li>
+  </ul>
+  <div class="foot-copy">© 2026 Gabspace. All rights reserved.</div>
+</footer>
+
+</body>
+</html>

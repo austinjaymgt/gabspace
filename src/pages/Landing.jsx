@@ -112,6 +112,7 @@ export default function Landing() {
       <style>{`
         .gs-nav-link { color: ${c.textSecondary}; text-decoration: none; font-size: 15px; font-weight: 500; }
         .gs-nav-link:hover { color: ${c.dark}; }
+        .gs-footer-link:hover { color: ${c.dark}; }
         .gs-btn-dark { background: ${c.dark}; color: #fff; }
         .gs-btn-dark:hover { opacity: 0.92; }
         .gs-btn-outline { background: transparent; color: ${c.dark}; border: 1.5px solid ${c.border}; }
@@ -460,8 +461,24 @@ export default function Landing() {
           <span style={{ fontFamily: fonts.heading, fontWeight: 800, fontSize: 16, color: c.dark }}>gabspace</span>
         </div>
         <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
-          {['Features', 'How it works', 'Early access', 'Privacy', 'Cookies', 'Acceptable Use', 'Subprocessors'].map((l) => (
-            <span key={l} style={{ fontSize: 13, color: c.textTertiary }}>{l}</span>
+          {[
+            { label: 'Features', onClick: () => scrollToId('features') },
+            { label: 'How it works', onClick: () => scrollToId('how-it-works') },
+            { label: 'Early access', onClick: () => scrollToId('apply') },
+            { label: 'Privacy', href: '/privacy.html' },
+            { label: 'Cookies', href: '/cookies.html' },
+            { label: 'Acceptable Use', href: '/acceptable-use.html' },
+            { label: 'Subprocessors', href: '/subprocessors.html' },
+          ].map((l) => (
+            <a
+              key={l.label}
+              className="gs-footer-link"
+              href={l.href || '#'}
+              onClick={l.onClick ? (e) => { e.preventDefault(); l.onClick() } : undefined}
+              style={{ fontSize: 13, color: c.textTertiary, textDecoration: 'none' }}
+            >
+              {l.label}
+            </a>
           ))}
         </div>
         <div style={{ fontSize: 12, color: c.textTertiary }}>© 2026 Gabspace. All rights reserved.</div>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acceptable Use Policy — Gabspace</title>
+  <meta name="description" content="What is and isn't allowed when using Gabspace."/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1A1A2E;
+      --ink2: #3D3D5C;
+      --ink3: #8585A0;
+      --cream: #F7F5F0;
+      --white: #FFFFFF;
+      --sage: #6B8F71;
+      --violet: #7C5CBF;
+      --violet-pale: #F0EBF9;
+      --rose: #C06B7A;
+      --rose-pale: #FAF0F2;
+      --border: rgba(26,26,46,0.09);
+      --border-soft: rgba(26,26,46,0.06);
+      --radius: 12px;
+      --radius-pill: 100px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; color: inherit; }
+    a.link { color: var(--violet); }
+    a.link:hover { text-decoration: underline; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 2.5rem; border-bottom: 0.5px solid var(--border-soft); background: var(--cream); position: sticky; top: 0; z-index: 100; }
+    .logo-wrap { display: flex; align-items: center; gap: 10px; }
+    .logo-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--violet), var(--sage)); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-mark svg { width: 18px; height: 18px; }
+    .logo-name { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a { font-size: 0.875rem; color: var(--ink3); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .btn { font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; border-radius: var(--radius-pill); padding: 0.6rem 1.35rem; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-primary { background: var(--ink); color: var(--white); }
+    .btn-primary:hover { background: var(--ink2); transform: translateY(-1px); }
+
+    .page { max-width: 760px; margin: 0 auto; padding: 4rem 2.5rem 3rem; }
+    .page-eye { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--violet); margin-bottom: 0.9rem; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: clamp(2.2rem, 4.5vw, 3rem); font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 0.75rem; color: var(--ink); }
+    .page-sub { font-size: 1rem; color: var(--ink3); font-weight: 300; line-height: 1.7; max-width: 620px; }
+    .updated { font-size: 0.8rem; color: var(--ink3); margin-top: 1rem; font-style: italic; }
+    .divider-thin { height: 0.5px; background: var(--border-soft); margin: 2.5rem 0; }
+
+    .content { color: var(--ink2); }
+    .content h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--ink); margin: 2.5rem 0 1rem; letter-spacing: -0.02em; }
+    .content h3 { font-family: 'DM Sans', sans-serif; font-size: 1.05rem; font-weight: 600; color: var(--ink); margin: 1.75rem 0 0.6rem; }
+    .content p { margin-bottom: 1rem; line-height: 1.75; }
+    .content ul { margin: 0.5rem 0 1.25rem 1.25rem; }
+    .content li { margin-bottom: 0.6rem; line-height: 1.7; }
+    .content li::marker { color: var(--violet); }
+    .content strong { color: var(--ink); font-weight: 600; }
+    .content .callout { background: var(--rose-pale); border-left: 3px solid var(--rose); padding: 1rem 1.25rem; border-radius: 0 9px 9px 0; margin: 1.5rem 0; }
+    .content .callout p { margin-bottom: 0; }
+    .content .callout strong { color: var(--rose); }
+
+    footer { border-top: 0.5px solid var(--border-soft); padding: 1.75rem 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .foot-logo { display: flex; align-items: center; gap: 8px; }
+    .foot-logo-mark { width: 22px; height: 22px; background: linear-gradient(135deg, var(--violet), var(--sage)); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .foot-logo-mark svg { width: 12px; height: 12px; }
+    .foot-name { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+    .foot-links { display: flex; gap: 1.5rem; list-style: none; flex-wrap: wrap; }
+    .foot-links a { font-size: 0.78rem; color: var(--ink3); transition: color 0.2s; }
+    .foot-links a:hover { color: var(--ink); }
+    .foot-copy { font-size: 0.72rem; color: var(--ink3); }
+
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { display: none; }
+      .page { padding: 2.5rem 1.25rem 2rem; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo-wrap">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/>
+        <rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/>
+        <rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/>
+        <rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/>
+      </svg>
+    </div>
+    <span class="logo-name">gabspace</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/#features">Features</a></li>
+    <li><a href="/#how-it-works">How it works</a></li>
+    <li><a href="/#apply">Early access</a></li>
+  </ul>
+  <a href="/#apply" class="btn btn-primary">Request access</a>
+</nav>
+
+<main class="page">
+  <div class="page-eye">Legal</div>
+  <h1 class="page-title">Acceptable Use Policy</h1>
+  <p class="page-sub">What is and isn't allowed when using Gabspace. Helps keep the platform safe for everyone.</p>
+  <p class="updated">Last updated: May 14, 2026</p>
+  <div class="divider-thin"></div>
+
+  <div class="content">
+    <p>This Acceptable Use Policy ("AUP") sets out what is and isn't allowed when using Gabspace (the "Service"), operated by Austin Jay Management LLC. It is part of our <a href="/privacy.html" class="link">Privacy Policy</a> and Terms of Service.</p>
+
+    <p>We may suspend or terminate accounts that violate this policy. Where the violation is serious — for example, illegal activity, threats to others, or compromise of our infrastructure — we may act immediately and without notice.</p>
+
+    <p>If you see something on Gabspace that violates this policy, email us at <a href="mailto:abuse@gabspace.io" class="link">abuse@gabspace.io</a>.</p>
+
+    <h2>You may not use Gabspace to:</h2>
+
+    <h3>Harm other people</h3>
+    <ul>
+      <li>Send spam, unsolicited bulk messages, or unauthorized commercial communications.</li>
+      <li>Harass, threaten, intimidate, defame, or stalk any person.</li>
+      <li>Promote, facilitate, or glorify violence, self-harm, terrorism, or hate based on race, ethnicity, religion, gender, sexual orientation, disability, or other protected characteristics.</li>
+      <li>Sexually exploit or endanger children. We have <strong>zero tolerance</strong> for child sexual abuse material (CSAM); we will report any such content to authorities.</li>
+      <li>Impersonate any person or misrepresent your affiliation with anyone.</li>
+    </ul>
+
+    <h3>Break the law</h3>
+    <ul>
+      <li>Violate any applicable law or regulation, including export control, sanctions, anti-spam (CAN-SPAM, CASL, GDPR/PECR), consumer protection, or intellectual property laws.</li>
+      <li>Use the Service to support illegal activity, including fraud, money laundering, or trafficking.</li>
+    </ul>
+
+    <h3>Violate other people's rights</h3>
+    <ul>
+      <li>Upload, share, or use content you don't have the right to use — including copyrighted material, trademarks, or confidential information of others.</li>
+      <li>Collect, store, or share other people's personal information without a lawful basis and (where required) their consent.</li>
+      <li>Use the Service to scrape, collect, or compile personal information about non-users.</li>
+    </ul>
+
+    <h3>Compromise the Service</h3>
+    <ul>
+      <li>Attempt to gain unauthorized access to the Service, other accounts, or our infrastructure.</li>
+      <li>Interfere with or disrupt the Service — for example, by overwhelming it with requests, sending malware, or exploiting vulnerabilities.</li>
+      <li>Reverse-engineer, decompile, or otherwise attempt to derive the source code of the Service, except to the extent permitted by law.</li>
+      <li>Bypass or attempt to bypass any security or access control mechanism.</li>
+      <li>Use the Service to send malware, viruses, phishing content, or any code intended to cause harm.</li>
+      <li>Use bots, scrapers, or automated tools to access the Service in ways that aren't supported by our API or expressly authorized in writing.</li>
+    </ul>
+
+    <h3>Misuse AI features</h3>
+    <ul>
+      <li>Submit content to AI features that you don't have the right to use.</li>
+      <li>Attempt to extract training data, model weights, or other proprietary information from the AI features.</li>
+      <li>Use AI features to generate content that violates this policy (e.g., harassment, illegal content, impersonation, CSAM).</li>
+      <li>Use AI-generated output to deceive others about its origin in a way that's unlawful or harmful.</li>
+    </ul>
+
+    <h3>Misuse email features</h3>
+    <ul>
+      <li>Use Gabspace to send commercial email without proper consent and an unsubscribe mechanism as required by law (CAN-SPAM, GDPR/PECR, CASL, etc.).</li>
+      <li>Send email that contains false header information, deceptive subject lines, or hides the sender's identity.</li>
+      <li>Use Gabspace to send email that violates the policies of our email delivery provider (currently Resend).</li>
+    </ul>
+
+    <h3>Resell or rebrand</h3>
+    <ul>
+      <li>Resell, sublicense, or white-label the Service without our written permission.</li>
+      <li>Use the Service to build a competing product.</li>
+    </ul>
+
+    <h2>Reporting violations</h2>
+    <p>To report a violation, email <a href="mailto:abuse@gabspace.io" class="link">abuse@gabspace.io</a> with:</p>
+    <ul>
+      <li>A description of what happened.</li>
+      <li>Links, screenshots, or other evidence if available.</li>
+      <li>Your contact information so we can follow up.</li>
+    </ul>
+    <p>We review reports promptly and respond as appropriate. We may share your report with law enforcement if required.</p>
+
+    <h2>What happens when you violate this policy</h2>
+    <p>Depending on the severity and circumstances, we may:</p>
+    <ul>
+      <li>Warn you and ask you to fix the issue.</li>
+      <li>Remove offending content.</li>
+      <li>Suspend your account temporarily.</li>
+      <li>Terminate your account permanently.</li>
+      <li>Report to law enforcement or other authorities.</li>
+      <li>Cooperate with investigations as required by law.</li>
+    </ul>
+    <p>We will generally try to give you notice and a chance to fix things, but for serious violations we may act immediately.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="mailto:hello@gabspace.io" class="link">hello@gabspace.io</a><br/>Reporting abuse: <a href="mailto:abuse@gabspace.io" class="link">abuse@gabspace.io</a></p>
+  </div>
+</main>
+
+<footer>
+  <div class="foot-logo">
+    <div class="foot-logo-mark">
+      <svg viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/><rect x="16" y="3" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/><rect x="3" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.55"/><rect x="16" y="16" width="9" height="9" rx="2.5" fill="white" opacity="0.9"/></svg>
+    </div>
+    <span class="foot-name">gabspace</span>
+  </div>
+  <ul class="foot-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/privacy.html">Privacy</a></li>
+    <li><a href="/cookies.html">Cookies</a></li>
+    <li><a href="/acceptable-use.html">Acceptable Use</a></li>
+    <li><a href="/subprocessors.html">Subprocessors</a></li>
+  </ul>
+  <div class="foot-copy">© 2026 Gabspace. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
