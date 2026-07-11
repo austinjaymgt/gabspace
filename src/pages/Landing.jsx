@@ -1,25 +1,36 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import gabspaceWordmark from '../assets/gabspace-wordmark.png'
 
-// ── Brand tokens — pulled from the live gabspace.io site + transactional
-// emails so this recreation matches exactly. ──────────────────────────────
+// ── Brand tokens — matches the in-app theme (src/theme.js / src/index.css)
+// so the landing page looks like the same product. ─────────────────────────
 const c = {
-  bg: '#F7F5F0',
+  bg: '#F5F5F7',
   card: '#FFFFFF',
-  dark: '#1A1A2E',
-  textSecondary: '#3D3D5C',
-  textTertiary: '#8585A0',
-  purple: '#7C5CBF',
+  dark: '#414042',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  purple: '#7F5793',
   purpleLight: '#EDE5F4',
+  cyan: '#09ACEF',
+  cyanLight: '#E0F5FD',
   green: '#6B8F71',
-  border: 'rgba(26,26,46,0.09)',
-  borderLight: 'rgba(26,26,46,0.06)',
+  danger: '#EF4444',
+  dangerLight: '#FEF2F2',
+  border: '#E2E2E4',
+  borderLight: '#F0F0F2',
+  gradientDiag: 'linear-gradient(135deg, #09ACEF 0%, #7F5793 50%, #09ACEF 100%)',
 }
 
 const fonts = {
-  heading: '"Syne", sans-serif',
-  body: '"DM Sans", sans-serif',
+  heading: '"Big Shoulders Display", sans-serif',
+  body: '"Source Sans 3", sans-serif',
 }
+
+// Marketing site (gabspace.io) and product app (app.gabspace.io) are the
+// same deployment, split by hostname — see src/main.jsx. Approved users
+// land here first, so give them a direct way back to the actual app.
+const LOGIN_URL = 'https://app.gabspace.io'
 
 const CREATIVE_TYPES = [
   'Photographer', 'Videographer', 'Graphic designer', 'Interior designer',
@@ -50,7 +61,7 @@ function BrandMark({ size = 32 }) {
   return (
     <div style={{
       width: size, height: size,
-      background: `linear-gradient(135deg, ${c.purple}, ${c.green})`,
+      background: c.gradientDiag,
       borderRadius: size * 0.3,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexShrink: 0,
@@ -73,7 +84,7 @@ function Check() {
   return <span style={{ color: c.green, fontWeight: 700 }}>✓</span>
 }
 function Cross() {
-  return <span style={{ color: '#C24949', fontWeight: 700 }}>✗</span>
+  return <span style={{ color: c.danger, fontWeight: 700 }}>✗</span>
 }
 
 export default function Landing() {
@@ -133,22 +144,30 @@ export default function Landing() {
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header style={{ position: 'sticky', top: 0, zIndex: 20, background: c.bg, borderBottom: `1px solid ${c.borderLight}` }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BrandMark size={32} />
-            <span style={{ fontFamily: fonts.heading, fontWeight: 800, fontSize: 20, color: c.dark }}>gabspace</span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src={gabspaceWordmark} alt="Gabspace" style={{ height: 26, width: 'auto' }} />
           </div>
           <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('features') }} href="#features">Features</a>
             <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('how-it-works') }} href="#how-it-works">How it works</a>
             <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('apply') }} href="#apply">Early access</a>
           </nav>
-          <button
-            className="gs-btn-dark"
-            onClick={() => scrollToId('apply')}
-            style={{ border: 'none', borderRadius: 100, padding: '11px 22px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: fonts.body }}
-          >
-            Request access
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <a
+              className="gs-nav-link"
+              href={LOGIN_URL}
+              style={{ fontWeight: 600 }}
+            >
+              Log in
+            </a>
+            <button
+              className="gs-btn-dark"
+              onClick={() => scrollToId('apply')}
+              style={{ border: 'none', borderRadius: 100, padding: '11px 22px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: fonts.body }}
+            >
+              Request access
+            </button>
+          </div>
         </div>
       </header>
 
@@ -415,7 +434,7 @@ export default function Landing() {
                 </div>
 
                 {error && (
-                  <div style={{ fontSize: 13.5, color: '#C24949', background: '#FBEAEA', border: '1px solid rgba(194,73,73,0.25)', borderRadius: 10, padding: '10px 14px' }}>
+                  <div style={{ fontSize: 13.5, color: c.danger, background: c.dangerLight, border: `1px solid ${c.danger}40`, borderRadius: 10, padding: '10px 14px' }}>
                     {error}
                   </div>
                 )}
@@ -456,9 +475,8 @@ export default function Landing() {
 
       {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer style={{ padding: '48px 32px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
-          <BrandMark size={24} />
-          <span style={{ fontFamily: fonts.heading, fontWeight: 800, fontSize: 16, color: c.dark }}>gabspace</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+          <img src={gabspaceWordmark} alt="Gabspace" style={{ height: 22, width: 'auto' }} />
         </div>
         <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
           {[
