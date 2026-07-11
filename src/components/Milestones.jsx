@@ -21,11 +21,6 @@ const fStyles = {
   input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return null
-  return new Date(String(dateStr).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 export default function Milestones({ projectId, workspaceId }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -61,6 +56,11 @@ export default function Milestones({ projectId, workspaceId }) {
   async function updateStatus(id, status) {
     await supabase.from('project_milestones').update({ status }).eq('id', id)
     setItems(prev => prev.map(m => m.id === id ? { ...m, status } : m))
+  }
+
+  async function updateField(id, field, value) {
+    await supabase.from('project_milestones').update({ [field]: value }).eq('id', id)
+    setItems(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m))
   }
 
   async function togglePortal(id, current) {
@@ -124,10 +124,22 @@ export default function Milestones({ projectId, workspaceId }) {
             const st = STATUSES[m.status] || STATUSES.upcoming
             return (
               <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: m.show_in_portal ? t.colors.primaryLight : t.colors.bgHover, borderRadius: '8px', alignItems: 'center', border: m.show_in_portal ? `1px solid ${t.colors.primary}` : '1px solid transparent', transition: 'background 0.15s' }}>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, textDecoration: m.status === 'done' ? 'line-through' : 'none' }}>{m.title}</span>
-                <span style={{ fontSize: '12px', color: m.target_date ? t.colors.textSecondary : t.colors.textTertiary, fontStyle: m.target_date ? 'normal' : 'italic' }}>
-                  {formatDate(m.target_date) || 'No date'}
-                </span>
+                <input
+                  value={m.title}
+                  onChange={e => setItems(prev => prev.map(x => x.id === m.id ? { ...x, title: e.target.value } : x))}
+                  onBlur={e => { if (e.target.value.trim() && e.target.value !== m.title) updateField(m.id, 'title', e.target.value.trim()) }}
+                  style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, textDecoration: m.status === 'done' ? 'line-through' : 'none', border: '1px solid transparent', borderRadius: '6px', padding: '4px 6px', backgroundColor: 'transparent', fontFamily: 'DM Sans, sans-serif', outline: 'none', width: '100%' }}
+                  onFocus={e => { e.target.style.border = `1px solid ${t.colors.border}`; e.target.style.backgroundColor = t.colors.bgCard }}
+                  onBlurCapture={e => { e.target.style.border = '1px solid transparent'; e.target.style.backgroundColor = 'transparent' }}
+                />
+                <input
+                  type="date"
+                  value={m.target_date ? String(m.target_date).slice(0, 10) : ''}
+                  onChange={e => updateField(m.id, 'target_date', e.target.value || null)}
+                  style={{ fontSize: '12px', color: m.target_date ? t.colors.textSecondary : t.colors.textTertiary, border: '1px solid transparent', borderRadius: '6px', padding: '4px 6px', backgroundColor: 'transparent', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                  onFocus={e => { e.target.style.border = `1px solid ${t.colors.border}`; e.target.style.backgroundColor = t.colors.bgCard }}
+                  onBlur={e => { e.target.style.border = '1px solid transparent'; e.target.style.backgroundColor = 'transparent' }}
+                />
                 <select value={m.status} onChange={e => updateStatus(m.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
                   <option value="upcoming">Upcoming</option>
                   <option value="in_progress">In progress</option>

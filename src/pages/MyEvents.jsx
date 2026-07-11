@@ -186,7 +186,7 @@ function PipelineStepper({ current, onChange }) {
 }
 
 // ── RUN OF SHOW ───────────────────────────────────────────────────────────────
-function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
+function RunOfShow({ eventId, eventTitle, eventDate, venue, workspaceId }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -207,7 +207,7 @@ function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { data } = await supabase.from('run_of_show').insert({
-      project_id: eventId, user_id: user.id,
+      project_id: eventId, workspace_id: workspaceId, user_id: user.id,
       title: form.title, start_time: form.start_time, end_time: form.end_time,
       role_label: form.role_label || null, notes: form.notes || null,
     }).select().single()
@@ -346,7 +346,7 @@ function RunOfShow({ eventId, eventTitle, eventDate, venue }) {
 }
 
 // ── STAFFING ──────────────────────────────────────────────────────────────────
-function Staffing({ eventId }) {
+function Staffing({ eventId, workspaceId }) {
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -367,7 +367,7 @@ function Staffing({ eventId }) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { data } = await supabase.from('event_staffing').insert({
-      project_id: eventId, user_id: user.id,
+      project_id: eventId, workspace_id: workspaceId, user_id: user.id,
       role: form.role, person_name: form.person_name || null,
       status: form.status, notes: form.notes || null,
     }).select().single()
@@ -862,7 +862,7 @@ function ProposalGenerator({ event, onClose }) {
         const { data: urlData } = supabase.storage.from('project-files').getPublicUrl(fileName)
         const { data: { user } } = await supabase.auth.getUser()
         await supabase.from('project_documents').insert({
-          project_id: event.id, user_id: user.id,
+          project_id: event.id, workspace_id: event.workspace_id, user_id: user.id,
           name: `Proposal — ${event.title}.html`,
           file_url: urlData.publicUrl, file_type: 'text/html',
         })
@@ -1027,7 +1027,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, workspaceId 
 
   async function addBudgetItem() {
     const { data } = await supabase.from('project_budget_items').insert({
-      project_id: event.id, category: budgetForm.category,
+      project_id: event.id, workspace_id: workspaceId, category: budgetForm.category,
       projected_amount: budgetForm.projected_amount ? parseFloat(budgetForm.projected_amount) : null,
       actual_amount: budgetForm.actual_amount ? parseFloat(budgetForm.actual_amount) : null,
       notes: budgetForm.notes || null,
@@ -1050,7 +1050,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, workspaceId 
     const { error: uploadError } = await supabase.storage.from('project-files').upload(fileName, file)
     if (!uploadError) {
       const { data: urlData } = supabase.storage.from('project-files').getPublicUrl(fileName)
-      await supabase.from('project_documents').insert({ project_id: event.id, user_id: user.id, name: file.name, file_url: urlData.publicUrl, file_type: file.type })
+      await supabase.from('project_documents').insert({ project_id: event.id, workspace_id: workspaceId, user_id: user.id, name: file.name, file_url: urlData.publicUrl, file_type: file.type })
       fetchAll()
     }
     setUploading(false)
@@ -1161,8 +1161,8 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, workspaceId 
 
       {/* Planning tab */}
       {activeTab === 'details' && <>
-        <RunOfShow eventId={event.id} eventTitle={data.title} eventDate={data.event_date} venue={data.venue} />
-        <Staffing eventId={event.id} />
+        <RunOfShow eventId={event.id} eventTitle={data.title} eventDate={data.event_date} venue={data.venue} workspaceId={workspaceId} />
+        <Staffing eventId={event.id} workspaceId={workspaceId} />
         {data.description && (
           <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '20px 24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
             <div style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Brief</div>
@@ -1318,6 +1318,7 @@ export default function MyEvents({ workspaceId, userRole, session }) {
     setSaving(true); setError(null)
     const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.from('projects').insert({
+      workspace_id: workspaceId,
       type: 'event', title: form.title, client_id: form.client_id || null,
       status: 'planning', event_status: form.event_status || 'inquiry',
       event_date: form.event_date || null, venue: form.venue || null,

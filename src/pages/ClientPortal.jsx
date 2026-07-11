@@ -14,7 +14,7 @@ function timeAgo(dateString) {
   return `${days}d ago`
 }
 
-export default function ClientPortal() {
+export default function ClientPortal({ workspaceId }) {
   const [portals, setPortals] = useState([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(null)
@@ -79,6 +79,7 @@ export default function ClientPortal() {
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('portal_updates').insert({
       client_id: clientId,
+      workspace_id: workspaceId,
       user_id: user.id,
       title: updateForm.title || null,
       message: updateForm.message,

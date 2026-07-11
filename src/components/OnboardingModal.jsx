@@ -4,9 +4,9 @@ import { theme as t } from "../theme";
 
 const steps = [
   { id: "user_settings", label: "Update business information", table: "user_settings", page: "settings" },
-  { id: "client", label: "Add your first client", table: "clients", page: "clients" },
+  { id: "client", label: "Add your first client", table: "clients", page: "allclients" },
   { id: "project", label: "Create a project", table: "projects", page: "projects" },
-  { id: "expense", label: "Log an expense", table: "expenses", page: "expenses" },
+  { id: "expense", label: "Log an expense", table: "expenses", page: "department-budget" },
   { id: "invoice", label: "Create an invoice", table: "invoices", page: "invoices" },
 ];
 

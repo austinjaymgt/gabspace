@@ -13,7 +13,6 @@ import CreativeStrategy from './pages/CreativeStrategy'
 import Briefs from './pages/Briefs'
 import Packages from './pages/Packages'
 import DepartmentBudget from './pages/DepartmentBudget'
-// import Inquiries from './pages/Inquiries' // Hidden pending multi-tenant re-architecture
 import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
@@ -24,10 +23,6 @@ import Events from './pages/Events'
 import Vendors from './pages/Vendors'
 import Invoices from './pages/Invoices'
 import Tasks from './pages/Tasks'
-import Expenses from './pages/Expenses'
-import Revenue from './pages/Revenue'
-import FinanceOverview from './pages/FinanceOverview'
-import Campaigns from './pages/Campaigns'
 import ContentCalendar from './pages/ContentCalendar'
 import Assets from './pages/Assets'
 import BusinessEvents from './pages/BusinessEvents'
@@ -295,8 +290,6 @@ function renderPage() {
         return isStaff ? <EventBrainstorm {...pageProps} /> : <AccessDenied />
       case 'business-events':
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
-      // case 'inquiries':
-//   return isStaff ? <Inquiries {...pageProps} /> : <AccessDenied />
 
       case 'tasks':
         return <Tasks {...pageProps} />
@@ -400,6 +393,7 @@ function renderPage() {
                     placeholder="Jane Doe"
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
+                    required
                   />
                 </div>
 
@@ -411,6 +405,7 @@ function renderPage() {
                     placeholder="Jane Doe Studio"
                     value={workspaceName}
                     onChange={e => setWorkspaceName(e.target.value)}
+                    required
                   />
                 </div>
               </>
