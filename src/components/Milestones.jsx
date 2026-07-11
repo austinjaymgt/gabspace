@@ -21,12 +21,21 @@ const fStyles = {
   input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
+const iconBtn = { background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: t.colors.textTertiary, padding: '4px' }
+
+function formatDate(dateStr) {
+  if (!dateStr) return null
+  return new Date(String(dateStr).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export default function Milestones({ projectId, workspaceId }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ title: '', target_date: '' })
   const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editDraft, setEditDraft] = useState({ title: '', target_date: '' })
 
   useEffect(() => { fetchItems() }, [])
 
@@ -58,9 +67,21 @@ export default function Milestones({ projectId, workspaceId }) {
     setItems(prev => prev.map(m => m.id === id ? { ...m, status } : m))
   }
 
-  async function updateField(id, field, value) {
-    await supabase.from('project_milestones').update({ [field]: value }).eq('id', id)
-    setItems(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m))
+  function startEdit(m) {
+    setEditingId(m.id)
+    setEditDraft({ title: m.title, target_date: m.target_date ? String(m.target_date).slice(0, 10) : '' })
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+  }
+
+  async function saveEdit(id) {
+    if (!editDraft.title.trim()) return
+    const updates = { title: editDraft.title.trim(), target_date: editDraft.target_date || null }
+    await supabase.from('project_milestones').update(updates).eq('id', id)
+    setItems(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m))
+    setEditingId(null)
   }
 
   async function togglePortal(id, current) {
@@ -122,24 +143,33 @@ export default function Milestones({ projectId, workspaceId }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {items.map(m => {
             const st = STATUSES[m.status] || STATUSES.upcoming
+            const isEditing = editingId === m.id
             return (
-              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: m.show_in_portal ? t.colors.primaryLight : t.colors.bgHover, borderRadius: '8px', alignItems: 'center', border: m.show_in_portal ? `1px solid ${t.colors.primary}` : '1px solid transparent', transition: 'background 0.15s' }}>
-                <input
-                  value={m.title}
-                  onChange={e => setItems(prev => prev.map(x => x.id === m.id ? { ...x, title: e.target.value } : x))}
-                  onBlur={e => { if (e.target.value.trim() && e.target.value !== m.title) updateField(m.id, 'title', e.target.value.trim()) }}
-                  style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, textDecoration: m.status === 'done' ? 'line-through' : 'none', border: '1px solid transparent', borderRadius: '6px', padding: '4px 6px', backgroundColor: 'transparent', fontFamily: 'DM Sans, sans-serif', outline: 'none', width: '100%' }}
-                  onFocus={e => { e.target.style.border = `1px solid ${t.colors.border}`; e.target.style.backgroundColor = t.colors.bgCard }}
-                  onBlurCapture={e => { e.target.style.border = '1px solid transparent'; e.target.style.backgroundColor = 'transparent' }}
-                />
-                <input
-                  type="date"
-                  value={m.target_date ? String(m.target_date).slice(0, 10) : ''}
-                  onChange={e => updateField(m.id, 'target_date', e.target.value || null)}
-                  style={{ fontSize: '12px', color: m.target_date ? t.colors.textSecondary : t.colors.textTertiary, border: '1px solid transparent', borderRadius: '6px', padding: '4px 6px', backgroundColor: 'transparent', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
-                  onFocus={e => { e.target.style.border = `1px solid ${t.colors.border}`; e.target.style.backgroundColor = t.colors.bgCard }}
-                  onBlur={e => { e.target.style.border = '1px solid transparent'; e.target.style.backgroundColor = 'transparent' }}
-                />
+              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto auto', gap: '8px', padding: '10px 12px', backgroundColor: m.show_in_portal ? t.colors.primaryLight : t.colors.bgHover, borderRadius: '8px', alignItems: 'center', border: m.show_in_portal ? `1px solid ${t.colors.primary}` : '1px solid transparent', transition: 'background 0.15s' }}>
+                {isEditing ? (
+                  <input
+                    autoFocus
+                    value={editDraft.title}
+                    onChange={e => setEditDraft({ ...editDraft, title: e.target.value })}
+                    onKeyDown={e => { if (e.key === 'Enter') saveEdit(m.id); if (e.key === 'Escape') cancelEdit() }}
+                    style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, border: `1px solid ${t.colors.border}`, borderRadius: '6px', padding: '4px 6px', backgroundColor: t.colors.bgCard, fontFamily: 'DM Sans, sans-serif', outline: 'none', width: '100%' }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, textDecoration: m.status === 'done' ? 'line-through' : 'none' }}>{m.title}</span>
+                )}
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={editDraft.target_date}
+                    onChange={e => setEditDraft({ ...editDraft, target_date: e.target.value })}
+                    onKeyDown={e => { if (e.key === 'Enter') saveEdit(m.id); if (e.key === 'Escape') cancelEdit() }}
+                    style={{ fontSize: '12px', color: t.colors.textSecondary, border: `1px solid ${t.colors.border}`, borderRadius: '6px', padding: '4px 6px', backgroundColor: t.colors.bgCard, outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '12px', color: m.target_date ? t.colors.textSecondary : t.colors.textTertiary, fontStyle: m.target_date ? 'normal' : 'italic' }}>
+                    {formatDate(m.target_date) || 'No date'}
+                  </span>
+                )}
                 <select value={m.status} onChange={e => updateStatus(m.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
                   <option value="upcoming">Upcoming</option>
                   <option value="in_progress">In progress</option>
@@ -154,7 +184,19 @@ export default function Milestones({ projectId, workspaceId }) {
                   />
                   <span style={{ fontSize: '11px', color: m.show_in_portal ? '#7F5793' : t.colors.textTertiary, fontWeight: m.show_in_portal ? 600 : 400 }}>Portal</span>
                 </label>
-                <button onClick={() => deleteItem(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: t.colors.textTertiary }}>✕</button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {isEditing ? (
+                    <>
+                      <button onClick={() => saveEdit(m.id)} disabled={!editDraft.title.trim()} style={{ ...iconBtn, color: '#1D9E75' }} title="Save">✓</button>
+                      <button onClick={cancelEdit} style={iconBtn} title="Cancel">✕</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => startEdit(m)} style={iconBtn} title="Edit">✎</button>
+                      <button onClick={() => deleteItem(m.id)} style={iconBtn} title="Delete">✕</button>
+                    </>
+                  )}
+                </div>
               </div>
             )
           })}
