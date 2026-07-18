@@ -1,3 +1,3 @@
 -- Superseded by 20260101000000_baseline_schema.sql, which already contains
--- the budget_categories table this migration created.
+-- everything this migration created (portal_links, portal_projects, etc.).
 -- Kept as a no-op so its version stays in sync with production's tracked history.
