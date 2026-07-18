@@ -84,7 +84,7 @@ function ProjectRow({ record, onClick }) {
 
 // ── Main export ────────────────────────────────────────────────────────────
 
-export default function Projects({ workspaceId }) {
+export default function Projects({ businessSpaceId }) {
   const [records, setRecords] = useState([])
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -145,7 +145,7 @@ export default function Projects({ workspaceId }) {
       user_id: user.id,
     }
 
-    const { error: saveError } = await supabase.from('projects').insert({ ...payload, workspace_id: workspaceId })
+    const { error: saveError } = await supabase.from('projects').insert({ ...payload, business_space_id: businessSpaceId })
     if (saveError) {
       setError(saveError.message)
     } else {
@@ -211,7 +211,7 @@ export default function Projects({ workspaceId }) {
         onBack={() => { setSelectedRecord(null); fetchRecords() }}
         onDelete={handleDelete}
         clients={clients}
-        workspaceId={workspaceId}
+        businessSpaceId={businessSpaceId}
       />
     )
   }
@@ -465,7 +465,7 @@ export default function Projects({ workspaceId }) {
 
 const DEFAULT_SECTION_ORDER = ['milestones', 'budget', 'tasks', 'notes', 'documents']
 
-function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
+function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
   const [data, setData] = useState(record)
   const [tasks, setTasks] = useState([])
   const [documents, setDocuments] = useState([])
@@ -576,7 +576,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
   async function addTask() {
     if (!newTaskTitle.trim()) return
     setAddingTask(true)
-    const { data: newTask, error } = await supabase.from('tasks').insert({ title: newTaskTitle, project_id: record.id, workspace_id: workspaceId, status: 'todo' }).select().single()
+    const { data: newTask, error } = await supabase.from('tasks').insert({ title: newTaskTitle, project_id: record.id, business_space_id: businessSpaceId, status: 'todo' }).select().single()
     if (!error && newTask) setTasks(prev => [...prev, newTask])
     setNewTaskTitle('')
     setAddingTask(false)
@@ -596,7 +596,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
   async function addBudgetItem() {
     const { data: newItem, error } = await supabase.from('project_budget_items').insert({
       project_id: record.id,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       category: budgetForm.category,
       projected_amount: budgetForm.projected_amount ? parseFloat(budgetForm.projected_amount) : null,
       actual_amount: budgetForm.actual_amount ? parseFloat(budgetForm.actual_amount) : null,
@@ -636,7 +636,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
       const { data: urlData } = supabase.storage.from('project-files').getPublicUrl(fileName)
       const { error: docError } = await supabase.from('project_documents').insert({
         project_id: record.id,
-        workspace_id: workspaceId,
+        business_space_id: businessSpaceId,
         user_id: user.id,
         name: file.name,
         file_url: urlData.publicUrl,
@@ -859,7 +859,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
                 if (key === 'milestones') return (
                   <div {...wrapperProps} style={{ ...wrapperProps.style, position: 'relative' }}>
                     <div style={{ position: 'absolute', top: '22px', left: '20px', zIndex: 1 }}>{grip}</div>
-                    <Milestones projectId={record.id} workspaceId={workspaceId} />
+                    <Milestones projectId={record.id} businessSpaceId={businessSpaceId} />
                   </div>
                 )
 
@@ -1128,9 +1128,9 @@ function ProjectDetail({ record, onBack, onDelete, clients, workspaceId }) {
                 eventTitle={data.title}
                 eventDate={data.event_date || data.start_date}
                 venue={data.venue}
-                workspaceId={workspaceId}
+                businessSpaceId={businessSpaceId}
               />
-              <Staffing eventId={record.id} workspaceId={workspaceId} />
+              <Staffing eventId={record.id} businessSpaceId={businessSpaceId} />
             </>
           )}
         </>

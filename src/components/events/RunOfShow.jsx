@@ -34,7 +34,7 @@ const fStyles = {
   input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
-export default function RunOfShow({ eventId, eventTitle, eventDate, venue, workspaceId }) {
+export default function RunOfShow({ eventId, eventTitle, eventDate, venue, businessSpaceId }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -56,7 +56,7 @@ export default function RunOfShow({ eventId, eventTitle, eventDate, venue, works
     const { data: { user } } = await supabase.auth.getUser()
     const { data: newItem, error } = await supabase.from('run_of_show').insert({
       project_id: eventId,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       user_id: user.id,
       title: form.title,
       item_date: form.item_date || null,

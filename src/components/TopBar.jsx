@@ -5,8 +5,9 @@ import { Icon } from './Icon'
 import { useThemeMode } from '../ThemeContext'
 import { useIsNotDesktop } from '../hooks/useMediaQuery'
 import GlobalSearch from './GlobalSearch'
+import BusinessSpaceSwitcher from './BusinessSpaceSwitcher'
 
-export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, workspaceId }) {
+export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, businessSpaceId }) {
   const isMobile = useIsNotDesktop()
   const isDesktop = !isMobile
   const [firstName, setFirstName] = useState('')
@@ -58,29 +59,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
     <Icon name="menu" size="lg" />
   </button>
 )}
-        <div style={{ minWidth: 0, overflow: 'hidden' }}>
-          <div style={{
-            fontSize: isMobile ? '15px' : '17px',
-            fontWeight: '800',
-            color: t.colors.textPrimary,
-            letterSpacing: '-0.4px',
-            lineHeight: 1.2,
-            fontFamily: t.fonts.heading,
-            whiteSpace: 'nowrap',
-          }}>
-            gabspace
-          </div>
-          {!isMobile && (
-            <div style={{
-              fontSize: t.fontSizes.xs,
-              color: t.colors.textTertiary,
-              fontFamily: t.fonts.sans,
-              whiteSpace: 'nowrap',
-            }}>
-              creativity meets clarity
-            </div>
-          )}
-        </div>
+        <BusinessSpaceSwitcher isMobile={isMobile} onNavigate={onNavigate} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '12px', flexShrink: 0 }}>
@@ -106,7 +85,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
           <Icon name={isDark ? 'sun' : 'moon'} size="sm" />
         </button>
 
-        <GlobalSearch workspaceId={workspaceId} onNavigate={onNavigate} isMobile={isMobile} />
+        <GlobalSearch businessSpaceId={businessSpaceId} onNavigate={onNavigate} isMobile={isMobile} />
 
         <div
           onClick={() => onNavigate('settings')}

@@ -4,7 +4,7 @@ import { theme as t } from '../theme'
 
 const TAGS = ['Leadership', 'HR', 'Benefits', 'New Policy', 'Culture', 'Operations', 'General']
 
-export default function IntranetManager({ workspaceId, userRole }) {
+export default function IntranetManager({ businessSpaceId, userRole }) {
   const [activeTab, setActiveTab] = useState('announcements')
 
   // Announcements

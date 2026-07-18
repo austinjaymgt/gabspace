@@ -29,7 +29,7 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
-export default function CreativeStrategy({ workspaceId, userRole }) {
+export default function CreativeStrategy({ businessSpaceId, userRole }) {
   const [campaigns, setCampaigns] = useState([])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -58,13 +58,13 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
   const isCreativeOrDirector = ['owner', 'admin', 'member'].includes(userRole)
 
   useEffect(() => {
-    if (workspaceId) fetchAll()
-  }, [workspaceId])
+    if (businessSpaceId) fetchAll()
+  }, [businessSpaceId])
 
   async function fetchAll() {
     setLoading(true)
     const [campRes, projRes] = await Promise.all([
-      supabase.from('campaigns').select('*').eq('workspace_id', workspaceId).order('created_at', { ascending: false }),
+      supabase.from('campaigns').select('*').eq('business_space_id', businessSpaceId).order('created_at', { ascending: false }),
       supabase.from('projects').select('id, title, event_date, event_status').order('title'),
     ])
     setCampaigns(campRes.data || [])
@@ -77,7 +77,7 @@ export default function CreativeStrategy({ workspaceId, userRole }) {
     const { data: user } = await supabase.auth.getUser()
     const qy = quarterInfoFromDate(form.start_date) || quarterInfoFromDate(form.end_date)
     const payload = {
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       user_id: user.user?.id,
       name: form.name,
       overall_goal: form.overall_goal,

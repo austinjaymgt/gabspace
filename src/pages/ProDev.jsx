@@ -27,7 +27,7 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
-export default function ProDev({ workspaceId, userRole, session }) {
+export default function ProDev({ businessSpaceId, userRole, session }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -53,15 +53,15 @@ export default function ProDev({ workspaceId, userRole, session }) {
   })
 
   useEffect(() => {
-    if (workspaceId) fetchItems()
-  }, [workspaceId])
+    if (businessSpaceId) fetchItems()
+  }, [businessSpaceId])
 
   async function fetchItems() {
     setLoading(true)
     const { data } = await supabase
       .from('pro_dev')
       .select('*')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     setItems(data || [])
     setLoading(false)
@@ -70,7 +70,7 @@ export default function ProDev({ workspaceId, userRole, session }) {
   async function saveItem() {
     if (!form.title || !form.member_name || !form.type) return
     const payload = {
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       user_id: session?.user?.id,
       member_name: form.member_name,
       title: form.title,

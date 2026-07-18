@@ -67,7 +67,7 @@ const s = {
 
 const emptyEditForm = { eventName: '', clientName: '', eventType: '', audience: '', budget: '', headcount: '', goal: '', context: '' }
 
-export default function EventBrainstorm({ workspaceId, session }) {
+export default function EventBrainstorm({ businessSpaceId, session }) {
   const [vibes, setVibes] = useState([])
   const [form, setForm] = useState({ eventName: '', clientName: '', eventType: '', audience: '', budget: '', headcount: '', goal: '', context: '' })
   const [generating, setGenerating] = useState(false)
@@ -88,15 +88,15 @@ export default function EventBrainstorm({ workspaceId, session }) {
   const briefRef = useRef(null)
   const SHOW_GENERATOR = false  // flip to true to re-enable the AI concept generator
 
-  useEffect(() => { fetchConcepts() }, [workspaceId])
+  useEffect(() => { fetchConcepts() }, [businessSpaceId])
 
   async function fetchConcepts() {
-    if (!workspaceId) return
+    if (!businessSpaceId) return
     setLoadingConcepts(true)
     const { data } = await supabase
       .from('projects')
       .select('*')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .eq('type', 'event')
       .eq('event_status', 'concept')
       .order('created_at', { ascending: false })
@@ -109,11 +109,11 @@ export default function EventBrainstorm({ workspaceId, session }) {
   }
 
   async function handleCapture() {
-    if (!captureText.trim() || !workspaceId) return
+    if (!captureText.trim() || !businessSpaceId) return
     setCaptureSaving(true)
     const title = captureTitle.trim() || captureText.slice(0, 80)
     await supabase.from('projects').insert({
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       user_id: session.user.id,
       title,
       type: 'event',
@@ -238,10 +238,10 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
   }
 
   async function handleSaveConcept() {
-    if (!concept || !workspaceId) return
+    if (!concept || !businessSpaceId) return
     setSaving(true)
     await supabase.from('projects').insert({
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       user_id: session.user.id,
       title: concept.conceptName,
       type: 'event',
@@ -305,7 +305,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
       notes: c.description || null,
       status: 'idea',
       user_id: user.id,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
     })
     await supabase.from('projects').delete().eq('id', id)
     fetchConcepts()

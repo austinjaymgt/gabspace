@@ -56,7 +56,7 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
-  const [workspaceId, setWorkspaceId] = useState(null)
+  const [businessSpaceId, setBusinessSpaceId] = useState(null)
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
 const [showBetaWelcome, setShowBetaWelcome] = useState(false)
@@ -130,7 +130,7 @@ const WELCOME_SPLASH_MS = 2600
 
   useEffect(() => {
     if (!session) {
-  setWorkspaceId(null)
+  setBusinessSpaceId(null)
   setUserRole(null)
   setWorkspaceLoading(false)
   return
@@ -139,14 +139,14 @@ const WELCOME_SPLASH_MS = 2600
 
     supabase
       .from('user_profiles')
-.select('workspace_id, role, onboarding_complete')
+.select('business_space_id, role, onboarding_complete')
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(async ({ data, error }) => {
       
     console.log('profile data:', data, 'error:', error)
     if (data) {
-  setWorkspaceId(data.workspace_id)
+  setBusinessSpaceId(data.business_space_id)
   setUserRole(data.role)
 
   // Beta welcome check
@@ -169,7 +169,7 @@ const WELCOME_SPLASH_MS = 2600
 
         const { data: invite } = await supabase
           .from('invites')
-          .select('workspace_id, role, id, invited_by')
+          .select('business_space_id, role, id, invited_by')
           .eq('email', session.user.email)
           .eq('accepted', false)
           .maybeSingle()
@@ -177,12 +177,12 @@ const WELCOME_SPLASH_MS = 2600
         if (invite) {
           await supabase.from('user_profiles').insert({
             user_id: session.user.id,
-            workspace_id: invite.workspace_id,
+            business_space_id: invite.business_space_id,
             role: invite.role,
             invited_by: invite.invited_by,
           })
           await supabase.from('invites').update({ accepted: true }).eq('id', invite.id)
-          setWorkspaceId(invite.workspace_id)
+          setBusinessSpaceId(invite.business_space_id)
           setUserRole(invite.role)
         }
 
@@ -243,11 +243,11 @@ const WELCOME_SPLASH_MS = 2600
   async function handleLogout() {
     await supabase.auth.signOut()
     setSession(null)
-    setWorkspaceId(null)
+    setBusinessSpaceId(null)
     setUserRole(null)
   }
 
-const pageProps = { workspaceId, userRole, session }
+const pageProps = { businessSpaceId, userRole, session }
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
   const isStaff = ['owner', 'admin', 'member'].includes(userRole)
   const isClientOnly = userRole === 'client'
@@ -543,7 +543,7 @@ function renderPage() {
       {showBetaWelcome && (
   <BetaWelcomeModal
     session={session}
-    workspaceId={workspaceId}
+    businessSpaceId={businessSpaceId}
     onComplete={() => {
       setShowBetaWelcome(false)
       // Onboarding just finished — this is a once-per-user "you've arrived" moment,
@@ -558,7 +558,7 @@ function renderPage() {
   <SplashScreen gif={gabbyCelebrateGif} tagline="you're all set — welcome to your space." />
 )}
 <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} workspaceId={workspaceId} />
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} />
         <div style={{ flex: 1 }}>
           {renderPage()}

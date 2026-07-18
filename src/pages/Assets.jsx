@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 
-export default function Assets({ workspaceId }) {
+export default function Assets({ businessSpaceId }) {
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -61,7 +61,7 @@ export default function Assets({ workspaceId }) {
       description: form.description || null,
       tags: form.tags || null,
       user_id: user.id,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
 
     })
     if (error) setError(error.message)

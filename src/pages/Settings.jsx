@@ -16,7 +16,7 @@ const ROLE_COLORS = {
   client: { bg: '#FAF0F2', color: '#C06B7A' },
 }
 
-export default function Settings({ session, workspaceId, userRole }) {
+export default function Settings({ session, businessSpaceId, userRole }) {
   const [settings, setSettings] = useState(null)
   const [form, setForm] = useState({
     first_name: '',
@@ -49,7 +49,7 @@ export default function Settings({ session, workspaceId, userRole }) {
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
 
   useEffect(() => { fetchSettings() }, [])
-  useEffect(() => { if (workspaceId && isOwnerOrAdmin) { fetchMembers(); fetchInvites() } }, [workspaceId])
+  useEffect(() => { if (businessSpaceId && isOwnerOrAdmin) { fetchMembers(); fetchInvites() } }, [businessSpaceId])
 
   async function fetchSettings() {
     const { data } = await supabase
@@ -73,7 +73,7 @@ export default function Settings({ session, workspaceId, userRole }) {
     const { data } = await supabase
       .from('user_profiles')
       .select('id, user_id, role, display_name, joined_at')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('joined_at', { ascending: true })
     if (data) setMembers(data)
   }
@@ -82,7 +82,7 @@ export default function Settings({ session, workspaceId, userRole }) {
     const { data } = await supabase
       .from('invites')
       .select('id, email, role, accepted, created_at')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .eq('accepted', false)
       .order('created_at', { ascending: false })
     if (data) setInvites(data)
@@ -105,7 +105,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
       body: JSON.stringify({
         email: inviteEmail,
         role: inviteRole,
-        workspaceId,
+        businessSpaceId,
         invitedBy: currentSession.user.id,
       }),
     })

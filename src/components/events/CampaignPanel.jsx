@@ -2,20 +2,20 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 
-export default function CampaignPanel({ projectId, workspaceId }) {
+export default function CampaignPanel({ projectId, businessSpaceId }) {
   const [campaign, setCampaign] = useState(null)
   const [allCampaigns, setAllCampaigns] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (projectId && workspaceId) fetchCampaign()
-  }, [projectId, workspaceId])
+    if (projectId && businessSpaceId) fetchCampaign()
+  }, [projectId, businessSpaceId])
 
   async function fetchCampaign() {
     setLoading(true)
     const [campRes, allRes] = await Promise.all([
       supabase.from('campaigns').select('*').eq('project_id', projectId).maybeSingle(),
-      supabase.from('campaigns').select('id, name').eq('workspace_id', workspaceId).order('name'),
+      supabase.from('campaigns').select('id, name').eq('business_space_id', businessSpaceId).order('name'),
     ])
     setCampaign(campRes.data)
     setAllCampaigns(allRes.data || [])

@@ -34,15 +34,15 @@ const WORKSPACE_SCOPED_TABLES = [
 ]
 
 // Storage buckets that hold workspace-scoped files.
-// Path convention: {workspace_id}/...
+// Path convention: {business_space_id}/...
 const WORKSPACE_SCOPED_BUCKETS = ['resources']
 
 async function purgeBucketForWorkspace(
   adminClient: ReturnType<typeof createClient>,
   bucket: string,
-  workspaceId: string
+  businessSpaceId: string
 ) {
-  // List everything under {workspaceId}/ then recursively gather paths.
+  // List everything under {businessSpaceId}/ then recursively gather paths.
   // Supabase storage list() is non-recursive, so we walk subfolders.
   const allPaths: string[] = []
 
@@ -66,7 +66,7 @@ async function purgeBucketForWorkspace(
     }
   }
 
-  await walk(workspaceId)
+  await walk(businessSpaceId)
 
   if (allPaths.length === 0) return 0
 
@@ -119,7 +119,7 @@ serve(async (req) => {
     // 3. Fetch all memberships for this user.
     const { data: memberships, error: membershipsError } = await adminClient
       .from('user_profiles')
-      .select('workspace_id, role')
+      .select('business_space_id, role')
       .eq('user_id', userId)
 
     if (membershipsError) {
@@ -129,22 +129,22 @@ serve(async (req) => {
       })
     }
 
-    const ownedWorkspaceIds = (memberships || [])
+    const ownedBusinessSpaceIds = (memberships || [])
       .filter(m => m.role === 'owner')
-      .map(m => m.workspace_id)
-    const memberOnlyWorkspaceIds = (memberships || [])
+      .map(m => m.business_space_id)
+    const memberOnlyBusinessSpaceIds = (memberships || [])
       .filter(m => m.role !== 'owner')
-      .map(m => m.workspace_id)
+      .map(m => m.business_space_id)
 
     // 4. BLOCK CHECK: for each owned workspace, count *other* members.
     const blockingWorkspaces: Array<{ id: string; name: string; other_member_count: number }> = []
-    const soloOwnedWorkspaceIds: string[] = []
+    const soloOwnedBusinessSpaceIds: string[] = []
 
-    for (const wsId of ownedWorkspaceIds) {
+    for (const wsId of ownedBusinessSpaceIds) {
       const { count, error: countError } = await adminClient
         .from('user_profiles')
         .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', wsId)
+        .eq('business_space_id', wsId)
         .neq('user_id', userId)
 
       if (countError) {
@@ -156,7 +156,7 @@ serve(async (req) => {
 
       if ((count || 0) > 0) {
         const { data: ws } = await adminClient
-          .from('workspaces')
+          .from('business_spaces')
           .select('name')
           .eq('id', wsId)
           .single()
@@ -166,7 +166,7 @@ serve(async (req) => {
           other_member_count: count || 0,
         })
       } else {
-        soloOwnedWorkspaceIds.push(wsId)
+        soloOwnedBusinessSpaceIds.push(wsId)
       }
     }
 
@@ -182,7 +182,7 @@ serve(async (req) => {
     }
 
     // 5. PROCEED: clean up solo-owned workspaces.
-    for (const wsId of soloOwnedWorkspaceIds) {
+    for (const wsId of soloOwnedBusinessSpaceIds) {
       console.log(`deleting workspace ${wsId}`)
 
       // 5a. Purge storage first (otherwise orphaned).
@@ -196,7 +196,7 @@ serve(async (req) => {
         const { error: delError } = await adminClient
           .from(table)
           .delete()
-          .eq('workspace_id', wsId)
+          .eq('business_space_id', wsId)
         if (delError) {
           console.log(`  delete error in ${table}:`, delError.message)
           // Don't abort — log and continue. Audit log captures partial state.
@@ -205,7 +205,7 @@ serve(async (req) => {
 
       // 5c. Delete the workspace row itself.
       const { error: wsDelError } = await adminClient
-        .from('workspaces')
+        .from('business_spaces')
         .delete()
         .eq('id', wsId)
       if (wsDelError) {
@@ -214,12 +214,12 @@ serve(async (req) => {
     }
 
     // 6. Leave member-only workspaces (just remove our profile row from them).
-    if (memberOnlyWorkspaceIds.length > 0) {
+    if (memberOnlyBusinessSpaceIds.length > 0) {
       const { error: leaveError } = await adminClient
         .from('user_profiles')
         .delete()
         .eq('user_id', userId)
-        .in('workspace_id', memberOnlyWorkspaceIds)
+        .in('business_space_id', memberOnlyBusinessSpaceIds)
       if (leaveError) {
         console.log('leave workspaces error:', leaveError.message)
       }
@@ -245,8 +245,8 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         email: userEmail,
-        workspaces_deleted: soloOwnedWorkspaceIds,
-        workspaces_left: memberOnlyWorkspaceIds,
+        workspaces_deleted: soloOwnedBusinessSpaceIds,
+        workspaces_left: memberOnlyBusinessSpaceIds,
         reason: 'user_requested',
         initiated_from: 'settings_ui',
       })
@@ -271,8 +271,8 @@ serve(async (req) => {
     console.log('delete-account complete for:', userId)
     return new Response(JSON.stringify({
       status: 'deleted',
-      workspaces_deleted: soloOwnedWorkspaceIds.length,
-      workspaces_left: memberOnlyWorkspaceIds.length,
+      workspaces_deleted: soloOwnedBusinessSpaceIds.length,
+      workspaces_left: memberOnlyBusinessSpaceIds.length,
     }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

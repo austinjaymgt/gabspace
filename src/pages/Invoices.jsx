@@ -9,7 +9,7 @@ const statusConfig = {
   overdue: { bg: t.colors.dangerLight,  color: t.colors.danger,       label: 'Overdue' },
 }
 
-export default function Invoices({ workspaceId }) {
+export default function Invoices({ businessSpaceId }) {
   const [invoices, setInvoices] = useState([])
   const [clients, setClients] = useState([])
   const [projects, setProjects] = useState([])
@@ -59,7 +59,7 @@ export default function Invoices({ workspaceId }) {
     setError(null)
     const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.from('invoices').insert({
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       invoice_number: form.invoice_number || null,
       client_id: form.client_id || null,
       project_id: form.project_id || null,

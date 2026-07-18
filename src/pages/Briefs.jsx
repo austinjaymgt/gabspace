@@ -14,7 +14,7 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
-export default function Briefs({ workspaceId, userRole, session }) {
+export default function Briefs({ businessSpaceId, userRole, session }) {
   const [briefs, setBriefs] = useState([])
   const [packages, setPackages] = useState([])
   const [projects, setProjects] = useState([])
@@ -42,15 +42,15 @@ export default function Briefs({ workspaceId, userRole, session }) {
   })
 
   useEffect(() => {
-    if (workspaceId) fetchAll()
-  }, [workspaceId])
+    if (businessSpaceId) fetchAll()
+  }, [businessSpaceId])
 
   async function fetchAll() {
     setLoading(true)
     const [briefsRes, packagesRes, projectsRes] = await Promise.all([
-      supabase.from('event_briefs').select('*').eq('workspace_id', workspaceId).order('created_at', { ascending: false }),
-      supabase.from('event_packages').select('*').eq('workspace_id', workspaceId).order('name'),
-      supabase.from('projects').select('id, title').eq('workspace_id', workspaceId).order('title'),
+      supabase.from('event_briefs').select('*').eq('business_space_id', businessSpaceId).order('created_at', { ascending: false }),
+      supabase.from('event_packages').select('*').eq('business_space_id', businessSpaceId).order('name'),
+      supabase.from('projects').select('id, title').eq('business_space_id', businessSpaceId).order('title'),
     ])
     setBriefs(briefsRes.data || [])
     setPackages(packagesRes.data || [])
@@ -93,7 +93,7 @@ export default function Briefs({ workspaceId, userRole, session }) {
   async function saveBrief() {
     if (!form.event_name) return
     const payload = {
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       package_id: form.package_id || null,
       project_id: form.project_id || null,
       event_name: form.event_name,

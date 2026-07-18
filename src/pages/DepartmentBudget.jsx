@@ -50,7 +50,7 @@ const tdStyle = { padding: '9px 14px', fontSize: t.fontSizes.sm, color: t.colors
 const quarterBadgeStyle = { fontSize: t.fontSizes.xs, background: t.colors.primaryLight, color: t.colors.primary, padding: '2px 8px', borderRadius: t.radius.full }
 const rowActionBtnStyle = (danger) => ({ background: 'none', border: `1px solid ${t.colors.border}`, borderRadius: t.radius.sm, padding: '4px 8px', fontSize: t.fontSizes.xs, color: danger ? t.colors.danger : t.colors.textSecondary, cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap' })
 
-export default function DepartmentBudget({ workspaceId, userRole }) {
+export default function DepartmentBudget({ businessSpaceId, userRole }) {
   const [budget, setBudget] = useState(null)
   const [lineItems, setLineItems] = useState([])
   const [expenses, setExpenses] = useState([])
@@ -85,18 +85,18 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
   const isDirector = ['owner', 'admin'].includes(userRole)
 
   useEffect(() => {
-    if (workspaceId) fetchAll()
-  }, [workspaceId, year])
+    if (businessSpaceId) fetchAll()
+  }, [businessSpaceId, year])
 
   async function fetchAll() {
     setLoading(true)
     const [budgetRes, lineRes, expenseRes, revenueRes, projRes, categoryRes] = await Promise.all([
-      supabase.from('department_budget').select('*').eq('workspace_id', workspaceId).eq('year', year).maybeSingle(),
-      supabase.from('budget_line_items').select('*').eq('workspace_id', workspaceId).order('created_at', { ascending: true }),
-      supabase.from('expenses').select('*').eq('workspace_id', workspaceId).order('date', { ascending: false }),
-      supabase.from('revenue').select('*').eq('workspace_id', workspaceId).order('date', { ascending: false }),
-      supabase.from('projects').select('id, title, event_status, event_date').eq('workspace_id', workspaceId).order('created_at', { ascending: false }),
-      supabase.from('budget_categories').select('*').eq('workspace_id', workspaceId).order('position', { ascending: true }),
+      supabase.from('department_budget').select('*').eq('business_space_id', businessSpaceId).eq('year', year).maybeSingle(),
+      supabase.from('budget_line_items').select('*').eq('business_space_id', businessSpaceId).order('created_at', { ascending: true }),
+      supabase.from('expenses').select('*').eq('business_space_id', businessSpaceId).order('date', { ascending: false }),
+      supabase.from('revenue').select('*').eq('business_space_id', businessSpaceId).order('date', { ascending: false }),
+      supabase.from('projects').select('id, title, event_status, event_date').eq('business_space_id', businessSpaceId).order('created_at', { ascending: false }),
+      supabase.from('budget_categories').select('*').eq('business_space_id', businessSpaceId).order('position', { ascending: true }),
     ])
     setBudget(budgetRes.data)
     setLineItems(lineRes.data || [])
@@ -115,8 +115,8 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
     let categories = categoryRes.data || []
     if (categories.length === 0) {
       const seedRows = [
-        ...DEFAULT_EXPENSE_CATEGORIES.map((name, i) => ({ workspace_id: workspaceId, type: 'expense', name, position: i })),
-        ...DEFAULT_INCOME_CATEGORIES.map((name, i) => ({ workspace_id: workspaceId, type: 'income', name, position: i })),
+        ...DEFAULT_EXPENSE_CATEGORIES.map((name, i) => ({ business_space_id: businessSpaceId, type: 'expense', name, position: i })),
+        ...DEFAULT_INCOME_CATEGORIES.map((name, i) => ({ business_space_id: businessSpaceId, type: 'income', name, position: i })),
       ]
       const { data: seeded } = await supabase.from('budget_categories').insert(seedRows).select('*')
       categories = seeded || []
@@ -134,7 +134,7 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
       setNewCategoryName('')
       return
     }
-    const { data } = await supabase.from('budget_categories').insert({ workspace_id: workspaceId, type, name, position: list.length }).select('*').single()
+    const { data } = await supabase.from('budget_categories').insert({ business_space_id: businessSpaceId, type, name, position: list.length }).select('*').single()
     if (!data) return
     if (type === 'expense') setExpenseCategories(p => [...p, data])
     else setIncomeCategories(p => [...p, data])
@@ -147,10 +147,10 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
     if (!name || name === cat.name) return
     await supabase.from('budget_categories').update({ name }).eq('id', cat.id)
     if (cat.type === 'expense') {
-      await supabase.from('budget_line_items').update({ category: name }).eq('workspace_id', workspaceId).eq('category', cat.name)
-      await supabase.from('expenses').update({ category: name }).eq('workspace_id', workspaceId).eq('category', cat.name)
+      await supabase.from('budget_line_items').update({ category: name }).eq('business_space_id', businessSpaceId).eq('category', cat.name)
+      await supabase.from('expenses').update({ category: name }).eq('business_space_id', businessSpaceId).eq('category', cat.name)
     } else {
-      await supabase.from('revenue').update({ tax_category: name }).eq('workspace_id', workspaceId).eq('tax_category', cat.name)
+      await supabase.from('revenue').update({ tax_category: name }).eq('business_space_id', businessSpaceId).eq('tax_category', cat.name)
     }
     fetchAll()
   }
@@ -170,7 +170,7 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
 
   async function saveBudget() {
     const payload = {
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       year,
       annual_budget: Number(budgetForm.annual_budget) || 0,
       q1_target: Number(budgetForm.q1_target) || 0,
@@ -198,7 +198,7 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
     let error
     if (status === 'planned') {
       const payload = {
-        workspace_id: workspaceId,
+        business_space_id: businessSpaceId,
         category: expenseForm.category,
         label: expenseForm.title,
         projected_amount: Number(expenseForm.amount) || 0,
@@ -216,7 +216,7 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
     } else {
       const { data: { user } } = await supabase.auth.getUser()
       const payload = {
-        workspace_id: workspaceId,
+        business_space_id: businessSpaceId,
         category: expenseForm.category,
         title: expenseForm.title,
         amount: Number(expenseForm.amount) || 0,
@@ -248,7 +248,7 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
   // Actual → Planned is a reversible, no-consequence move — instant, no confirmation needed.
   async function revertExpenseToPlanned(item) {
     await supabase.from('budget_line_items').insert({
-      workspace_id: workspaceId, category: item.category, label: item.title, projected_amount: item.amount,
+      business_space_id: businessSpaceId, category: item.category, label: item.title, projected_amount: item.amount,
       item_date: item.date, quarter: item.date ? quarterFromDate(item.date) : null, project_id: item.project_id, notes: item.notes,
     })
     await supabase.from('expenses').delete().eq('id', item.id)
@@ -259,7 +259,7 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
   async function confirmExpenseActual(item, amount) {
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('expenses').insert({
-      workspace_id: workspaceId, category: item.category, title: item.label, amount: Number(amount) || 0,
+      business_space_id: businessSpaceId, category: item.category, title: item.label, amount: Number(amount) || 0,
       date: item.item_date, project_id: item.project_id, notes: item.notes, user_id: user.id,
     })
     await supabase.from('budget_line_items').delete().eq('id', item.id)
@@ -301,7 +301,7 @@ export default function DepartmentBudget({ workspaceId, userRole }) {
     }
     const { data: { user } } = await supabase.auth.getUser()
     const payload = {
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       income_stream: incomeForm.income_stream,
       amount: Number(incomeForm.amount) || 0,
       date: incomeForm.date || null,

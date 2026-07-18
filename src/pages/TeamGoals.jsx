@@ -121,7 +121,7 @@ function ViewRow({ label, children }) {
   )
 }
 
-export default function TeamGoals({ workspaceId, userRole }) {
+export default function TeamGoals({ businessSpaceId, userRole }) {
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
   const [activePeriod, setActivePeriod] = useState('Q2 2026')
@@ -143,8 +143,8 @@ export default function TeamGoals({ workspaceId, userRole }) {
   const ro = !isOwnerOrAdmin
 
   useEffect(() => {
-    if (workspaceId) fetchGoals()
-  }, [workspaceId, activePeriod])
+    if (businessSpaceId) fetchGoals()
+  }, [businessSpaceId, activePeriod])
 
   useEffect(() => {
     const onKey = e => { if (e.key === 'Escape') { setOpenGoalId(null); setShowNewForm(false) } }
@@ -157,7 +157,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
     const { data } = await supabase
       .from('team_goals')
       .select('*, goal_subtasks(*)')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .eq('period', activePeriod)
       .order('created_at', { ascending: true })
     const normalized = (data || []).map(g => ({
@@ -239,7 +239,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
     } else {
       const { data, error } = await supabase
         .from('team_goals')
-        .insert({ ...payload, workspace_id: workspaceId })
+        .insert({ ...payload, business_space_id: businessSpaceId })
         .select('*, goal_subtasks(*)')
         .single()
       if (error || !data) { setFormError('Could not save — try again.'); return }
@@ -281,7 +281,7 @@ export default function TeamGoals({ workspaceId, userRole }) {
     const sortOrder = goal.subtasks.length
     const { data, error } = await supabase
       .from('goal_subtasks')
-      .insert({ goal_id: openGoalId, workspace_id: workspaceId, title: text, sort_order: sortOrder })
+      .insert({ goal_id: openGoalId, business_space_id: businessSpaceId, title: text, sort_order: sortOrder })
       .select()
       .single()
     if (error || !data) return

@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 
 
-export default function ContentCalendar({ workspaceId }) {
+export default function ContentCalendar({ businessSpaceId }) {
   const [items, setItems] = useState([])
   const [campaigns, setCampaigns] = useState([])
   const [projects, setProjects] = useState([])
@@ -91,7 +91,7 @@ export default function ContentCalendar({ workspaceId }) {
       project_id: form.project_id || null,
       media_url: form.media_url || null,
       user_id: user.id,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
     })
     if (error) setError(error.message)
     else {

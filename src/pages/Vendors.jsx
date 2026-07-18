@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import TagInput from '../components/TagInput'
 
-export default function Vendors({ workspaceId }) {
+export default function Vendors({ businessSpaceId }) {
     const [vendors, setVendors] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -88,7 +88,7 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
       }
     } else {
   // Insert new vendor
-  const result = await supabase.from('vendors').insert({ ...payload, user_id: user.id, workspace_id: workspaceId })
+  const result = await supabase.from('vendors').insert({ ...payload, user_id: user.id, business_space_id: businessSpaceId })
   error = result.error
 }
 

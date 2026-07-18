@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 
-export default function Events({ workspaceId }) {
+export default function Events({ businessSpaceId }) {
   const [events, setEvents] = useState([])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -29,7 +29,7 @@ export default function Events({ workspaceId }) {
     const { data, error } = await supabase
       .from('events')
       .select('*, projects(title, client_id, clients(name))')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('event_date', { ascending: true })
     if (!error) setEvents(data)
     setLoading(false)
@@ -39,7 +39,7 @@ export default function Events({ workspaceId }) {
     const { data } = await supabase
       .from('projects')
       .select('id, title, clients(name)')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
     if (data) setProjects(data)
   }
 
@@ -47,7 +47,7 @@ export default function Events({ workspaceId }) {
     setSaving(true)
     setError(null)
     const { error } = await supabase.from('events').insert({
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       name: form.name,
       project_id: form.project_id || null,
       event_date: form.event_date || null,

@@ -28,7 +28,7 @@ function formatDate(dateStr) {
   return new Date(String(dateStr).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-export default function Milestones({ projectId, workspaceId }) {
+export default function Milestones({ projectId, businessSpaceId }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -51,7 +51,7 @@ export default function Milestones({ projectId, workspaceId }) {
     setSaving(true)
     const { data: newItem, error } = await supabase.from('project_milestones').insert({
       project_id: projectId,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       title: form.title,
       target_date: form.target_date || null,
     }).select().single()

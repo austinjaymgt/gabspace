@@ -31,7 +31,7 @@ function compareTasks(a, b, sortBy) {
   }
 }
 
-export default function Tasks({ workspaceId }) {
+export default function Tasks({ businessSpaceId }) {
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -52,17 +52,17 @@ export default function Tasks({ workspaceId }) {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!workspaceId) return
+    if (!businessSpaceId) return
     fetchTasks()
     fetchProjects()
-  }, [workspaceId])
+  }, [businessSpaceId])
 
   async function fetchTasks() {
     setLoading(true)
     const { data, error } = await supabase
       .from('tasks')
       .select('*, projects(title)')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
     if (!error) setTasks(data)
     setLoading(false)
   }
@@ -71,7 +71,7 @@ export default function Tasks({ workspaceId }) {
     const { data } = await supabase
       .from('projects')
       .select('id, title')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
     if (data) setProjects(data)
   }
 
@@ -107,7 +107,7 @@ export default function Tasks({ workspaceId }) {
     setSaving(true)
     setError(null)
 
-    if (!workspaceId) {
+    if (!businessSpaceId) {
       setError('Workspace not loaded yet. Please try again.')
       setSaving(false)
       return
@@ -115,7 +115,7 @@ export default function Tasks({ workspaceId }) {
 
     const payload = {
       title: form.title,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       project_id: form.project_id || null,
       status: form.status,
       start_date: form.start_date || null,

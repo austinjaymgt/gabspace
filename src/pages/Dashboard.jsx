@@ -245,7 +245,7 @@ function BudgetQuarterWidget({ summary, onNavigate }) {
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
-export default function Dashboard({ session, workspaceId, userRole, onNavigate }) {
+export default function Dashboard({ session, businessSpaceId, userRole, onNavigate }) {
   const isDirector = ['owner', 'admin'].includes(userRole)
 
   const [settings, setSettings] = useState(null)
@@ -288,7 +288,7 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
     fetchGoals()
     if (isDirector) fetchBudgetSummary()
     else fetchContent()
-  }, [workspaceId, isDirector])
+  }, [businessSpaceId, isDirector])
 
   function getGreeting() {
     const hour = new Date().getHours()
@@ -308,11 +308,11 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
   }
 
   async function fetchProjectCounts() {
-    if (!workspaceId) return
+    if (!businessSpaceId) return
     const { data } = await supabase
       .from('projects')
       .select('status')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .eq('type', 'project')
       .in('status', ['planning', 'active', 'on-hold'])
     if (!data) return
@@ -322,11 +322,11 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
   }
 
   async function fetchAllProjects() {
-    if (!workspaceId) return
+    if (!businessSpaceId) return
     const { data } = await supabase
       .from('projects')
       .select('id, title, status, clients(name)')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .eq('type', 'project')
       .in('status', ['planning', 'active', 'on-hold'])
       .order('created_at', { ascending: false })
@@ -338,11 +338,11 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
     const { data, error } = await supabase
       .from('tasks')
       .select('*, projects(title)')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .neq('status', 'done')
       .order('due_date', { ascending: true, nullsFirst: false })
     if (error) {
-      const { data: bare } = await supabase.from('tasks').select('*').eq('workspace_id', workspaceId).neq('status', 'done').order('due_date', { ascending: true, nullsFirst: false })
+      const { data: bare } = await supabase.from('tasks').select('*').eq('business_space_id', businessSpaceId).neq('status', 'done').order('due_date', { ascending: true, nullsFirst: false })
       setTasks(bare || [])
     } else {
       setTasks(data || [])
@@ -351,11 +351,11 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
   }
 
   async function fetchSparkIdeas() {
-    if (!workspaceId) return
+    if (!businessSpaceId) return
     const { data } = await supabase
       .from('projects')
       .select('id, title')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .eq('type', 'event')
       .eq('event_status', 'concept')
       .order('created_at', { ascending: false })
@@ -364,10 +364,10 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
   }
 
   async function saveSparkIdea() {
-    if (!sparkIdea.trim() || !workspaceId) return
+    if (!sparkIdea.trim() || !businessSpaceId) return
     setSavingIdea(true)
     await supabase.from('projects').insert({
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       user_id: session.user.id,
       title: sparkIdea.trim(),
       type: 'event',
@@ -383,7 +383,7 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
     const { data } = await supabase
       .from('team_goals')
       .select('id, title, progress, category, category_label, status, due_date')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(4)
     setGoals(data || [])
@@ -403,15 +403,15 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
   }
 
   async function fetchBudgetSummary() {
-    if (!workspaceId) return
+    if (!businessSpaceId) return
     const now = new Date()
     const year = now.getFullYear()
     const quarter = quarterFromDate(ymd(now))
     const [budgetRes, expenseRes, lineRes, revenueRes] = await Promise.all([
-      supabase.from('department_budget').select('*').eq('workspace_id', workspaceId).eq('year', year).maybeSingle(),
-      supabase.from('expenses').select('amount, date').eq('workspace_id', workspaceId),
-      supabase.from('budget_line_items').select('projected_amount, quarter').eq('workspace_id', workspaceId),
-      supabase.from('revenue').select('amount, status, date').eq('workspace_id', workspaceId),
+      supabase.from('department_budget').select('*').eq('business_space_id', businessSpaceId).eq('year', year).maybeSingle(),
+      supabase.from('expenses').select('amount, date').eq('business_space_id', businessSpaceId),
+      supabase.from('budget_line_items').select('projected_amount, quarter').eq('business_space_id', businessSpaceId),
+      supabase.from('revenue').select('amount, status, date').eq('business_space_id', businessSpaceId),
     ])
     const inQuarter = dateStr => {
       if (!dateStr) return false
@@ -434,10 +434,10 @@ export default function Dashboard({ session, workspaceId, userRole, onNavigate }
   }
 
   async function handleQuickTask(e) {
-    if (e.key !== 'Enter' || !quickTask.trim() || !workspaceId) return
+    if (e.key !== 'Enter' || !quickTask.trim() || !businessSpaceId) return
     const title = quickTask.trim()
     setQuickTask('')
-    await supabase.from('tasks').insert({ title, workspace_id: workspaceId, status: 'todo' })
+    await supabase.from('tasks').insert({ title, business_space_id: businessSpaceId, status: 'todo' })
     fetchTasks()
   }
 

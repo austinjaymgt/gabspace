@@ -20,7 +20,7 @@ const fStyles = {
   input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
-export default function Staffing({ eventId, workspaceId }) {
+export default function Staffing({ eventId, businessSpaceId }) {
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -42,7 +42,7 @@ export default function Staffing({ eventId, workspaceId }) {
     const { data: { user } } = await supabase.auth.getUser()
     const { data: newStaff, error } = await supabase.from('event_staffing').insert({
       project_id: eventId,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       user_id: user.id,
       role: form.role,
       person_name: form.person_name || null,

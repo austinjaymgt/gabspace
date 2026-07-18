@@ -6,7 +6,7 @@ import { Icon } from '../components/Icon'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
-export default function Resources({ workspaceId, session }) {
+export default function Resources({ businessSpaceId, session }) {
   const [resources, setResources] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -109,7 +109,7 @@ if (form.kind === 'link') payload.url = normalizeUrl(form.url)
         // INSERT — different flow for file vs link
         if (form.kind === 'link') {
           const { error: insErr } = await supabase.from('resources').insert({
-            workspace_id: workspaceId,
+            business_space_id: businessSpaceId,
             created_by: user.id,
             kind: 'link',
             title: form.title.trim(),
@@ -128,7 +128,7 @@ if (form.kind === 'link') payload.url = normalizeUrl(form.url)
           // insert using a pre-generated UUID.
           const resourceId = crypto.randomUUID()
           const safeName = form.file.name.replace(/[^\w.\-]/g, '_')
-          const filePath = `${workspaceId}/${resourceId}/${safeName}`
+          const filePath = `${businessSpaceId}/${resourceId}/${safeName}`
 
           // 1. Upload to storage
           const { error: upErr } = await supabase
@@ -143,7 +143,7 @@ if (form.kind === 'link') payload.url = normalizeUrl(form.url)
           // 2. Insert the row referencing the uploaded path
           const { error: insErr } = await supabase.from('resources').insert({
             id: resourceId,
-            workspace_id: workspaceId,
+            business_space_id: businessSpaceId,
             created_by: user.id,
             kind: 'file',
             title: form.title.trim(),

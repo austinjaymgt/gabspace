@@ -113,7 +113,7 @@ const SOURCES = [
   },
 ]
 
-export default function GlobalSearch({ workspaceId, onNavigate, isMobile = false }) {
+export default function GlobalSearch({ businessSpaceId, onNavigate, isMobile = false }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -164,7 +164,7 @@ export default function GlobalSearch({ workspaceId, onNavigate, isMobile = false
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [query, workspaceId])
+  }, [query, businessSpaceId])
 
   function handleSelect(page) {
     onNavigate(page)

@@ -10,7 +10,7 @@ const statusConfig = {
   inactive:  { bg: t.colors.bg,            color: t.colors.textTertiary,   label: 'Inactive' },
 }
 
-export default function Clients({ workspaceId }) {
+export default function Clients({ businessSpaceId }) {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -62,7 +62,7 @@ export default function Clients({ workspaceId }) {
   const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)
   const { data } = await supabase
     .from('portal_tokens')
-    .insert({ client_id: clientId, user_id: user.id, workspace_id: workspaceId, token })
+    .insert({ client_id: clientId, user_id: user.id, business_space_id: businessSpaceId, token })
     .select().single()
   setPortalToken(data)
 }
@@ -84,7 +84,7 @@ export default function Clients({ workspaceId }) {
   setSaving(true)
   setError(null)
   const { data: { user } } = await supabase.auth.getUser()
-  const { error } = await supabase.from('clients').insert({ ...form, user_id: user.id, workspace_id: workspaceId })
+  const { error } = await supabase.from('clients').insert({ ...form, user_id: user.id, business_space_id: businessSpaceId })
       if (error) setError(error.message)
     else {
       setShowForm(false)

@@ -25,7 +25,7 @@ const statusColors = {
   cancelled: { bg: '#FAF0F2', color: '#C06B7A' },
 }
 
-export default function BusinessEvents({ workspaceId }) {
+export default function BusinessEvents({ businessSpaceId }) {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -73,7 +73,7 @@ export default function BusinessEvents({ workspaceId }) {
       notes: form.notes || null,
       prep_checklist: [],
       user_id: user.id,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
     })
     if (error) setError(error.message)
     else {

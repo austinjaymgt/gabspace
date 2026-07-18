@@ -22,10 +22,10 @@ serve(async (req) => {
       })
     }
 
-    const { email, role, workspaceId, invitedBy } = JSON.parse(body)
-    console.log('parsed:', { email, role, workspaceId, invitedBy })
+    const { email, role, businessSpaceId, invitedBy } = JSON.parse(body)
+    console.log('parsed:', { email, role, businessSpaceId, invitedBy })
 
-    if (!email || !role || !workspaceId || !invitedBy) {
+    if (!email || !role || !businessSpaceId || !invitedBy) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -38,7 +38,7 @@ serve(async (req) => {
 
     const { error: insertError } = await adminClient
       .from('invites')
-      .insert({ workspace_id: workspaceId, email, role, invited_by: invitedBy })
+      .insert({ business_space_id: businessSpaceId, email, role, invited_by: invitedBy })
 
     console.log('insert error:', insertError)
 

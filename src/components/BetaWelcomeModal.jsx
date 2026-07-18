@@ -17,7 +17,7 @@ const STEPS = [
   { id: 4, label: 'Agreement'  },
 ]
 
-export default function BetaWelcomeModal({ session, workspaceId, onComplete }) {
+export default function BetaWelcomeModal({ session, businessSpaceId, onComplete }) {
   const [step, setStep]           = useState(1)
   const [ndaChecked, setNdaChecked] = useState(false)
   const [saving, setSaving]       = useState(false)
@@ -40,7 +40,7 @@ export default function BetaWelcomeModal({ session, workspaceId, onComplete }) {
         onboarding_completed_at:  new Date().toISOString(),
       })
       .eq('user_id',      session.user.id)
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
 
     setSaving(false)
     if (dbError) {

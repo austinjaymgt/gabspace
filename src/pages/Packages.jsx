@@ -42,7 +42,7 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
-export default function Packages({ workspaceId, userRole }) {
+export default function Packages({ businessSpaceId, userRole }) {
   const [packages, setPackages] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('library') // library | detail | form
@@ -74,15 +74,15 @@ export default function Packages({ workspaceId, userRole }) {
   const [newTimelineItem, setNewTimelineItem] = useState({ days_out: 30, task: '', owner_role: '' })
 
   useEffect(() => {
-    if (workspaceId) fetchPackages()
-  }, [workspaceId])
+    if (businessSpaceId) fetchPackages()
+  }, [businessSpaceId])
 
   async function fetchPackages() {
     setLoading(true)
     const { data } = await supabase
       .from('event_packages')
       .select('*')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: true })
     setPackages(data || [])
     setLoading(false)
@@ -102,7 +102,7 @@ export default function Packages({ workspaceId, userRole }) {
     if (!name) return
 
     const payload = {
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       name,
       event_type: form.event_type,
       description: form.description,

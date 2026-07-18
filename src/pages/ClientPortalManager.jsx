@@ -54,7 +54,7 @@ function timeAgo(dateStr) {
   return `${d}d ago`
 }
 
-export default function ClientPortalManager({ workspaceId, session }) {
+export default function ClientPortalManager({ businessSpaceId, session }) {
   const [portals, setPortals] = useState([])
   const [clients, setClients] = useState([])
   const [projectsByClient, setProjectsByClient] = useState({})
@@ -86,7 +86,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
 
   const staffName = session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || 'Team'
 
-  useEffect(() => { if (workspaceId) init() }, [workspaceId])
+  useEffect(() => { if (businessSpaceId) init() }, [businessSpaceId])
 
   async function init() {
     setLoading(true)
@@ -98,7 +98,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
     const { data } = await supabase
       .from('portal_links')
       .select('*, clients(name, company), portal_projects(id, project_id, staff_last_viewed, projects(id, title, status))')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     setPortals(data || [])
     return data || []
@@ -154,7 +154,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
     const { data } = await supabase
       .from('clients')
       .select('id, name, company')
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('name')
     setClients(data || [])
   }
@@ -165,7 +165,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
       .from('projects')
       .select('id, title, status')
       .eq('client_id', clientId)
-      .eq('workspace_id', workspaceId)
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     setProjectsByClient(prev => ({ ...prev, [clientId]: data || [] }))
   }
@@ -221,7 +221,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
     if (!newClientId) return
     setCreating(true)
     const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
-    const { error } = await supabase.from('portal_links').insert({ client_id: newClientId, workspace_id: workspaceId, token })
+    const { error } = await supabase.from('portal_links').insert({ client_id: newClientId, business_space_id: businessSpaceId, token })
     if (!error) { setShowNewPortal(false); setNewClientId(''); await fetchPortals() }
     setCreating(false)
   }
@@ -247,7 +247,7 @@ export default function ClientPortalManager({ workspaceId, session }) {
     setSavingDeliv(true)
     const { data, error } = await supabase.from('deliverables').insert({
       project_id: projectId,
-      workspace_id: workspaceId,
+      business_space_id: businessSpaceId,
       ...delivForm,
     }).select().single()
     if (!error) {
