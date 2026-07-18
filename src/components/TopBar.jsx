@@ -7,7 +7,7 @@ import { useIsNotDesktop } from '../hooks/useMediaQuery'
 import GlobalSearch from './GlobalSearch'
 import BusinessSpaceSwitcher from './BusinessSpaceSwitcher'
 
-export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, businessSpaceId }) {
+export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, businessSpaceId, onSwitchBusinessSpace }) {
   const isMobile = useIsNotDesktop()
   const isDesktop = !isMobile
   const [firstName, setFirstName] = useState('')
@@ -59,7 +59,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
     <Icon name="menu" size="lg" />
   </button>
 )}
-        <BusinessSpaceSwitcher isMobile={isMobile} onNavigate={onNavigate} />
+        <BusinessSpaceSwitcher isMobile={isMobile} onNavigate={onNavigate} session={session} businessSpaceId={businessSpaceId} onSwitch={onSwitchBusinessSpace} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '12px', flexShrink: 0 }}>

@@ -1,19 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { theme as t } from '../theme'
+import { supabase } from '../supabaseClient'
 import { Icon } from './Icon'
 
-// Mock data for UI validation only — no backend multi-business support yet.
-const MOCK_BUSINESSES = [
-  { id: 'gabspace-events', name: 'Gabspace Events', tagline: 'creativity meets clarity', icon: 'events', color: t.colors.primary },
-  { id: 'studio-nova', name: 'Studio Nova', tagline: 'branding & design', icon: 'creative', color: t.colors.accent },
-  { id: 'the-local-collective', name: 'The Local Collective', tagline: 'community & marketing', icon: 'campaigns', color: t.colors.highlight },
-]
+const AVATAR_COLORS = [t.colors.primary, t.colors.accent, t.colors.highlight]
 
-const STORAGE_KEY = 'gabspace-active-business'
-
-function getInitialActiveId() {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return MOCK_BUSINESSES.some(b => b.id === stored) ? stored : MOCK_BUSINESSES[0].id
+function colorFor(id) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
 }
 
 function Avatar({ business, size }) {
@@ -22,21 +17,25 @@ function Avatar({ business, size }) {
       width: `${size}px`,
       height: `${size}px`,
       borderRadius: t.radius.md,
-      backgroundColor: business.color,
+      backgroundColor: colorFor(business.id),
       color: t.colors.textInverse,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
+      fontSize: `${Math.round(size * 0.45)}px`,
+      fontWeight: '700',
+      fontFamily: t.fonts.sans,
     }}>
-      <Icon name={business.icon} size="sm" />
+      {business.name.charAt(0).toUpperCase()}
     </div>
   )
 }
 
-export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate }) {
-  const [activeId, setActiveId] = useState(getInitialActiveId)
+export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate, session, businessSpaceId, onSwitch }) {
+  const [businesses, setBusinesses] = useState([])
   const [open, setOpen] = useState(false)
+  const [switching, setSwitching] = useState(false)
   const containerRef = useRef(null)
 
   useEffect(() => {
@@ -49,14 +48,29 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate }) 
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const active = MOCK_BUSINESSES.find(b => b.id === activeId)
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase
+      .from('business_space_members')
+      .select('business_space_id, business_spaces(id, name)')
+      .eq('user_id', session.user.id)
+      .then(({ data }) => {
+        const rows = (data || [])
+          .filter(r => r.business_spaces)
+          .map(r => ({ id: r.business_spaces.id, name: r.business_spaces.name }))
+        setBusinesses(rows)
+      })
+  }, [session])
 
-  function handleSelect(id) {
+  const active = businesses.find(b => b.id === businessSpaceId) || { id: businessSpaceId || '', name: 'Loading…' }
+
+  async function handleSelect(id) {
     setOpen(false)
-    if (id === activeId) return
-    setActiveId(id)
-    localStorage.setItem(STORAGE_KEY, id)
-    onNavigate?.('dashboard')
+    if (id === businessSpaceId || switching) return
+    setSwitching(true)
+    const { error } = await onSwitch?.(id) || {}
+    setSwitching(false)
+    if (!error) onNavigate?.('dashboard')
   }
 
   const dropdown = open && (
@@ -74,7 +88,7 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate }) 
       fontFamily: t.fonts.sans,
       overflow: 'hidden',
     }}>
-      {MOCK_BUSINESSES.map(business => (
+      {businesses.map(business => (
         <div
           key={business.id}
           onClick={() => handleSelect(business.id)}
@@ -100,17 +114,8 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate }) 
             }}>
               {business.name}
             </div>
-            <div style={{
-              fontSize: t.fontSizes.xs,
-              color: t.colors.textTertiary,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {business.tagline}
-            </div>
           </div>
-          {business.id === activeId && (
+          {business.id === businessSpaceId && (
             <span style={{ display: 'flex', alignItems: 'center', color: t.colors.primary, flexShrink: 0 }}>
               <Icon name="success" size="sm" />
             </span>
@@ -177,14 +182,6 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate }) 
             textOverflow: 'ellipsis',
           }}>
             {active.name}
-          </div>
-          <div style={{
-            fontSize: t.fontSizes.xs,
-            color: t.colors.textTertiary,
-            fontFamily: t.fonts.sans,
-            whiteSpace: 'nowrap',
-          }}>
-            {active.tagline}
           </div>
         </div>
         <Icon name="expand" size="sm" color={t.colors.textTertiary} />

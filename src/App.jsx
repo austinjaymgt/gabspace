@@ -247,6 +247,15 @@ const WELCOME_SPLASH_MS = 2600
     setUserRole(null)
   }
 
+  async function handleBusinessSpaceSwitch(newId) {
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ business_space_id: newId })
+      .eq('user_id', session.user.id)
+    if (!error) setBusinessSpaceId(newId)
+    return { error }
+  }
+
 const pageProps = { businessSpaceId, userRole, session }
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
   const isStaff = ['owner', 'admin', 'member'].includes(userRole)
@@ -558,7 +567,7 @@ function renderPage() {
   <SplashScreen gif={gabbyCelebrateGif} tagline="you're all set — welcome to your space." />
 )}
 <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} />
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} />
         <div style={{ flex: 1 }}>
           {renderPage()}
