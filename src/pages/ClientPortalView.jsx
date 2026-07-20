@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { statusConfig, computeDisplayStatus } from '../utils/invoiceStatus'
 
 const REACTIONS = ['👍', '❤️', '🔥', '🎉']
 
@@ -30,9 +31,12 @@ function timeAgo(dateStr) {
 
 export default function ClientPortalView() {
   const [token, setToken] = useState(null)
+  const [initialInvoiceId, setInitialInvoiceId] = useState(null)
   const [portalLink, setPortalLink] = useState(null)
   const [projects, setProjects] = useState([])
   const [activeProject, setActiveProject] = useState(null)
+  const [viewMode, setViewMode] = useState('projects') // 'projects' | 'invoices'
+  const [invoices, setInvoices] = useState([])
   const [deliverables, setDeliverables] = useState([])
   const [reactions, setReactions] = useState({})
   const [myReactions, setMyReactions] = useState({})
@@ -51,6 +55,11 @@ export default function ClientPortalView() {
     const t = params.get('portal')
     if (t) setToken(t)
     else setNotFound(true)
+    const invoiceParam = params.get('invoice')
+    if (invoiceParam) {
+      setInitialInvoiceId(invoiceParam)
+      setViewMode('invoices')
+    }
   }, [])
 
   useEffect(() => { if (token) loadPortal() }, [token])
@@ -67,7 +76,11 @@ export default function ClientPortalView() {
     setPortalLink(link)
     const projs = (link.portal_projects || []).map(pp => pp.projects).filter(Boolean)
     setProjects(projs)
-    if (projs.length > 0) await loadProject(projs[0].id)
+
+    const { data: invs } = await supabase.rpc('get_portal_invoices', { p_token: token })
+    setInvoices(invs || [])
+
+    if (viewMode !== 'invoices' && projs.length > 0) await loadProject(projs[0].id)
     setLoading(false)
   }
 
@@ -238,14 +251,14 @@ export default function ClientPortalView() {
                 {projects.map(p => (
                   <button
                     key={p.id}
-                    onClick={() => loadProject(p.id)}
+                    onClick={() => { setViewMode('projects'); loadProject(p.id) }}
                     style={{
                       display: 'block', width: '100%', textAlign: 'left',
-                      background: activeProject === p.id ? PLUM_LT : 'none',
+                      background: viewMode === 'projects' && activeProject === p.id ? PLUM_LT : 'none',
                       border: 'none',
-                      borderLeft: activeProject === p.id ? `3px solid ${BLUE}` : '3px solid transparent',
-                      color: activeProject === p.id ? GRAPHITE : '#666',
-                      fontWeight: activeProject === p.id ? 600 : 400,
+                      borderLeft: viewMode === 'projects' && activeProject === p.id ? `3px solid ${BLUE}` : '3px solid transparent',
+                      color: viewMode === 'projects' && activeProject === p.id ? GRAPHITE : '#666',
+                      fontWeight: viewMode === 'projects' && activeProject === p.id ? 600 : 400,
                       fontSize: 13,
                       padding: '8px 14px',
                       cursor: 'pointer',
@@ -259,20 +272,44 @@ export default function ClientPortalView() {
                 <div style={{ height: 8 }} />
               </div>
             )}
+
+            {invoices.length > 0 && (
+              <div style={{ borderTop: '1px solid #ebebeb' }}>
+                <button
+                  onClick={() => setViewMode('invoices')}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    background: viewMode === 'invoices' ? PLUM_LT : 'none',
+                    border: 'none',
+                    borderLeft: viewMode === 'invoices' ? `3px solid ${BLUE}` : '3px solid transparent',
+                    color: viewMode === 'invoices' ? GRAPHITE : '#666',
+                    fontWeight: viewMode === 'invoices' ? 600 : 400,
+                    fontSize: 13,
+                    padding: '8px 14px',
+                    cursor: 'pointer',
+                    fontFamily: '"Source Sans 3", sans-serif',
+                    transition: 'background 0.12s',
+                  }}
+                >
+                  Invoices
+                </button>
+                <div style={{ height: 8 }} />
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right feed */}
         <div style={{ flex: 1, minWidth: 0 }}>
 
-          {projects.length === 0 && (
+          {viewMode === 'projects' && projects.length === 0 && (
             <div style={{ background: '#fff', border: '1px solid #e2e2e2', borderRadius: 8, padding: 32, textAlign: 'center', color: PLUM, fontFamily: '"Source Sans 3", sans-serif', fontSize: 14 }}>
               Nothing's been shared with you yet — check back soon.
             </div>
           )}
 
           {/* Project header */}
-          {activeProj && (
+          {viewMode === 'projects' && activeProj && (
             <div style={{ background: '#fff', border: '1px solid #e2e2e2', borderRadius: 8, marginBottom: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <div style={{ height: 5, background: `linear-gradient(90deg, ${PLUM} 0%, ${BLUE} 100%)` }} />
               <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -322,13 +359,13 @@ export default function ClientPortalView() {
             </div>
           )}
 
-          {deliverables.length === 0 && activeProject && (
+          {viewMode === 'projects' && deliverables.length === 0 && activeProject && (
             <div style={{ background: '#fff', border: '1px solid #e2e2e2', borderRadius: 8, padding: 32, textAlign: 'center', color: PLUM, fontFamily: '"Source Sans 3", sans-serif', fontSize: 14 }}>
               No deliverables yet for <strong>{activeProj?.title}</strong> — they'll show up here as soon as they're ready.
             </div>
           )}
 
-          {deliverables.map(d => {
+          {viewMode === 'projects' && deliverables.map(d => {
             const rxn = reactions[d.id] || {}
             const mySet = myReactions[d.id] || new Set()
             const cmts = comments[d.id] || []
@@ -451,6 +488,72 @@ export default function ClientPortalView() {
                     onKeyDown={e => { if (e.key === 'Enter') submitComment(d.id) }}
                     style={{ flex: 1, background: '#f5f0fb', border: '1px solid #e0d0f0', borderRadius: 20, padding: '7px 14px', fontSize: 13, fontFamily: '"Source Sans 3", sans-serif', outline: 'none', color: GRAPHITE }}
                   />
+                </div>
+              </div>
+            )
+          })}
+
+          {viewMode === 'invoices' && invoices.length === 0 && (
+            <div style={{ background: '#fff', border: '1px solid #e2e2e2', borderRadius: 8, padding: 32, textAlign: 'center', color: PLUM, fontFamily: '"Source Sans 3", sans-serif', fontSize: 14 }}>
+              No invoices to show yet.
+            </div>
+          )}
+
+          {viewMode === 'invoices' && invoices.map(inv => {
+            const displayStatus = computeDisplayStatus(inv)
+            const sc = statusConfig[displayStatus]
+            const outstanding = (parseFloat(inv.total_amount) || 0) - (parseFloat(inv.amount_paid) || 0)
+            const highlighted = initialInvoiceId === inv.id
+            return (
+              <div
+                key={inv.id}
+                style={{
+                  background: '#fff',
+                  border: highlighted ? `2px solid ${BLUE}` : '1px solid #e2e2e2',
+                  borderRadius: 8,
+                  marginBottom: 16,
+                  padding: 20,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                  <div>
+                    <div style={{ fontFamily: '"Big Shoulders Display", sans-serif', fontSize: 17, fontWeight: 700, color: GRAPHITE }}>
+                      {inv.invoice_number || 'Invoice'}
+                    </div>
+                    {inv.due_date && (
+                      <div style={{ fontSize: 12, color: '#999', fontFamily: '"Source Sans 3", sans-serif', marginTop: 2 }}>
+                        Due {new Date(inv.due_date).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontFamily: '"Source Sans 3", sans-serif' }}>
+                    {sc.label}
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
+                  <div style={{ background: '#f7f7f7', borderRadius: 6, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 10, color: '#aaa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Total</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: GRAPHITE, fontFamily: '"Big Shoulders Display", sans-serif' }}>${parseFloat(inv.total_amount || 0).toLocaleString()}</div>
+                  </div>
+                  <div style={{ background: '#f7f7f7', borderRadius: 6, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 10, color: '#aaa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Paid</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#0e8a4a', fontFamily: '"Big Shoulders Display", sans-serif' }}>${parseFloat(inv.amount_paid || 0).toLocaleString()}</div>
+                  </div>
+                  <div style={{ background: '#f7f7f7', borderRadius: 6, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 10, color: '#aaa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Outstanding</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: outstanding > 0 ? '#c0392b' : '#0e8a4a', fontFamily: '"Big Shoulders Display", sans-serif' }}>${outstanding.toLocaleString()}</div>
+                  </div>
+                </div>
+
+                <div>
+                  {(inv.line_items || []).map((li, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: i === 0 ? 'none' : '1px solid #f0f0f0', fontSize: 13, fontFamily: '"Source Sans 3", sans-serif', color: '#555' }}>
+                      <span>{li.description} {parseFloat(li.quantity) !== 1 ? `× ${li.quantity}` : ''}</span>
+                      <span>${parseFloat(li.total || 0).toLocaleString()}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )

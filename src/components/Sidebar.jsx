@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 import { Icon } from './Icon'
+import { getModules, MODULE_NAV_PATHS } from '../utils/businessModules'
 
   const navItems = [
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
@@ -26,8 +27,14 @@ import { Icon } from './Icon'
   */
 
   {
+    label: 'Money', icon: 'finance', path: 'money', children: [
+      { label: 'Income', path: 'income' },
+      { label: 'Expenses', path: 'expenses' },
+      { label: 'Snapshot', path: 'snapshot' },
+    ]
+  },
+  {
     label: 'Operations', icon: 'operations', path: 'business', children: [
-      { label: 'Budget', path: 'department-budget' },
       { label: 'Vendors', path: 'vendors' },
       { label: 'Resources', path: 'resources' },
     ]
@@ -50,6 +57,19 @@ import { Icon } from './Icon'
   { label: 'Settings', icon: 'settings', path: 'settings' },
 ]
 
+function filterNavItems(modules) {
+  const hiddenPaths = new Set()
+  Object.entries(MODULE_NAV_PATHS).forEach(([key, paths]) => {
+    if (!modules[key]) paths.forEach(p => hiddenPaths.add(p))
+  })
+
+  return navItems
+    .map(item => item.children
+      ? { ...item, children: item.children.filter(c => !hiddenPaths.has(c.path)) }
+      : item)
+    .filter(item => item.children ? item.children.length > 0 : !hiddenPaths.has(item.path))
+}
+
 const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED_WIDTH = 56
 
@@ -63,9 +83,10 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse }) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId }) {
   const [expanded, setExpanded] = useState([])
   const isDesktop = useIsDesktop()
+  const items = filterNavItems(getModules(businessSpaceId))
 
   function toggleExpand(label) {
     setExpanded(prev =>
@@ -168,7 +189,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
 
       {/* Nav */}
       <nav style={{ padding: '8px 0', flex: 1 }}>
-        {navItems.map(item => {
+        {items.map(item => {
           const isActive = currentPage === item.path ||
             (item.children && item.children.some(c => c.path === currentPage))
 

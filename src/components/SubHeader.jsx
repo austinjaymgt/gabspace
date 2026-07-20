@@ -17,9 +17,13 @@ const allPages = [
   // { path: 'briefs',            label: 'Briefs',            icon: 'brief' },
   { path: 'resources',         label: 'Resources',         icon: 'resources' },  
  
+  // Money
+  { path: 'income',            label: 'Income',            icon: 'finance' },
+  { path: 'expenses',          label: 'Expenses',          icon: 'finance' },
+  { path: 'snapshot',          label: 'Snapshot',          icon: 'finance' },
+
   // Operations
   { path: 'vendors',           label: 'Vendors',           icon: 'vendors' },
-  { path: 'department-budget', label: 'Budget',      icon: 'finance' },
 
   // Creative Collective
   { path: 'creative-strategy', label: 'Creative Strategy', icon: 'creative' },
@@ -37,14 +41,19 @@ const allPages = [
 const validPaths = new Set(allPages.map(p => p.path))
 
 
-export default function SubHeader({ currentPage, onNavigate, session }) {
+export default function SubHeader({ currentPage, onNavigate, session, businessSpaceId }) {
   const [settings, setSettings] = useState(null)
+  const [business, setBusiness] = useState(null)
   const [showFavPicker, setShowFavPicker] = useState(false)
   const isMobile = useIsNotDesktop()
 
   useEffect(() => {
     if (session) fetchSettings()
   }, [session])
+
+  useEffect(() => {
+    if (businessSpaceId) fetchBusiness()
+  }, [businessSpaceId])
 
   async function fetchSettings() {
     const { data } = await supabase
@@ -53,6 +62,15 @@ export default function SubHeader({ currentPage, onNavigate, session }) {
       .eq('user_id', session.user.id)
       .maybeSingle()
     setSettings(data)
+  }
+
+  async function fetchBusiness() {
+    const { data } = await supabase
+      .from('business_spaces')
+      .select('name, logo_url')
+      .eq('id', businessSpaceId)
+      .single()
+    setBusiness(data)
   }
 
   async function toggleFavorite(path) {
@@ -107,9 +125,9 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
         }}
-      >        {settings?.logo_url && !isMobile && (
+      >        {business?.logo_url && !isMobile && (
           <img
-            src={settings.logo_url}
+            src={business.logo_url}
             alt="logo"
             style={{
               width: '24px',
@@ -121,14 +139,14 @@ const favoritePages = allPages.filter(p => favorites.includes(p.path))
           />
         )}
 
-{settings?.business_name && !isMobile && (
+{business?.name && !isMobile && (
           <span style={{
             fontSize: t.fontSizes.sm,
             fontWeight: '600',
             color: t.colors.textSecondary,
             marginRight: '8px',
           }}>
-            {settings.business_name}
+            {business.name}
           </span>
         )}
         {!isMobile && (

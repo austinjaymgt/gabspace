@@ -60,7 +60,7 @@ const SOURCES = [
     table: 'invoices',
     icon: 'invoice',
     label: 'Invoice',
-    page: 'invoices',
+    page: 'income',
     columns: ['invoice_number'],
     title: r => r.invoice_number || 'Invoice',
     subtitle: r => r.clients?.name || '',

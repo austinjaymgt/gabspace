@@ -8,11 +8,6 @@ function fmtMoney(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
-function pct(a, b) {
-  if (!b) return 0
-  return Math.min(Math.round((a / b) * 100), 100)
-}
-
 function startOfToday() {
   const d = new Date()
   d.setHours(0, 0, 0, 0)
@@ -198,33 +193,19 @@ function SparkIdeaRow({ idea }) {
 
 function BudgetQuarterWidget({ summary, onNavigate }) {
   if (!summary) return null
-  const { quarter, hasBudget, target, actual, planned, received, pending } = summary
-  const spentPct = pct(actual, target)
+  const { quarter, actual, planned, received, pending } = summary
   const net = received - actual
   return (
     <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
-      <SectionHeader label={`Budget · ${quarter}`} onViewAll={() => onNavigate('department-budget')} viewAllColor={t.colors.primary} />
+      <SectionHeader label={`Snapshot · ${quarter}`} onViewAll={() => onNavigate('snapshot')} viewAllColor={t.colors.primary} />
 
-      {hasBudget ? (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary }}>Expenses</span>
-            <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{spentPct}%</span>
-          </div>
-          <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden', marginBottom: '8px' }}>
-            <div style={{ height: '100%', width: `${spentPct}%`, background: spentPct > 90 ? t.colors.danger : t.colors.primary, borderRadius: t.radius.full }} />
-          </div>
-          <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textSecondary, marginBottom: '2px' }}>{fmtMoney(actual)} of {fmtMoney(target)}</div>
-          <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Planned: {fmtMoney(planned)}</div>
-        </>
-      ) : (
-        <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginBottom: '10px' }}>
-          {fmtMoney(actual)} in expenses logged this quarter.{' '}
-          <button onClick={() => onNavigate('department-budget')} style={{ background: 'none', border: 'none', color: t.colors.primary, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, fontSize: t.fontSizes.sm, padding: 0 }}>
-            Set a budget →
-          </button>
+      <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+          <span style={{ fontWeight: '600', color: t.colors.textPrimary }}>Expenses</span>
+          <span>{fmtMoney(actual)}</span>
         </div>
-      )}
+        {planned > 0 && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{fmtMoney(planned)} planned</div>}
+      </div>
 
       <div style={{ borderTop: `1px solid ${t.colors.borderLight}`, marginTop: '14px', paddingTop: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '4px' }}>
@@ -304,7 +285,10 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   async function fetchSettings() {
     if (!session) return
     const { data } = await supabase.from('user_settings').select('*').eq('user_id', session.user.id).maybeSingle()
-    setSettings(data)
+    const { data: business } = businessSpaceId
+      ? await supabase.from('business_spaces').select('name, logo_url').eq('id', businessSpaceId).single()
+      : { data: null }
+    setSettings({ ...data, business_name: business?.name || '', logo_url: business?.logo_url || '' })
   }
 
   async function fetchProjectCounts() {
@@ -407,8 +391,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     const now = new Date()
     const year = now.getFullYear()
     const quarter = quarterFromDate(ymd(now))
-    const [budgetRes, expenseRes, lineRes, revenueRes] = await Promise.all([
-      supabase.from('department_budget').select('*').eq('business_space_id', businessSpaceId).eq('year', year).maybeSingle(),
+    const [expenseRes, lineRes, revenueRes] = await Promise.all([
       supabase.from('expenses').select('amount, date').eq('business_space_id', businessSpaceId),
       supabase.from('budget_line_items').select('projected_amount, quarter').eq('business_space_id', businessSpaceId),
       supabase.from('revenue').select('amount, status, date').eq('business_space_id', businessSpaceId),
@@ -423,8 +406,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     const quarterRevenue = (revenueRes.data || []).filter(r => inQuarter(r.date))
     const received = quarterRevenue.filter(r => r.status === 'received').reduce((s, r) => s + Number(r.amount || 0), 0)
     const pending = quarterRevenue.filter(r => r.status === 'pending').reduce((s, r) => s + Number(r.amount || 0), 0)
-    const target = Number(budgetRes.data?.[`${quarter.toLowerCase()}_target`] || 0)
-    setBudgetSummary({ quarter: `${quarter} ${year}`, hasBudget: !!budgetRes.data, target, actual, planned, received, pending })
+    setBudgetSummary({ quarter: `${quarter} ${year}`, actual, planned, received, pending })
   }
 
   async function completeTask(id) {

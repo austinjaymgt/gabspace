@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { Icon } from '../components/Icon'
+import Toggle from '../components/Toggle'
+import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModules, toggleModuleState } from '../utils/businessModules'
 
 const ROLE_LABELS = {
   owner: 'Owner',
@@ -16,7 +19,7 @@ const ROLE_COLORS = {
   client: { bg: '#FAF0F2', color: '#C06B7A' },
 }
 
-export default function Settings({ session, businessSpaceId, userRole }) {
+export default function Settings({ session, businessSpaceId, userRole, onBusinessIdentityChange, onArchiveBusiness }) {
   const [settings, setSettings] = useState(null)
   const [form, setForm] = useState({
     first_name: '',
@@ -24,6 +27,7 @@ export default function Settings({ session, businessSpaceId, userRole }) {
     logo_url: '',
     display_name: '',
     job_title: '',
+    plan: 'free',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -38,6 +42,7 @@ export default function Settings({ session, businessSpaceId, userRole }) {
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState(null)
   const [inviteSent, setInviteSent] = useState(false)
+  const [memberError, setMemberError] = useState(null)
 
 // Delete account
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -47,9 +52,53 @@ export default function Settings({ session, businessSpaceId, userRole }) {
   const [blockedWorkspaces, setBlockedWorkspaces] = useState(null)
 
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
+  const isOwner = userRole === 'owner'
+
+  // Archive business
+  const [archiving, setArchiving] = useState(false)
+  const [archiveError, setArchiveError] = useState(null)
+
+  // Modules
+  const [modules, setModulesState] = useState(getModules(businessSpaceId))
+  const [moduleDataCounts, setModuleDataCounts] = useState({})
+  const [moduleNote, setModuleNote] = useState(null)
+
+  async function fetchModuleDataCounts() {
+    const counts = {}
+    await Promise.all(Object.entries(MODULE_DATA_TABLES).map(async ([key, table]) => {
+      const { count } = await supabase
+        .from(table)
+        .select('id', { count: 'exact', head: true })
+        .eq('business_space_id', businessSpaceId)
+      counts[key] = count || 0
+    }))
+    setModuleDataCounts(counts)
+  }
 
   useEffect(() => { fetchSettings() }, [])
+  useEffect(() => { if (businessSpaceId) fetchBusinessIdentity() }, [businessSpaceId])
   useEffect(() => { if (businessSpaceId && isOwnerOrAdmin) { fetchMembers(); fetchInvites() } }, [businessSpaceId])
+  useEffect(() => {
+    setModulesState(getModules(businessSpaceId))
+    setModuleNote(null)
+    if (businessSpaceId) fetchModuleDataCounts()
+  }, [businessSpaceId])
+
+  function handleToggleModule(key) {
+    const wasOn = modules[key]
+    const { modules: next, note } = toggleModuleState(modules, key)
+    setModulesState(next)
+    persistModules(businessSpaceId, next)
+    onBusinessIdentityChange?.()
+
+    const dataCount = moduleDataCounts[key] || 0
+    if (wasOn && !next[key] && dataCount > 0) {
+      const label = MODULE_DEFS.find(m => m.key === key).label
+      setModuleNote(`${label} turned off — its ${dataCount} existing ${dataCount === 1 ? 'entry stays' : 'entries stay'} put, just hidden.`)
+    } else {
+      setModuleNote(note)
+    }
+  }
 
   async function fetchSettings() {
     const { data } = await supabase
@@ -59,23 +108,50 @@ export default function Settings({ session, businessSpaceId, userRole }) {
       .maybeSingle()
     if (data) {
       setSettings(data)
-      setForm({
-        first_name: data.first_name || '',
-        business_name: data.business_name || '',
-        logo_url: data.logo_url || '',
-        display_name: data.display_name || '',
-        job_title: data.job_title || '',
-      })
+      setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'free' }))
     }
   }
 
-  async function fetchMembers() {
-    const { data } = await supabase
-      .from('user_profiles')
-      .select('id, user_id, role, display_name, joined_at')
+  async function fetchBusinessIdentity() {
+    const { data: business } = await supabase
+      .from('business_spaces')
+      .select('name, logo_url')
+      .eq('id', businessSpaceId)
+      .single()
+
+    const { data: membership } = await supabase
+      .from('business_space_members')
+      .select('display_name, job_title')
       .eq('business_space_id', businessSpaceId)
-      .order('joined_at', { ascending: true })
-    if (data) setMembers(data)
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+
+    setForm(prev => ({
+      ...prev,
+      business_name: business?.name || '',
+      logo_url: business?.logo_url || '',
+      display_name: membership?.display_name || '',
+      job_title: membership?.job_title || '',
+    }))
+  }
+
+  async function fetchMembers() {
+    const { data: memberRows } = await supabase
+      .from('business_space_members')
+      .select('id, user_id, role, display_name, created_at')
+      .eq('business_space_id', businessSpaceId)
+      .order('created_at', { ascending: true })
+    if (!memberRows) return
+
+    // Fall back to the person's global first name for anyone who hasn't
+    // set a display name for this specific business yet.
+    const { data: settingsRows } = await supabase
+      .from('user_settings')
+      .select('user_id, first_name')
+      .in('user_id', memberRows.map(m => m.user_id))
+
+    const firstNameByUser = Object.fromEntries((settingsRows || []).map(s => [s.user_id, s.first_name]))
+    setMembers(memberRows.map(m => ({ ...m, display_name: m.display_name || firstNameByUser[m.user_id] })))
   }
 
   async function fetchInvites() {
@@ -124,6 +200,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
     setInviteRole('member')
     setInviting(false)
     fetchInvites()
+    if (result.alreadyMember) fetchMembers()
     setTimeout(() => setInviteSent(false), 3000)
   }
 
@@ -132,36 +209,60 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
     fetchInvites()
   }
 
-  async function handleUpdateRole(profileId, newRole) {
-    await supabase.from('user_profiles').update({ role: newRole }).eq('id', profileId)
+  async function handleUpdateRole(userId, newRole) {
+    const { error } = await supabase.rpc('update_member_role', {
+      target_user_id: userId,
+      target_business_space_id: businessSpaceId,
+      new_role: newRole,
+    })
+    if (error) { setMemberError(error.message); return }
+    setMemberError(null)
     fetchMembers()
   }
 
-  async function handleRemoveMember(profileId) {
+  async function handleRemoveMember(userId) {
     if (!window.confirm('Remove this member from the workspace?')) return
-    await supabase.from('user_profiles').delete().eq('id', profileId)
+    const { error } = await supabase.rpc('remove_business_member', {
+      target_user_id: userId,
+      target_business_space_id: businessSpaceId,
+    })
+    if (error) { setMemberError(error.message); return }
+    setMemberError(null)
     fetchMembers()
   }
 
   async function handleSave() {
     setSaving(true)
     setError(null)
-    const payload = {
-      first_name: form.first_name,
-      business_name: form.business_name,
-      logo_url: form.logo_url,
-      display_name: form.display_name,
-      job_title: form.job_title,
-    }
+
+    const personalPayload = { first_name: form.first_name, plan: form.plan }
     if (settings) {
-      await supabase.from('user_settings').update(payload).eq('user_id', session.user.id)
+      await supabase.from('user_settings').update(personalPayload).eq('user_id', session.user.id)
     } else {
-      await supabase.from('user_settings').insert({ user_id: session.user.id, ...payload })
+      await supabase.from('user_settings').insert({ user_id: session.user.id, ...personalPayload })
     }
+
+    await supabase.rpc('update_my_business_profile', {
+      target_business_space_id: businessSpaceId,
+      new_display_name: form.display_name,
+      new_job_title: form.job_title,
+    })
+
+    if (isOwnerOrAdmin) {
+      const { error: identityError } = await supabase.rpc('update_business_identity', {
+        target_business_space_id: businessSpaceId,
+        new_name: form.business_name,
+        new_logo_url: form.logo_url,
+      })
+      if (identityError) setError(identityError.message)
+      else onBusinessIdentityChange?.()
+    }
+
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
     fetchSettings()
+    fetchBusinessIdentity()
   }
 
   async function handleLogoUpload(e) {
@@ -183,8 +284,23 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
     const { data: urlData } = supabase.storage.from('logos').getPublicUrl(fileName)
     const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`
     setForm(prev => ({ ...prev, logo_url: newLogoUrl }))
-    await supabase.from('user_settings').update({ logo_url: newLogoUrl }).eq('user_id', session.user.id)
+    const { error: identityError } = await supabase.rpc('update_business_identity', {
+      target_business_space_id: businessSpaceId,
+      new_name: form.business_name,
+      new_logo_url: newLogoUrl,
+    })
+    if (identityError) setError(identityError.message)
+    else onBusinessIdentityChange?.()
     setUploading(false)
+  }
+
+  async function handleArchive() {
+    if (!window.confirm("Archive this business? Everyone loses access until it's restored — nothing is deleted, and you can restore it anytime from the business switcher.")) return
+    setArchiving(true)
+    setArchiveError(null)
+    const { error } = await onArchiveBusiness?.() || {}
+    setArchiving(false)
+    if (error) setArchiveError(error.message || 'Something went wrong.')
   }
 
   async function handleDeleteAccount() {
@@ -293,7 +409,16 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
           </div>
           <div style={fieldStyle}>
             <label style={labelStyle}>Business name</label>
-            <input style={inputStyle} placeholder="e.g. Wildflower Creative Co." value={form.business_name} onChange={e => setForm({ ...form, business_name: e.target.value })} />
+            <input
+              style={{ ...inputStyle, ...(isOwnerOrAdmin ? {} : { backgroundColor: t.colors.bg, color: t.colors.textTertiary, cursor: 'not-allowed' }) }}
+              placeholder="e.g. Wildflower Creative Co."
+              value={form.business_name}
+              onChange={e => setForm({ ...form, business_name: e.target.value })}
+              disabled={!isOwnerOrAdmin}
+            />
+            {!isOwnerOrAdmin && (
+              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Only owners and admins can change the business name</span>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div style={fieldStyle}>
@@ -316,18 +441,30 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                 <div style={{ width: '56px', height: '56px', borderRadius: t.radius.md, backgroundColor: t.colors.bg, border: `1px dashed ${t.colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🏢</div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ padding: '8px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans, display: 'inline-block' }}>
-                  {uploading ? 'Uploading...' : 'Upload logo'}
-                  <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
-                </label>
-                <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>PNG, JPG up to 2MB</span>
-                {form.logo_url && (
-                  <button onClick={async () => {
-                    setForm(prev => ({ ...prev, logo_url: '' }))
-                    await supabase.from('user_settings').update({ logo_url: '' }).eq('user_id', session.user.id)
-                  }} style={{ fontSize: t.fontSizes.xs, color: t.colors.danger, background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, textAlign: 'left', padding: 0 }}>
-                    Remove logo
-                  </button>
+                {isOwnerOrAdmin ? (
+                  <>
+                    <label style={{ padding: '8px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans, display: 'inline-block' }}>
+                      {uploading ? 'Uploading...' : 'Upload logo'}
+                      <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                    </label>
+                    <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>PNG, JPG up to 2MB</span>
+                    {form.logo_url && (
+                      <button onClick={async () => {
+                        setForm(prev => ({ ...prev, logo_url: '' }))
+                        const { error: identityError } = await supabase.rpc('update_business_identity', {
+                          target_business_space_id: businessSpaceId,
+                          new_name: form.business_name,
+                          new_logo_url: '',
+                        })
+                        if (identityError) setError(identityError.message)
+                        else onBusinessIdentityChange?.()
+                      }} style={{ fontSize: t.fontSizes.xs, color: t.colors.danger, background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, textAlign: 'left', padding: 0 }}>
+                        Remove logo
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Only owners and admins can change the business logo</span>
                 )}
               </div>
             </div>
@@ -338,12 +475,47 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
         </div>
       </div>
 
+      {/* ── Modules ── */}
+      {isOwnerOrAdmin && (
+        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+            <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Modules</h3>
+            <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>Turn features on or off for this business — the sidebar updates to match</p>
+          </div>
+          <div style={{ padding: '8px 24px 24px' }}>
+            {MODULE_DEFS.map(m => (
+              <div key={m.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 0', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', minWidth: 0 }}>
+                  <span style={{ color: t.colors.textTertiary, marginTop: '2px', flexShrink: 0 }}>
+                    <Icon name={m.icon} size="sm" />
+                  </span>
+                  <div>
+                    <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>{m.label}</div>
+                    <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginTop: '2px' }}>{m.description}</div>
+                    {m.note && (
+                      <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px', fontStyle: 'italic' }}>{m.note}</div>
+                    )}
+                  </div>
+                </div>
+                <Toggle checked={!!modules[m.key]} onChange={() => handleToggleModule(m.key)} />
+              </div>
+            ))}
+            {moduleNote && (
+              <div style={{ marginTop: '14px', padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontSize: t.fontSizes.sm, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <Icon name="info" size="sm" />
+                <span>{moduleNote}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Account ── */}
       <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
         <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
           <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Account</h3>
         </div>
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
             <div>
               <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>Email</div>
@@ -351,11 +523,27 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
             </div>
             <RoleBadge role={userRole} />
           </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Plan (testing only — no billing yet)</label>
+            <select
+              value={form.plan}
+              onChange={e => setForm({ ...form, plan: e.target.value })}
+              style={{ ...inputStyle, cursor: 'pointer', backgroundColor: t.colors.bgCard, maxWidth: '220px' }}
+            >
+              <option value="free">Free (1 business)</option>
+              <option value="duo">Duo (2 businesses)</option>
+              <option value="studio">Studio (3 businesses)</option>
+              <option value="enterprise">Enterprise (uncapped)</option>
+            </select>
+            <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
+              Controls how many business spaces you can create. Manual override until real billing ships.
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ── Team — hidden for v1 ── */}
-      {false && isOwnerOrAdmin && (
+      {/* ── Team ── */}
+      {isOwnerOrAdmin && (
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
           <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
             <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Team</h3>
@@ -380,7 +568,6 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
               >
                 <option value="admin">Admin</option>
                 <option value="member">Member</option>
-                <option value="client">Client</option>
               </select>
               <button
                 onClick={handleInvite}
@@ -408,6 +595,11 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
             <div style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textTertiary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Members ({members.length})
             </div>
+            {memberError && (
+              <div style={{ marginBottom: '12px', padding: '8px 12px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
+                {memberError}
+              </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {members.map(m => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
@@ -425,17 +617,16 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                     ) : (
                       <select
                         value={m.role}
-                        onChange={e => handleUpdateRole(m.id, e.target.value)}
+                        onChange={e => handleUpdateRole(m.user_id, e.target.value)}
                         style={{ padding: '4px 8px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, fontFamily: t.fonts.sans, backgroundColor: t.colors.bgCard, cursor: 'pointer' }}
                       >
                         <option value="admin">Admin</option>
                         <option value="member">Member</option>
-                        <option value="client">Client</option>
                       </select>
                     )}
                     {m.role !== 'owner' && (
                       <button
-                        onClick={() => handleRemoveMember(m.id)}
+                        onClick={() => handleRemoveMember(m.user_id)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '16px', padding: '2px 6px', borderRadius: t.radius.sm, lineHeight: 1 }}
                         title="Remove member"
                       >
@@ -482,6 +673,37 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
           <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.danger, margin: '0 0 4px' }}>Danger zone</h3>
           <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>Permanent actions that can't be undone</p>
         </div>
+        {isOwner && (
+          <div style={{ padding: '24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, marginBottom: '4px' }}>Archive this business</div>
+                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, maxWidth: '380px' }}>
+                  Hides this business for everyone and nothing is deleted. Restore it anytime from the business switcher.
+                </div>
+              </div>
+              <button
+                onClick={handleArchive}
+                disabled={archiving}
+                style={{
+                  padding: '10px 20px', borderRadius: t.radius.md,
+                  border: `1px solid ${t.colors.danger}`,
+                  backgroundColor: t.colors.bgCard, color: t.colors.danger,
+                  fontSize: t.fontSizes.sm, fontWeight: '500',
+                  cursor: archiving ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap',
+                  opacity: archiving ? 0.6 : 1,
+                }}
+              >
+                {archiving ? 'Archiving…' : 'Archive business'}
+              </button>
+            </div>
+            {archiveError && (
+              <div style={{ marginTop: '12px', padding: '8px 12px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
+                {archiveError}
+              </div>
+            )}
+          </div>
+        )}
         <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, marginBottom: '4px' }}>Delete account</div>

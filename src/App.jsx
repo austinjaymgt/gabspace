@@ -12,7 +12,8 @@ import ProDev from './pages/ProDev'
 import CreativeStrategy from './pages/CreativeStrategy'
 import Briefs from './pages/Briefs'
 import Packages from './pages/Packages'
-import DepartmentBudget from './pages/DepartmentBudget'
+import Expenses from './pages/Expenses'
+import Snapshot from './pages/Snapshot'
 import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
@@ -39,6 +40,7 @@ import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
 import BetaWelcomeModal from './components/BetaWelcomeModal'
 import BetaStatusScreen from './components/BetaStatusScreen'
+import AddBusinessFlow from './components/AddBusinessFlow'
 
 export default function App() {
   const isMobile = useIsMobile()
@@ -57,9 +59,12 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [businessSpaceId, setBusinessSpaceId] = useState(null)
+  const [businessIdentityVersion, setBusinessIdentityVersion] = useState(0)
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
 const [showBetaWelcome, setShowBetaWelcome] = useState(false)
+const [showAddBusinessFlow, setShowAddBusinessFlow] = useState(false)
+const [addBusinessForced, setAddBusinessForced] = useState(false)
 const [authChecked, setAuthChecked] = useState(false)
 const [authSplashDone, setAuthSplashDone] = useState(false)
 const [showDailySplash, setShowDailySplash] = useState(false)
@@ -128,6 +133,35 @@ const WELCOME_SPLASH_MS = 2600
 //     })
 // }, [session])
 
+  // Picks a fallback if the given business is archived (e.g. archived by a
+  // co-owner in another session) — the active business_space_id should
+  // never silently point at something archived. Self-heals user_profiles
+  // when a fallback exists; flags needsCreate when this was the only one.
+  async function resolveActiveBusiness(userId, businessSpaceIdToCheck, currentRole) {
+    if (!businessSpaceIdToCheck) return { needsCreate: true }
+
+    const { data: business } = await supabase
+      .from('business_spaces')
+      .select('archived_at')
+      .eq('id', businessSpaceIdToCheck)
+      .maybeSingle()
+    if (!business?.archived_at) return { businessSpaceId: businessSpaceIdToCheck, role: currentRole }
+
+    const { data: memberships } = await supabase
+      .from('business_space_members')
+      .select('business_space_id, role, business_spaces(archived_at)')
+      .eq('user_id', userId)
+      .neq('business_space_id', businessSpaceIdToCheck)
+    const fallback = (memberships || []).find(m => m.business_spaces && !m.business_spaces.archived_at)
+    if (!fallback) return { needsCreate: true }
+
+    await supabase
+      .from('user_profiles')
+      .update({ business_space_id: fallback.business_space_id, role: fallback.role })
+      .eq('user_id', userId)
+    return { businessSpaceId: fallback.business_space_id, role: fallback.role }
+  }
+
   useEffect(() => {
     if (!session) {
   setBusinessSpaceId(null)
@@ -143,11 +177,18 @@ const WELCOME_SPLASH_MS = 2600
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(async ({ data, error }) => {
-      
+
     console.log('profile data:', data, 'error:', error)
     if (data) {
-  setBusinessSpaceId(data.business_space_id)
-  setUserRole(data.role)
+  const resolved = await resolveActiveBusiness(session.user.id, data.business_space_id, data.role)
+  if (resolved.needsCreate) {
+    setBusinessSpaceId(null)
+    setUserRole(null)
+    setAddBusinessForced(true)
+  } else {
+    setBusinessSpaceId(resolved.businessSpaceId)
+    setUserRole(resolved.role)
+  }
 
   // Beta welcome check
   const { data: betaRow } = await supabase
@@ -164,29 +205,17 @@ const WELCOME_SPLASH_MS = 2600
 }
 
   setWorkspaceLoading(false)
-  return
+} else {
+  // Authenticated session with no matching user_profiles row (e.g. the
+  // local DB was reset out from under a still-cached session) — this
+  // account no longer exists here. Sign out rather than rendering a
+  // half-logged-in app shell with a businessSpaceId that can never resolve.
+  await supabase.auth.signOut()
+  setSession(null)
+  setBusinessSpaceId(null)
+  setUserRole(null)
+  setWorkspaceLoading(false)
 }
-
-        const { data: invite } = await supabase
-          .from('invites')
-          .select('business_space_id, role, id, invited_by')
-          .eq('email', session.user.email)
-          .eq('accepted', false)
-          .maybeSingle()
-
-        if (invite) {
-          await supabase.from('user_profiles').insert({
-            user_id: session.user.id,
-            business_space_id: invite.business_space_id,
-            role: invite.role,
-            invited_by: invite.invited_by,
-          })
-          await supabase.from('invites').update({ accepted: true }).eq('id', invite.id)
-          setBusinessSpaceId(invite.business_space_id)
-          setUserRole(invite.role)
-        }
-
-        setWorkspaceLoading(false)
       })
   }, [session])
 
@@ -248,15 +277,67 @@ const WELCOME_SPLASH_MS = 2600
   }
 
   async function handleBusinessSpaceSwitch(newId) {
+    const { data: business } = await supabase
+      .from('business_spaces')
+      .select('archived_at')
+      .eq('id', newId)
+      .maybeSingle()
+    if (business?.archived_at) return { error: { message: 'This business is archived — restore it first.' } }
+
+    const { data: membership } = await supabase
+      .from('business_space_members')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .eq('business_space_id', newId)
+      .maybeSingle()
+
     const { error } = await supabase
       .from('user_profiles')
-      .update({ business_space_id: newId })
+      .update({ business_space_id: newId, role: membership?.role || 'member' })
       .eq('user_id', session.user.id)
-    if (!error) setBusinessSpaceId(newId)
+    if (!error) {
+      setBusinessSpaceId(newId)
+      if (membership?.role) setUserRole(membership.role)
+    }
     return { error }
   }
 
-const pageProps = { businessSpaceId, userRole, session }
+  async function handleArchiveBusinessSpace() {
+    const { error } = await supabase.rpc('archive_business_space', { target_business_space_id: businessSpaceId })
+    if (error) return { error }
+
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('business_space_id, role')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+    if (data) {
+      setBusinessSpaceId(data.business_space_id)
+      setUserRole(data.role)
+    }
+    bumpBusinessIdentityVersion()
+    setCurrentPage('dashboard')
+    return {}
+  }
+
+  async function handleRestoreBusinessSpace(id) {
+    const { error } = await supabase.rpc('restore_business_space', { target_business_space_id: id })
+    if (!error) bumpBusinessIdentityVersion()
+    return { error }
+  }
+
+  async function handleCreateBusinessSpace(name) {
+    const { data: newId, error } = await supabase.rpc('create_business_space', { business_name: name })
+    if (error) return { error }
+    const result = await handleBusinessSpaceSwitch(newId)
+    return { ...result, businessSpaceId: newId }
+  }
+
+  function bumpBusinessIdentityVersion() {
+    setBusinessIdentityVersion(v => v + 1)
+  }
+
+const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange: bumpBusinessIdentityVersion, onArchiveBusiness: handleArchiveBusinessSpace }
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
   const isStaff = ['owner', 'admin', 'member'].includes(userRole)
   const isClientOnly = userRole === 'client'
@@ -303,10 +384,12 @@ function renderPage() {
       case 'tasks':
         return <Tasks {...pageProps} />
 
-      case 'invoices':
+      case 'income':
         return isOwnerOrAdmin ? <Invoices {...pageProps} /> : <AccessDenied />
-      case 'department-budget':
-        return isOwnerOrAdmin ? <DepartmentBudget {...pageProps} /> : <AccessDenied />
+      case 'expenses':
+        return isOwnerOrAdmin ? <Expenses {...pageProps} /> : <AccessDenied />
+      case 'snapshot':
+        return isOwnerOrAdmin ? <Snapshot {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
       case 'campaigns':
           return isStaff ? <CreativeStrategy {...pageProps} /> : <AccessDenied />
       case 'campaign-tracking':
@@ -566,9 +649,23 @@ function renderPage() {
       {showWelcomeSplash && (
   <SplashScreen gif={gabbyCelebrateGif} tagline="you're all set — welcome to your space." />
 )}
-<Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} />
-        <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} />
+
+      {(showAddBusinessFlow || addBusinessForced) && (
+  <AddBusinessFlow
+    forced={addBusinessForced}
+    onCreate={handleCreateBusinessSpace}
+    onClose={addBusinessForced ? undefined : () => setShowAddBusinessFlow(false)}
+    onDone={() => {
+      setShowAddBusinessFlow(false)
+      setAddBusinessForced(false)
+      bumpBusinessIdentityVersion()
+      setCurrentPage('dashboard')
+    }}
+  />
+)}
+<Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} />
+        <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
           {renderPage()}
         </div>
