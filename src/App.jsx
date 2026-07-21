@@ -84,7 +84,14 @@ const WELCOME_SPLASH_MS = 2600
       setSession(session)
       setAuthChecked(true)
     })
-    supabase.auth.onAuthStateChange((_event, session) => setSession(session))
+    supabase.auth.onAuthStateChange((_event, session) => {
+      // Supabase re-validates the session on tab focus and hands back a new
+      // object each time (even when the user hasn't changed), which would
+      // otherwise re-trigger the [session] workspace fetch below and blow
+      // away whatever the user was doing. Only update when the user actually
+      // changes (sign in/out/switch).
+      setSession(prev => (prev?.user?.id === session?.user?.id ? prev : session))
+    })
   }, [])
 
   // Hold the cold-auth splash for a minimum stretch so the gif/tagline are
