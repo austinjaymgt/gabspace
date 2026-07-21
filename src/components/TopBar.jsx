@@ -7,7 +7,7 @@ import { useIsNotDesktop } from '../hooks/useMediaQuery'
 import GlobalSearch from './GlobalSearch'
 import BusinessSpaceSwitcher from './BusinessSpaceSwitcher'
 
-export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, businessSpaceId, onSwitchBusinessSpace, onOpenCreateBusinessFlow, onRestoreBusinessSpace, businessIdentityVersion }) {
+export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, businessSpaceId, onSwitchBusinessSpace, onOpenCreateBusinessFlow, onRestoreBusinessSpace, businessIdentityVersion, hideMenuButton }) {
   const isMobile = useIsNotDesktop()
   const isDesktop = !isMobile
   const [firstName, setFirstName] = useState('')
@@ -41,7 +41,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       zIndex: 30,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px', minWidth: 0 }}>
-        {!isDesktop && (
+        {!isDesktop && !hideMenuButton && (
   <button
     onClick={onMenuClick}
     style={{
@@ -63,6 +63,27 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '12px', flexShrink: 0 }}>
+        {/* Home — back to the landing screen */}
+        <button
+          onClick={() => onNavigate('home')}
+          title="Home"
+          style={{
+            background: currentPage === 'home' ? 'var(--color-primary)' : 'var(--color-bg)',
+            border: `1px solid var(--color-border)`,
+            borderRadius: t.radius.full,
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: currentPage === 'home' ? '#fff' : t.colors.textSecondary,
+            flexShrink: 0,
+          }}
+        >
+          <Icon name="home" size="sm" />
+        </button>
+
         {/* Dark mode toggle */}
         <button
           onClick={toggleDark}

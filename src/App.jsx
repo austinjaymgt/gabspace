@@ -16,8 +16,10 @@ import Expenses from './pages/Expenses'
 import Snapshot from './pages/Snapshot'
 import BetaAdmin from './pages/BetaAdmin'
 import Sidebar from './components/Sidebar'
+import MobileTabBar from './components/MobileTabBar'
 import TopBar from './components/TopBar'
 import Dashboard from './pages/Dashboard'
+import Home from './pages/Home'
 import AllClients from './pages/AllClients'
 import Projects from './pages/Projects'
 import Events from './pages/Events'
@@ -45,7 +47,7 @@ import AddBusinessFlow from './components/AddBusinessFlow'
 export default function App() {
   const isMobile = useIsMobile()
   const [session, setSession] = useState(null)
-  const [currentPage, setCurrentPage] = useState('dashboard')
+  const [currentPage, setCurrentPage] = useState('home')
   const [mode, setMode] = useState('signin') // 'signin' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -621,17 +623,8 @@ function renderPage() {
     return <SplashScreen gif={gabbyIdleGif} tagline="welcome back." />
   }
 
-  return (
-    <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, display: 'flex' }}>
-      {/* showOnboarding && (
-  <OnboardingModal
-    userId={session.user.id}
-    onComplete={() => setShowOnboarding(false)}
-    onSkip={() => setShowOnboarding(false)}
-    onNavigate={(page) => setCurrentPage(page)}
-  />
-) */}
-
+  const overlays = (
+    <>
       {showBetaWelcome && (
   <BetaWelcomeModal
     session={session}
@@ -663,14 +656,42 @@ function renderPage() {
     }}
   />
 )}
-<Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} />      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} />
+    </>
+  )
+
+  // Home is a distinct full-screen moment before entering the workspace —
+  // no sidebar/topbar/subheader/floating Gabi badge. Those come back the
+  // instant the user navigates anywhere else.
+  if (currentPage === 'home' && !isClientOnly && !addBusinessForced) {
+    return (
+      <>
+        {overlays}
+        <Home session={session} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onNavigate={setCurrentPage} />
+      </>
+    )
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, display: 'flex' }}>
+      {/* showOnboarding && (
+  <OnboardingModal
+    userId={session.user.id}
+    onComplete={() => setShowOnboarding(false)}
+    onSkip={() => setShowOnboarding(false)}
+    onNavigate={(page) => setCurrentPage(page)}
+  />
+) */}
+
+      {overlays}
+{!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? '60px' : 0 }}>
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
           {renderPage()}
         </div>
       </div>
-      <div style={{ position: 'fixed', bottom: isMobile ? 12 : 24, right: isMobile ? 12 : 24, zIndex: 999 }}>
+      {isMobile && <MobileTabBar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} businessSpaceId={businessSpaceId} />}
+      <div style={{ position: 'fixed', bottom: isMobile ? 72 : 24, right: isMobile ? 12 : 24, zIndex: 999 }}>
         <Gabi size={isMobile ? 52 : 80} />
       </div>
     </div>

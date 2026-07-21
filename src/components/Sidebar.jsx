@@ -338,31 +338,6 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
           <Icon name="signout" size="sm" />
           {!collapsed && 'Sign out'}
         </button>
-        {!collapsed && (
-          <button
-            onClick={() => handleNav('projects')}
-            style={{
-              width: '100%',
-              padding: '10px',
-              background: 'transparent',
-              border: `1.5px solid ${t.colors.navAccent}`,
-              borderRadius: t.radius.md,
-              color: t.colors.navAccent,
-              fontSize: t.fontSizes.base,
-              fontWeight: '600',
-              fontFamily: t.fonts.sans,
-              cursor: 'pointer',
-              letterSpacing: '0.02em',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-            }}
-          >
-            <Icon name="add" size="sm" />
-            New Event
-          </button>
-        )}
       </div>
     </div>
   )

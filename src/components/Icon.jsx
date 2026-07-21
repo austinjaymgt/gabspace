@@ -14,7 +14,7 @@
 
 import {
   // Navigation & Layout
-  LayoutDashboard, Search, Menu, X, ArrowLeft, Settings, Bell,
+  Home, LayoutDashboard, Search, Menu, X, ArrowLeft, Settings, Bell,
   CircleUser, PanelLeft, MoreVertical, ExternalLink,
   ChevronDown, ChevronRight, LogOut, Building2, Wrench, BookOpen, UsersRound,
   Store, Target, Megaphone, BarChart3, Library, Moon, Sun,
@@ -47,6 +47,7 @@ import {
 // Keep this sorted by category. Add new icons alphabetically within a category.
 const ICON_MAP = {
   // Navigation & Layout
+  'home': Home,
   'dashboard': LayoutDashboard,
   'search': Search,
   'menu': Menu,
