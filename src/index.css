@@ -119,6 +119,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -130,6 +135,7 @@ body {
 input, select, textarea {
   background-color: var(--color-bg-card) !important;
   color: var(--color-text-primary) !important;
+  min-width: 0;
 }
 
 select.status-select {

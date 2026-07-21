@@ -115,7 +115,7 @@ export default function Milestones({ projectId, businessSpaceId }) {
 
       {showForm && (
         <div style={{ backgroundColor: t.colors.bgHover, borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '12px', marginBottom: '12px' }}>
             <div style={fStyles.field}>
               <label style={fStyles.label}>Milestone *</label>
               <input style={fStyles.input} placeholder="e.g. Deposit received, Contract signed, Final delivery" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
@@ -145,7 +145,7 @@ export default function Milestones({ projectId, businessSpaceId }) {
             const st = STATUSES[m.status] || STATUSES.upcoming
             const isEditing = editingId === m.id
             return (
-              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto auto', gap: '8px', padding: '10px 12px', backgroundColor: m.show_in_portal ? t.colors.primaryLight : t.colors.bgHover, borderRadius: '8px', alignItems: 'center', border: m.show_in_portal ? `1px solid ${t.colors.primary}` : '1px solid transparent', transition: 'background 0.15s' }}>
+              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto auto', gap: '8px', padding: '10px 12px', backgroundColor: m.show_in_portal ? t.colors.primaryLight : t.colors.bgHover, borderRadius: '8px', alignItems: 'center', border: m.show_in_portal ? `1px solid ${t.colors.primary}` : '1px solid transparent', transition: 'background 0.15s' }}>
                 {isEditing ? (
                   <input
                     autoFocus

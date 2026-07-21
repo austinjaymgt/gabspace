@@ -687,7 +687,7 @@ const styles = {
   },
   summaryRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: '16px',
     marginBottom: '24px',
   },
@@ -711,7 +711,7 @@ const styles = {
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
     gap: '16px',
     marginBottom: '20px',
   },
@@ -768,7 +768,7 @@ const styles = {
   },
   tableHeader: {
     display: 'grid',
-    gridTemplateColumns: '1.6fr 1.1fr 1.3fr 0.6fr 0.8fr 0.8fr 1.1fr',
+    gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 0.6fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.1fr)',
     padding: '12px 20px',
     backgroundColor: t.colors.bg,
     borderBottom: `1px solid ${t.colors.border}`,
@@ -780,7 +780,7 @@ const styles = {
   },
   tableRow: {
     display: 'grid',
-    gridTemplateColumns: '1.6fr 1.1fr 1.3fr 0.6fr 0.8fr 0.8fr 1.1fr',
+    gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 0.6fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.1fr)',
     padding: '14px 20px',
     borderBottom: `1px solid ${t.colors.borderLight}`,
     alignItems: 'center',

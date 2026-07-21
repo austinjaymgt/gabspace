@@ -177,7 +177,7 @@ export default function BetaAdmin() {
           {/* Table header */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1.5fr 1.8fr 1fr 1fr 0.8fr 1fr',
+            gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr)',
             padding: '11px 20px',
             backgroundColor: '#fafaf8',
             borderBottom: '1px solid #f0f0eb',
@@ -204,7 +204,7 @@ export default function BetaAdmin() {
                 key={applicant.id}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1.5fr 1.8fr 1fr 1fr 0.8fr 1fr',
+                  gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr)',
                   padding: '14px 20px',
                   borderBottom: '1px solid #f9f9f7',
                   alignItems: 'center',

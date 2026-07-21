@@ -110,7 +110,7 @@ export default function Snapshot({ businessSpaceId, userRole, onNavigate }) {
       </div>
 
       {/* Top stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px', marginBottom: '24px' }}>
         <div style={cardStyle}>
           <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Income</div>
           <div style={{ fontSize: '22px', fontWeight: '700', color: t.colors.textPrimary, fontFamily: t.fonts.heading, marginBottom: '2px' }}>{fmt(data.totalIncomeReceived)}</div>
@@ -133,7 +133,7 @@ export default function Snapshot({ businessSpaceId, userRole, onNavigate }) {
       </div>
 
       {/* Breakdown panels */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
         <div style={cardStyle}>
           <h3 style={{ fontFamily: t.fonts.heading, fontSize: '16px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 14px' }}>Income breakdown</h3>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${t.colors.borderLight}` }}>

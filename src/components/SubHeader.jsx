@@ -303,7 +303,7 @@ const displayPages = activeCategory ? activeCategory.children : favoritePages
           padding: '12px',
           zIndex: 100,
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
           gap: '4px',
           width: '320px',
         }}>

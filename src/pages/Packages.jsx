@@ -239,7 +239,7 @@ export default function Packages({ businessSpaceId, userRole }) {
           {/* Basic info */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Basic Info</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Event Type *</label>
                 <select value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
@@ -270,7 +270,7 @@ export default function Packages({ businessSpaceId, userRole }) {
           {/* Budget & headcount */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Budget & Headcount</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '14px', marginBottom: '14px' }}>
               {[
                 { key: 'budget_low', label: 'Budget Low' },
                 { key: 'budget_mid', label: 'Budget Mid' },
@@ -282,7 +282,7 @@ export default function Packages({ businessSpaceId, userRole }) {
                 </div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Headcount Min</label>
                 <input type="number" value={form.headcount_min} onChange={e => setForm(f => ({ ...f, headcount_min: e.target.value }))} placeholder="e.g. 50" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
@@ -313,7 +313,7 @@ export default function Packages({ businessSpaceId, userRole }) {
           {/* Inspo deck */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Inspo Deck</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Deck URL</label>
                 <input value={form.inspo_deck_url} onChange={e => setForm(f => ({ ...f, inspo_deck_url: e.target.value }))} placeholder="https://figma.com/... or Google Drive link" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
@@ -348,7 +348,7 @@ export default function Packages({ businessSpaceId, userRole }) {
             )}
 
             {/* Add new timeline item */}
-            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 140px auto', gap: '10px', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '120px minmax(0, 1fr) 140px auto', gap: '10px', alignItems: 'end' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.xs, color: t.colors.textSecondary, display: 'block', marginBottom: '4px' }}>Days out</label>
                 <select value={newTimelineItem.days_out} onChange={e => setNewTimelineItem(p => ({ ...p, days_out: Number(e.target.value) }))} style={{ width: '100%', padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
@@ -415,7 +415,7 @@ export default function Packages({ businessSpaceId, userRole }) {
           {/* Budget & headcount */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px 24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '14px' }}>Budget Range</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px', marginBottom: '16px' }}>
               {[
                 { label: 'Low', value: pkg.budget_low },
                 { label: 'Mid', value: pkg.budget_mid },

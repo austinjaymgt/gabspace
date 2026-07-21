@@ -421,7 +421,7 @@ const styles = {
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.sans },
   formGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
     gap: '16px',
     marginBottom: '20px',
   },

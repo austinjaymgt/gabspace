@@ -122,7 +122,7 @@ function EventForm({ clients, onSave, onCancel, saving, error, initial }) {
     <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '28px', border: '1px solid #f0f0eb', marginBottom: '24px' }}>
       <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 22px', fontFamily: 'Syne, sans-serif' }}>{initial ? 'Edit Event' : 'New Event'}</h3>
       {error && <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' }}>
         <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
           <label style={fStyles.label}>Event name *</label>
           <input style={fStyles.input} placeholder="e.g. Studio Open House" value={form.title} onChange={e => f('title', e.target.value)} />
@@ -280,7 +280,7 @@ function RunOfShow({ eventId, eventTitle, eventDate, venue, businessSpaceId }) {
 
       {showForm && (
         <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px', marginBottom: '12px' }}>
             <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
               <label style={fStyles.label}>Item title *</label>
               <input style={fStyles.input} placeholder="e.g. Guest Arrival, Dinner Service, Speeches" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
@@ -413,7 +413,7 @@ function Staffing({ eventId, businessSpaceId }) {
 
       {showForm && (
         <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px', marginBottom: '12px' }}>
             <div style={fStyles.field}>
               <label style={fStyles.label}>Role *</label>
               <input style={fStyles.input} placeholder="e.g. Event Coordinator, AV Tech, Greeter" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} />
@@ -451,7 +451,7 @@ function Staffing({ eventId, businessSpaceId }) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.3fr', gap: '8px', padding: '6px 12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.3fr)', gap: '8px', padding: '6px 12px' }}>
             {['Role', 'Person', 'Status', ''].map(h => (
               <span key={h} style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>
             ))}
@@ -459,7 +459,7 @@ function Staffing({ eventId, businessSpaceId }) {
           {staff.map(s => {
             const st = STAFF_STATUSES[s.status]
             return (
-              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 0.3fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center' }}>
+              <div key={s.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.3fr)', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E' }}>{s.role}</div>
                   {s.notes && <div style={{ fontSize: '11px', color: '#8585A0' }}>{s.notes}</div>}
@@ -593,7 +593,7 @@ function ConceptForm({ event, onSave }) {
         {c.successMetrics?.filter(m => m.label).length > 0 && (
           <div style={card}>
             <div style={sectionLabel}>Success Metrics</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
               {c.successMetrics.filter(m => m.label).map((m, i) => (
                 <div key={i} style={{ background: '#F7F5F0', borderRadius: '8px', padding: '12px 14px' }}>
                   <div style={{ fontSize: '11px', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{m.label}</div>
@@ -632,7 +632,7 @@ function ConceptForm({ event, onSave }) {
           <button onClick={addMoment} style={{ fontSize: '12px', color: '#7C5CBF', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Add moment</button>
         </div>
         {form.experienceDesign.map((m, i) => (
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '10px', marginBottom: '10px', alignItems: 'start' }}>
+          <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr) auto', gap: '10px', marginBottom: '10px', alignItems: 'start' }}>
             <input value={m.moment} onChange={e => updateMoment(i, 'moment', e.target.value)} placeholder="Moment name" style={inp} />
             <input value={m.description} onChange={e => updateMoment(i, 'description', e.target.value)} placeholder="What happens, how it feels..." style={inp} />
             {form.experienceDesign.length > 1 && <button onClick={() => removeMoment(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8585A0', fontSize: '14px', paddingTop: '8px' }}>✕</button>}
@@ -659,7 +659,7 @@ function ConceptForm({ event, onSave }) {
           <button onClick={addMetric} style={{ fontSize: '12px', color: '#7C5CBF', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Add metric</button>
         </div>
         {form.successMetrics.map((m, i) => (
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
+          <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) auto', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
             <input value={m.label} onChange={e => updateMetric(i, 'label', e.target.value)} placeholder="Metric (e.g. Attendance)" style={inp} />
             <input value={m.value} onChange={e => updateMetric(i, 'value', e.target.value)} placeholder="Target (e.g. 500 guests)" style={inp} />
             {form.successMetrics.length > 1 && <button onClick={() => removeMetric(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8585A0', fontSize: '14px' }}>✕</button>}
@@ -885,7 +885,7 @@ function ProposalGenerator({ event, onClose }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px' }}>
             <div style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Sender (you)</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '10px' }}>
               <div style={fStyles.field}>
                 <label style={fStyles.label}>Your name</label>
                 <input style={fStyles.input} value={senderName} onChange={e => setSenderName(e.target.value)} placeholder="Your full name" />
@@ -917,7 +917,7 @@ function ProposalGenerator({ event, onClose }) {
             </div>
             <button onClick={addMilestone} style={{ fontSize: '12px', color: '#7C5CBF', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Add milestone</button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr)', gap: '10px' }}>
             <div style={fStyles.field}>
               <label style={fStyles.label}>Investment total</label>
               <input style={fStyles.input} placeholder="e.g. $12,500" value={investment} onChange={e => setInvestment(e.target.value)} />
@@ -1176,7 +1176,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
           </div>
           {showBudgetForm && (
             <div style={{ backgroundColor: '#fafaf8', borderRadius: '10px', padding: '16px', marginBottom: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '10px', marginBottom: '10px' }}>
                 {[{ label: 'Category *', key: 'category', placeholder: 'e.g. Catering, Venue' }, { label: 'Projected ($)', key: 'projected_amount', placeholder: '0.00', type: 'number' }, { label: 'Actual ($)', key: 'actual_amount', placeholder: '0.00', type: 'number' }, { label: 'Notes', key: 'notes', placeholder: 'Optional' }].map(({ label, key, placeholder, type }) => (
                   <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <label style={{ fontSize: '11px', fontWeight: '500', color: '#8585A0' }}>{label}</label>
@@ -1194,7 +1194,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
             <p style={{ fontSize: '13px', color: '#8585A0', textAlign: 'center', padding: '24px 0' }}>No budget categories yet — add one to start tracking spend</p>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.4fr', gap: '8px', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', marginBottom: '6px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.4fr)', gap: '8px', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', marginBottom: '6px' }}>
                 {['Category', 'Projected', 'Actual', 'Difference', ''].map(h => <span key={h} style={{ fontSize: '11px', fontWeight: '600', color: '#8585A0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>)}
               </div>
               {budgetItems.map(item => {
@@ -1202,7 +1202,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
                 const actual = parseFloat(item.actual_amount) || 0
                 const diff = proj - actual
                 return (
-                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.4fr', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center', marginBottom: '4px' }}>
+                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.4fr)', gap: '8px', padding: '10px 12px', backgroundColor: '#fafaf8', borderRadius: '8px', alignItems: 'center', marginBottom: '4px' }}>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: '#1A1A2E' }}>{item.category}</div>
                       {item.notes && <div style={{ fontSize: '11px', color: '#8585A0' }}>{item.notes}</div>}

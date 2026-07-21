@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { statusConfig, computeDisplayStatus } from '../utils/invoiceStatus'
 import { quarterFromDate, quarterInfoFromDate } from '../utils/dates'
+import { useIsMobile } from '../hooks/useMediaQuery'
 
 const emptyLineItem = () => ({ description: '', quantity: '1', unit_price: '' })
 
@@ -65,6 +66,7 @@ export default function Invoices({ businessSpaceId }) {
   const [clients, setClients] = useState([])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const isMobile = useIsMobile()
   const [showForm, setShowForm] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [form, setForm] = useState({
@@ -864,6 +866,34 @@ export default function Invoices({ businessSpaceId }) {
                 + New invoice
               </button>
             </div>
+          ) : isMobile ? (
+            <div style={styles.cardList}>
+              {invoices.map(invoice => {
+                const sc = statusConfig[computeDisplayStatus(invoice)]
+                return (
+                  <div key={invoice.id} style={styles.invoiceCard} onClick={() => setSelectedInvoice(invoice)}>
+                    <div style={styles.invoiceCardTop}>
+                      <span style={styles.invoiceNumber}>{invoice.invoice_number || '—'}</span>
+                      <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
+                        {sc.label}
+                      </div>
+                    </div>
+                    {invoice.clients && <div style={styles.invoiceCardRow}>{invoice.clients.name}</div>}
+                    {invoice.projects && <div style={styles.invoiceCardRow}>{invoice.projects.title}</div>}
+                    <div style={styles.invoiceCardRow}>
+                      Total ${parseFloat(invoice.total_amount || 0).toLocaleString()}
+                      {' · '}
+                      <span style={{ color: t.colors.success, fontWeight: '500' }}>
+                        Paid ${parseFloat(invoice.amount_paid || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    {invoice.due_date && (
+                      <div style={styles.invoiceCardRow}>Due {new Date(invoice.due_date).toLocaleDateString()}</div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           ) : (
             <div style={styles.table}>
               <div style={styles.tableHeader}>
@@ -1121,7 +1151,7 @@ export default function Invoices({ businessSpaceId }) {
           </div>
 
           {/* Quarterly income cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '12px', marginBottom: '28px' }}>
             {QUARTERS.map(q => {
               const items = yearRevenue.filter(r => quarterFromDate(r.date) === q)
               const received = items.filter(r => r.status === 'received').reduce((s, r) => s + Number(r.amount || 0), 0)
@@ -1169,7 +1199,7 @@ export default function Invoices({ businessSpaceId }) {
             <div style={{ ...incomeCardStyle, padding: '24px', marginBottom: '24px' }}>
               <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px' }}>{editingIncome ? 'Edit Income' : 'Log Income'}</h3>
               {incomeFormError && <div style={{ padding: '10px 14px', borderRadius: t.radius.md, background: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm, marginBottom: '16px' }}>{incomeFormError}</div>}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={incomeLabelStyle}>Source *</label>
                   <input value={incomeForm.income_stream} onChange={e => setIncomeForm(p => ({ ...p, income_stream: e.target.value }))} placeholder="e.g. Client retainer, sponsorship" style={incomeInputStyle} />
@@ -1359,7 +1389,7 @@ const styles = {
   },
   summaryRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: '16px',
     marginBottom: '24px',
   },
@@ -1383,7 +1413,7 @@ const styles = {
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
     gap: '16px',
     marginBottom: '20px',
   },
@@ -1407,7 +1437,7 @@ const styles = {
   },
   lineItemsEditorHeader: {
     display: 'grid',
-    gridTemplateColumns: '2fr 0.8fr 1fr 0.4fr',
+    gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 0.4fr)',
     gap: '10px',
     fontSize: t.fontSizes.xs,
     fontWeight: '600',
@@ -1418,7 +1448,7 @@ const styles = {
   },
   lineItemsEditorRow: {
     display: 'grid',
-    gridTemplateColumns: '2fr 0.8fr 1fr 0.4fr',
+    gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 0.4fr)',
     gap: '10px',
     marginBottom: '8px',
     alignItems: 'center',
@@ -1489,7 +1519,7 @@ const styles = {
   },
   tableHeader: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr 0.3fr',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.3fr)',
     padding: '12px 20px',
     backgroundColor: t.colors.bg,
     borderBottom: `1px solid ${t.colors.border}`,
@@ -1501,7 +1531,7 @@ const styles = {
   },
   tableRow: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1.5fr 1.5fr 1fr 1fr 1fr 1fr 0.3fr',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.3fr)',
     padding: '14px 20px',
     borderBottom: `1px solid ${t.colors.borderLight}`,
     alignItems: 'center',
@@ -1510,7 +1540,7 @@ const styles = {
   },
   recurringTableHeader: {
     display: 'grid',
-    gridTemplateColumns: '1.5fr 1.5fr 1fr 1fr 1fr 1fr 1.2fr',
+    gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr)',
     padding: '12px 20px',
     backgroundColor: t.colors.bg,
     borderBottom: `1px solid ${t.colors.border}`,
@@ -1522,7 +1552,7 @@ const styles = {
   },
   recurringTableRow: {
     display: 'grid',
-    gridTemplateColumns: '1.5fr 1.5fr 1fr 1fr 1fr 1fr 1.2fr',
+    gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr)',
     padding: '14px 20px',
     borderBottom: `1px solid ${t.colors.borderLight}`,
     alignItems: 'center',
@@ -1536,7 +1566,12 @@ const styles = {
     borderRadius: t.radius.full,
     fontSize: t.fontSizes.sm,
     fontWeight: '500',
+    flexShrink: 0,
   },
+  cardList: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  invoiceCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, padding: '14px 16px', cursor: 'pointer' },
+  invoiceCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '8px' },
+  invoiceCardRow: { fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginTop: '4px', wordBreak: 'break-word' },
   emptyState: {
     display: 'flex',
     flexDirection: 'column',
@@ -1593,7 +1628,7 @@ const styles = {
   detailSub: { fontSize: t.fontSizes.md, color: t.colors.textSecondary, margin: 0 },
   amountRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: '16px',
     marginBottom: '24px',
   },
@@ -1612,7 +1647,7 @@ const styles = {
   },
   lineItemsHeader: {
     display: 'grid',
-    gridTemplateColumns: '2fr 0.6fr 1fr 1fr',
+    gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 0.6fr) minmax(0, 1fr) minmax(0, 1fr)',
     padding: '10px 0',
     fontSize: t.fontSizes.xs,
     fontWeight: '600',
@@ -1622,7 +1657,7 @@ const styles = {
   },
   lineItemsRow: {
     display: 'grid',
-    gridTemplateColumns: '2fr 0.6fr 1fr 1fr',
+    gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 0.6fr) minmax(0, 1fr) minmax(0, 1fr)',
     padding: '10px 0',
     borderTop: `1px solid ${t.colors.borderLight}`,
     fontSize: t.fontSizes.base,
@@ -1630,7 +1665,7 @@ const styles = {
   },
   detailGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
     gap: '16px',
     marginBottom: '24px',
   },
@@ -1654,7 +1689,7 @@ const styles = {
   paymentHistory: { marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' },
   paymentHistoryRow: {
     display: 'grid',
-    gridTemplateColumns: '110px 90px 1fr 28px',
+    gridTemplateColumns: '110px 90px minmax(0, 1fr) 28px',
     gap: '10px',
     alignItems: 'center',
     padding: '6px 0',

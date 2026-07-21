@@ -451,7 +451,7 @@ const styles = {
   },
   summaryRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: '16px',
     marginBottom: '20px',
   },
@@ -516,7 +516,7 @@ const styles = {
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
     gap: '16px',
     marginBottom: '20px',
   },

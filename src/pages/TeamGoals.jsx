@@ -394,7 +394,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
       </div>
 
       {/* Summary stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '12px', marginBottom: '28px' }}>
         {[
           { label: 'Total Goals', value: visibleGoals.length },
           { label: 'On Track', value: onTrack },
@@ -435,7 +435,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
       {showNewForm && (
         <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px', marginBottom: '20px' }}>
           <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px' }}>New Goal</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Goal Title *</label>
               <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Book 12 new clients this quarter" style={fieldStyle} />
@@ -579,7 +579,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
                         {activeGoal?.description && (
                           <p style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: '0 0 20px' }}>{activeGoal.description}</p>
                         )}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '4px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '4px' }}>
                           <ViewRow label="Owner">{activeGoal?.owner || '—'}</ViewRow>
                           <ViewRow label="Start date">{fmtDate(activeGoal?.start_date) || '—'}</ViewRow>
                           <ViewRow label="Due date">{fmtDate(activeGoal?.due_date) || '—'}</ViewRow>
@@ -600,7 +600,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
                     ) : (
                       /* EDIT MODE */
                       <>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
                           <div style={{ gridColumn: '1 / -1' }}>
                             <label style={labelStyle}>Goal Title *</label>
                             <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Book 12 new clients this quarter" style={fieldStyle} />

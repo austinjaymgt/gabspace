@@ -532,7 +532,7 @@ export default function ClientPortalView() {
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 14 }}>
                   <div style={{ background: '#f7f7f7', borderRadius: 6, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: '#aaa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Total</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: GRAPHITE, fontFamily: '"Big Shoulders Display", sans-serif' }}>${parseFloat(inv.total_amount || 0).toLocaleString()}</div>

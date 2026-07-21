@@ -245,7 +245,7 @@ export default function CalendarWidget() {
           <div style={{ flex: 1, minWidth: 0 }}>
 
             {/* Day labels */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', borderBottom: `1px solid ${t.colors.borderLight}` }}>
               {DAYS.map(d => (
                 <div key={d} style={{ padding: '8px 0', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {d}
@@ -255,7 +255,7 @@ export default function CalendarWidget() {
 
             {/* Month view */}
             {calView === 'month' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
                 {monthDays.map((date, i) => {
                   if (!date) return <div key={`empty-${i}`} style={{ minHeight: '80px', borderRight: `1px solid ${t.colors.borderLight}`, borderBottom: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgHover }} />
                   const key = toDateKey(date.toISOString())
@@ -324,7 +324,7 @@ export default function CalendarWidget() {
 
             {/* Week view */}
             {calView === 'week' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
                 {weekDays.map(date => {
                   const key = toDateKey(date.toISOString())
                   const dayEvents = eventsByDate[key] || []

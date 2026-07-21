@@ -6,6 +6,7 @@ import RunOfShow from '../components/events/RunOfShow'
 import Staffing from '../components/events/Staffing'
 import ConceptForm from '../components/events/ConceptForm'
 import Milestones from '../components/Milestones'
+import { useIsMobile } from '../hooks/useMediaQuery'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -54,10 +55,37 @@ function toDateInput(value) {
 
 function ProjectRow({ record, onClick }) {
   const sc = STATUS_COLORS[record.status] || STATUS_COLORS.planning
+  const isMobile = useIsMobile()
   const dateStart = record.event_date || record.start_date
   const dateEnd = record.end_date
+  const timeline = dateStart && dateEnd
+    ? `${new Date(dateStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} → ${new Date(dateEnd + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+    : dateStart
+      ? new Date(dateStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '—'
+
+  if (isMobile) {
+    return (
+      <div style={styles.projectCard} onClick={onClick}>
+        <div style={styles.projectCardTop}>
+          <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
+            {record.title}
+            {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#F0EBF9', color: '#7C5CBF', fontWeight: '600' }}>EVENT</span>}
+          </span>
+          <div style={{ display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: sc.bg, color: sc.color, textTransform: 'capitalize', flexShrink: 0 }}>
+            {record.status === 'active' ? 'In Progress' : (record.status || '').replace(/-/g, ' ')}
+          </div>
+        </div>
+        {record.clients?.name && <div style={styles.projectCardRow}>{record.clients.name}</div>}
+        <div style={styles.projectCardRow}>{record.project_type || (record.has_event_features ? 'Event' : '—')}</div>
+        {record.budget && <div style={styles.projectCardRow}>${parseFloat(record.budget).toLocaleString()}</div>}
+        {timeline !== '—' && <div style={styles.projectCardRow}>{timeline}</div>}
+      </div>
+    )
+  }
+
   return (
-    <div style={{ ...styles.tableRow, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }} onClick={onClick}>
+    <div style={{ ...styles.tableRow, gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.3fr)' }} onClick={onClick}>
       <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
         {record.title}
         {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#F0EBF9', color: '#7C5CBF', fontWeight: '600' }}>EVENT</span>}
@@ -65,19 +93,23 @@ function ProjectRow({ record, onClick }) {
       <span style={styles.tableCell}>{record.clients?.name || '—'}</span>
       <span style={styles.tableCell}>{record.project_type || (record.has_event_features ? 'Event' : '—')}</span>
       <span style={styles.tableCell}>{record.budget ? `$${parseFloat(record.budget).toLocaleString()}` : '—'}</span>
-      <span style={styles.tableCell}>
-        {dateStart && dateEnd
-          ? `${new Date(dateStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} → ${new Date(dateEnd + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-          : dateStart
-            ? new Date(dateStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-            : '—'}
-      </span>
+      <span style={styles.tableCell}>{timeline}</span>
       <span>
         <div style={{ display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: sc.bg, color: sc.color, textTransform: 'capitalize' }}>
           {record.status === 'active' ? 'In Progress' : (record.status || '').replace(/-/g, ' ')}
         </div>
       </span>
       <span style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>→</span>
+    </div>
+  )
+}
+
+function ProjectsTableHeader() {
+  const isMobile = useIsMobile()
+  if (isMobile) return null
+  return (
+    <div style={{ ...styles.tableHeader, gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.3fr)' }}>
+      <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
     </div>
   )
 }
@@ -236,7 +268,7 @@ export default function Projects({ businessSpaceId }) {
       </div>
 
       {/* Status stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PROJECT_STATUS_CARDS.length}, 1fr)`, gap: '14px', marginBottom: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PROJECT_STATUS_CARDS.length}, minmax(0, 1fr))`, gap: '14px', marginBottom: '20px' }}>
         {PROJECT_STATUS_CARDS.map(({ key, label, color }) => {
           const count = records.filter(r => r.status === key).length
           const isSelected = filterStatus === key
@@ -360,9 +392,7 @@ export default function Projects({ businessSpaceId }) {
                   <div style={{ flex: 1, height: '1px', backgroundColor: t.colors.border }} />
                 </div>
                 <div style={styles.table}>
-                  <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
-                    <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
-                  </div>
+                  <ProjectsTableHeader />
                   {recs.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
                 </div>
               </div>
@@ -385,9 +415,7 @@ export default function Projects({ businessSpaceId }) {
                   </button>
                   {!isCollapsed && (
                     <div style={styles.table}>
-                      <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
-                        <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
-                      </div>
+                      <ProjectsTableHeader />
                       {recs.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
                     </div>
                   )}
@@ -396,9 +424,7 @@ export default function Projects({ businessSpaceId }) {
             })
           ) : filteredRecords.length > 0 ? (
             <div style={styles.table}>
-              <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
-                <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
-              </div>
+              <ProjectsTableHeader />
               {filteredRecords.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
             </div>
           ) : !isFiltered ? (
@@ -424,9 +450,7 @@ export default function Projects({ businessSpaceId }) {
               </button>
               {showCompleted && (
                 <div style={styles.table}>
-                  <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
-                    <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
-                  </div>
+                  <ProjectsTableHeader />
                   {completedRecords.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
                 </div>
               )}
@@ -447,9 +471,7 @@ export default function Projects({ businessSpaceId }) {
               </button>
               {showCancelled && (
                 <div style={styles.table}>
-                  <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.5fr 1fr 0.3fr' }}>
-                    <span>Project</span><span>Client</span><span>Type</span><span>Budget</span><span>Timeline</span><span>Status</span><span></span>
-                  </div>
+                  <ProjectsTableHeader />
                   {cancelledRecords.map(record => <ProjectRow key={record.id} record={record} onClick={() => setSelectedRecord(record)} />)}
                 </div>
               )}
@@ -898,7 +920,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                       </div>
                       {showBudgetForm && (
                         <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '16px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '10px' }}>
                             {[
                               { label: 'Category *', key: 'category', placeholder: 'e.g. Catering, Venue' },
                               { label: 'Projected ($)', key: 'projected_amount', placeholder: '0.00', type: 'number' },
@@ -921,7 +943,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                         <div style={{ textAlign: 'center', padding: '32px', color: t.colors.textTertiary, fontSize: t.fontSizes.sm }}>No budget categories yet — add one to start tracking</div>
                       ) : (
                         <>
-                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.5fr', gap: '8px', padding: '8px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, marginBottom: '8px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.5fr)', gap: '8px', padding: '8px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, marginBottom: '8px' }}>
                             {['Category', 'Projected', 'Actual', 'Difference', ''].map(h => (
                               <span key={h} style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</span>
                             ))}
@@ -933,7 +955,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                               const diff = projected - actual
                               const isEditing = editingBudgetItem === item.id
                               return (
-                                <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 0.5fr', gap: '8px', padding: '10px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, alignItems: 'center' }}>
+                                <div key={item.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.5fr)', gap: '8px', padding: '10px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, alignItems: 'center' }}>
                                   {isEditing ? (
                                     <>
                                       {['category', 'projected_amount', 'actual_amount'].map(ek => (
@@ -1145,7 +1167,7 @@ const styles = {
   addBtn: { padding: '10px 18px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
   formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
+  formGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
   input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
@@ -1173,6 +1195,9 @@ const styles = {
   tableHeader: { display: 'grid', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
   tableRow: { display: 'grid', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
   tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
+  projectCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, padding: '14px 16px', cursor: 'pointer', marginBottom: '10px' },
+  projectCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '8px' },
+  projectCardRow: { fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginTop: '4px', wordBreak: 'break-word' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
   backBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },

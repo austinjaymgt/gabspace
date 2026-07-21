@@ -40,7 +40,7 @@ function ConceptSection({ label, children }) {
 const s = {
   card: { backgroundColor: t.colors.bgCard, borderRadius: '12px', border: `0.5px solid ${t.colors.border}`, padding: '22px 24px', marginBottom: '16px' },
   sectionLabel: { fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '12px' },
-  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' },
+  grid2: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
   input: { fontFamily: 'inherit', fontSize: '14px', color: t.colors.textPrimary, background: t.colors.bgHover, border: `0.5px solid ${t.colors.border}`, borderRadius: '8px', padding: '10px 12px', outline: 'none', width: '100%', boxSizing: 'border-box' },
@@ -410,7 +410,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                         {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ ...s.statusBadge, ...(isIdea ? STATUS_COLORS.idea : STATUS_COLORS.concept) }}>
                         {isIdea ? 'Idea' : 'Concept'}
                       </span>
@@ -643,7 +643,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
             <ConceptSection label="Press & Content Strategy"><p style={s.bodyText}>{concept.pressAndContent}</p></ConceptSection>
             <hr style={s.divider} />
             <ConceptSection label="Success Metrics">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
                 {concept.successMetrics.map((m, i) => (
                   <div key={i} style={{ background: t.colors.bgHover, borderRadius: '8px', padding: '12px 14px', border: `0.5px solid ${t.colors.border}` }}>
                     <div style={{ fontSize: '11px', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{m.label}</div>

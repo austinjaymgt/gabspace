@@ -166,7 +166,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '12px', marginBottom: '24px' }}>
         {[
           { label: 'Total Items', value: items.length },
           { label: 'In Progress', value: inProgress },
@@ -186,7 +186,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
           <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px' }}>
             {editingItem ? 'Edit Item' : 'New Pro Dev Item'}
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Team Member *</label>
               <input

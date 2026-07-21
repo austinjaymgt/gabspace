@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { useIsMobile } from '../hooks/useMediaQuery'
 
 const statusConfig = {
   lead:      { bg: t.colors.primaryLight,  color: t.colors.primary,        label: 'Lead' },
@@ -26,6 +27,7 @@ export default function Clients({ businessSpaceId }) {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('created_at')
   const [filterStatus, setFilterStatus] = useState('all')
+  const isMobile = useIsMobile()
 
   useEffect(() => { fetchClients() }, [])
 
@@ -354,6 +356,32 @@ export default function Clients({ businessSpaceId }) {
           <p style={styles.emptyText}>{search ? 'Try a different search term' : 'Add your first client to start building your book of business'}</p>
           {!search && <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add client</button>}
         </div>
+      ) : isMobile ? (
+        <div style={styles.cardList}>
+          {displayedClients.map(client => {
+            const sc = statusConfig[client.status] || statusConfig.inactive
+            return (
+              <div
+                key={client.id}
+                style={styles.clientCard}
+                onClick={() => { setSelectedClient(client); fetchPortalData(client.id) }}
+              >
+                <div style={styles.clientCardTop}>
+                  <span style={styles.clientName}>
+                    <div style={styles.avatar}>{client.name.charAt(0).toUpperCase()}</div>
+                    {client.name}
+                  </span>
+                  <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
+                    {sc.label}
+                  </div>
+                </div>
+                {client.company && <div style={styles.clientCardRow}>{client.company}</div>}
+                {client.email && <div style={styles.clientCardRow}>{client.email}</div>}
+                {client.phone && <div style={styles.clientCardRow}>{client.phone}</div>}
+              </div>
+            )
+          })}
+        </div>
       ) : (
         <div style={styles.table}>
           <div style={styles.tableHeader}>
@@ -403,7 +431,7 @@ const styles = {
 
   formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
+  formGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
   input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
@@ -414,12 +442,17 @@ const styles = {
   error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
 
   table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
-  tableHeader: { display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1.2fr 1fr 0.3fr', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
-  tableRow: { display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1.2fr 1fr 0.3fr', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
+  tableHeader: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
+  tableRow: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
   clientName: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary },
   avatar: { width: '32px', height: '32px', borderRadius: '50%', backgroundColor: t.colors.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: t.fontSizes.base, fontWeight: '600', flexShrink: 0, fontFamily: t.fonts.heading },
   tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
-  statusBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '500', textTransform: 'capitalize' },
+  statusBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '500', textTransform: 'capitalize', flexShrink: 0 },
+
+  cardList: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  clientCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, padding: '14px 16px', cursor: 'pointer' },
+  clientCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '8px' },
+  clientCardRow: { fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginTop: '4px', wordBreak: 'break-word' },
 
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   emptyIcon: { fontSize: '40px', marginBottom: '16px' },
@@ -436,7 +469,7 @@ const styles = {
   detailAvatar: { width: '64px', height: '64px', borderRadius: '50%', background: `linear-gradient(135deg, ${t.colors.primary}, #6B8F71)`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '700', marginBottom: '16px', fontFamily: t.fonts.heading },
   detailName: { fontSize: '24px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
   detailCompany: { fontSize: t.fontSizes.md, color: t.colors.textSecondary, margin: '0 0 32px' },
-  detailGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', width: '100%', maxWidth: '500px' },
+  detailGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '20px', width: '100%', maxWidth: '500px' },
   detailField: { backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '14px 16px' },
   detailFieldLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.06em' },
   detailFieldValue: { fontSize: t.fontSizes.md, color: t.colors.textPrimary },

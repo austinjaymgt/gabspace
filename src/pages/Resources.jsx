@@ -648,7 +648,7 @@ const styles = {
   // Form
   formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' },
+  formGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'flex', alignItems: 'center', gap: '6px' },
   lockedHint: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: 400 },
@@ -707,7 +707,7 @@ const styles = {
   detailAvatar: { width: '56px', height: '56px', borderRadius: t.radius.md, background: `linear-gradient(135deg, ${t.colors.primary}, #6B8F71)`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   detailName: { fontSize: '24px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 6px', fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
   detailKindBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: t.colors.primaryLight, color: t.colors.primary, textTransform: 'uppercase', letterSpacing: '0.05em' },
-  detailGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
+  detailGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' },
   detailField: { backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '14px 16px' },
   detailFieldLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.06em' },
   detailFieldValue: { fontSize: t.fontSizes.md, color: t.colors.textPrimary, wordBreak: 'break-word' },

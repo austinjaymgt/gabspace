@@ -375,7 +375,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
           {/* Event details */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Event Details</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Event Name *</label>
                 <input value={form.event_name} onChange={e => setForm(f => ({ ...f, event_name: e.target.value }))} placeholder="e.g. Brand Activation x Industry Conference" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
@@ -413,7 +413,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Budget</div>
             {selectedPackage && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px', marginBottom: '16px' }}>
                 {['low', 'mid', 'high'].map(tier => (
                   <button key={tier} onClick={() => setForm(f => ({ ...f, budget_tier: tier, budget_amount: selectedPackage[`budget_${tier}`] || '' }))}
                     style={{ padding: '12px', borderRadius: t.radius.md, border: `2px solid ${form.budget_tier === tier ? t.colors.primary : t.colors.border}`, background: form.budget_tier === tier ? t.colors.primaryLight : t.colors.bg, cursor: 'pointer', textAlign: 'center' }}>

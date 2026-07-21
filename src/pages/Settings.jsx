@@ -420,7 +420,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
               <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Only owners and admins can change the business name</span>
             )}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
             <div style={fieldStyle}>
               <label style={labelStyle}>Display name</label>
               <input style={inputStyle} placeholder="e.g. Alex Rivera" value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} />
