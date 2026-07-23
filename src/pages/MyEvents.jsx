@@ -53,7 +53,7 @@ const btnStyles = {
   cancel:    { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
   back:      { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
   edit:      { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
-  delete:    { padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', cursor: 'pointer' },
+  delete:    { padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', fontSize: '13px', cursor: 'pointer' },
 }
 
 const fStyles = {
@@ -121,7 +121,7 @@ function EventForm({ clients, onSave, onCancel, saving, error, initial }) {
   return (
     <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '28px', border: '1px solid #f0f0eb', marginBottom: '24px' }}>
       <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 22px', fontFamily: 'Syne, sans-serif' }}>{initial ? 'Edit Event' : 'New Event'}</h3>
-      {error && <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fff0f0', color: '#cc3333', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
+      {error && <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' }}>
         <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
           <label style={fStyles.label}>Event name *</label>
@@ -1209,7 +1209,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
                     </div>
                     <span style={{ fontSize: '13px', color: '#3D3D5C' }}>{proj > 0 ? `$${proj.toLocaleString()}` : '—'}</span>
                     <span style={{ fontSize: '13px', color: '#3D3D5C' }}>{actual > 0 ? `$${actual.toLocaleString()}` : '—'}</span>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: proj === 0 ? '#8585A0' : diff >= 0 ? '#1D9E75' : '#cc3333' }}>{proj === 0 ? '—' : diff >= 0 ? `+$${diff.toLocaleString()}` : `-$${Math.abs(diff).toLocaleString()}`}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: proj === 0 ? '#8585A0' : diff >= 0 ? '#1D9E75' : 'var(--color-danger)' }}>{proj === 0 ? '—' : diff >= 0 ? `+$${diff.toLocaleString()}` : `-$${Math.abs(diff).toLocaleString()}`}</span>
                     <button onClick={() => deleteBudgetItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#8585A0' }}>✕</button>
                   </div>
                 )
@@ -1217,8 +1217,8 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
               <div style={{ borderTop: '1px solid #f0f0eb', paddingTop: '12px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {[
                   { label: 'Total projected', value: totalProjected, color: '#1A1A2E' },
-                  { label: 'Total actual', value: totalActual, color: '#cc3333' },
-                  overallBudget > 0 && { label: 'Remaining', value: overallBudget - totalActual, color: (overallBudget - totalActual) >= 0 ? '#1D9E75' : '#cc3333' },
+                  { label: 'Total actual', value: totalActual, color: 'var(--color-danger)' },
+                  overallBudget > 0 && { label: 'Remaining', value: overallBudget - totalActual, color: (overallBudget - totalActual) >= 0 ? '#1D9E75' : 'var(--color-danger)' },
                 ].filter(Boolean).map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#fafaf8', borderRadius: '8px' }}>
                     <span style={{ fontSize: '13px', color: '#8585A0' }}>{row.label}</span>

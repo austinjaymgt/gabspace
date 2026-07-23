@@ -1,20 +1,35 @@
+/* ── Gabspace brand tokens (see brand guide section 2) ──────────────────
+   These are the raw brand hues, independent of light/dark theme. Semantic
+   tokens below (--color-primary, --color-accent, etc.) derive from these. */
+:root {
+  --brand-bg-deep:       #160814;
+  --brand-bg-plum:       #2b0f2a;
+  --brand-accent-magenta:#e0399b;
+  --brand-orb-blue:      #4fa8e8;
+  --brand-orb-teal:      #3fd6c8;
+  --brand-ink:           #f3eaf1;
+  --brand-ink-dim:       #c9b8c6;
+  --brand-warning:       #e89a4f;
+  --brand-radial-bg:     radial-gradient(circle at 50% 0%, var(--brand-bg-plum) 0%, var(--brand-bg-deep) 70%);
+}
+
 /* ── Light mode (default) ────────────────────────────────────────────── */
 :root {
-  --color-primary:        #7F5793;
+  --color-primary:        #6a3f7a;
   --color-primary-light:  #EDE5F4;
-  --color-primary-dark:   #5E3F6E;
-  --color-accent:         #09ACEF;
+  --color-primary-dark:   #4a2b57;
+  --color-accent:         var(--brand-accent-magenta);
   --color-accent-light:   #FDEAFC;
-  --color-accent-dark:    #D930C7;
-  --color-highlight:      #09ACEF;
+  --color-accent-dark:    #b02c78;
+  --color-highlight:      var(--brand-orb-blue);
   --color-highlight-light:#E0F5FD;
-  --color-cyan:           #6EFFFF;
-  --color-danger:         #09ACEF;
+  --color-cyan:           var(--brand-orb-teal);
+  --color-danger:         var(--brand-accent-magenta);
   --color-danger-light:   #FDEAFC;
-  --color-success:        #09ACEF;
-  --color-success-light:  #E0F5FD;
-  --color-warning:        #09ACEF;
-  --color-warning-light:  #FDEAFC;
+  --color-success:        #1f9c8f;
+  --color-success-light:  #E0FBF7;
+  --color-warning:        var(--brand-warning);
+  --color-warning-light:  #FDF0E0;
 
   --color-bg:             #F5F5F7;
   --color-bg-card:        #FFFFFF;
@@ -22,78 +37,81 @@
   --color-border:         #E2E2E4;
   --color-border-light:   #F0F0F2;
 
-  --color-nav:            #414042;
+  --color-nav:            var(--brand-bg-plum);
   --color-nav-hover:      rgba(255,255,255,0.07);
-  --color-nav-active:     #7F5793;
-  --color-nav-text:       rgba(255,255,255,0.5);
+  --color-nav-active:     var(--brand-accent-magenta);
+  --color-nav-text:       rgba(243,234,241,0.5);
   --color-nav-text-active:#FFFFFF;
-  --color-nav-accent:     #09ACEF;
+  --color-nav-accent:     var(--brand-accent-magenta);
 
-  --color-text-primary:   #414042;
+  --color-text-primary:   #2b1a2a;
   --color-text-secondary: #6B7280;
   --color-text-tertiary:  #9CA3AF;
   --color-text-inverse:   #FFFFFF;
 
-  --gradient:             linear-gradient(90deg, #09ACEF 0%, #6EFFFF 50%, #09ACEF 100%);
-  --gradient-diag:        linear-gradient(135deg, #09ACEF 0%, #7F5793 50%, #09ACEF 100%);
+  --gradient:             linear-gradient(90deg, var(--brand-orb-blue) 0%, var(--brand-orb-teal) 50%, var(--brand-accent-magenta) 100%);
+  --gradient-diag:        linear-gradient(135deg, var(--brand-orb-blue) 0%, var(--brand-bg-plum) 50%, var(--brand-accent-magenta) 100%);
+  --gradient-bg:          radial-gradient(circle at 50% 0%, #f7f0f6 0%, #F5F5F7 70%);
 }
 
 /* ── Dark mode ───────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --color-primary:        #A47EC0;
-  --color-primary-light:  #2A1F33;
-  --color-primary-dark:   #C49FE0;
-  --color-accent:         #09ACEF;
-  --color-accent-light:   #2E1A2E;
-  --color-accent-dark:    #FF70F5;
-  --color-highlight:      #09ACEF;
-  --color-highlight-light:#0C2230;
-  --color-cyan:           #6EFFFF;
-  --color-danger:         #09ACEF;
-  --color-danger-light:   #2E1A2E;
-  --color-success:        #09ACEF;
-  --color-success-light:  #0C2230;
-  --color-warning:        #09ACEF;
-  --color-warning-light:  #2E1A2E;
+  --color-primary:        var(--brand-orb-blue);
+  --color-primary-light:  #241a33;
+  --color-primary-dark:   #8fc8f5;
+  --color-accent:         var(--brand-accent-magenta);
+  --color-accent-light:   #33182b;
+  --color-accent-dark:    #ff6ec2;
+  --color-highlight:      var(--brand-orb-blue);
+  --color-highlight-light:#132430;
+  --color-cyan:           var(--brand-orb-teal);
+  --color-danger:         var(--brand-accent-magenta);
+  --color-danger-light:   #33182b;
+  --color-success:        var(--brand-orb-teal);
+  --color-success-light:  #12302c;
+  --color-warning:        var(--brand-warning);
+  --color-warning-light:  #33241a;
 
-  --color-bg:             #1C1C1E;
-  --color-bg-card:        #2C2C2E;
-  --color-bg-hover:       #3A3A3C;
-  --color-border:         #3A3A3C;
-  --color-border-light:   #2C2C2E;
+  --color-bg:             var(--brand-bg-deep);
+  --color-bg-card:        var(--brand-bg-plum);
+  --color-bg-hover:       #3a1938;
+  --color-border:         rgba(243,234,241,0.12);
+  --color-border-light:   rgba(243,234,241,0.07);
 
-  --color-nav:            #111112;
+  --color-nav:            var(--brand-bg-plum);
   --color-nav-hover:      rgba(255,255,255,0.07);
-  --color-nav-active:     #7F5793;
-  --color-nav-text:       rgba(255,255,255,0.4);
+  --color-nav-active:     var(--brand-accent-magenta);
+  --color-nav-text:       rgba(243,234,241,0.5);
   --color-nav-text-active:#FFFFFF;
-  --color-nav-accent:     #09ACEF;
+  --color-nav-accent:     var(--brand-accent-magenta);
 
-  --color-text-primary:   #F5F5F7;
-  --color-text-secondary: #AEAEB2;
-  --color-text-tertiary:  #636366;
+  --color-text-primary:   var(--brand-ink);
+  --color-text-secondary: var(--brand-ink-dim);
+  --color-text-tertiary:  #8a7690;
   --color-text-inverse:   #FFFFFF;
+
+  --gradient-bg:          var(--brand-radial-bg);
 }
 
 /* ── Forced light (pre-auth screens: login/signup, splash) ─────────────
    These render before we know who the user is, so they should look the
    same regardless of the device's saved/OS dark-mode preference. ────── */
 .force-light-theme {
-  --color-primary:        #7F5793;
+  --color-primary:        #6a3f7a;
   --color-primary-light:  #EDE5F4;
-  --color-primary-dark:   #5E3F6E;
-  --color-accent:         #09ACEF;
+  --color-primary-dark:   #4a2b57;
+  --color-accent:         var(--brand-accent-magenta);
   --color-accent-light:   #FDEAFC;
-  --color-accent-dark:    #D930C7;
-  --color-highlight:      #09ACEF;
+  --color-accent-dark:    #b02c78;
+  --color-highlight:      var(--brand-orb-blue);
   --color-highlight-light:#E0F5FD;
-  --color-cyan:           #6EFFFF;
-  --color-danger:         #09ACEF;
+  --color-cyan:           var(--brand-orb-teal);
+  --color-danger:         var(--brand-accent-magenta);
   --color-danger-light:   #FDEAFC;
-  --color-success:        #09ACEF;
-  --color-success-light:  #E0F5FD;
-  --color-warning:        #09ACEF;
-  --color-warning-light:  #FDEAFC;
+  --color-success:        #1f9c8f;
+  --color-success-light:  #E0FBF7;
+  --color-warning:        var(--brand-warning);
+  --color-warning-light:  #FDF0E0;
 
   --color-bg:             #F5F5F7;
   --color-bg-card:        #FFFFFF;
@@ -101,17 +119,19 @@
   --color-border:         #E2E2E4;
   --color-border-light:   #F0F0F2;
 
-  --color-nav:            #414042;
+  --color-nav:            var(--brand-bg-plum);
   --color-nav-hover:      rgba(255,255,255,0.07);
-  --color-nav-active:     #7F5793;
-  --color-nav-text:       rgba(255,255,255,0.5);
+  --color-nav-active:     var(--brand-accent-magenta);
+  --color-nav-text:       rgba(243,234,241,0.5);
   --color-nav-text-active:#FFFFFF;
-  --color-nav-accent:     #09ACEF;
+  --color-nav-accent:     var(--brand-accent-magenta);
 
-  --color-text-primary:   #414042;
+  --color-text-primary:   #2b1a2a;
   --color-text-secondary: #6B7280;
   --color-text-tertiary:  #9CA3AF;
   --color-text-inverse:   #FFFFFF;
+
+  --gradient-bg:          var(--brand-radial-bg);
 }
 
 /* ── Base reset ──────────────────────────────────────────────────────── */
@@ -129,7 +149,13 @@ body {
   padding: 0;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Quicksand", sans-serif;
+  font-weight: 600;
 }
 
 input, select, textarea {
@@ -145,6 +171,7 @@ select.status-select {
 
 #root {
   background-color: var(--color-bg);
+  background-image: var(--gradient-bg);
   min-height: 100vh;
 }
 

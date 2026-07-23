@@ -64,7 +64,7 @@ const styles = {
     flexWrap: 'wrap',
     gap: '6px',
     padding: '6px 8px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     minHeight: '40px',

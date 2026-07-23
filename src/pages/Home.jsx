@@ -246,8 +246,8 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
 
         {!loadingTasks && totalUrgent > 0 && (
           <div style={{ ...s.feedPanel, animation: riseAnim(0.8) }} onClick={e => e.stopPropagation()}>
-            <FeedGroup label="Overdue" color="rgba(255,107,107,0.9)" tasks={overdueTasks} onComplete={completeTask} />
-            <FeedGroup label="Today" color="rgba(214,60,201,0.85)" tasks={todayTasks} onComplete={completeTask} />
+            <FeedGroup label="Overdue" color="rgba(224,57,155,1)" tasks={overdueTasks} onComplete={completeTask} />
+            <FeedGroup label="Today" color="rgba(224,57,155,0.65)" tasks={todayTasks} onComplete={completeTask} />
             <FeedGroup label="This week" color="rgba(244,238,248,0.5)" tasks={weekTasks} onComplete={completeTask} />
           </div>
         )}

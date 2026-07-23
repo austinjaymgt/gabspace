@@ -19,7 +19,7 @@ export default function CurrencyInput({ value, onChange, placeholder = '0', styl
       style={{
         width: '100%',
         padding: '9px 12px',
-        borderRadius: t.radius.md,
+        borderRadius: t.radius.full,
         border: `1px solid ${t.colors.border}`,
         fontSize: t.fontSizes.base,
         fontFamily: t.fonts.sans,

@@ -32,7 +32,7 @@ const s = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '16px',
-    backgroundColor: t.colors.nav,
+    backgroundImage: 'var(--gradient-bg)',
     fontFamily: t.fonts.sans,
     animation: 'splash-fade-in 0.25s ease',
   },

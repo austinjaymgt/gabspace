@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 import { Icon } from './Icon'
 import { getModules, MODULE_NAV_PATHS } from '../utils/businessModules'
+import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
 
   const navItems = [
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
@@ -125,20 +126,11 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
       }}>
         {!collapsed && (
           <div>
-            <div style={{
-              fontSize: '22px',
-              fontWeight: '800',
-              color: '#FFFFFF',
-              letterSpacing: '-0.5px',
-              fontFamily: t.fonts.heading,
-              lineHeight: 1,
-            }}>
-              gabspace
-            </div>
+            <img src={gabspaceLockup} alt="Gabspace" style={{ height: '26px', width: 'auto', display: 'block' }} />
             <div style={{
               fontSize: t.fontSizes.xs,
               color: 'rgba(255,255,255,0.35)',
-              marginTop: '4px',
+              marginTop: '6px',
               fontFamily: t.fonts.sans,
             }}>
               creativity meets clarity

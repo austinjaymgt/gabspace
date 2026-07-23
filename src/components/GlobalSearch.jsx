@@ -322,7 +322,7 @@ export default function GlobalSearch({ businessSpaceId, onNavigate, isMobile = f
         alignItems: 'center',
         gap: '8px',
         backgroundColor: t.colors.bg,
-        borderRadius: t.radius.xl,
+        borderRadius: t.radius.full,
         padding: '8px 14px',
         border: `1px solid ${t.colors.borderLight}`,
       }}>

@@ -317,8 +317,8 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate, se
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          padding: '4px 6px',
-          borderRadius: t.radius.md,
+          padding: '4px 10px 4px 4px',
+          borderRadius: t.radius.full,
           fontFamily: t.fonts.sans,
         }}
         onMouseEnter={e => e.currentTarget.style.backgroundColor = t.colors.bg}

@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="orbGradientUrgent" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#ffb8e0"/>
+      <stop offset="55%" stop-color="#e0399b"/>
+      <stop offset="100%" stop-color="#8a2c6e"/>
+    </radialGradient>
+  </defs>
+  <path d="M55 8 C82 8 100 30 100 56 C100 84 80 102 52 100 C26 98 10 78 12 52 C14 28 30 8 55 8 Z"
+        fill="url(#orbGradientUrgent)"/>
+</svg>

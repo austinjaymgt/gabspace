@@ -1,13 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+<svg width="512" height="512" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7C5CBF"/>
-      <stop offset="1" stop-color="#6B8F71"/>
-    </linearGradient>
+    <radialGradient id="orbGradient" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#7fd8ff"/>
+      <stop offset="55%" stop-color="#4fa8e8"/>
+      <stop offset="100%" stop-color="#6a5cd0"/>
+    </radialGradient>
   </defs>
-  <rect width="32" height="32" rx="7" fill="url(#g)"/>
-  <rect x="5" y="5" width="10" height="10" rx="2.5" fill="#FFFFFF" fill-opacity="0.95"/>
-  <rect x="17" y="5" width="10" height="10" rx="2.5" fill="#FFFFFF" fill-opacity="0.65"/>
-  <rect x="5" y="17" width="10" height="10" rx="2.5" fill="#FFFFFF" fill-opacity="0.65"/>
-  <rect x="17" y="17" width="10" height="10" rx="2.5" fill="#FFFFFF" fill-opacity="0.95"/>
+  <path d="M55 8 C82 8 100 30 100 56 C100 84 80 102 52 100 C26 98 10 78 12 52 C14 28 30 8 55 8 Z"
+        fill="url(#orbGradient)"/>
 </svg>

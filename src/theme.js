@@ -1,7 +1,22 @@
 export const taskStatusConfig = {
-  'todo':        { label: 'To do',       color: '#999',    bg: '#F3F3F3' },
-  'in-progress': { label: 'In progress', color: '#D4874E', bg: '#FBF0E6' },
-  'done':        { label: 'Done',        color: '#6B8F71', bg: '#EAF2EA' },
+  'todo':        { label: 'To do',       color: '#7d6b86', bg: '#F3EEF3' },
+  'in-progress': { label: 'In progress', color: '#2e7fb8', bg: '#E3F1FC' },
+  'done':        { label: 'Done',        color: '#1f9c8f', bg: '#E1FBF6' },
+}
+
+// Gabspace brand palette (see brand guide section 2) — the source of truth
+// for the app's dark/plum identity. Referenced directly where a component
+// needs the brand hue itself rather than a semantic (light/dark-aware) token.
+export const brand = {
+  bgDeep: '#160814',
+  bgPlum: '#2b0f2a',
+  accentMagenta: '#e0399b',
+  orbBlue: '#4fa8e8',
+  orbTeal: '#3fd6c8',
+  ink: '#f3eaf1',
+  inkDim: '#c9b8c6',
+  warningGradient: ['#ffe0a8', '#e89a4f', '#c0507a'],
+  radialBg: 'radial-gradient(circle at 50% 0%, #2b0f2a 0%, #160814 70%)',
 }
 
 export const theme = {
@@ -49,21 +64,29 @@ export const theme = {
     gradientDiag: 'var(--gradient-diag)',
   },
 
-  // Typography
+  // Typography — Quicksand for display/headings (rounded, geometric warmth),
+  // Manrope for body/UI text (density + readability at small sizes).
   fonts: {
-    heading: '"Big Shoulders Display", sans-serif',
-    sans: '"Source Sans 3", -apple-system, BlinkMacSystemFont, sans-serif',
+    heading: '"Quicksand", sans-serif',
+    sans: '"Manrope", -apple-system, BlinkMacSystemFont, sans-serif',
   },
 
+  // Brand type scale (guide section 3): H1 40/Quicksand 700, H2 28/Quicksand 600,
+  // body 16/Manrope 400, caption 13/Manrope 500. Existing sm/base/md steps are
+  // kept for density-sensitive UI (tables, badges) that predates this scale.
   fontSizes: {
     xs: '11px',
     sm: '12px',
     base: '13px',
+    caption: '13px',
     md: '14px',
     lg: '16px',
+    body: '16px',
     xl: '18px',
     '2xl': '20px',
+    h2: '28px',
     '3xl': '24px',
+    h1: '40px',
   },
 
   // Spacing
@@ -77,12 +100,14 @@ export const theme = {
     '3xl': '48px',
   },
 
-  // Borders
+  // Borders — pill/capsule for inputs, buttons, tabs (radius.full); the
+  // larger 20-28px scale is for cards/panels holding multiple items.
   radius: {
     sm: '6px',
     md: '8px',
     lg: '12px',
-    xl: '16px',
+    xl: '24px',
+    card: '24px',
     full: '9999px',
   },
 

@@ -5,7 +5,7 @@ import { theme as t } from '../theme'
 const STATUS_CONFIG = {
   pending:  { label: 'Pending',  bg: '#FEF3C7', color: '#92400E', border: '#F59E0B' },
   approved: { label: 'Approved', bg: '#f0faf6', color: '#1D9E75', border: '#1D9E75' },
-  rejected: { label: 'Rejected', bg: '#fff0f0', color: '#cc3333', border: '#cc3333' },
+  rejected: { label: 'Rejected', bg: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'var(--color-danger)' },
 }
 
 function timeAgo(dateString) {
@@ -102,7 +102,7 @@ export default function BetaAdmin() {
           { key: 'all',      label: 'All',      color: t.colors.textPrimary, bg: '#f0f0eb' },
           { key: 'pending',  label: 'Pending',  color: '#92400E', bg: '#FEF3C7' },
           { key: 'approved', label: 'Approved', color: '#1D9E75', bg: '#f0faf6' },
-          { key: 'rejected', label: 'Rejected', color: '#cc3333', bg: '#fff0f0' },
+          { key: 'rejected', label: 'Rejected', color: 'var(--color-danger)', bg: 'var(--color-danger-light)' },
         ].map(({ key, label, color, bg }) => (
           <button
             key={key}
@@ -293,9 +293,9 @@ export default function BetaAdmin() {
                       style={{
                         width: '26px', height: '26px',
                         borderRadius: '50%',
-                        border: '1.5px solid #cc3333',
+                        border: '1.5px solid var(--color-danger)',
                         backgroundColor: '#fff',
-                        color: '#cc3333',
+                        color: 'var(--color-danger)',
                         fontSize: '13px',
                         cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',

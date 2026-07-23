@@ -51,7 +51,7 @@ const s = {
   editBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#D4874E', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
   cancelBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#8585A0', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
   generateBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: t.colors.bgCard, color: t.colors.textSecondary, border: `0.5px solid ${t.colors.border}`, borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
-  deleteBtn: { fontFamily: 'inherit', fontSize: '12px', background: '#fff0f0', color: '#cc3333', border: 'none', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer' },
+  deleteBtn: { fontFamily: 'inherit', fontSize: '12px', background: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'none', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer' },
   metaPill: { fontSize: '11px', fontWeight: '500', padding: '4px 12px', borderRadius: '100px', border: '0.5px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' },
   divider: { border: 'none', borderTop: '0.5px solid rgba(0,0,0,0.08)', margin: '18px 0' },
   bodyText: { fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 },

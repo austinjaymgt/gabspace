@@ -561,7 +561,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
             <div style={{ padding: '20px 0', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>You're all caught up 🎉</div>
           ) : (
             <div>
-              <TaskGroup label="Overdue" color="#cc3333" tasks={overdueTasks} onComplete={completeTask} />
+              <TaskGroup label="Overdue" color="var(--color-danger)" tasks={overdueTasks} onComplete={completeTask} />
               <TaskGroup label="Today" color="#D4874E" tasks={todayTasks} onComplete={completeTask} />
               <TaskGroup label="This week" color={t.colors.textTertiary} tasks={weekTasks} onComplete={completeTask} />
               {tasks.filter(tk => !tk.due_date).slice(0, 5).map(task => (

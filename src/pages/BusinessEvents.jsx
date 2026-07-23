@@ -553,7 +553,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
               {data.cost && (
                 <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '10px 14px' }}>
                   <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' }}>Cost</div>
-                  <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: '#cc3333' }}>${parseFloat(data.cost).toLocaleString()}</div>
+                  <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: 'var(--color-danger)' }}>${parseFloat(data.cost).toLocaleString()}</div>
                 </div>
               )}
             </div>
@@ -591,7 +591,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                         <span style={{
                           fontSize: t.fontSizes.xs,
                           fontWeight: '700',
-                          color: parseFloat(outcomes[row.field]) >= row.goal ? '#10B981' : '#cc3333',
+                          color: parseFloat(outcomes[row.field]) >= row.goal ? '#10B981' : 'var(--color-danger)',
                         }}>
                           {parseFloat(outcomes[row.field]) >= row.goal ? '✓' : `${Math.round((parseFloat(outcomes[row.field]) / row.goal) * 100)}%`}
                         </span>

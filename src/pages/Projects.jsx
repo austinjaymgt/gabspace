@@ -975,7 +975,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                                       </div>
                                       <span style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>{projected > 0 ? `$${projected.toLocaleString()}` : '—'}</span>
                                       <span style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>{actual > 0 ? `$${actual.toLocaleString()}` : '—'}</span>
-                                      <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: projected === 0 ? t.colors.textTertiary : diff >= 0 ? '#10B981' : '#cc3333' }}>
+                                      <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: projected === 0 ? t.colors.textTertiary : diff >= 0 ? '#10B981' : 'var(--color-danger)' }}>
                                         {projected === 0 ? '—' : diff >= 0 ? `+$${diff.toLocaleString()}` : `-$${Math.abs(diff).toLocaleString()}`}
                                       </span>
                                       <div style={{ display: 'flex', gap: '6px' }}>
@@ -992,8 +992,8 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                             {[
                               { label: 'Total projected', value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.projected_amount) || 0), 0), color: t.colors.textPrimary },
                               contingency > 0 && { label: `Total + ${contingency}% contingency`, value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.projected_amount) || 0), 0) * (1 + contingency / 100), color: '#F59E0B' },
-                              { label: 'Total actual', value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: '#cc3333' },
-                              budget > 0 && { label: 'Overall budget remaining', value: budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: (budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0)) >= 0 ? '#10B981' : '#cc3333' },
+                              { label: 'Total actual', value: budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: 'var(--color-danger)' },
+                              budget > 0 && { label: 'Overall budget remaining', value: budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0), color: (budget - budgetItems.reduce((sum, i) => sum + (parseFloat(i.actual_amount) || 0), 0)) >= 0 ? '#10B981' : 'var(--color-danger)' },
                             ].filter(Boolean).map(row => (
                               <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
                                 <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>{row.label}</span>
