@@ -2,12 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t, taskStatusConfig } from '../theme'
 import { Icon } from '../components/Icon'
-import { quarterFromDate } from '../utils/dates'
 import { fetchPortalActivity } from '../utils/portalActivity'
-
-function fmtMoney(n) {
-  return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-}
 
 function startOfToday() {
   const d = new Date()
@@ -17,10 +12,6 @@ function startOfToday() {
 
 function parseDateOnly(s) {
   return new Date(s + 'T00:00:00')
-}
-
-function ymd(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function dueLabel(dueString) {
@@ -41,38 +32,6 @@ const PROJECT_STATUS_FILTERS = [
   { key: 'active',   label: 'In Progress', color: '#6B8F71', bg: '#EAF2EA' },
   { key: 'on-hold',  label: 'Paused', color: '#D4874E', bg: '#FBF0E6' },
 ]
-
-const categoryStyles = {
-  team:      { bg: '#F0EBF9', color: '#7C5CBF' },
-  business:  { bg: '#EAF2EA', color: '#6B8F71' },
-  personal:  { bg: '#FBF0E6', color: '#D4874E' },
-  financial: { bg: '#EAF4F9', color: '#5B9BBF' },
-  marketing: { bg: '#FAF0F2', color: '#C06B7A' },
-  other:     { bg: '#F3F3F3', color: '#6B7280' },
-}
-
-function goalTypeLabel(goal) {
-  if (goal.category === 'other') return goal.category_label || 'Other'
-  const labels = { team: 'Team', business: 'Business', personal: 'Personal', financial: 'Financial', marketing: 'Marketing' }
-  return labels[goal.category] || 'Team'
-}
-
-const contentStatusColors = {
-  draft:     { color: '#D4874E', bg: '#FBF0E6' },
-  scheduled: { color: '#7C5CBF', bg: '#F0EBF9' },
-  published: { color: '#6B8F71', bg: '#EAF2EA' },
-}
-
-const platformColors = {
-  Instagram: '#E1306C',
-  TikTok: '#000000',
-  Facebook: '#1877F2',
-  LinkedIn: '#0A66C2',
-  Email: '#FF6B35',
-  YouTube: '#FF0000',
-  'Google Ads': '#4285F4',
-  Other: '#888',
-}
 
 // ── Section header ─────────────────────────────────────────────────────────
 
@@ -129,54 +88,6 @@ function TaskGroup({ label, color, tasks, onComplete }) {
   )
 }
 
-// ── Goal row ────────────────────────────────────────────────────────────────
-
-function GoalRow({ goal }) {
-  const pct = Math.max(0, Math.min(100, goal.progress || 0))
-  const cs = categoryStyles[goal.category] || categoryStyles.team
-  const typeLabel = goalTypeLabel(goal)
-  const dueDateStr = goal.due_date
-    ? parseDateOnly(goal.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : null
-  return (
-    <div style={{ padding: '10px 0', borderTop: `1px solid ${t.colors.borderLight}` }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '6px' }}>
-        <span style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textPrimary, minWidth: 0, flex: 1 }}>{goal.title}</span>
-        <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textSecondary, whiteSpace: 'nowrap', fontWeight: '600' }}>{pct}%</span>
-      </div>
-      <div style={{ height: '6px', backgroundColor: t.colors.borderLight, borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
-        <div style={{ height: '100%', width: `${pct}%`, backgroundColor: '#6B8F71', borderRadius: '3px', transition: 'width 0.3s' }} />
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', padding: '2px 8px', borderRadius: t.radius.full, backgroundColor: cs.bg, color: cs.color }}>
-          {typeLabel}
-        </span>
-        {dueDateStr && (
-          <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Due {dueDateStr}</span>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── Content row ─────────────────────────────────────────────────────────────
-
-function ContentRow({ item }) {
-  const sc = contentStatusColors[(item.status || '').toLowerCase()] || contentStatusColors.draft
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderTop: `1px solid ${t.colors.borderLight}` }}>
-      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: platformColors[item.platform] || '#888', flexShrink: 0 }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textPrimary, lineHeight: '1.3' }}>{item.title}</div>
-        <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{item.platform || 'Content'}</div>
-      </div>
-      <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', padding: '3px 10px', borderRadius: t.radius.full, backgroundColor: sc.bg, color: sc.color, whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
-        {item.status || 'Draft'}
-      </span>
-    </div>
-  )
-}
-
 // ── Spark Pad idea row ───────────────────────────────────────────────────────
 
 function SparkIdeaRow({ idea }) {
@@ -190,46 +101,9 @@ function SparkIdeaRow({ idea }) {
   )
 }
 
-// ── Budget quarter summary ───────────────────────────────────────────────────
-
-function BudgetQuarterWidget({ summary, onNavigate }) {
-  if (!summary) return null
-  const { quarter, actual, planned, received, pending } = summary
-  const net = received - actual
-  return (
-    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
-      <SectionHeader label={`Snapshot · ${quarter}`} onViewAll={() => onNavigate('snapshot')} viewAllColor={t.colors.primary} />
-
-      <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginBottom: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-          <span style={{ fontWeight: '600', color: t.colors.textPrimary }}>Expenses</span>
-          <span>{fmtMoney(actual)}</span>
-        </div>
-        {planned > 0 && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{fmtMoney(planned)} planned</div>}
-      </div>
-
-      <div style={{ borderTop: `1px solid ${t.colors.borderLight}`, marginTop: '14px', paddingTop: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '4px' }}>
-          <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary }}>Income</span>
-          <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textPrimary, whiteSpace: 'nowrap', flexShrink: 0 }}>{fmtMoney(received)}</span>
-        </div>
-        {pending > 0 && (
-          <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginBottom: '8px' }}>{fmtMoney(pending)} pending</div>
-        )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '8px' }}>
-          <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Net</span>
-          <span style={{ fontSize: t.fontSizes.sm, fontWeight: '700', color: net < 0 ? t.colors.danger : t.colors.textPrimary, whiteSpace: 'nowrap', flexShrink: 0 }}>{fmtMoney(net)}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
-export default function Dashboard({ session, businessSpaceId, userRole, onNavigate, portalActivityVersion }) {
-  const isDirector = ['owner', 'admin'].includes(userRole)
-
+export default function Dashboard({ session, businessSpaceId, onNavigate, portalActivityVersion }) {
   const [settings, setSettings] = useState(null)
   const [projectCounts, setProjectCounts] = useState({ planning: 0, active: 0, 'on-hold': 0 })
 
@@ -250,17 +124,6 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   const [allProjects, setAllProjects] = useState([])
   const [projectFilter, setProjectFilter] = useState('active')
 
-  // Goals
-  const [goals, setGoals] = useState([])
-  const [loadingGoals, setLoadingGoals] = useState(true)
-
-  // Content
-  const [content, setContent] = useState([])
-  const [loadingContent, setLoadingContent] = useState(true)
-
-  // Budget (directors only)
-  const [budgetSummary, setBudgetSummary] = useState(null)
-
   // Portal activity
   const [portalUnread, setPortalUnread] = useState(0)
 
@@ -270,10 +133,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     fetchAllProjects()
     fetchTasks()
     fetchSparkIdeas()
-    fetchGoals()
-    if (isDirector) fetchBudgetSummary()
-    else fetchContent()
-  }, [businessSpaceId, isDirector])
+  }, [businessSpaceId])
 
   useEffect(() => {
     if (!businessSpaceId) return
@@ -374,53 +234,6 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     setSparkIdea('')
     fetchSparkIdeas()
     setSavingIdea(false)
-  }
-
-  async function fetchGoals() {
-    setLoadingGoals(true)
-    const { data } = await supabase
-      .from('team_goals')
-      .select('id, title, progress, category, category_label, status, due_date')
-      .eq('business_space_id', businessSpaceId)
-      .order('due_date', { ascending: true, nullsFirst: false })
-      .limit(4)
-    setGoals(data || [])
-    setLoadingGoals(false)
-  }
-
-  async function fetchContent() {
-    setLoadingContent(true)
-    const { data } = await supabase
-      .from('content_calendar')
-      .select('id, title, platform, status, scheduled_date')
-      .order('status', { ascending: true })
-      .order('scheduled_date', { ascending: true, nullsFirst: false })
-      .limit(5)
-    setContent(data || [])
-    setLoadingContent(false)
-  }
-
-  async function fetchBudgetSummary() {
-    if (!businessSpaceId) return
-    const now = new Date()
-    const year = now.getFullYear()
-    const quarter = quarterFromDate(ymd(now))
-    const [expenseRes, lineRes, revenueRes] = await Promise.all([
-      supabase.from('expenses').select('amount, date').eq('business_space_id', businessSpaceId),
-      supabase.from('budget_line_items').select('projected_amount, quarter').eq('business_space_id', businessSpaceId),
-      supabase.from('revenue').select('amount, status, date').eq('business_space_id', businessSpaceId),
-    ])
-    const inQuarter = dateStr => {
-      if (!dateStr) return false
-      const d = parseDateOnly(dateStr)
-      return d.getFullYear() === year && `Q${Math.floor(d.getMonth() / 3) + 1}` === quarter
-    }
-    const actual = (expenseRes.data || []).filter(e => inQuarter(e.date)).reduce((s, e) => s + Number(e.amount || 0), 0)
-    const planned = (lineRes.data || []).filter(i => i.quarter === quarter).reduce((s, i) => s + Number(i.projected_amount || 0), 0)
-    const quarterRevenue = (revenueRes.data || []).filter(r => inQuarter(r.date))
-    const received = quarterRevenue.filter(r => r.status === 'received').reduce((s, r) => s + Number(r.amount || 0), 0)
-    const pending = quarterRevenue.filter(r => r.status === 'pending').reduce((s, r) => s + Number(r.amount || 0), 0)
-    setBudgetSummary({ quarter: `${quarter} ${year}`, actual, planned, received, pending })
   }
 
   async function completeTask(id) {
@@ -644,39 +457,6 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
             </div>
           )}
         </div>
-
-      </div>
-
-      {/* ── Goals | Budget or Content by Status ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-
-        {/* Goals */}
-        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
-          <SectionHeader label="Goals" onViewAll={() => onNavigate('team-goals')} viewAllColor="#6B8F71" />
-          {loadingGoals ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', color: t.colors.textTertiary, fontSize: t.fontSizes.base }}>Loading…</div>
-          ) : goals.length === 0 ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>No goals set yet — add one to give the week some direction.</div>
-          ) : (
-            goals.map(goal => <GoalRow key={goal.id} goal={goal} />)
-          )}
-        </div>
-
-        {/* Budget (directors) or Content by Status (everyone else) */}
-        {isDirector ? (
-          <BudgetQuarterWidget summary={budgetSummary} onNavigate={onNavigate} />
-        ) : (
-          <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
-            <SectionHeader label="Content by Status" onViewAll={() => onNavigate('campaign-tracking')} viewAllColor={t.colors.primary} />
-            {loadingContent ? (
-              <div style={{ padding: '20px 0', textAlign: 'center', color: t.colors.textTertiary, fontSize: t.fontSizes.base }}>Loading…</div>
-            ) : content.length === 0 ? (
-              <div style={{ padding: '20px 0', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>Nothing scheduled coming up.</div>
-            ) : (
-              content.map(item => <ContentRow key={item.id} item={item} />)
-            )}
-          </div>
-        )}
 
       </div>
 
