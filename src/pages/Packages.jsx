@@ -242,7 +242,7 @@ export default function Packages({ businessSpaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Event Type *</label>
-                <select value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+                <select value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   <option value="">Select type</option>
                   {PRESET_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
@@ -250,19 +250,19 @@ export default function Packages({ businessSpaceId, userRole }) {
               {form.name === 'Custom' && (
                 <div>
                   <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Custom Name *</label>
-                  <input value={form.custom_name} onChange={e => setForm(f => ({ ...f, custom_name: e.target.value }))} placeholder="e.g. Partner Summit" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                  <input value={form.custom_name} onChange={e => setForm(f => ({ ...f, custom_name: e.target.value }))} placeholder="e.g. Partner Summit" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
                 </div>
               )}
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Track</label>
-                <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+                <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   <option value="">Select track</option>
                   {EVENT_TRACKS.map(tr => <option key={tr} value={tr}>{tr}</option>)}
                 </select>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Description</label>
-                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What is this event type and when is it typically used?" rows={3} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What is this event type and when is it typically used?" rows={3} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>
@@ -285,11 +285,11 @@ export default function Packages({ businessSpaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Headcount Min</label>
-                <input type="number" value={form.headcount_min} onChange={e => setForm(f => ({ ...f, headcount_min: e.target.value }))} placeholder="e.g. 50" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input type="number" value={form.headcount_min} onChange={e => setForm(f => ({ ...f, headcount_min: e.target.value }))} placeholder="e.g. 50" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Headcount Max</label>
-                <input type="number" value={form.headcount_max} onChange={e => setForm(f => ({ ...f, headcount_max: e.target.value }))} placeholder="e.g. 500" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input type="number" value={form.headcount_max} onChange={e => setForm(f => ({ ...f, headcount_max: e.target.value }))} placeholder="e.g. 500" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>
@@ -306,7 +306,7 @@ export default function Packages({ businessSpaceId, userRole }) {
             </div>
             <div style={{ marginTop: '16px' }}>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Merch Notes</label>
-              <input value={form.merch_notes} onChange={e => setForm(f => ({ ...f, merch_notes: e.target.value }))} placeholder="Typical merch items, drop timing, budget allocation..." style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+              <input value={form.merch_notes} onChange={e => setForm(f => ({ ...f, merch_notes: e.target.value }))} placeholder="Typical merch items, drop timing, budget allocation..." style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
             </div>
           </div>
 
@@ -316,11 +316,11 @@ export default function Packages({ businessSpaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Deck URL</label>
-                <input value={form.inspo_deck_url} onChange={e => setForm(f => ({ ...f, inspo_deck_url: e.target.value }))} placeholder="https://figma.com/... or Google Drive link" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.inspo_deck_url} onChange={e => setForm(f => ({ ...f, inspo_deck_url: e.target.value }))} placeholder="https://figma.com/... or Google Drive link" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Display Label</label>
-                <input value={form.inspo_deck_label} onChange={e => setForm(f => ({ ...f, inspo_deck_label: e.target.value }))} placeholder="e.g. 2024 Portfolio Deck" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.inspo_deck_label} onChange={e => setForm(f => ({ ...f, inspo_deck_label: e.target.value }))} placeholder="e.g. 2024 Portfolio Deck" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>
@@ -351,34 +351,34 @@ export default function Packages({ businessSpaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: '120px minmax(0, 1fr) 140px auto', gap: '10px', alignItems: 'end' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.xs, color: t.colors.textSecondary, display: 'block', marginBottom: '4px' }}>Days out</label>
-                <select value={newTimelineItem.days_out} onChange={e => setNewTimelineItem(p => ({ ...p, days_out: Number(e.target.value) }))} style={{ width: '100%', padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+                <select value={newTimelineItem.days_out} onChange={e => setNewTimelineItem(p => ({ ...p, days_out: Number(e.target.value) }))} style={{ width: '100%', padding: '8px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   {DAYS_OUT_OPTIONS.map(d => <option key={d} value={d}>{d === 0 ? 'Day of' : `${d} days`}</option>)}
                 </select>
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.xs, color: t.colors.textSecondary, display: 'block', marginBottom: '4px' }}>Task</label>
-                <input value={newTimelineItem.task} onChange={e => setNewTimelineItem(p => ({ ...p, task: e.target.value }))} placeholder="e.g. Book venue" style={{ width: '100%', padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={newTimelineItem.task} onChange={e => setNewTimelineItem(p => ({ ...p, task: e.target.value }))} placeholder="e.g. Book venue" style={{ width: '100%', padding: '8px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.xs, color: t.colors.textSecondary, display: 'block', marginBottom: '4px' }}>Owner</label>
-                <input value={newTimelineItem.owner_role} onChange={e => setNewTimelineItem(p => ({ ...p, owner_role: e.target.value }))} placeholder="e.g. Events Lead" style={{ width: '100%', padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={newTimelineItem.owner_role} onChange={e => setNewTimelineItem(p => ({ ...p, owner_role: e.target.value }))} placeholder="e.g. Events Lead" style={{ width: '100%', padding: '8px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
-              <button onClick={addTimelineItem} style={{ padding: '8px 16px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+              <button onClick={addTimelineItem} style={{ padding: '8px 16px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
             </div>
           </div>
 
           {/* Notes */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Additional Notes</div>
-            <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="History, lessons learned, special considerations for this event type..." rows={4} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+            <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="History, lessons learned, special considerations for this event type..." rows={4} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
           </div>
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '10px', paddingBottom: '40px' }}>
-            <button onClick={savePackage} style={{ padding: '11px 28px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={savePackage} style={{ padding: '11px 28px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               {editingPackage ? 'Save Changes' : 'Create Package'}
             </button>
-            <button onClick={resetForm} style={{ padding: '11px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={resetForm} style={{ padding: '11px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -404,9 +404,9 @@ export default function Packages({ businessSpaceId, userRole }) {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {isDirector && (
-              <button onClick={() => startEdit(pkg)} style={{ padding: '8px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
+              <button onClick={() => startEdit(pkg)} style={{ padding: '8px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
             )}
-            <button onClick={() => alert('Brief generator coming soon!')} style={{ padding: '8px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Generate Brief</button>
+            <button onClick={() => alert('Brief generator coming soon!')} style={{ padding: '8px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Generate Brief</button>
           </div>
         </div>
 
@@ -451,7 +451,7 @@ export default function Packages({ businessSpaceId, userRole }) {
           {pkg.inspo_deck_url && (
             <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px 24px' }}>
               <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '14px' }}>Inspo Deck</div>
-              <a href={pkg.inspo_deck_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: t.radius.md, border: `1px solid ${t.colors.primary}`, color: t.colors.primary, textDecoration: 'none', fontSize: t.fontSizes.base, fontWeight: '500', fontFamily: t.fonts.sans }}>
+              <a href={pkg.inspo_deck_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: t.radius.full, border: `1px solid ${t.colors.primary}`, color: t.colors.primary, textDecoration: 'none', fontSize: t.fontSizes.base, fontWeight: '500', fontFamily: t.fonts.sans }}>
                 🔗 {pkg.inspo_deck_label || 'View Inspo Deck'}
               </a>
             </div>
@@ -496,7 +496,7 @@ export default function Packages({ businessSpaceId, userRole }) {
           <h1 style={{ fontFamily: t.fonts.heading, fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>Event Packages</h1>
         </div>
         {isDirector && (
-          <button onClick={startNew} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+          <button onClick={startNew} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
             + New Package
           </button>
         )}
@@ -508,11 +508,11 @@ export default function Packages({ businessSpaceId, userRole }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search packages..."
-          style={{ padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, width: '220px' }}
+          style={{ padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, width: '220px' }}
         />
-        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px' }}>
+        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px' }}>
           {['all', ...EVENT_TRACKS].map(tr => (
-            <button key={tr} onClick={() => setFilterTrack(tr)} style={{ padding: '5px 14px', borderRadius: t.radius.sm, border: 'none', background: filterTrack === tr ? t.colors.bgCard : 'transparent', color: filterTrack === tr ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterTrack === tr ? '600' : '400', boxShadow: filterTrack === tr ? t.shadows.sm : 'none' }}>
+            <button key={tr} onClick={() => setFilterTrack(tr)} style={{ padding: '5px 14px', borderRadius: t.radius.full, border: 'none', background: filterTrack === tr ? t.colors.bgCard : 'transparent', color: filterTrack === tr ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterTrack === tr ? '600' : '400', boxShadow: filterTrack === tr ? t.shadows.sm : 'none' }}>
               {tr === 'all' ? 'All' : tr}
             </button>
           ))}
@@ -529,7 +529,7 @@ export default function Packages({ businessSpaceId, userRole }) {
             {isDirector ? 'Create your first package to make booking easier for your clients.' : 'No packages here yet — check back soon.'}
           </div>
           {isDirector && (
-            <button onClick={startNew} style={{ padding: '10px 24px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={startNew} style={{ padding: '10px 24px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               Create Package
             </button>
           )}
@@ -565,10 +565,10 @@ export default function Packages({ businessSpaceId, userRole }) {
                 )}
 
                 <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '4px' }}>
-                  <button onClick={() => viewPackage(pkg)} style={{ flex: 1, padding: '8px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>View</button>
-                  <button onClick={() => alert('Brief generator coming soon!')} style={{ flex: 1, padding: '8px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Generate Brief</button>
+                  <button onClick={() => viewPackage(pkg)} style={{ flex: 1, padding: '8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>View</button>
+                  <button onClick={() => alert('Brief generator coming soon!')} style={{ flex: 1, padding: '8px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Generate Brief</button>
                   {isDirector && (
-                    <button onClick={() => startEdit(pkg)} style={{ padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>✏️</button>
+                    <button onClick={() => startEdit(pkg)} style={{ padding: '8px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>✏️</button>
                   )}
                 </div>
               </div>

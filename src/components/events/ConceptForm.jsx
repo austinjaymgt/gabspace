@@ -4,9 +4,9 @@ import { supabase } from '../../supabaseClient'
 import { theme as t } from '../../theme'
 
 const btnStyles = {
-  primary:   { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel:    { padding: '9px 16px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
+  primary:   { padding: '9px 18px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  secondary: { padding: '7px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel:    { padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
 }
 
 export default function ConceptForm({ event, onSave }) {
@@ -53,9 +53,9 @@ export default function ConceptForm({ event, onSave }) {
     setTimeout(() => setSaved(false), 2000)
   }
 
-  const sectionLabel = { fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5CBF', marginBottom: '10px' }
-  const card = { backgroundColor: t.colors.bgCard, borderRadius: '14px', padding: '22px 24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '16px' }
-  const inp = { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, width: '100%', boxSizing: 'border-box', fontFamily: 'DM Sans, sans-serif' }
+  const sectionLabel = { fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '10px' }
+  const card = { backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '22px 24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '16px' }
+  const inp = { padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, width: '100%', boxSizing: 'border-box', fontFamily: t.fonts.sans }
 
   if (!editMode && event.concept_data) {
     const c = event.concept_data
@@ -63,7 +63,7 @@ export default function ConceptForm({ event, onSave }) {
     const tagSage = { background: '#EAF2EA', color: '#6B8F71' }
     const tagAmber = { background: '#FBF0E6', color: '#D4874E' }
     const tagStyles = [tagViolet, tagSage, tagAmber]
-    const tag = { fontSize: '12px', padding: '4px 11px', borderRadius: '100px', fontWeight: '500', display: 'inline-block' }
+    const tag = { fontSize: '12px', padding: '4px 11px', borderRadius: t.radius.full, fontWeight: '500', display: 'inline-block' }
     return (
       <>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
@@ -155,7 +155,7 @@ export default function ConceptForm({ event, onSave }) {
       <div style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div style={sectionLabel}>Key Moments</div>
-          <button onClick={addMoment} style={{ fontSize: '12px', color: '#7C5CBF', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Add moment</button>
+          <button onClick={addMoment} style={{ fontSize: '12px', color: t.colors.primary, fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Add moment</button>
         </div>
         {form.experienceDesign.map((m, i) => (
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '10px', marginBottom: '10px', alignItems: 'start' }}>
@@ -182,7 +182,7 @@ export default function ConceptForm({ event, onSave }) {
       <div style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div style={sectionLabel}>Success Metrics</div>
-          <button onClick={addMetric} style={{ fontSize: '12px', color: '#7C5CBF', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Add metric</button>
+          <button onClick={addMetric} style={{ fontSize: '12px', color: t.colors.primary, fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>+ Add metric</button>
         </div>
         {form.successMetrics.map((m, i) => (
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>

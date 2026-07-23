@@ -519,7 +519,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                       key={status}
                       onClick={() => updateStatus(status)}
                       style={{
-                        flex: 1, padding: '7px 4px', borderRadius: t.radius.md,
+                        flex: 1, padding: '7px 4px', borderRadius: t.radius.full,
                         border: `1px solid ${isActive ? ssc.color : t.colors.borderLight}`,
                         backgroundColor: isActive ? ssc.bg : '#fff',
                         color: isActive ? ssc.color : t.colors.textTertiary,
@@ -553,7 +553,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
               {data.cost && (
                 <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '10px 14px' }}>
                   <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' }}>Cost</div>
-                  <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: 'var(--color-danger)' }}>${parseFloat(data.cost).toLocaleString()}</div>
+                  <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.danger }}>${parseFloat(data.cost).toLocaleString()}</div>
                 </div>
               )}
             </div>
@@ -591,7 +591,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                         <span style={{
                           fontSize: t.fontSizes.xs,
                           fontWeight: '700',
-                          color: parseFloat(outcomes[row.field]) >= row.goal ? '#10B981' : 'var(--color-danger)',
+                          color: parseFloat(outcomes[row.field]) >= row.goal ? t.colors.success : t.colors.danger,
                         }}>
                           {parseFloat(outcomes[row.field]) >= row.goal ? '✓' : `${Math.round((parseFloat(outcomes[row.field]) / row.goal) * 100)}%`}
                         </span>
@@ -619,8 +619,8 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
               <button
                 onClick={saveOutcomes}
                 style={{
-                  width: '100%', padding: '9px', borderRadius: t.radius.md, border: 'none',
-                  backgroundColor: outcomesSaved ? '#10B981' : t.colors.primary,
+                  width: '100%', padding: '9px', borderRadius: t.radius.full, border: 'none',
+                  backgroundColor: outcomesSaved ? t.colors.success : t.colors.primary,
                   color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600',
                   cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'background 0.2s',
                 }}
@@ -699,8 +699,8 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
               <button
                 onClick={saveNotes}
                 style={{
-                  padding: '6px 14px', borderRadius: t.radius.md, border: 'none',
-                  backgroundColor: notesSaved ? '#10B981' : t.colors.primary,
+                  padding: '6px 14px', borderRadius: t.radius.full, border: 'none',
+                  backgroundColor: notesSaved ? t.colors.success : t.colors.primary,
                   color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600',
                   cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'background 0.2s',
                 }}
@@ -710,7 +710,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
             </div>
             <textarea
               style={{
-                width: '100%', padding: '12px', borderRadius: t.radius.md,
+                width: '100%', padding: '12px', borderRadius: t.radius.full,
                 border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.base,
                 color: t.colors.textPrimary, outline: 'none', resize: 'vertical',
                 fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box',
@@ -729,16 +729,16 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
 }
 
 const styles = {
-  addBtn: { padding: '10px 18px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  addBtn: { padding: '10px 18px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
   formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
-  input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
+  input: { padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  saveBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  saveBtn: { padding: '9px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
   error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
   table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
   tableHeader: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
@@ -746,7 +746,7 @@ const styles = {
   tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
-  backBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  editBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  deleteBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
+  backBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  editBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  deleteBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
 }

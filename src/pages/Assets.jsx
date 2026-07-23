@@ -381,7 +381,7 @@ const styles = {
   subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
   addBtn: {
     padding: '10px 18px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -429,7 +429,7 @@ const styles = {
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, fontFamily: t.fonts.sans },
   input: {
     padding: '9px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base,
     color: t.colors.textPrimary,
@@ -440,7 +440,7 @@ const styles = {
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
   cancelBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -450,7 +450,7 @@ const styles = {
   },
   saveBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -570,7 +570,7 @@ const styles = {
   },
   editBtn: {
     padding: '6px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -612,7 +612,7 @@ const styles = {
   openLink: {
     display: 'inline-block',
     padding: '8px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     backgroundColor: t.colors.accentLight,
     color: t.colors.accent,
     fontSize: t.fontSizes.base,
@@ -624,7 +624,7 @@ const styles = {
   },
   copyLinkBtn: {
     padding: '8px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -638,7 +638,7 @@ const styles = {
   },
   deleteBtnFull: {
     padding: '10px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.dangerLight,
     color: t.colors.danger,

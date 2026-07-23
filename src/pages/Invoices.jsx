@@ -34,14 +34,14 @@ function inSelectedYear(dateStr, year) {
   return quarterInfoFromDate(dateStr)?.year === year
 }
 
-const incomeInputStyle = { width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }
+const incomeInputStyle = { width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }
 const incomeLabelStyle = { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }
 const incomeCardStyle = { background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, overflow: 'hidden' }
 const incomeTableWrapStyle = { ...incomeCardStyle, overflow: 'auto' }
 const incomeThStyle = { textAlign: 'left', padding: '10px 14px', fontSize: t.fontSizes.xs, fontWeight: '700', color: t.colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em', background: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, borderRight: `1px solid ${t.colors.borderLight}`, whiteSpace: 'nowrap' }
 const incomeTdStyle = { padding: '9px 14px', fontSize: t.fontSizes.sm, color: t.colors.textPrimary, borderBottom: `1px solid ${t.colors.borderLight}`, borderRight: `1px solid ${t.colors.borderLight}`, verticalAlign: 'middle' }
 const incomeQuarterBadgeStyle = { fontSize: t.fontSizes.xs, background: t.colors.primaryLight, color: t.colors.primary, padding: '2px 8px', borderRadius: t.radius.full }
-const incomeRowActionBtnStyle = (danger) => ({ background: 'none', border: `1px solid ${t.colors.border}`, borderRadius: t.radius.sm, padding: '4px 8px', fontSize: t.fontSizes.xs, color: danger ? t.colors.danger : t.colors.textSecondary, cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap' })
+const incomeRowActionBtnStyle = (danger) => ({ background: 'none', border: `1px solid ${t.colors.border}`, borderRadius: t.radius.full, padding: '4px 8px', fontSize: t.fontSizes.xs, color: danger ? t.colors.danger : t.colors.textSecondary, cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap' })
 
 export default function Invoices({ businessSpaceId }) {
   const [activeTab, setActiveTab] = useState('invoices')
@@ -1144,7 +1144,7 @@ export default function Invoices({ businessSpaceId }) {
             <select
               value={incomeYear}
               onChange={e => setIncomeYear(Number(e.target.value))}
-              style={{ padding: '8px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, background: t.colors.bgCard, fontFamily: t.fonts.sans }}
+              style={{ padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, background: t.colors.bgCard, fontFamily: t.fonts.sans }}
             >
               {[CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -1174,8 +1174,8 @@ export default function Invoices({ businessSpaceId }) {
               <h3 style={{ fontFamily: t.fonts.heading, fontSize: '18px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, letterSpacing: '-0.01em' }}>Income Breakdown</h3>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setShowIncomeCategoryManager(v => !v)} style={{ padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Manage Categories</button>
-              <button onClick={() => { setIncomeFormError(''); setShowIncomeForm(true) }} style={{ padding: '9px 16px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>+ Log Income</button>
+              <button onClick={() => setShowIncomeCategoryManager(v => !v)} style={{ padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Manage Categories</button>
+              <button onClick={() => { setIncomeFormError(''); setShowIncomeForm(true) }} style={{ padding: '9px 16px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>+ Log Income</button>
             </div>
           </div>
 
@@ -1241,15 +1241,15 @@ export default function Invoices({ businessSpaceId }) {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                <button onClick={saveIncome} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>{editingIncome ? 'Save Changes' : 'Log Income'}</button>
-                <button onClick={resetIncomeForm} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={saveIncome} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>{editingIncome ? 'Save Changes' : 'Log Income'}</button>
+                <button onClick={resetIncomeForm} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
               </div>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px', width: 'fit-content', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px', width: 'fit-content', marginBottom: '20px' }}>
             {['overview', 'by-project'].map(v => (
-              <button key={v} onClick={() => setIncomeActiveView(v)} style={{ padding: '7px 16px', borderRadius: t.radius.sm, border: 'none', background: incomeActiveView === v ? t.colors.bgCard : 'transparent', color: incomeActiveView === v ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: incomeActiveView === v ? '600' : '400', fontFamily: t.fonts.sans, cursor: 'pointer', boxShadow: incomeActiveView === v ? t.shadows.sm : 'none' }}>
+              <button key={v} onClick={() => setIncomeActiveView(v)} style={{ padding: '7px 16px', borderRadius: t.radius.full, border: 'none', background: incomeActiveView === v ? t.colors.bgCard : 'transparent', color: incomeActiveView === v ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: incomeActiveView === v ? '600' : '400', fontFamily: t.fonts.sans, cursor: 'pointer', boxShadow: incomeActiveView === v ? t.shadows.sm : 'none' }}>
                 {v === 'overview' ? 'By Category' : 'By Event/Project'}
               </button>
             ))}
@@ -1356,7 +1356,7 @@ const styles = {
   subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
   addBtn: {
     padding: '10px 18px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -1421,7 +1421,7 @@ const styles = {
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
   input: {
     padding: '9px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base,
     color: t.colors.textPrimary,
@@ -1455,7 +1455,7 @@ const styles = {
   },
   addRowBtn: {
     padding: '6px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px dashed ${t.colors.border}`,
     backgroundColor: 'transparent',
     color: t.colors.primary,
@@ -1466,7 +1466,7 @@ const styles = {
   },
   removeRowBtn: {
     padding: '6px 10px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.dangerLight,
     color: t.colors.danger,
@@ -1484,7 +1484,7 @@ const styles = {
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
   cancelBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -1494,7 +1494,7 @@ const styles = {
   },
   saveBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -1593,7 +1593,7 @@ const styles = {
   },
   backBtn: {
     padding: '8px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -1603,7 +1603,7 @@ const styles = {
   },
   deleteBtn: {
     padding: '8px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.dangerLight,
     color: t.colors.danger,
@@ -1735,7 +1735,7 @@ function IncomeCategoryManagerPanel({ categories, newCategoryName, setNewCategor
           placeholder="New category name"
           style={{ ...incomeInputStyle, flex: 1 }}
         />
-        <button onClick={onAdd} style={{ padding: '9px 16px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Add</button>
+        <button onClick={onAdd} style={{ padding: '9px 16px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Add</button>
       </div>
     </div>
   )
@@ -1806,8 +1806,8 @@ function IncomeConfirmAmountModal({ itemLabel, initialAmount, onCancel, onConfir
           style={incomeInputStyle}
         />
         <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
-          <button onClick={() => onConfirm(amount)} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Confirm</button>
-          <button onClick={onCancel} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => onConfirm(amount)} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Confirm</button>
+          <button onClick={onCancel} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
         </div>
       </div>
     </div>

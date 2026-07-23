@@ -360,7 +360,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Package Template</div>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Based on package</label>
-              <select value={form.package_id} onChange={e => handlePackageSelect(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+              <select value={form.package_id} onChange={e => handlePackageSelect(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                 <option value="">No package — start from scratch</option>
                 {packages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -378,30 +378,30 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Event Name *</label>
-                <input value={form.event_name} onChange={e => setForm(f => ({ ...f, event_name: e.target.value }))} placeholder="e.g. Brand Activation x Industry Conference" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.event_name} onChange={e => setForm(f => ({ ...f, event_name: e.target.value }))} placeholder="e.g. Brand Activation x Industry Conference" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Event Track</label>
-                <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+                <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   <option value="">Select track</option>
                   {['External', 'Internal', 'F&F'].map(tr => <option key={tr} value={tr}>{tr}</option>)}
                 </select>
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Event Date</label>
-                <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
+                <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Venue</label>
-                <input value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))} placeholder="Venue name or TBD" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))} placeholder="Venue name or TBD" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Headcount</label>
-                <input type="number" value={form.headcount} onChange={e => setForm(f => ({ ...f, headcount: e.target.value }))} placeholder="e.g. 200" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input type="number" value={form.headcount} onChange={e => setForm(f => ({ ...f, headcount: e.target.value }))} placeholder="e.g. 200" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Link to Project</label>
-                <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+                <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   <option value="">No project link</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
@@ -416,7 +416,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px', marginBottom: '16px' }}>
                 {['low', 'mid', 'high'].map(tier => (
                   <button key={tier} onClick={() => setForm(f => ({ ...f, budget_tier: tier, budget_amount: selectedPackage[`budget_${tier}`] || '' }))}
-                    style={{ padding: '12px', borderRadius: t.radius.md, border: `2px solid ${form.budget_tier === tier ? t.colors.primary : t.colors.border}`, background: form.budget_tier === tier ? t.colors.primaryLight : t.colors.bg, cursor: 'pointer', textAlign: 'center' }}>
+                    style={{ padding: '12px', borderRadius: t.radius.full, border: `2px solid ${form.budget_tier === tier ? t.colors.primary : t.colors.border}`, background: form.budget_tier === tier ? t.colors.primaryLight : t.colors.bg, cursor: 'pointer', textAlign: 'center' }}>
                     <div style={{ fontSize: t.fontSizes.xs, textTransform: 'uppercase', letterSpacing: '0.08em', color: form.budget_tier === tier ? t.colors.primary : t.colors.textTertiary, marginBottom: '4px' }}>{tier}</div>
                     <div style={{ fontSize: t.fontSizes.lg, fontWeight: '700', color: form.budget_tier === tier ? t.colors.primary : t.colors.textPrimary }}>{fmt(selectedPackage[`budget_${tier}`])}</div>
                   </button>
@@ -435,15 +435,15 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Vendor Notes</label>
-                <textarea value={form.vendor_notes} onChange={e => setForm(f => ({ ...f, vendor_notes: e.target.value }))} placeholder="Vendor categories, specific requirements, preferred partners..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.vendor_notes} onChange={e => setForm(f => ({ ...f, vendor_notes: e.target.value }))} placeholder="Vendor categories, specific requirements, preferred partners..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Merch & Swag Notes</label>
-                <textarea value={form.merch_notes} onChange={e => setForm(f => ({ ...f, merch_notes: e.target.value }))} placeholder="Merch items, quantities, drop timing..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.merch_notes} onChange={e => setForm(f => ({ ...f, merch_notes: e.target.value }))} placeholder="Merch items, quantities, drop timing..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Creative Notes</label>
-                <textarea value={form.creative_notes} onChange={e => setForm(f => ({ ...f, creative_notes: e.target.value }))} placeholder="Creative direction, campaign linkage, brand goals..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.creative_notes} onChange={e => setForm(f => ({ ...f, creative_notes: e.target.value }))} placeholder="Creative direction, campaign linkage, brand goals..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>
@@ -481,10 +481,10 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
               })}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={saveBrief} style={{ padding: '11px 28px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+              <button onClick={saveBrief} style={{ padding: '11px 28px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
                 {editingBrief ? 'Save Changes' : 'Create Brief'}
               </button>
-              <button onClick={resetForm} style={{ padding: '11px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+              <button onClick={resetForm} style={{ padding: '11px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
                 Cancel
               </button>
             </div>
@@ -502,7 +502,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
 <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Toolkit</div>
           <h1 style={{ fontFamily: t.fonts.heading, fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>Event Briefs</h1>
         </div>
-        <button onClick={() => startNew(null)} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+        <button onClick={() => startNew(null)} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
           + New Brief
         </button>
       </div>
@@ -514,7 +514,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>📋</div>
           <div style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' }}>No briefs yet — create one to kick off your next project</div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginBottom: '16px' }}>Generate a brief from a package or start from scratch.</div>
-          <button onClick={() => startNew(null)} style={{ padding: '10px 24px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+          <button onClick={() => startNew(null)} style={{ padding: '10px 24px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
             Create Brief
           </button>
         </div>
@@ -543,13 +543,13 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
                   <select
                     value={brief.status}
                     onChange={e => updateStatus(brief.id, e.target.value)}
-                    style={{ padding: '5px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}
+                    style={{ padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}
                   >
                     {STATUS_OPTIONS.map(s => <option key={s} value={s}>{statusStyles[s].label}</option>)}
                   </select>
-                  <button onClick={() => startEdit(brief)} style={{ padding: '6px 12px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
-                  <button onClick={() => exportPDF(brief)} style={{ padding: '6px 12px', borderRadius: t.radius.sm, border: 'none', background: t.colors.nav, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>↓ PDF</button>
-                  <button onClick={() => deleteBrief(brief.id)} style={{ padding: '6px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
+                  <button onClick={() => startEdit(brief)} style={{ padding: '6px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => exportPDF(brief)} style={{ padding: '6px 12px', borderRadius: t.radius.full, border: 'none', background: t.colors.nav, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>↓ PDF</button>
+                  <button onClick={() => deleteBrief(brief.id)} style={{ padding: '6px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
             )

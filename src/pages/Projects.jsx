@@ -70,7 +70,7 @@ function ProjectRow({ record, onClick }) {
         <div style={styles.projectCardTop}>
           <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
             {record.title}
-            {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#F0EBF9', color: '#7C5CBF', fontWeight: '600' }}>EVENT</span>}
+            {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontWeight: '600' }}>EVENT</span>}
           </span>
           <div style={{ display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: sc.bg, color: sc.color, textTransform: 'capitalize', flexShrink: 0 }}>
             {record.status === 'active' ? 'In Progress' : (record.status || '').replace(/-/g, ' ')}
@@ -88,7 +88,7 @@ function ProjectRow({ record, onClick }) {
     <div style={{ ...styles.tableRow, gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.3fr)' }} onClick={onClick}>
       <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
         {record.title}
-        {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: '#F0EBF9', color: '#7C5CBF', fontWeight: '600' }}>EVENT</span>}
+        {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontWeight: '600' }}>EVENT</span>}
       </span>
       <span style={styles.tableCell}>{record.clients?.name || '—'}</span>
       <span style={styles.tableCell}>{record.project_type || (record.has_event_features ? 'Event' : '—')}</span>
@@ -278,7 +278,7 @@ export default function Projects({ businessSpaceId }) {
               onClick={() => setFilterStatus(isSelected ? 'all' : key)}
               style={{
                 backgroundColor: t.colors.bgCard,
-                borderRadius: '12px',
+                borderRadius: t.radius.card,
                 padding: '20px 22px',
                 border: isSelected ? `1.5px solid ${color}` : `1px solid ${t.colors.border}`,
                 cursor: 'pointer',
@@ -298,7 +298,7 @@ export default function Projects({ businessSpaceId }) {
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value)}
-          style={{ padding: '6px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans }}
+          style={{ padding: '6px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans }}
         >
           <option value="created_at">Date added</option>
           <option value="title">Name</option>
@@ -705,10 +705,10 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
             disabled={togglingFeatures}
             style={{
               padding: '8px 14px',
-              borderRadius: t.radius.md,
-              border: hasEventFeatures ? '1.5px solid #7C5CBF' : `1px solid ${t.colors.border}`,
-              backgroundColor: hasEventFeatures ? '#F0EBF9' : t.colors.bgCard,
-              color: hasEventFeatures ? '#7C5CBF' : t.colors.textSecondary,
+              borderRadius: t.radius.full,
+              border: hasEventFeatures ? `1.5px solid ${t.colors.primary}` : `1px solid ${t.colors.border}`,
+              backgroundColor: hasEventFeatures ? t.colors.primaryLight : t.colors.bgCard,
+              color: hasEventFeatures ? t.colors.primary : t.colors.textSecondary,
               fontSize: t.fontSizes.sm,
               fontWeight: hasEventFeatures ? '600' : '400',
               cursor: 'pointer',
@@ -769,7 +769,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
             {hasEventFeatures && (
               <>
                 <div style={{ gridColumn: 'span 2', borderTop: `1px solid ${t.colors.borderLight}`, paddingTop: '16px', marginTop: '4px' }}>
-                  <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: '#7C5CBF', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Event details</div>
+                  <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.primary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Event details</div>
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Event date</label>
@@ -814,7 +814,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                 const isActive = data.status === step
                 return (
                   <button key={step} onClick={() => updateStatus(step)} style={{
-                    flex: 1, minWidth: '80px', padding: '8px 4px', borderRadius: t.radius.md,
+                    flex: 1, minWidth: '80px', padding: '8px 4px', borderRadius: t.radius.full,
                     border: `1px solid ${isActive ? stepColor.border : t.colors.borderLight}`,
                     backgroundColor: isActive ? stepColor.bg : t.colors.bgCard,
                     color: isActive ? stepColor.color : t.colors.textTertiary,
@@ -830,9 +830,9 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
           </div>
 
           {/* Tab bar */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', backgroundColor: t.colors.bgCard, borderRadius: '10px', padding: '6px', border: `1px solid ${t.colors.borderLight}` }}>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.full, padding: '6px', border: `1px solid ${t.colors.borderLight}` }}>
             <button onClick={() => setActiveTab('details')} style={{
-              flex: 1, padding: '8px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+              flex: 1, padding: '8px 16px', borderRadius: t.radius.full, border: 'none', cursor: 'pointer',
               fontSize: t.fontSizes.sm, fontWeight: activeTab === 'details' ? '700' : '400',
               backgroundColor: activeTab === 'details' ? t.colors.primary : 'transparent',
               color: activeTab === 'details' ? '#fff' : t.colors.textTertiary,
@@ -840,9 +840,9 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
             }}>Project Details</button>
             {hasEventFeatures && (
               <button onClick={() => setActiveTab('event')} style={{
-                flex: 1, padding: '8px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+                flex: 1, padding: '8px 16px', borderRadius: t.radius.full, border: 'none', cursor: 'pointer',
                 fontSize: t.fontSizes.sm, fontWeight: activeTab === 'event' ? '700' : '400',
-                backgroundColor: activeTab === 'event' ? '#7C5CBF' : 'transparent',
+                backgroundColor: activeTab === 'event' ? t.colors.primary : 'transparent',
                 color: activeTab === 'event' ? '#fff' : t.colors.textTertiary,
                 fontFamily: t.fonts.sans, transition: 'all 0.15s',
               }}>Event Planning</button>
@@ -896,20 +896,20 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>Contingency</span>
-                            <select value={contingency} onChange={e => setContingency(parseInt(e.target.value))} style={{ padding: '4px 8px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, outline: 'none', backgroundColor: t.colors.bgCard }}>
+                            <select value={contingency} onChange={e => setContingency(parseInt(e.target.value))} style={{ padding: '4px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, outline: 'none', backgroundColor: t.colors.bgCard }}>
                               {[0, 5, 10, 15, 20, 25].map(n => <option key={n} value={n}>{n}%</option>)}
                             </select>
                           </div>
-                          <button onClick={() => setShowBudgetForm(true)} style={{ padding: '7px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer' }}>+ Add category</button>
+                          <button onClick={() => setShowBudgetForm(true)} style={{ padding: '7px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer' }}>+ Add category</button>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', padding: '12px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
                         <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontWeight: '500' }}>Overall budget:</span>
                         {editingBudget ? (
                           <>
-                            <input style={{ padding: '5px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', width: '120px', backgroundColor: t.colors.bgCard }} type="number" value={budgetInput} onChange={e => setBudgetInput(e.target.value)} autoFocus />
-                            <button onClick={saveBudget} style={{ padding: '5px 10px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: '600', cursor: 'pointer' }}>Save</button>
-                            <button onClick={() => setEditingBudget(false)} style={{ padding: '5px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Cancel</button>
+                            <input style={{ padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', width: '120px', backgroundColor: t.colors.bgCard }} type="number" value={budgetInput} onChange={e => setBudgetInput(e.target.value)} autoFocus />
+                            <button onClick={saveBudget} style={{ padding: '5px 10px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: '600', cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => setEditingBudget(false)} style={{ padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Cancel</button>
                           </>
                         ) : (
                           <>
@@ -929,13 +929,13 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                             ].map(({ label, key: fk, placeholder, type }) => (
                               <div key={fk} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: t.fontSizes.xs, fontWeight: '500', color: t.colors.textTertiary }}>{label}</label>
-                                <input style={{ padding: '8px 10px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', backgroundColor: t.colors.bgCard }} type={type || 'text'} placeholder={placeholder} value={budgetForm[fk]} onChange={e => setBudgetForm({ ...budgetForm, [fk]: e.target.value })} />
+                                <input style={{ padding: '8px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none', backgroundColor: t.colors.bgCard }} type={type || 'text'} placeholder={placeholder} value={budgetForm[fk]} onChange={e => setBudgetForm({ ...budgetForm, [fk]: e.target.value })} />
                               </div>
                             ))}
                           </div>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                            <button onClick={() => setShowBudgetForm(false)} style={{ padding: '7px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, cursor: 'pointer' }}>Cancel</button>
-                            <button onClick={addBudgetItem} disabled={!budgetForm.category} style={{ padding: '7px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer' }}>Add</button>
+                            <button onClick={() => setShowBudgetForm(false)} style={{ padding: '7px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, cursor: 'pointer' }}>Cancel</button>
+                            <button onClick={addBudgetItem} disabled={!budgetForm.category} style={{ padding: '7px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer' }}>Add</button>
                           </div>
                         </div>
                       )}
@@ -959,11 +959,11 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                                   {isEditing ? (
                                     <>
                                       {['category', 'projected_amount', 'actual_amount'].map(ek => (
-                                        <input key={ek} style={{ padding: '5px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none' }} type={ek !== 'category' ? 'number' : 'text'} value={editBudgetForm[ek]} onChange={e => setEditBudgetForm({ ...editBudgetForm, [ek]: e.target.value })} />
+                                        <input key={ek} style={{ padding: '5px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, outline: 'none' }} type={ek !== 'category' ? 'number' : 'text'} value={editBudgetForm[ek]} onChange={e => setEditBudgetForm({ ...editBudgetForm, [ek]: e.target.value })} />
                                       ))}
                                       <div style={{ display: 'flex', gap: '4px' }}>
-                                        <button onClick={() => saveBudgetItem(item.id)} style={{ padding: '4px 8px', borderRadius: t.radius.sm, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Save</button>
-                                        <button onClick={() => setEditingBudgetItem(null)} style={{ padding: '4px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Cancel</button>
+                                        <button onClick={() => saveBudgetItem(item.id)} style={{ padding: '4px 8px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Save</button>
+                                        <button onClick={() => setEditingBudgetItem(null)} style={{ padding: '4px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.xs, cursor: 'pointer' }}>Cancel</button>
                                       </div>
                                       <span></span>
                                     </>
@@ -1061,12 +1061,12 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                           {grip}
                           <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: 0 }}>Notes</h3>
                         </div>
-                        <button onClick={saveNotes} disabled={savingNotes} style={{ padding: '6px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: notesSaved ? '#10B981' : t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'background 0.2s' }}>
+                        <button onClick={saveNotes} disabled={savingNotes} style={{ padding: '6px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: notesSaved ? '#10B981' : t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'background 0.2s' }}>
                           {notesSaved ? '✓ Saved' : savingNotes ? 'Saving...' : 'Save notes'}
                         </button>
                       </div>
                       <textarea
-                        style={{ width: '100%', padding: '12px', borderRadius: t.radius.md, border: `1px solid ${notesDirty ? t.colors.border : t.colors.borderLight}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: t.colors.bg }}
+                        style={{ width: '100%', padding: '12px', borderRadius: t.radius.full, border: `1px solid ${notesDirty ? t.colors.border : t.colors.borderLight}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: t.colors.bg }}
                         rows={5}
                         placeholder="Internal notes about this project..."
                         value={notes}
@@ -1088,7 +1088,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                           {grip}
                           <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: 0 }}>Documents</h3>
                         </div>
-                        <label style={{ padding: '8px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}>
+                        <label style={{ padding: '8px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}>
                           {uploading ? 'Uploading...' : '+ Upload file'}
                           <input type="file" onChange={uploadDocument} style={{ display: 'none' }} />
                         </label>
@@ -1126,9 +1126,9 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                   onClick={() => setConceptOpen(o => !o)}
                   style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', background: 'none', border: 'none', padding: '0 0 16px', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  <span style={{ fontSize: t.fontSizes.xs, fontWeight: '700', color: '#7C5CBF', textTransform: 'uppercase', letterSpacing: '0.12em' }}>💡 Concept</span>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: '#7C5CBF', opacity: 0.2 }} />
-                  <span style={{ fontSize: '11px', color: '#7C5CBF', opacity: 0.7, fontWeight: '600', flexShrink: 0 }}>{conceptOpen ? '▲ Collapse' : '▼ Expand'}</span>
+                  <span style={{ fontSize: t.fontSizes.xs, fontWeight: '700', color: t.colors.primary, textTransform: 'uppercase', letterSpacing: '0.12em' }}>💡 Concept</span>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: t.colors.primary, opacity: 0.2 }} />
+                  <span style={{ fontSize: '11px', color: t.colors.primary, opacity: 0.7, fontWeight: '600', flexShrink: 0 }}>{conceptOpen ? '▲ Collapse' : '▼ Expand'}</span>
                 </button>
                 {conceptOpen && (
                   <ConceptForm
@@ -1164,16 +1164,16 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
 // ── Styles ─────────────────────────────────────────────────────────────────
 
 const styles = {
-  addBtn: { padding: '10px 18px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  addBtn: { padding: '10px 18px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
   formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
-  input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
+  input: { padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  saveBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  saveBtn: { padding: '9px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
   statusSelect: {
     padding: '3px 24px 3px 10px',
     borderRadius: t.radius.full,
@@ -1200,7 +1200,7 @@ const styles = {
   projectCardRow: { fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginTop: '4px', wordBreak: 'break-word' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
-  backBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  editBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  deleteBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
+  backBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  editBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  deleteBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
 }

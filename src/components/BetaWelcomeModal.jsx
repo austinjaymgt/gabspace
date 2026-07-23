@@ -294,7 +294,7 @@ const s = {
   },
   sheet: {
     backgroundColor: t.colors.bgCard,
-    borderRadius:    t.radius.xl,
+    borderRadius:    t.radius.card,
     width:           '100%',
     maxWidth:        '540px',
     maxHeight:       '90vh',
@@ -395,7 +395,7 @@ const s = {
   ndaCard: {
     backgroundColor: t.colors.bgPage,
     border:          `1px solid ${t.colors.borderLight}`,
-    borderRadius:    t.radius.lg,
+    borderRadius:    t.radius.card,
     padding:         '16px',
     marginBottom:    '18px',
   },

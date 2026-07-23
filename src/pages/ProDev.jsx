@@ -159,7 +159,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          style={{ padding: '9px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}
+          style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}
         >
           + Add Item
         </button>
@@ -193,12 +193,12 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
                 value={form.member_name}
                 onChange={e => setForm(f => ({ ...f, member_name: e.target.value }))}
                 placeholder="e.g. Alex Rivera"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
               />
             </div>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Type *</label>
-              <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+              <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                 <option value="">Select type</option>
                 {TYPES.map(ty => <option key={ty} value={ty}>{ty}</option>)}
               </select>
@@ -209,7 +209,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="e.g. Professional Certification, Industry Conference 2026"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
               />
             </div>
             <div>
@@ -218,22 +218,22 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
                 value={form.provider}
                 onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}
                 placeholder="e.g. Coursera, NACE, LinkedIn Learning"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
               />
             </div>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Status</label>
-              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{statusStyles[s].label}</option>)}
               </select>
             </div>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Start Date</label>
-              <input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
+              <input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
             </div>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>End Date</label>
-              <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
+              <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
             </div>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Cost</label>
@@ -245,7 +245,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
                 value={form.certificate_url}
                 onChange={e => setForm(f => ({ ...f, certificate_url: e.target.value }))}
                 placeholder="Link to certificate or credential"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
               />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
@@ -255,15 +255,15 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Key takeaways, relevance to role, application to work..."
                 rows={2}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }}
               />
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
-            <button onClick={saveItem} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={saveItem} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               {editingItem ? 'Save Changes' : 'Add Item'}
             </button>
-            <button onClick={resetForm} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={resetForm} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -274,24 +274,24 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search..."
-          style={{ padding: '7px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, width: '180px' }}
+          style={{ padding: '7px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, width: '180px' }}
         />
         {isDirector && members.length > 0 && (
-          <select value={filterMember} onChange={e => setFilterMember(e.target.value)} style={{ padding: '7px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
+          <select value={filterMember} onChange={e => setFilterMember(e.target.value)} style={{ padding: '7px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
             <option value="all">All Members</option>
             {members.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         )}
-        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px' }}>
+        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px' }}>
           {['all', ...TYPES].map(ty => (
-            <button key={ty} onClick={() => setFilterType(ty)} style={{ padding: '4px 12px', borderRadius: t.radius.sm, border: 'none', background: filterType === ty ? t.colors.bgCard : 'transparent', color: filterType === ty ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterType === ty ? '600' : '400', boxShadow: filterType === ty ? t.shadows.sm : 'none' }}>
+            <button key={ty} onClick={() => setFilterType(ty)} style={{ padding: '4px 12px', borderRadius: t.radius.full, border: 'none', background: filterType === ty ? t.colors.bgCard : 'transparent', color: filterType === ty ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterType === ty ? '600' : '400', boxShadow: filterType === ty ? t.shadows.sm : 'none' }}>
               {ty === 'all' ? 'All' : ty}
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px' }}>
+        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px' }}>
           {['all', ...STATUS_OPTIONS].map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '4px 12px', borderRadius: t.radius.sm, border: 'none', background: filterStatus === s ? t.colors.bgCard : 'transparent', color: filterStatus === s ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterStatus === s ? '600' : '400', boxShadow: filterStatus === s ? t.shadows.sm : 'none' }}>
+            <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '4px 12px', borderRadius: t.radius.full, border: 'none', background: filterStatus === s ? t.colors.bgCard : 'transparent', color: filterStatus === s ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterStatus === s ? '600' : '400', boxShadow: filterStatus === s ? t.shadows.sm : 'none' }}>
               {s === 'all' ? 'All' : statusStyles[s]?.label}
             </button>
           ))}
@@ -306,7 +306,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎓</div>
           <div style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' }}>No pro dev items yet</div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginBottom: '16px' }}>Start tracking your team's growth — add conferences, certs, and courses.</div>
-          <button onClick={() => setShowForm(true)} style={{ padding: '10px 24px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+          <button onClick={() => setShowForm(true)} style={{ padding: '10px 24px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
             Add First Item
           </button>
         </div>
@@ -367,13 +367,13 @@ function ItemRow({ item, onEdit, onDelete, onStatusChange, isDirector }) {
       </div>
       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
         {item.certificate_url && (
-          <a href={item.certificate_url} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.primary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, textDecoration: 'none', fontWeight: '500' }}>🏆 Cert</a>
+          <a href={item.certificate_url} target="_blank" rel="noopener noreferrer" style={{ padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.primary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, textDecoration: 'none', fontWeight: '500' }}>🏆 Cert</a>
         )}
-        <select value={item.status} onChange={e => onStatusChange(item.id, e.target.value)} style={{ padding: '5px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard, cursor: 'pointer' }}>
+        <select value={item.status} onChange={e => onStatusChange(item.id, e.target.value)} style={{ padding: '5px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard, cursor: 'pointer' }}>
           {STATUS_OPTIONS.map(s => <option key={s} value={s}>{statusStyles[s].label}</option>)}
         </select>
-        <button onClick={() => onEdit(item)} style={{ padding: '5px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
-        <button onClick={() => onDelete(item.id)} style={{ padding: '5px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
+        <button onClick={() => onEdit(item)} style={{ padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
+        <button onClick={() => onDelete(item.id)} style={{ padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
       </div>
     </div>
   )

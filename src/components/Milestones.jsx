@@ -10,15 +10,15 @@ const STATUSES = {
 }
 
 const btnStyles = {
-  primary: { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel: { padding: '9px 16px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
+  primary: { padding: '9px 18px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  secondary: { padding: '7px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel: { padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
 }
 
 const fStyles = {
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
-  input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
+  input: { padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
 const iconBtn = { background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: t.colors.textTertiary, padding: '4px' }
@@ -98,9 +98,9 @@ export default function Milestones({ projectId, businessSpaceId }) {
   const done = items.filter(m => m.status === 'done').length
 
   return (
-    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: '14px', padding: '24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
+    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: 'Syne, sans-serif' }}>Milestones</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading }}>Milestones</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {items.length > 0 && <span style={{ fontSize: '13px', color: t.colors.textTertiary }}>{done}/{items.length} done</span>}
           <button onClick={() => setShowForm(true)} style={btnStyles.secondary}>+ Add milestone</button>
@@ -109,7 +109,7 @@ export default function Milestones({ projectId, businessSpaceId }) {
 
       {items.length > 0 && (
         <div style={{ height: '4px', backgroundColor: t.colors.borderLight, borderRadius: '2px', overflow: 'hidden', marginBottom: '16px' }}>
-          <div style={{ height: '100%', width: `${(done / items.length) * 100}%`, backgroundColor: '#7C5CBF', borderRadius: '2px', transition: 'width 0.3s' }} />
+          <div style={{ height: '100%', width: `${(done / items.length) * 100}%`, backgroundColor: t.colors.primary, borderRadius: '2px', transition: 'width 0.3s' }} />
         </div>
       )}
 
@@ -152,7 +152,7 @@ export default function Milestones({ projectId, businessSpaceId }) {
                     value={editDraft.title}
                     onChange={e => setEditDraft({ ...editDraft, title: e.target.value })}
                     onKeyDown={e => { if (e.key === 'Enter') saveEdit(m.id); if (e.key === 'Escape') cancelEdit() }}
-                    style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, border: `1px solid ${t.colors.border}`, borderRadius: '6px', padding: '4px 6px', backgroundColor: t.colors.bgCard, fontFamily: 'DM Sans, sans-serif', outline: 'none', width: '100%' }}
+                    style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.full, padding: '4px 6px', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans, outline: 'none', width: '100%' }}
                   />
                 ) : (
                   <span style={{ fontSize: '13px', fontWeight: '600', color: t.colors.textPrimary, textDecoration: m.status === 'done' ? 'line-through' : 'none' }}>{m.title}</span>
@@ -163,14 +163,14 @@ export default function Milestones({ projectId, businessSpaceId }) {
                     value={editDraft.target_date}
                     onChange={e => setEditDraft({ ...editDraft, target_date: e.target.value })}
                     onKeyDown={e => { if (e.key === 'Enter') saveEdit(m.id); if (e.key === 'Escape') cancelEdit() }}
-                    style={{ fontSize: '12px', color: t.colors.textSecondary, border: `1px solid ${t.colors.border}`, borderRadius: '6px', padding: '4px 6px', backgroundColor: t.colors.bgCard, outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                    style={{ fontSize: '12px', color: t.colors.textSecondary, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.full, padding: '4px 6px', backgroundColor: t.colors.bgCard, outline: 'none', fontFamily: t.fonts.sans }}
                   />
                 ) : (
                   <span style={{ fontSize: '12px', color: m.target_date ? t.colors.textSecondary : t.colors.textTertiary, fontStyle: m.target_date ? 'normal' : 'italic' }}>
                     {formatDate(m.target_date) || 'No date'}
                   </span>
                 )}
-                <select value={m.status} onChange={e => updateStatus(m.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                <select value={m.status} onChange={e => updateStatus(m.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: t.radius.full, border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: t.fonts.sans }}>
                   <option value="upcoming">Upcoming</option>
                   <option value="in_progress">In progress</option>
                   <option value="done">Done</option>
@@ -180,9 +180,9 @@ export default function Milestones({ projectId, businessSpaceId }) {
                     type="checkbox"
                     checked={!!m.show_in_portal}
                     onChange={() => togglePortal(m.id, !!m.show_in_portal)}
-                    style={{ accentColor: '#7F5793', width: 14, height: 14, cursor: 'pointer' }}
+                    style={{ accentColor: t.colors.primary, width: 14, height: 14, cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '11px', color: m.show_in_portal ? '#7F5793' : t.colors.textTertiary, fontWeight: m.show_in_portal ? 600 : 400 }}>Portal</span>
+                  <span style={{ fontSize: '11px', color: m.show_in_portal ? t.colors.primary : t.colors.textTertiary, fontWeight: m.show_in_portal ? 600 : 400 }}>Portal</span>
                 </label>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   {isEditing ? (

@@ -8,7 +8,7 @@ function fmt(n) {
 }
 
 const cardStyle = { background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px 24px' }
-const selectStyle = { padding: '8px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, background: t.colors.bgCard, fontFamily: t.fonts.sans }
+const selectStyle = { padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, background: t.colors.bgCard, fontFamily: t.fonts.sans }
 
 const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4']
 const CURRENT_YEAR = new Date().getFullYear()

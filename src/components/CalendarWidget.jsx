@@ -10,7 +10,7 @@ const SOURCES = {
 }
 const navBtn = {
   width: '28px', height: '28px',
-  borderRadius: '6px',
+  borderRadius: t.radius.full,
   border: `1px solid ${t.colors.border}`,
   backgroundColor: t.colors.bgCard,
   color: t.colors.textSecondary,
@@ -174,7 +174,7 @@ export default function CalendarWidget() {
           </span>
           <button
             onClick={() => { setCursor(new Date()); setSelected(null) }}
-            style={{ padding: '4px 10px', borderRadius: '100px', border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textTertiary, fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+            style={{ padding: '4px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.borderLight}`, backgroundColor: t.colors.bgCard, color: t.colors.textTertiary, fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
           >
             Today
           </button>
@@ -191,7 +191,7 @@ export default function CalendarWidget() {
                   onClick={() => toggleFilter(type)}
                   style={{
                     padding: '4px 10px',
-                    borderRadius: '100px',
+                    borderRadius: t.radius.full,
                     border: `1.5px solid ${active ? cfg.color : t.colors.border}`,
                     backgroundColor: active ? cfg.bg : t.colors.bgCard,
                     color: active ? cfg.color : t.colors.textTertiary,
@@ -209,14 +209,14 @@ export default function CalendarWidget() {
           </div>
 
           {/* View toggle */}
-          <div style={{ display: 'flex', backgroundColor: t.colors.bgHover, borderRadius: '8px', padding: '3px', gap: '2px' }}>
+          <div style={{ display: 'flex', backgroundColor: t.colors.bgHover, borderRadius: t.radius.full, padding: '3px', gap: '2px' }}>
             {['month', 'week'].map(v => (
               <button
                 key={v}
                 onClick={() => { setCalView(v); setSelected(null) }}
                 style={{
                   padding: '5px 12px',
-                  borderRadius: '6px',
+                  borderRadius: t.radius.full,
                   border: 'none',
                   fontSize: '12px',
                   fontWeight: '600',
@@ -282,7 +282,7 @@ export default function CalendarWidget() {
                       <div style={{
                         width: '24px', height: '24px',
                         borderRadius: '50%',
-                        backgroundColor: isToday ? '#1A1A2E' : 'transparent',
+                        backgroundColor: isToday ? t.colors.primary : 'transparent',
                         color: isToday ? '#fff' : t.colors.textSecondary,
                         fontSize: '12px',
                         fontWeight: isToday ? '700' : '400',
@@ -348,7 +348,7 @@ export default function CalendarWidget() {
                       <div style={{
                         width: '28px', height: '28px',
                         borderRadius: '50%',
-                        backgroundColor: isToday ? '#1A1A2E' : 'transparent',
+                        backgroundColor: isToday ? t.colors.primary : 'transparent',
                         color: isToday ? '#fff' : t.colors.textSecondary,
                         fontSize: '13px',
                         fontWeight: isToday ? '700' : '500',

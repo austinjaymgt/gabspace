@@ -351,7 +351,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
 
   const inputStyle = {
     padding: '10px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.md,
     outline: 'none',
@@ -443,7 +443,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {isOwnerOrAdmin ? (
                   <>
-                    <label style={{ padding: '8px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans, display: 'inline-block' }}>
+                    <label style={{ padding: '8px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans, display: 'inline-block' }}>
                       {uploading ? 'Uploading...' : 'Upload logo'}
                       <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
                     </label>
@@ -573,7 +573,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                 onClick={handleInvite}
                 disabled={inviting}
                 style={{
-                  padding: '10px 20px', borderRadius: t.radius.md, border: 'none',
+                  padding: '10px 20px', borderRadius: t.radius.full, border: 'none',
                   backgroundColor: inviteSent ? t.colors.success : t.colors.primary,
                   color: t.colors.textInverse, fontSize: t.fontSizes.md,
                   fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans,
@@ -618,7 +618,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                       <select
                         value={m.role}
                         onChange={e => handleUpdateRole(m.user_id, e.target.value)}
-                        style={{ padding: '4px 8px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, fontFamily: t.fonts.sans, backgroundColor: t.colors.bgCard, cursor: 'pointer' }}
+                        style={{ padding: '4px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, fontFamily: t.fonts.sans, backgroundColor: t.colors.bgCard, cursor: 'pointer' }}
                       >
                         <option value="admin">Admin</option>
                         <option value="member">Member</option>
@@ -627,7 +627,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                     {m.role !== 'owner' && (
                       <button
                         onClick={() => handleRemoveMember(m.user_id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '16px', padding: '2px 6px', borderRadius: t.radius.sm, lineHeight: 1 }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '16px', padding: '2px 6px', borderRadius: t.radius.full, lineHeight: 1 }}
                         title="Remove member"
                       >
                         ✕
@@ -654,7 +654,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                     </div>
                     <button
                       onClick={() => handleRevokeInvite(inv.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '16px', padding: '2px 6px', borderRadius: t.radius.sm, lineHeight: 1 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '16px', padding: '2px 6px', borderRadius: t.radius.full, lineHeight: 1 }}
                       title="Revoke invite"
                     >
                       ✕
@@ -686,7 +686,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                 onClick={handleArchive}
                 disabled={archiving}
                 style={{
-                  padding: '10px 20px', borderRadius: t.radius.md,
+                  padding: '10px 20px', borderRadius: t.radius.full,
                   border: `1px solid ${t.colors.danger}`,
                   backgroundColor: t.colors.bgCard, color: t.colors.danger,
                   fontSize: t.fontSizes.sm, fontWeight: '500',
@@ -714,7 +714,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
           <button
             onClick={() => setDeleteModalOpen(true)}
             style={{
-              padding: '10px 20px', borderRadius: t.radius.md,
+              padding: '10px 20px', borderRadius: t.radius.full,
               border: `1px solid ${t.colors.danger}`,
               backgroundColor: t.colors.bgCard, color: t.colors.danger,
               fontSize: t.fontSizes.sm, fontWeight: '500',
@@ -730,14 +730,14 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
       <div style={{ display: 'flex', gap: '12px' }}>
         <button
           onClick={async () => { await supabase.auth.signOut(); window.location.reload() }}
-          style={{ padding: '12px 24px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.danger, fontSize: t.fontSizes.md, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
+          style={{ padding: '12px 24px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.danger, fontSize: t.fontSizes.md, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
         >
           Sign out
         </button>
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ padding: '12px 24px', borderRadius: t.radius.md, border: 'none', backgroundColor: saved ? t.colors.success : t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'background 0.2s' }}
+          style={{ padding: '12px 24px', borderRadius: t.radius.full, border: 'none', backgroundColor: saved ? t.colors.success : t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'background 0.2s' }}
         >
           {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save settings'}
         </button>
@@ -758,7 +758,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
             onClick={e => e.stopPropagation()}
             style={{
               backgroundColor: t.colors.bgCard,
-              borderRadius: t.radius.lg,
+              borderRadius: t.radius.card,
               maxWidth: '480px', width: '100%',
               maxHeight: '90vh', overflow: 'auto',
               border: `1px solid ${t.colors.borderLight}`,
@@ -794,7 +794,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                       onClick={closeDeleteModal}
-                      style={{ padding: '10px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                      style={{ padding: '10px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
                     >
                       Got it
                     </button>
@@ -821,7 +821,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                     placeholder="DELETE MY ACCOUNT"
                     style={{
                       width: '100%', boxSizing: 'border-box',
-                      padding: '10px 14px', borderRadius: t.radius.md,
+                      padding: '10px 14px', borderRadius: t.radius.full,
                       border: `1px solid ${t.colors.border}`,
                       fontSize: t.fontSizes.md, outline: 'none',
                       color: t.colors.textPrimary, fontFamily: 'monospace',
@@ -838,7 +838,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                     <button
                       onClick={closeDeleteModal}
                       disabled={deleting}
-                      style={{ padding: '10px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                      style={{ padding: '10px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '500', cursor: 'pointer', fontFamily: t.fonts.sans }}
                     >
                       Cancel
                     </button>
@@ -846,7 +846,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                       onClick={handleDeleteAccount}
                       disabled={deleting || deleteConfirmText !== 'DELETE MY ACCOUNT'}
                       style={{
-                        padding: '10px 20px', borderRadius: t.radius.md, border: 'none',
+                        padding: '10px 20px', borderRadius: t.radius.full, border: 'none',
                         backgroundColor: t.colors.danger, color: t.colors.textInverse,
                         fontSize: t.fontSizes.sm, fontWeight: '600',
                         cursor: deleting || deleteConfirmText !== 'DELETE MY ACCOUNT' ? 'not-allowed' : 'pointer',

@@ -99,7 +99,7 @@ export default function BetaAdmin() {
       {/* Stat pills */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {[
-          { key: 'all',      label: 'All',      color: t.colors.textPrimary, bg: '#f0f0eb' },
+          { key: 'all',      label: 'All',      color: t.colors.textPrimary, bg: t.colors.bgHover },
           { key: 'pending',  label: 'Pending',  color: '#92400E', bg: '#FEF3C7' },
           { key: 'approved', label: 'Approved', color: '#1D9E75', bg: '#f0faf6' },
           { key: 'rejected', label: 'Rejected', color: 'var(--color-danger)', bg: 'var(--color-danger-light)' },
@@ -111,7 +111,7 @@ export default function BetaAdmin() {
               padding: '8px 16px',
               borderRadius: '100px',
               border: filter === key ? `1.5px solid ${color}` : '1.5px solid transparent',
-              backgroundColor: filter === key ? bg : '#f7f7f4',
+              backgroundColor: filter === key ? bg : t.colors.bg,
               color: filter === key ? color : t.colors.textTertiary,
               fontSize: t.fontSizes.sm,
               fontWeight: '600',
@@ -125,8 +125,8 @@ export default function BetaAdmin() {
           >
             {label}
             <span style={{
-              backgroundColor: filter === key ? color : '#ddd',
-              color: filter === key ? '#fff' : '#999',
+              backgroundColor: filter === key ? color : t.colors.bgHover,
+              color: filter === key ? '#fff' : t.colors.textTertiary,
               borderRadius: '100px',
               fontSize: '11px',
               fontWeight: '700',
@@ -165,7 +165,7 @@ export default function BetaAdmin() {
           Loading applicants...
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px', textAlign: 'center', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb' }}>
+        <div style={{ padding: '60px', textAlign: 'center', backgroundColor: '#fff', borderRadius: t.radius.card, border: `1px solid ${t.colors.borderLight}` }}>
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>📭</div>
           <div style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '4px' }}>No applicants found</div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>
@@ -173,17 +173,17 @@ export default function BetaAdmin() {
           </div>
         </div>
       ) : (
-        <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f0f0eb', overflow: 'hidden' }}>
+        <div style={{ backgroundColor: '#fff', borderRadius: t.radius.card, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden' }}>
           {/* Table header */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr)',
             padding: '11px 20px',
-            backgroundColor: '#fafaf8',
-            borderBottom: '1px solid #f0f0eb',
+            backgroundColor: t.colors.bgHover,
+            borderBottom: `1px solid ${t.colors.borderLight}`,
             fontSize: '11px',
             fontWeight: '600',
-            color: '#999',
+            color: t.colors.textTertiary,
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
           }}>
@@ -206,11 +206,11 @@ export default function BetaAdmin() {
                   display: 'grid',
                   gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr)',
                   padding: '14px 20px',
-                  borderBottom: '1px solid #f9f9f7',
+                  borderBottom: `1px solid ${t.colors.borderLight}`,
                   alignItems: 'center',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fafaf8'}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = t.colors.bgHover}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 {/* Name + social */}

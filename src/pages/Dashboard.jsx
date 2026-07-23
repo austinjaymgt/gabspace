@@ -494,7 +494,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
               rows={3}
               style={{
                 width: '100%', boxSizing: 'border-box',
-                padding: '10px 12px', borderRadius: t.radius.md,
+                padding: '10px 12px', borderRadius: t.radius.full,
                 border: `1px solid ${t.colors.border}`,
                 backgroundColor: t.colors.bg, color: t.colors.textPrimary,
                 fontSize: t.fontSizes.base, fontFamily: t.fonts.sans,
@@ -506,7 +506,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
               disabled={savingIdea || !sparkIdea.trim()}
               style={{
                 marginTop: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
-                padding: '8px 16px', borderRadius: t.radius.md,
+                padding: '8px 16px', borderRadius: t.radius.full,
                 border: `1px solid ${t.colors.borderLight}`,
                 backgroundColor: t.colors.bg, color: t.colors.textPrimary,
                 fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer',
@@ -540,7 +540,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
           placeholder="Name a task and hit Enter — it'll show up below…"
           style={{
             width: '100%', boxSizing: 'border-box',
-            padding: '14px 20px', borderRadius: t.radius.lg,
+            padding: '14px 20px', borderRadius: t.radius.full,
             border: `1px solid ${t.colors.border}`,
             backgroundColor: t.colors.bgCard, color: t.colors.textPrimary,
             fontSize: t.fontSizes.md, fontFamily: t.fonts.sans,

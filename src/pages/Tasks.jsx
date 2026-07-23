@@ -440,7 +440,7 @@ const styles = {
   subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
   addBtn: {
     padding: '10px 18px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -497,7 +497,7 @@ const styles = {
   },
   sortSelect: {
     padding: '7px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -524,7 +524,7 @@ const styles = {
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
   input: {
     padding: '9px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base,
     color: t.colors.textPrimary,
@@ -535,7 +535,7 @@ const styles = {
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
   cancelBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -545,7 +545,7 @@ const styles = {
   },
   saveBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -634,7 +634,7 @@ const styles = {
     cursor: 'pointer',
     padding: '4px 8px',
     flexShrink: 0,
-    borderRadius: t.radius.sm,
+    borderRadius: t.radius.full,
     fontFamily: t.fonts.sans,
   },
   deleteBtn: {
@@ -645,7 +645,7 @@ const styles = {
     cursor: 'pointer',
     padding: '4px 8px',
     flexShrink: 0,
-    borderRadius: t.radius.sm,
+    borderRadius: t.radius.full,
     fontFamily: t.fonts.sans,
   },
   completedSection: {

@@ -1,9 +1,11 @@
+import { theme as t } from '../theme'
+
 const c = {
-  bg: '#F7F5F0',
-  card: '#FFFFFF',
-  dark: '#1A1A2E',
-  textTertiary: '#8585A0',
-  purple: '#7C5CBF',
+  bg: t.colors.bg,
+  card: t.colors.bgCard,
+  dark: t.colors.textPrimary,
+  textTertiary: t.colors.textTertiary,
+  purple: t.colors.primary,
   green: '#6B8F71',
 }
 
@@ -37,7 +39,7 @@ export default function BetaStatusScreen() {
       background: c.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '24px',
     }}>
       <div style={{
-        background: c.card, borderRadius: 16, padding: '48px 40px', textAlign: 'center',
+        background: c.card, borderRadius: t.radius.card, padding: '48px 40px', textAlign: 'center',
         maxWidth: 400, width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
       }}>
         <BrandMark />

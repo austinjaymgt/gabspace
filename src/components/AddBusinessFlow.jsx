@@ -305,7 +305,7 @@ const s = {
   },
   input: {
     padding: '12px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.md,
     outline: 'none',
@@ -318,7 +318,7 @@ const s = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '14px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textPrimary,

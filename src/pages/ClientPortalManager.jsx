@@ -332,7 +332,7 @@ export default function ClientPortalManager({ businessSpaceId, session }) {
 
       {/* New portal form */}
       {showNewPortal && (
-        <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: t.space.lg, marginBottom: t.space.lg, display: 'flex', gap: t.space.md, alignItems: 'center' }}>
+        <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.card, padding: t.space.lg, marginBottom: t.space.lg, display: 'flex', gap: t.space.md, alignItems: 'center' }}>
           <select value={newClientId} onChange={e => setNewClientId(e.target.value)} style={inputStyle}>
             <option value="">Select a client...</option>
             {availableClients.map(c => (
@@ -363,7 +363,7 @@ export default function ClientPortalManager({ businessSpaceId, session }) {
           const portalUnread = linkedProjects.reduce((sum, pp) => sum + (unreadCounts[pp.id] || 0), 0)
 
           return (
-            <div key={portal.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, overflow: 'hidden' }}>
+            <div key={portal.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.card, overflow: 'hidden' }}>
 
               {/* Portal header row */}
               <div
@@ -627,7 +627,7 @@ export default function ClientPortalManager({ businessSpaceId, session }) {
                 const client = portal.clients
                 const linkedProjects = portal.portal_projects || []
                 return (
-                  <div key={portal.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.lg, opacity: 0.75 }}>
+                  <div key={portal.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.card, opacity: 0.75 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md, padding: `${t.space.md} ${t.space.lg}` }}>
                       <div style={{ flex: 1 }}>
                         <span style={{ fontWeight: 600, fontSize: t.fontSizes.md, color: t.colors.textSecondary }}>{client?.name}</span>
@@ -660,7 +660,7 @@ const btnStyle = {
   background: 'var(--color-primary)',
   color: '#fff',
   border: 'none',
-  borderRadius: 'var(--radius-md, 8px)',
+  borderRadius: t.radius.full,
   padding: '7px 16px',
   fontSize: '13px',
   fontWeight: 600,
@@ -673,7 +673,7 @@ const ghostBtnStyle = {
   background: 'transparent',
   color: 'var(--color-text-secondary)',
   border: `1px solid var(--color-border)`,
-  borderRadius: 'var(--radius-md, 8px)',
+  borderRadius: t.radius.full,
   padding: '6px 12px',
   fontSize: '13px',
   fontWeight: 500,
@@ -685,7 +685,7 @@ const ghostBtnStyle = {
 const inputStyle = {
   width: '100%',
   border: `1px solid var(--color-border)`,
-  borderRadius: 'var(--radius-md, 8px)',
+  borderRadius: t.radius.full,
   padding: '7px 10px',
   fontSize: '13px',
   fontFamily: 'inherit',

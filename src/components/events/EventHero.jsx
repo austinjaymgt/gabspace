@@ -1,3 +1,5 @@
+import { theme as t } from '../../theme'
+
 function parseLocal(dateStr) {
   return new Date(String(dateStr).slice(0, 10) + 'T00:00:00')
 }
@@ -15,7 +17,7 @@ function formatDateRange(start, end) {
 }
 
 export default function EventHero({ data, statusColor }) {
-  const es = statusColor || { bg: '#F0EBF9', color: '#7C5CBF' }
+  const es = statusColor || { bg: t.colors.primaryLight, color: t.colors.primary }
 
   // Support both event_date (migrated events) and start_date (projects)
   const dateField = data.event_date || data.start_date
@@ -31,12 +33,12 @@ export default function EventHero({ data, statusColor }) {
   ].filter(Boolean)
 
   return (
-    <div style={{ backgroundColor: '#1A1A2E', borderRadius: '16px', padding: '32px', marginBottom: '20px', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: t.colors.nav, borderRadius: '16px', padding: '32px', marginBottom: '20px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', width: '240px', height: '240px', borderRadius: '50%', background: es.color, opacity: 0.1, top: '-60px', right: '-60px' }} />
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: metaItems.length ? '20px' : '0' }}>
           <div>
-            <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', fontFamily: 'Syne, sans-serif', letterSpacing: '-0.3px' }}>{data.title}</h1>
+            <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', fontFamily: t.fonts.heading, letterSpacing: '-0.3px' }}>{data.title}</h1>
             {data.clients?.name && (
               <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
                 {data.clients.name}{data.clients.company ? ` · ${data.clients.company}` : ''}

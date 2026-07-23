@@ -413,7 +413,7 @@ const s = {
     boxSizing: 'border-box',
     marginTop: '6px',
     padding: '18px 22px',
-    borderRadius: '18px',
+    borderRadius: '24px',
     border: '1px solid rgba(255,255,255,0.1)',
     backgroundColor: 'rgba(255,255,255,0.04)',
     backdropFilter: 'blur(6px)',

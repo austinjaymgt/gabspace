@@ -428,7 +428,7 @@ export default function ClientPortalView() {
                       style={{
                         background: mySet.has(emoji) ? PLUM_LT : 'none',
                         border: mySet.has(emoji) ? '1px solid #c9aeda' : '1px solid transparent',
-                        borderRadius: 6,
+                        borderRadius: 9999,
                         padding: '5px 10px',
                         cursor: 'pointer',
                         fontSize: 18,
@@ -486,7 +486,7 @@ export default function ClientPortalView() {
                     value={commentInput[d.id] || ''}
                     onChange={e => setCommentInput(prev => ({ ...prev, [d.id]: e.target.value }))}
                     onKeyDown={e => { if (e.key === 'Enter') submitComment(d.id) }}
-                    style={{ flex: 1, background: '#f5f0fb', border: '1px solid #e0d0f0', borderRadius: 20, padding: '7px 14px', fontSize: 13, fontFamily: '"Source Sans 3", sans-serif', outline: 'none', color: GRAPHITE }}
+                    style={{ flex: 1, background: '#f5f0fb', border: '1px solid #e0d0f0', borderRadius: 9999, padding: '7px 14px', fontSize: 13, fontFamily: '"Source Sans 3", sans-serif', outline: 'none', color: GRAPHITE }}
                   />
                 </div>
               </div>
@@ -581,11 +581,11 @@ function NamePromptModal({ onSave, onClose }) {
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onSave(name.trim()) }}
-          style={{ width: '100%', border: '1px solid #d0c0e8', borderRadius: 6, padding: '9px 12px', fontSize: 14, fontFamily: '"Source Sans 3", sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: 14, color: GRAPHITE, background: '#faf8fd' }}
+          style={{ width: '100%', border: '1px solid #d0c0e8', borderRadius: 9999, padding: '9px 12px', fontSize: 14, fontFamily: '"Source Sans 3", sans-serif', outline: 'none', boxSizing: 'border-box', marginBottom: 14, color: GRAPHITE, background: '#faf8fd' }}
         />
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ background: 'none', border: '1px solid #d0c0e8', borderRadius: 6, padding: '7px 16px', cursor: 'pointer', fontFamily: '"Source Sans 3", sans-serif', fontSize: 13, color: PLUM }}>Cancel</button>
-          <button onClick={() => { if (name.trim()) onSave(name.trim()) }} disabled={!name.trim()} style={{ background: PLUM, color: '#fff', border: 'none', borderRadius: 6, padding: '7px 16px', cursor: 'pointer', fontFamily: '"Source Sans 3", sans-serif', fontSize: 13, fontWeight: 700, opacity: name.trim() ? 1 : 0.5 }}>Continue</button>
+          <button onClick={onClose} style={{ background: 'none', border: '1px solid #d0c0e8', borderRadius: 9999, padding: '7px 16px', cursor: 'pointer', fontFamily: '"Source Sans 3", sans-serif', fontSize: 13, color: PLUM }}>Cancel</button>
+          <button onClick={() => { if (name.trim()) onSave(name.trim()) }} disabled={!name.trim()} style={{ background: PLUM, color: '#fff', border: 'none', borderRadius: 9999, padding: '7px 16px', cursor: 'pointer', fontFamily: '"Source Sans 3", sans-serif', fontSize: 13, fontWeight: 700, opacity: name.trim() ? 1 : 0.5 }}>Continue</button>
         </div>
       </div>
     </div>

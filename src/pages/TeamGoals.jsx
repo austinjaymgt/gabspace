@@ -86,7 +86,7 @@ function CheckBox({ checked, onClick, disabled }) {
       disabled={disabled}
       aria-label={checked ? 'Mark incomplete' : 'Mark complete'}
       style={{
-        width: 18, height: 18, borderRadius: 5, flexShrink: 0, padding: 0,
+        width: 18, height: 18, borderRadius: t.radius.full, flexShrink: 0, padding: 0,
         cursor: disabled ? 'default' : 'pointer',
         border: checked ? 'none' : `1.5px solid ${t.colors.border}`,
         background: checked ? t.colors.accent : 'transparent',
@@ -312,12 +312,12 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
     : 0
 
   const selectStyle = {
-    padding: '8px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`,
+    padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base, color: t.colors.textPrimary, background: t.colors.bgCard,
     fontFamily: t.fonts.sans, cursor: 'pointer',
   }
   const fieldStyle = {
-    width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`,
+    width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box',
     color: t.colors.textPrimary, background: t.colors.bgCard,
   }
@@ -356,7 +356,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
                   placeholder="Add a subtask..."
                   style={{ ...fieldStyle, padding: '7px 10px', fontSize: t.fontSizes.sm }}
                 />
-                <button onClick={addSubtask} style={{ padding: '7px 14px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer', flexShrink: 0 }}>Add</button>
+                <button onClick={addSubtask} style={{ padding: '7px 14px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer', flexShrink: 0 }}>Add</button>
               </div>
             )}
           </div>
@@ -386,7 +386,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
             {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           {isOwnerOrAdmin && (
-            <button onClick={openNew} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={openNew} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               + Add Goal
             </button>
           )}
@@ -409,7 +409,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
       </div>
 
       {/* Type filter pills */}
-      <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px', marginBottom: '20px', flexWrap: 'wrap', width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px', marginBottom: '20px', flexWrap: 'wrap', width: 'fit-content' }}>
         {['all', ...CATEGORY_OPTIONS].map(c => {
           const active = activeCategory === c
           const style = c !== 'all' ? categoryStyles[c] : null
@@ -418,7 +418,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
               key={c}
               onClick={() => setActiveCategory(c)}
               style={{
-                padding: '5px 14px', borderRadius: t.radius.sm, border: 'none', fontFamily: t.fonts.sans,
+                padding: '5px 14px', borderRadius: t.radius.full, border: 'none', fontFamily: t.fonts.sans,
                 fontSize: t.fontSizes.xs, cursor: 'pointer', fontWeight: active ? '600' : '400',
                 background: active ? (style ? style.bg : t.colors.bgCard) : 'transparent',
                 color: active ? (style ? style.color : t.colors.textPrimary) : t.colors.textSecondary,
@@ -481,8 +481,8 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
           </div>
           {formError && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, marginTop: '10px' }}>{formError}</div>}
           <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
-            <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Add Goal</button>
-            <button onClick={() => setShowNewForm(false)} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Add Goal</button>
+            <button onClick={() => setShowNewForm(false)} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -592,7 +592,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
                         </div>
                         {renderSubtasks()}
                         {!ro && (
-                          <button onClick={startEditMode} style={{ marginTop: '20px', padding: '8px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+                          <button onClick={startEditMode} style={{ marginTop: '20px', padding: '8px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
                             Edit
                           </button>
                         )}
@@ -657,9 +657,9 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
                         {renderSubtasks()}
                         {formError && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, marginTop: '10px' }}>{formError}</div>}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '18px' }}>
-                          <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Save changes</button>
-                          <button onClick={cancelEdit} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
-                          <button onClick={handleDelete} style={{ marginLeft: 'auto', padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
+                          <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Save changes</button>
+                          <button onClick={cancelEdit} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={handleDelete} style={{ marginLeft: 'auto', padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
                         </div>
                       </>
                     )}

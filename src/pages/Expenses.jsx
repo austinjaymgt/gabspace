@@ -400,9 +400,9 @@ export default function Expenses({ businessSpaceId, userRole }) {
 
       {/* View toggle */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px', width: 'fit-content' }}>
+        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px', width: 'fit-content' }}>
           {['overview', 'by-project', 'by-vendor'].map(v => (
-            <button key={v} onClick={() => setActiveView(v)} style={{ padding: '7px 16px', borderRadius: t.radius.sm, border: 'none', background: activeView === v ? t.colors.bgCard : 'transparent', color: activeView === v ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: activeView === v ? '600' : '400', fontFamily: t.fonts.sans, cursor: 'pointer', boxShadow: activeView === v ? t.shadows.sm : 'none' }}>
+            <button key={v} onClick={() => setActiveView(v)} style={{ padding: '7px 16px', borderRadius: t.radius.full, border: 'none', background: activeView === v ? t.colors.bgCard : 'transparent', color: activeView === v ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: activeView === v ? '600' : '400', fontFamily: t.fonts.sans, cursor: 'pointer', boxShadow: activeView === v ? t.shadows.sm : 'none' }}>
               {v === 'overview' ? 'By Category' : v === 'by-project' ? 'By Event/Project' : 'By Vendor'}
             </button>
           ))}
@@ -675,7 +675,7 @@ const styles = {
   subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
   addBtn: {
     padding: '10px 18px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -719,7 +719,7 @@ const styles = {
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary },
   input: {
     padding: '9px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base,
     color: t.colors.textPrimary,
@@ -731,7 +731,7 @@ const styles = {
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
   cancelBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -742,7 +742,7 @@ const styles = {
   },
   saveBtn: {
     padding: '9px 16px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',

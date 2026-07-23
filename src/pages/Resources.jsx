@@ -640,36 +640,36 @@ const styles = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' },
   title: { fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },
   subtitle: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '4px 0 0' },
-  addBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
-  editBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.primary}`, backgroundColor: t.colors.bgCard, color: t.colors.primary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
-  deleteBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
-  openBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  addBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  editBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.primary}`, backgroundColor: t.colors.bgCard, color: t.colors.primary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
+  deleteBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
+  openBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
 
   // Form
-  formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
+  formCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '24px', border: `1px solid ${t.colors.border}`, marginBottom: '24px' },
   formTitle: { fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px', fontFamily: t.fonts.heading, letterSpacing: '-0.01em' },
   formGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'flex', alignItems: 'center', gap: '6px' },
   lockedHint: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: 400 },
-  input: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
-  fileInput: { padding: '9px 12px', borderRadius: t.radius.md, border: `1px dashed ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, cursor: 'pointer' },
-  fileStaticRow: { display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bg, color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans },
+  input: { padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard, fontFamily: t.fonts.sans },
+  fileInput: { padding: '9px 12px', borderRadius: t.radius.full, border: `1px dashed ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans, cursor: 'pointer' },
+  fileStaticRow: { display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bg, color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans },
   formActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end' },
-  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  saveBtn: { padding: '9px 16px', borderRadius: t.radius.md, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  cancelBtn: { padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  saveBtn: { padding: '9px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
   error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
 
   // Kind toggle
   kindToggle: { display: 'flex', gap: '8px' },
-  kindToggleBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
+  kindToggleBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '500' },
   kindToggleBtnActive: { borderColor: t.colors.primary, backgroundColor: t.colors.primaryLight, color: t.colors.primary },
   kindToggleBtnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
 
   // Filter bar
   filterBar: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', padding: '12px 16px', marginBottom: '12px', backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.md },
-  searchInput: { flex: 1, minWidth: '200px', padding: '8px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans },
-  segmented: { display: 'inline-flex', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
+  searchInput: { flex: 1, minWidth: '200px', padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans },
+  segmented: { display: 'inline-flex', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
   segmentedBtn: { padding: '8px 14px', border: 'none', backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: 500, cursor: 'pointer', fontFamily: t.fonts.sans },
   segmentedBtnActive: { backgroundColor: t.colors.primary, color: '#fff' },
 
@@ -682,7 +682,7 @@ const styles = {
 
   // Card grid
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
-  resourceCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px', border: `1px solid ${t.colors.border}`, cursor: 'pointer', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: '8px' },
+  resourceCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '20px', border: `1px solid ${t.colors.border}`, cursor: 'pointer', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: '8px' },
   cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' },
   cardIcon: { width: '40px', height: '40px', borderRadius: t.radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   kindBadge: { padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', backgroundColor: t.colors.bg, color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em' },
@@ -693,7 +693,7 @@ const styles = {
   tagChip: { padding: '2px 8px', borderRadius: t.radius.full, backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontSize: '11px', fontWeight: 500, fontFamily: t.fonts.sans },
 
   // Empty states
-  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
+  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, border: `1px solid ${t.colors.border}` },
   emptyIcon: { color: t.colors.textTertiary, marginBottom: '16px' },
   emptyTitle: { fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading },
   emptyText: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: '0 0 24px' },
@@ -701,8 +701,8 @@ const styles = {
 
   // Detail
   detailHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '24px' },
-  backBtn: { padding: '8px 14px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
-  detailCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '32px', border: `1px solid ${t.colors.border}` },
+  backBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },
+  detailCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '32px', border: `1px solid ${t.colors.border}` },
   detailTop: { display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '28px' },
   detailAvatar: { width: '56px', height: '56px', borderRadius: t.radius.md, background: `linear-gradient(135deg, ${t.colors.primary}, #6B8F71)`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   detailName: { fontSize: '24px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 6px', fontFamily: t.fonts.heading, letterSpacing: '-0.02em' },

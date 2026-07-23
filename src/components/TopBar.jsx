@@ -50,7 +50,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       cursor: 'pointer',
       color: t.colors.textSecondary,
       padding: '4px 6px',
-      borderRadius: t.radius.md,
+      borderRadius: t.radius.full,
       display: 'flex',
       alignItems: 'center',
     }}

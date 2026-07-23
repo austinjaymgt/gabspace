@@ -48,18 +48,18 @@ function formatTime(timeStr) {
 
 // ── SHARED STYLES ─────────────────────────────────────────────────────────────
 const btnStyles = {
-  primary:   { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#3D3D5C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel:    { padding: '9px 16px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
-  back:      { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
-  edit:      { padding: '8px 14px', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
-  delete:    { padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', fontSize: '13px', cursor: 'pointer' },
+  primary:   { padding: '9px 18px', borderRadius: t.radius.full, border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  secondary: { padding: '7px 14px', borderRadius: t.radius.full, border: '1px solid #f0f0eb', backgroundColor: '#fff', color: '#3D3D5C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel:    { padding: '9px 16px', borderRadius: t.radius.full, border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#666', fontSize: '13px', cursor: 'pointer' },
+  back:      { padding: '8px 14px', borderRadius: t.radius.full, border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
+  edit:      { padding: '8px 14px', borderRadius: t.radius.full, border: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '13px', cursor: 'pointer' },
+  delete:    { padding: '8px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', fontSize: '13px', cursor: 'pointer' },
 }
 
 const fStyles = {
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: '#666' },
-  input: { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
+  input: { padding: '9px 12px', borderRadius: t.radius.full, border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff' },
 }
 
 // ── EMPTY STATE ───────────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ function EmptyState({ onAdd }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #f0f0eb' }}>
       <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, #7C5CBF, #6B8F71)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', marginBottom: '20px' }}>🎪</div>
-      <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 8px', fontFamily: 'Syne, sans-serif' }}>No events yet</h3>
+      <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 8px', fontFamily: t.fonts.heading }}>No events yet</h3>
       <p style={{ fontSize: '14px', color: '#8585A0', margin: '0 0 24px', textAlign: 'center', maxWidth: '280px' }}>Add your first event — from inquiry to post-event, everything lives here.</p>
       <button onClick={onAdd} style={btnStyles.primary}>+ Add Event</button>
     </div>
@@ -88,10 +88,10 @@ function EventCard({ event, onClick }) {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: es.color, borderRadius: '14px 14px 0 0' }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <div style={{ flex: 1, marginRight: '12px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 3px', fontFamily: 'Syne, sans-serif', lineHeight: 1.2 }}>{event.title}</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 3px', fontFamily: t.fonts.heading, lineHeight: 1.2 }}>{event.title}</h3>
           {event.clients?.name && <p style={{ fontSize: '12px', color: '#8585A0', margin: 0 }}>{event.clients.name}{event.clients.company ? ` · ${event.clients.company}` : ''}</p>}
         </div>
-        <div style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', backgroundColor: es.bg, color: es.color, whiteSpace: 'nowrap', flexShrink: 0 }}>{es.label}</div>
+        <div style={{ padding: '4px 10px', borderRadius: t.radius.full, fontSize: '11px', fontWeight: '600', backgroundColor: es.bg, color: es.color, whiteSpace: 'nowrap', flexShrink: 0 }}>{es.label}</div>
       </div>
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
         {event.event_date && (
@@ -99,7 +99,7 @@ function EventCard({ event, onClick }) {
             <span style={{ fontSize: '12px' }}>📅</span>
             <span style={{ fontSize: '12px', color: '#3D3D5C', fontWeight: '500' }}>{formatDate(event.event_date)}</span>
             {daysUntil !== null && isUpcoming && daysUntil <= 30 && (
-              <span style={{ fontSize: '11px', color: '#fff', backgroundColor: daysUntil <= 7 ? '#C06B7A' : '#D4874E', borderRadius: '10px', padding: '1px 7px', fontWeight: '600' }}>
+              <span style={{ fontSize: '11px', color: '#fff', backgroundColor: daysUntil <= 7 ? '#C06B7A' : '#D4874E', borderRadius: t.radius.full, padding: '1px 7px', fontWeight: '600' }}>
                 {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil}d`}
               </span>
             )}
@@ -120,7 +120,7 @@ function EventForm({ clients, onSave, onCancel, saving, error, initial }) {
 
   return (
     <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '28px', border: '1px solid #f0f0eb', marginBottom: '24px' }}>
-      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 22px', fontFamily: 'Syne, sans-serif' }}>{initial ? 'Edit Event' : 'New Event'}</h3>
+      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1A1A2E', margin: '0 0 22px', fontFamily: t.fonts.heading }}>{initial ? 'Edit Event' : 'New Event'}</h3>
       {error && <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '20px' }}>
         <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
@@ -158,7 +158,7 @@ function EventForm({ clients, onSave, onCancel, saving, error, initial }) {
         </div>
         <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
           <label style={fStyles.label}>Description / notes</label>
-          <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: 'DM Sans, sans-serif' }} rows={3} placeholder="Event brief, special requirements..." value={form.description} onChange={e => f('description', e.target.value)} />
+          <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={3} placeholder="Event brief, special requirements..." value={form.description} onChange={e => f('description', e.target.value)} />
         </div>
       </div>
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
@@ -176,7 +176,7 @@ function PipelineStepper({ current, onChange }) {
       {EVENT_STATUSES.map(s => {
         const isActive = current === s.key
         return (
-          <button key={s.key} onClick={() => onChange(s.key)} style={{ padding: '7px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: isActive ? '700' : '400', border: `1px solid ${isActive ? s.color : '#f0f0eb'}`, backgroundColor: isActive ? s.bg : '#fafaf8', color: isActive ? s.color : '#8585A0', fontFamily: 'DM Sans, sans-serif', transition: 'all 0.15s' }}>
+          <button key={s.key} onClick={() => onChange(s.key)} style={{ padding: '7px 12px', borderRadius: t.radius.full, cursor: 'pointer', fontSize: '12px', fontWeight: isActive ? '700' : '400', border: `1px solid ${isActive ? s.color : '#f0f0eb'}`, backgroundColor: isActive ? s.bg : '#fafaf8', color: isActive ? s.color : '#8585A0', fontFamily: t.fonts.sans, transition: 'all 0.15s' }}>
             {s.label}
           </button>
         )
@@ -268,7 +268,7 @@ function RunOfShow({ eventId, eventTitle, eventDate, venue, businessSpaceId }) {
   return (
     <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Run of Show</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: t.fonts.heading }}>Run of Show</h3>
         <div style={{ display: 'flex', gap: '8px' }}>
           {items.length > 0 && <>
             <button onClick={handlePrint} style={btnStyles.secondary}>🖨 Print</button>
@@ -329,7 +329,7 @@ function RunOfShow({ eventId, eventTitle, eventDate, venue, businessSpaceId }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: item.notes ? '4px' : '0' }}>
                       <span style={{ fontSize: '12px', fontWeight: '700', color: '#7C5CBF', whiteSpace: 'nowrap' }}>{formatTime(item.start_time)} → {formatTime(item.end_time)}</span>
-                      {item.role_label && <span style={{ fontSize: '11px', fontWeight: '600', backgroundColor: '#F0EBF9', color: '#7C5CBF', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{item.role_label}</span>}
+                      {item.role_label && <span style={{ fontSize: '11px', fontWeight: '600', backgroundColor: '#F0EBF9', color: '#7C5CBF', padding: '2px 8px', borderRadius: t.radius.full, whiteSpace: 'nowrap' }}>{item.role_label}</span>}
                     </div>
                     <div style={{ fontSize: '13px', fontWeight: '600', color: '#1A1A2E' }}>{item.title}</div>
                     {item.notes && <div style={{ fontSize: '12px', color: '#8585A0', marginTop: '3px' }}>{item.notes}</div>}
@@ -395,7 +395,7 @@ function Staffing({ eventId, businessSpaceId }) {
   return (
     <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: staff.length > 0 ? '10px' : '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Staffing</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: t.fonts.heading }}>Staffing</h3>
         <button onClick={() => setShowForm(true)} style={btnStyles.secondary}>+ Add staff</button>
       </div>
 
@@ -406,7 +406,7 @@ function Staffing({ eventId, businessSpaceId }) {
             { label: `${tentative} tentative`, color: '#D4874E', bg: '#FBF0E6' },
             { label: `${needed} needed`, color: '#8585A0', bg: '#F0EBF9' },
           ].map(p => (
-            <span key={p.label} style={{ fontSize: '11px', fontWeight: '600', color: p.color, backgroundColor: p.bg, padding: '3px 10px', borderRadius: '20px' }}>{p.label}</span>
+            <span key={p.label} style={{ fontSize: '11px', fontWeight: '600', color: p.color, backgroundColor: p.bg, padding: '3px 10px', borderRadius: t.radius.full }}>{p.label}</span>
           ))}
         </div>
       )}
@@ -467,7 +467,7 @@ function Staffing({ eventId, businessSpaceId }) {
                 <span style={{ fontSize: '13px', color: s.person_name ? '#3D3D5C' : '#B0B0C0', fontStyle: s.person_name ? 'normal' : 'italic' }}>
                   {s.person_name || 'TBD'}
                 </span>
-                <select value={s.status} onChange={e => updateStatus(s.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                <select value={s.status} onChange={e => updateStatus(s.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: t.radius.full, border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: t.fonts.sans }}>
                   <option value="needed">Needed</option>
                   <option value="tentative">Tentative</option>
                   <option value="confirmed">Confirmed</option>
@@ -529,7 +529,7 @@ function ConceptForm({ event, onSave }) {
 
   const sectionLabel = { fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7C5CBF', marginBottom: '10px' }
   const card = { backgroundColor: '#fff', borderRadius: '14px', padding: '22px 24px', border: '1px solid #f0f0eb', marginBottom: '16px' }
-  const inp = { padding: '9px 12px', borderRadius: '8px', border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff', width: '100%', boxSizing: 'border-box', fontFamily: 'DM Sans, sans-serif' }
+  const inp = { padding: '9px 12px', borderRadius: t.radius.full, border: '1px solid #e0e0e0', fontSize: '13px', color: '#1A1A2E', outline: 'none', backgroundColor: '#fff', width: '100%', boxSizing: 'border-box', fontFamily: t.fonts.sans }
 
   if (!editMode && event.concept_data) {
     const c = event.concept_data
@@ -748,7 +748,7 @@ function CampaignPanel({ projectId, businessSpaceId }) {
               {campaign.platform && <span style={{ fontSize: '11px', color: '#8585A0' }}>🖥 {campaign.platform}</span>}
             </div>
           </div>
-          <button onClick={() => linkCampaign(null)} style={{ alignSelf: 'flex-start', padding: '7px 14px', borderRadius: '8px', border: '1px solid #E8E8E8', background: 'transparent', color: '#EF4444', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+          <button onClick={() => linkCampaign(null)} style={{ alignSelf: 'flex-start', padding: '7px 14px', borderRadius: t.radius.full, border: '1px solid #E8E8E8', background: 'transparent', color: '#EF4444', fontSize: '12px', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
             Unlink Campaign
           </button>
         </div>
@@ -761,7 +761,7 @@ function CampaignPanel({ projectId, businessSpaceId }) {
           </div>
           <div>
             <label style={{ fontSize: '12px', fontWeight: '500', color: '#6B7280', display: 'block', marginBottom: '6px' }}>Link to campaign</label>
-            <select onChange={e => linkCampaign(e.target.value)} defaultValue="" style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #E8E8E8', fontSize: '13px', fontFamily: 'DM Sans, sans-serif', color: '#1A1A2E' }}>
+            <select onChange={e => linkCampaign(e.target.value)} defaultValue="" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: '1px solid #E8E8E8', fontSize: '13px', fontFamily: t.fonts.sans, color: '#1A1A2E' }}>
               <option value="" disabled>Select a campaign</option>
               {allCampaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -877,9 +877,9 @@ function ProposalGenerator({ event, onClose }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', overflowY: 'auto' }}>
-      <div style={{ backgroundColor: '#fff', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '600px', fontFamily: 'DM Sans, sans-serif' }}>
+      <div style={{ backgroundColor: '#fff', borderRadius: '20px', padding: '32px', width: '100%', maxWidth: '600px', fontFamily: t.fonts.sans }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Generate Proposal</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1A1A2E', margin: 0, fontFamily: t.fonts.heading }}>Generate Proposal</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#8585A0' }}>✕</button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -898,11 +898,11 @@ function ProposalGenerator({ event, onClose }) {
           </div>
           <div style={fStyles.field}>
             <label style={fStyles.label}>Cover message / personal note</label>
-            <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: 'DM Sans, sans-serif' }} rows={4} placeholder="Thank you for the opportunity..." value={coverMessage} onChange={e => setCoverMessage(e.target.value)} />
+            <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={4} placeholder="Thank you for the opportunity..." value={coverMessage} onChange={e => setCoverMessage(e.target.value)} />
           </div>
           <div style={fStyles.field}>
             <label style={fStyles.label}>Scope of services</label>
-            <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: 'DM Sans, sans-serif' }} rows={4} placeholder="Full event coordination and management..." value={scopeOfServices} onChange={e => setScopeOfServices(e.target.value)} />
+            <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={4} placeholder="Full event coordination and management..." value={scopeOfServices} onChange={e => setScopeOfServices(e.target.value)} />
           </div>
           <div>
             <label style={{ ...fStyles.label, display: 'block', marginBottom: '8px' }}>Key milestones</label>
@@ -1070,7 +1070,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
 
   if (editMode) {
     return (
-      <div style={{ padding: '32px', fontFamily: 'DM Sans, sans-serif' }}>
+      <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
         <button onClick={() => setEditMode(false)} style={btnStyles.back}>← Back to event</button>
         <div style={{ marginTop: '20px' }}>
           <EventForm clients={clients} onSave={handleEditSave} onCancel={() => setEditMode(false)} saving={saving} error={error}
@@ -1081,7 +1081,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
   }
 
   return (
-    <div style={{ padding: '32px', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
       {showProposal && <ProposalGenerator event={data} onClose={() => { setShowProposal(false); fetchAll() }} />}
 
       {/* Header */}
@@ -1100,10 +1100,10 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div>
-              <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', fontFamily: 'Syne, sans-serif', letterSpacing: '-0.3px' }}>{data.title}</h1>
+              <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', fontFamily: t.fonts.heading, letterSpacing: '-0.3px' }}>{data.title}</h1>
               {data.clients?.name && <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>{data.clients.name}{data.clients.company ? ` · ${data.clients.company}` : ''}</p>}
             </div>
-            <div style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', backgroundColor: es.bg, color: es.color }}>{es.label}</div>
+            <div style={{ padding: '6px 14px', borderRadius: t.radius.full, fontSize: '12px', fontWeight: '700', backgroundColor: es.bg, color: es.color }}>{es.label}</div>
           </div>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
             {[
@@ -1128,18 +1128,18 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
       </div>
 
       {/* Tab bar */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', backgroundColor: '#fff', borderRadius: '10px', padding: '6px', border: '1px solid #f0f0eb' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', backgroundColor: '#fff', borderRadius: t.radius.full, padding: '6px', border: '1px solid #f0f0eb' }}>
         {[
           { key: 'details', label: 'Planning' },
           { key: 'concept', label: '💡 Concept' },
           { key: 'campaign', label: '🎨 Campaign' },
         ].map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-            flex: 1, padding: '8px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+            flex: 1, padding: '8px 16px', borderRadius: t.radius.full, border: 'none', cursor: 'pointer',
             fontSize: '13px', fontWeight: activeTab === tab.key ? '700' : '400',
             backgroundColor: activeTab === tab.key ? '#1A1A2E' : 'transparent',
             color: activeTab === tab.key ? '#fff' : '#8585A0',
-            fontFamily: 'DM Sans, sans-serif', transition: 'all 0.15s',
+            fontFamily: t.fonts.sans, transition: 'all 0.15s',
           }}>
             {tab.label}
           </button>
@@ -1171,7 +1171,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
         )}
         <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Budget</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: t.fonts.heading }}>Budget</h3>
             <button onClick={() => setShowBudgetForm(true)} style={btnStyles.secondary}>+ Add category</button>
           </div>
           {showBudgetForm && (
@@ -1231,7 +1231,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
         </div>
         <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Tasks</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: t.fonts.heading }}>Tasks</h3>
             <span style={{ fontSize: '12px', color: '#8585A0' }}>{doneTasks}/{tasks.length} done</span>
           </div>
           {tasks.length > 0 && <div style={{ height: '4px', backgroundColor: '#f0f0eb', borderRadius: '2px', overflow: 'hidden', marginBottom: '14px' }}><div style={{ height: '100%', width: `${(doneTasks / tasks.length) * 100}%`, backgroundColor: '#7C5CBF', borderRadius: '2px', transition: 'width 0.3s' }} /></div>}
@@ -1253,16 +1253,16 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
         </div>
         <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb', marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Notes</h3>
-            <button onClick={saveNotes} disabled={savingNotes} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', backgroundColor: notesSaved ? '#1D9E75' : '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: t.fonts.heading }}>Notes</h3>
+            <button onClick={saveNotes} disabled={savingNotes} style={{ padding: '6px 14px', borderRadius: t.radius.full, border: 'none', backgroundColor: notesSaved ? '#1D9E75' : '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s' }}>
               {notesSaved ? '✓ Saved' : savingNotes ? 'Saving...' : 'Save notes'}
             </button>
           </div>
-          <textarea style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #f0f0eb', fontSize: '13px', color: '#1A1A2E', outline: 'none', resize: 'vertical', fontFamily: 'DM Sans, sans-serif', lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: '#fafaf8' }} rows={5} placeholder="Internal notes, client preferences, special requirements..." value={notes} onChange={e => setNotes(e.target.value)} />
+          <textarea style={{ width: '100%', padding: '12px', borderRadius: t.radius.full, border: '1px solid #f0f0eb', fontSize: '13px', color: '#1A1A2E', outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: '#fafaf8' }} rows={5} placeholder="Internal notes, client preferences, special requirements..." value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
         <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: 'Syne, sans-serif' }}>Documents</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1A1A2E', margin: 0, fontFamily: t.fonts.heading }}>Documents</h3>
             <label style={{ ...btnStyles.primary, display: 'inline-block', cursor: 'pointer' }}>
               {uploading ? 'Uploading...' : '+ Upload file'}
               <input type="file" onChange={uploadDocument} style={{ display: 'none' }} />
@@ -1346,19 +1346,19 @@ export default function MyEvents({ businessSpaceId, userRole, session }) {
   }
 
   return (
-    <div style={{ padding: '32px', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ padding: '32px', fontFamily: t.fonts.sans }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#1A1A2E', margin: '0 0 4px', fontFamily: 'Syne, sans-serif' }}>My Events</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#1A1A2E', margin: '0 0 4px', fontFamily: t.fonts.heading }}>My Events</h2>
           <p style={{ fontSize: '13px', color: '#8585A0', margin: 0 }}>{events.length} total · {upcoming.length} upcoming</p>
         </div>
         <button onClick={() => setShowForm(true)} style={btnStyles.primary}>+ Add Event</button>
       </div>
 
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '24px' }}>
-        <button onClick={() => setFilterStatus('all')} style={{ padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', fontWeight: filterStatus === 'all' ? '700' : '400', border: `1px solid ${filterStatus === 'all' ? '#1A1A2E' : '#f0f0eb'}`, backgroundColor: filterStatus === 'all' ? '#1A1A2E' : '#fff', color: filterStatus === 'all' ? '#fff' : '#8585A0' }}>All</button>
+        <button onClick={() => setFilterStatus('all')} style={{ padding: '6px 14px', borderRadius: t.radius.full, cursor: 'pointer', fontSize: '12px', fontWeight: filterStatus === 'all' ? '700' : '400', border: `1px solid ${filterStatus === 'all' ? '#1A1A2E' : '#f0f0eb'}`, backgroundColor: filterStatus === 'all' ? '#1A1A2E' : '#fff', color: filterStatus === 'all' ? '#fff' : '#8585A0' }}>All</button>
         {EVENT_STATUSES.map(s => (
-          <button key={s.key} onClick={() => setFilterStatus(filterStatus === s.key ? 'all' : s.key)} style={{ padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px', fontWeight: filterStatus === s.key ? '700' : '400', border: `1px solid ${filterStatus === s.key ? s.color : '#f0f0eb'}`, backgroundColor: filterStatus === s.key ? s.bg : '#fff', color: filterStatus === s.key ? s.color : '#8585A0' }}>
+          <button key={s.key} onClick={() => setFilterStatus(filterStatus === s.key ? 'all' : s.key)} style={{ padding: '6px 14px', borderRadius: t.radius.full, cursor: 'pointer', fontSize: '12px', fontWeight: filterStatus === s.key ? '700' : '400', border: `1px solid ${filterStatus === s.key ? s.color : '#f0f0eb'}`, backgroundColor: filterStatus === s.key ? s.bg : '#fff', color: filterStatus === s.key ? s.color : '#8585A0' }}>
             {s.label}{events.filter(e => e.event_status === s.key).length > 0 && <span style={{ marginLeft: '5px', opacity: 0.7 }}>{events.filter(e => e.event_status === s.key).length}</span>}
           </button>
         ))}

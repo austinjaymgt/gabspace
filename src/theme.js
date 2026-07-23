@@ -64,10 +64,10 @@ export const theme = {
     gradientDiag: 'var(--gradient-diag)',
   },
 
-  // Typography — Quicksand for display/headings (rounded, geometric warmth),
-  // Manrope for body/UI text (density + readability at small sizes).
+  // Typography — Space Grotesk for display/headings, Manrope for body/UI
+  // text (density + readability at small sizes).
   fonts: {
-    heading: '"Quicksand", sans-serif',
+    heading: '"Space Grotesk", sans-serif',
     sans: '"Manrope", -apple-system, BlinkMacSystemFont, sans-serif',
   },
 

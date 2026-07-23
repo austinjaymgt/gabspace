@@ -125,7 +125,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
     }}>
       <div style={{
         background: t.colors.bgCard,
-        borderRadius: t.radius.lg,
+        borderRadius: t.radius.card,
         padding: "32px", width: "420px", maxWidth: "90vw",
         boxShadow: t.shadows.lg,
       }}>
@@ -180,7 +180,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
                   style={{
                     display: "flex", alignItems: "center", gap: "12px",
                     padding: "12px",
-                    borderRadius: t.radius.md,
+                    borderRadius: t.radius.full,
                     marginBottom: "8px",
                     cursor: "pointer",
                     background: done ? t.colors.successLight : t.colors.bg,
@@ -227,7 +227,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
             width: "100%", padding: "12px",
             background: allDone ? t.colors.primary : t.colors.border,
             color: "#fff", border: "none",
-            borderRadius: t.radius.md,
+            borderRadius: t.radius.full,
             fontSize: t.fontSizes.md,
             fontWeight: "600",
             cursor: allDone ? "pointer" : "not-allowed",

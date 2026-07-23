@@ -22,7 +22,7 @@ function BrandMark({ size = 32 }) {
     <div style={{
       width: `${size}px`,
       height: `${size}px`,
-      background: 'linear-gradient(135deg, #7C5CBF, #6B8F71)',
+      background: `linear-gradient(135deg, ${t.colors.primary}, #6B8F71)`,
       borderRadius: `${size * 0.25}px`,
       display: 'flex',
       alignItems: 'center',
@@ -483,7 +483,7 @@ const styles = {
   },
   welcomeCard: {
     backgroundColor: t.colors.bgCard,
-    borderRadius: t.radius.xl,
+    borderRadius: t.radius.card,
     padding: '28px',
     border: `1px solid ${t.colors.border}`,
     display: 'flex',
@@ -532,7 +532,7 @@ const styles = {
   },
   projectCard: {
     backgroundColor: t.colors.bgCard,
-    borderRadius: t.radius.lg,
+    borderRadius: t.radius.card,
     padding: '20px',
     border: `1px solid ${t.colors.border}`,
   },
@@ -592,7 +592,7 @@ const styles = {
   },
   updateCard: {
     backgroundColor: t.colors.bgCard,
-    borderRadius: t.radius.lg,
+    borderRadius: t.radius.card,
     padding: '20px',
     border: `1px solid ${t.colors.border}`,
   },
@@ -710,7 +710,7 @@ const styles = {
   },
   commentInput: {
     padding: '8px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base,
     outline: 'none',
@@ -719,7 +719,7 @@ const styles = {
   },
   commentTextarea: {
     padding: '8px 12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.base,
     outline: 'none',
@@ -734,7 +734,7 @@ const styles = {
   },
   commentCancelBtn: {
     padding: '7px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,
@@ -744,7 +744,7 @@ const styles = {
   },
   commentSubmitBtn: {
     padding: '7px 14px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: 'none',
     backgroundColor: t.colors.primary,
     color: '#fff',
@@ -765,7 +765,7 @@ const styles = {
   loadMoreBtn: {
     width: '100%',
     padding: '12px',
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     border: `1px solid ${t.colors.border}`,
     backgroundColor: t.colors.bgCard,
     color: t.colors.textSecondary,

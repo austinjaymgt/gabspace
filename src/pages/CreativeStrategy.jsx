@@ -190,28 +190,28 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Campaign Name *</label>
-                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Spring Product Launch Campaign" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Spring Product Launch Campaign" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Overall Goal</label>
-                <select value={form.overall_goal} onChange={e => setForm(f => ({ ...f, overall_goal: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+                <select value={form.overall_goal} onChange={e => setForm(f => ({ ...f, overall_goal: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   <option value="">Select goal</option>
                   {GOAL_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Status</label>
-                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
                   {STATUS_OPTIONS.map(s => <option key={s} value={s}>{statusStyles[s].label}</option>)}
                 </select>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Description</label>
-                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What is this campaign about?" rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What is this campaign about?" rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Strategy Notes</label>
-                <textarea value={form.strategy_notes} onChange={e => setForm(f => ({ ...f, strategy_notes: e.target.value }))} placeholder="Creative direction, key messages, brand goals, target audience..." rows={3} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.strategy_notes} onChange={e => setForm(f => ({ ...f, strategy_notes: e.target.value }))} placeholder="Creative direction, key messages, brand goals, target audience..." rows={3} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>
@@ -222,11 +222,11 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Start Date</label>
-                <input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
+                <input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>End Date</label>
-                <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
+                <input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Budget</label>
@@ -249,11 +249,11 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Channel</label>
-                <input value={form.channel} onChange={e => setForm(f => ({ ...f, channel: e.target.value }))} placeholder="e.g. Social, Email, OOH, IRL" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.channel} onChange={e => setForm(f => ({ ...f, channel: e.target.value }))} placeholder="e.g. Social, Email, OOH, IRL" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Platform</label>
-                <input value={form.platform} onChange={e => setForm(f => ({ ...f, platform: e.target.value }))} placeholder="e.g. Instagram, TikTok, YouTube" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <input value={form.platform} onChange={e => setForm(f => ({ ...f, platform: e.target.value }))} placeholder="e.g. Instagram, TikTok, YouTube" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>
@@ -261,7 +261,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
           {/* Event linkage */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Linked Event</div>
-            <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
+            <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
               <option value="">No event linked</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
             </select>
@@ -274,10 +274,10 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '10px', paddingBottom: '40px' }}>
-            <button onClick={saveCampaign} style={{ padding: '11px 28px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={saveCampaign} style={{ padding: '11px 28px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               {editingCampaign ? 'Save Changes' : 'Create Campaign'}
             </button>
-            <button onClick={resetForm} style={{ padding: '11px 20px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={resetForm} style={{ padding: '11px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               Cancel
             </button>
           </div>
@@ -297,7 +297,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
           <h1 style={{ fontFamily: t.fonts.heading, fontSize: '28px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>Creative Strategy</h1>
         </div>
         {isCreativeOrDirector && (
-          <button onClick={startNew} style={{ padding: '9px 18px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+          <button onClick={startNew} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
             + New Campaign
           </button>
         )}
@@ -305,19 +305,19 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))} style={{ padding: '7px 12px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
+        <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))} style={{ padding: '7px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
           {[CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1].map(y => <option key={y} value={y}>{y}</option>)}
         </select>
-        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px' }}>
+        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px' }}>
           {['all', ...QUARTERS].map(q => (
-            <button key={q} onClick={() => setFilterQuarter(q)} style={{ padding: '5px 14px', borderRadius: t.radius.sm, border: 'none', background: filterQuarter === q ? t.colors.bgCard : 'transparent', color: filterQuarter === q ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterQuarter === q ? '600' : '400', boxShadow: filterQuarter === q ? t.shadows.sm : 'none' }}>
+            <button key={q} onClick={() => setFilterQuarter(q)} style={{ padding: '5px 14px', borderRadius: t.radius.full, border: 'none', background: filterQuarter === q ? t.colors.bgCard : 'transparent', color: filterQuarter === q ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterQuarter === q ? '600' : '400', boxShadow: filterQuarter === q ? t.shadows.sm : 'none' }}>
               {q === 'all' ? 'All' : q}
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.md, padding: '4px' }}>
+        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px' }}>
           {['all', ...STATUS_OPTIONS].map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '5px 14px', borderRadius: t.radius.sm, border: 'none', background: filterStatus === s ? t.colors.bgCard : 'transparent', color: filterStatus === s ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterStatus === s ? '600' : '400', boxShadow: filterStatus === s ? t.shadows.sm : 'none' }}>
+            <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '5px 14px', borderRadius: t.radius.full, border: 'none', background: filterStatus === s ? t.colors.bgCard : 'transparent', color: filterStatus === s ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer', fontWeight: filterStatus === s ? '600' : '400', boxShadow: filterStatus === s ? t.shadows.sm : 'none' }}>
               {s === 'all' ? 'All' : statusStyles[s]?.label}
             </button>
           ))}
@@ -347,7 +347,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
           <div style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' }}>No campaigns yet</div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginBottom: '16px' }}>Create one to start shaping your creative strategy.</div>
           {isCreativeOrDirector && (
-            <button onClick={startNew} style={{ padding: '10px 24px', borderRadius: t.radius.md, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button onClick={startNew} style={{ padding: '10px 24px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               New Campaign
             </button>
           )}
@@ -451,7 +451,7 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
                 <select
                     onChange={e => { if (e.target.value) onLinkEvent(campaign.id, e.target.value) }}
                     value=""
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: t.radius.md, border: `1px dashed ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textTertiary, background: 'transparent', cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '7px 10px', borderRadius: t.radius.full, border: `1px dashed ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textTertiary, background: 'transparent', cursor: 'pointer' }}
           >
                     <option value="" disabled>+ Link to an event</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
@@ -464,11 +464,11 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
             {/* Actions */}
             {isCreativeOrDirector && (
               <div style={{ display: 'flex', gap: '6px', paddingTop: '4px' }}>
-                <select value={campaign.status} onChange={e => onStatusChange(campaign.id, e.target.value)} style={{ flex: 1, padding: '6px 8px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
+                <select value={campaign.status} onChange={e => onStatusChange(campaign.id, e.target.value)} style={{ flex: 1, padding: '6px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
                   {Object.entries(statusStyles).map(([val, st]) => <option key={val} value={val}>{st.label}</option>)}
                 </select>
-                <button onClick={() => onEdit(campaign)} style={{ padding: '6px 12px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
-                <button onClick={() => onDelete(campaign.id)} style={{ padding: '6px 10px', borderRadius: t.radius.sm, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
+                <button onClick={() => onEdit(campaign)} style={{ padding: '6px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
+                <button onClick={() => onDelete(campaign.id)} style={{ padding: '6px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
               </div>
             )}
           </div>

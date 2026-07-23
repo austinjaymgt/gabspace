@@ -38,20 +38,20 @@ function ConceptSection({ label, children }) {
 }
 
 const s = {
-  card: { backgroundColor: t.colors.bgCard, borderRadius: '12px', border: `0.5px solid ${t.colors.border}`, padding: '22px 24px', marginBottom: '16px' },
+  card: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, border: `0.5px solid ${t.colors.border}`, padding: '22px 24px', marginBottom: '16px' },
   sectionLabel: { fontSize: '11px', fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '12px' },
   grid2: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px', marginBottom: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
-  input: { fontFamily: 'inherit', fontSize: '14px', color: t.colors.textPrimary, background: t.colors.bgHover, border: `0.5px solid ${t.colors.border}`, borderRadius: '8px', padding: '10px 12px', outline: 'none', width: '100%', boxSizing: 'border-box' },
-  chip: { fontSize: '12px', fontWeight: '500', padding: '6px 14px', borderRadius: '100px', border: '0.5px solid', cursor: 'pointer', fontFamily: 'inherit' },
-  primaryBtn: { fontFamily: 'inherit', fontSize: '14px', fontWeight: '500', background: '#1A1A2E', color: '#fff', border: 'none', borderRadius: '100px', padding: '13px 24px', cursor: 'pointer' },
-  secondaryBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: t.colors.bgCard, color: t.colors.textSecondary, border: `0.5px solid ${t.colors.border}`, borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
-  promoteBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#7C5CBF', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
-  editBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#D4874E', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
-  cancelBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#8585A0', color: '#fff', border: 'none', borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
-  generateBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: t.colors.bgCard, color: t.colors.textSecondary, border: `0.5px solid ${t.colors.border}`, borderRadius: '100px', padding: '8px 16px', cursor: 'pointer' },
-  deleteBtn: { fontFamily: 'inherit', fontSize: '12px', background: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'none', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer' },
+  input: { fontFamily: 'inherit', fontSize: '14px', color: t.colors.textPrimary, background: t.colors.bgHover, border: `0.5px solid ${t.colors.border}`, borderRadius: t.radius.full, padding: '10px 12px', outline: 'none', width: '100%', boxSizing: 'border-box' },
+  chip: { fontSize: '12px', fontWeight: '500', padding: '6px 14px', borderRadius: t.radius.full, border: '0.5px solid', cursor: 'pointer', fontFamily: 'inherit' },
+  primaryBtn: { fontFamily: 'inherit', fontSize: '14px', fontWeight: '500', background: t.colors.primary, color: '#fff', border: 'none', borderRadius: t.radius.full, padding: '13px 24px', cursor: 'pointer' },
+  secondaryBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: t.colors.bgCard, color: t.colors.textSecondary, border: `0.5px solid ${t.colors.border}`, borderRadius: t.radius.full, padding: '8px 16px', cursor: 'pointer' },
+  promoteBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#7C5CBF', color: '#fff', border: 'none', borderRadius: t.radius.full, padding: '8px 16px', cursor: 'pointer' },
+  editBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#D4874E', color: '#fff', border: 'none', borderRadius: t.radius.full, padding: '8px 16px', cursor: 'pointer' },
+  cancelBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: '#8585A0', color: '#fff', border: 'none', borderRadius: t.radius.full, padding: '8px 16px', cursor: 'pointer' },
+  generateBtn: { fontFamily: 'inherit', fontSize: '12px', fontWeight: '500', background: t.colors.bgCard, color: t.colors.textSecondary, border: `0.5px solid ${t.colors.border}`, borderRadius: t.radius.full, padding: '8px 16px', cursor: 'pointer' },
+  deleteBtn: { fontFamily: 'inherit', fontSize: '12px', background: 'var(--color-danger-light)', color: 'var(--color-danger)', border: 'none', borderRadius: t.radius.full, padding: '8px 12px', cursor: 'pointer' },
   metaPill: { fontSize: '11px', fontWeight: '500', padding: '4px 12px', borderRadius: '100px', border: '0.5px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' },
   divider: { border: 'none', borderTop: '0.5px solid rgba(0,0,0,0.08)', margin: '18px 0' },
   bodyText: { fontSize: '14px', color: '#3D3D5C', lineHeight: '1.65', margin: 0 },
@@ -382,7 +382,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                   {/* Card row */}
                   <div style={{
                     backgroundColor: t.colors.bgCard,
-                    borderRadius: isEditing ? '12px 12px 0 0' : '12px',
+                    borderRadius: isEditing ? `${t.radius.card} ${t.radius.card} 0 0` : t.radius.card,
                     border: `0.5px solid ${t.colors.border}`,
                     borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
                     padding: '18px 20px',
@@ -452,7 +452,7 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no preamble. U
                       border: `0.5px solid ${t.colors.border}`,
                       borderTop: 'none',
                       borderLeft: `3px solid ${isIdea ? '#D4874E' : '#7C5CBF'}`,
-                      borderRadius: '0 0 12px 12px',
+                      borderRadius: `0 0 ${t.radius.card} ${t.radius.card}`,
                       padding: '20px 24px 24px',
                       marginBottom: '10px',
                     }}>

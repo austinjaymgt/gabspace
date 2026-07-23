@@ -9,15 +9,15 @@ const STAFF_STATUSES = {
 }
 
 const btnStyles = {
-  primary: { padding: '9px 18px', borderRadius: '8px', border: 'none', backgroundColor: '#7C5CBF', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' },
-  secondary: { padding: '7px 14px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
-  cancel: { padding: '9px 16px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
+  primary: { padding: '9px 18px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans },
+  secondary: { padding: '7px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', fontWeight: '500', cursor: 'pointer' },
+  cancel: { padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: '13px', cursor: 'pointer' },
 }
 
 const fStyles = {
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '500', color: t.colors.textSecondary },
-  input: { padding: '9px 12px', borderRadius: '8px', border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
+  input: { padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: '13px', color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bgCard },
 }
 
 export default function Staffing({ eventId, businessSpaceId }) {
@@ -72,9 +72,9 @@ export default function Staffing({ eventId, businessSpaceId }) {
   const needed = staff.filter(s => s.status === 'needed').length
 
   return (
-    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: '14px', padding: '24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
+    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '24px', border: `1px solid ${t.colors.borderLight}`, marginBottom: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: staff.length > 0 ? '10px' : '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: 'Syne, sans-serif' }}>Staffing</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading }}>Staffing</h3>
         <button onClick={() => setShowForm(true)} style={btnStyles.secondary}>+ Add staff</button>
       </div>
 
@@ -146,7 +146,7 @@ export default function Staffing({ eventId, businessSpaceId }) {
                 <span style={{ fontSize: '13px', color: s.person_name ? t.colors.textSecondary : t.colors.textTertiary, fontStyle: s.person_name ? 'normal' : 'italic' }}>
                   {s.person_name || 'TBD'}
                 </span>
-                <select value={s.status} onChange={e => updateStatus(s.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                <select value={s.status} onChange={e => updateStatus(s.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: t.radius.full, border: 'none', fontSize: '11px', fontWeight: '600', backgroundColor: st.bg, color: st.color, cursor: 'pointer', fontFamily: t.fonts.sans }}>
                   <option value="needed">Needed</option>
                   <option value="tentative">Tentative</option>
                   <option value="confirmed">Confirmed</option>
