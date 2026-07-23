@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useIsMobile } from './hooks/useMediaQuery'
 import Gabi from './components/Gabi'
-import Orb from './components/Orb'
+import OrbiWidget from './components/OrbiWidget'
 import gabspaceLockup from './assets/gabspace-lockup-dark-bg.svg'
 import SplashScreen from './components/SplashScreen'
 import { supabase } from './supabaseClient'
@@ -696,7 +696,7 @@ function renderPage() {
       </div>
       {isMobile && <MobileTabBar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} businessSpaceId={businessSpaceId} />}
       <div style={{ position: 'fixed', bottom: isMobile ? 72 : 24, right: isMobile ? 12 : 24, zIndex: 999 }}>
-        <Orb size={isMobile ? 52 : 80} />
+        <OrbiWidget businessSpaceId={businessSpaceId} isMobile={isMobile} onNavigate={setCurrentPage} />
       </div>
     </div>
   )

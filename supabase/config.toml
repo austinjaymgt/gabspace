@@ -25,3 +25,8 @@ entrypoint = "./functions/generate-event-concept/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/generate-event-concept/*.html" ]
+
+[functions.orbi-brief]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/orbi-brief/index.ts"
