@@ -246,8 +246,8 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
 
         {!loadingTasks && totalUrgent > 0 && (
           <div style={{ ...s.feedPanel, animation: riseAnim(0.8) }} onClick={e => e.stopPropagation()}>
-            <FeedGroup label="Overdue" color="rgba(224,57,155,1)" tasks={overdueTasks} onComplete={completeTask} />
-            <FeedGroup label="Today" color="rgba(224,57,155,0.65)" tasks={todayTasks} onComplete={completeTask} />
+            <FeedGroup label="Overdue" color="rgba(192,80,110,0.9)" tasks={overdueTasks} onComplete={completeTask} />
+            <FeedGroup label="Today" color="rgba(169,174,187,0.9)" tasks={todayTasks} onComplete={completeTask} />
             <FeedGroup label="This week" color="rgba(244,238,248,0.5)" tasks={weekTasks} onComplete={completeTask} />
           </div>
         )}
@@ -314,7 +314,7 @@ const s = {
     width: '900px',
     height: '900px',
     borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(214,60,201,0.32) 0%, rgba(214,60,201,0) 70%)',
+    background: 'radial-gradient(circle, rgba(169,174,187,0.32) 0%, rgba(169,174,187,0) 70%)',
     pointerEvents: 'none',
   },
   center: {
@@ -369,7 +369,7 @@ const s = {
     fontFamily: '"Inter", sans-serif',
     fontSize: '13px',
     fontWeight: 500,
-    color: 'rgba(214,60,201,0.75)',
+    color: 'rgba(169,174,187,0.75)',
     textAlign: 'center',
     letterSpacing: '0.02em',
     margin: 0,
@@ -440,7 +440,7 @@ const s = {
     width: '15px',
     height: '15px',
     cursor: 'pointer',
-    accentColor: 'rgba(214,60,201,0.85)',
+    accentColor: 'rgba(169,174,187,0.85)',
     flexShrink: 0,
   },
   taskTitle: {
@@ -483,9 +483,9 @@ const s = {
     whiteSpace: 'nowrap',
   },
   chipActive: {
-    borderColor: 'rgba(214,60,201,0.55)',
+    borderColor: 'rgba(169,174,187,0.55)',
     color: 'rgba(244,238,248,0.96)',
-    backgroundColor: 'rgba(214,60,201,0.14)',
+    backgroundColor: 'rgba(169,174,187,0.14)',
   },
   hint: {
     marginTop: '22px',

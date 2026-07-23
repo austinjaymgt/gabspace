@@ -11,6 +11,7 @@ export const brand = {
   bgDeep: '#160814',
   bgPlum: '#2b0f2a',
   accentMagenta: '#e0399b',
+  accentSilver: '#a9aebb',
   orbBlue: '#4fa8e8',
   orbTeal: '#3fd6c8',
   ink: '#f3eaf1',
