@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 import { Icon } from './Icon'
 import { getModules, MODULE_NAV_PATHS } from '../utils/businessModules'
+import { fetchPortalActivity } from '../utils/portalActivity'
 import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
 
   const navItems = [
@@ -86,8 +87,14 @@ function useIsDesktop() {
 
 export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId }) {
   const [expanded, setExpanded] = useState([])
+  const [portalUnread, setPortalUnread] = useState(0)
   const isDesktop = useIsDesktop()
   const items = filterNavItems(getModules(businessSpaceId))
+
+  useEffect(() => {
+    if (!businessSpaceId) return
+    fetchPortalActivity(businessSpaceId).then(({ total }) => setPortalUnread(total))
+  }, [businessSpaceId])
 
   function toggleExpand(label) {
     setExpanded(prev =>
@@ -224,12 +231,20 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
                   }
                 }}
               >
-                <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, position: 'relative' }}>
                   <Icon name={item.icon} size="sm" />
+                  {collapsed && item.path === 'client-portal-manager' && portalUnread > 0 && (
+                    <span style={{ position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: t.radius.full, backgroundColor: t.colors.primary }} />
+                  )}
                 </span>
                 {!collapsed && (
                   <>
                     <span style={{ flex: 1 }}>{item.label}</span>
+                    {item.path === 'client-portal-manager' && portalUnread > 0 && (
+                      <span style={{ background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: 700, borderRadius: t.radius.full, minWidth: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>
+                        {portalUnread}
+                      </span>
+                    )}
                     {item.children && (
                       <span style={{ display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.25)' }}>
                         <Icon name={expanded.includes(item.label) ? 'expand' : 'collapse'} size="sm" />

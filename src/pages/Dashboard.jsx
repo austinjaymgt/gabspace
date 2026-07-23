@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t, taskStatusConfig } from '../theme'
 import { Icon } from '../components/Icon'
 import { quarterFromDate } from '../utils/dates'
+import { fetchPortalActivity } from '../utils/portalActivity'
 
 function fmtMoney(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
@@ -260,6 +261,9 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   // Budget (directors only)
   const [budgetSummary, setBudgetSummary] = useState(null)
 
+  // Portal activity
+  const [portalUnread, setPortalUnread] = useState(0)
+
   useEffect(() => {
     fetchSettings()
     fetchProjectCounts()
@@ -267,9 +271,15 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     fetchTasks()
     fetchSparkIdeas()
     fetchGoals()
+    fetchPortalUnread()
     if (isDirector) fetchBudgetSummary()
     else fetchContent()
   }, [businessSpaceId, isDirector])
+
+  async function fetchPortalUnread() {
+    const { total } = await fetchPortalActivity(businessSpaceId)
+    setPortalUnread(total)
+  }
 
   function getGreeting() {
     const hour = new Date().getHours()
@@ -612,6 +622,21 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
                   </div>
                 )
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Portal Activity */}
+        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
+          <SectionHeader label="Portal Activity" onViewAll={() => onNavigate('client-portal-manager')} viewAllColor={t.colors.primary} />
+          {portalUnread === 0 ? (
+            <div style={{ padding: '20px 0', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>No new activity</div>
+          ) : (
+            <div style={{ padding: '20px 0', textAlign: 'center' }}>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: t.colors.primary, fontFamily: t.fonts.heading }}>{portalUnread}</div>
+              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginTop: '4px' }}>
+                unread comment{portalUnread === 1 ? '' : 's'} & reactions from clients
+              </div>
             </div>
           )}
         </div>

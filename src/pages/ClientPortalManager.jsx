@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { fetchPortalActivity } from '../utils/portalActivity'
 
 const STATUS_COLORS = {
   draft:          { bg: t.colors.bgHover,      color: t.colors.textSecondary, label: 'Draft' },
@@ -91,6 +92,8 @@ export default function ClientPortalManager({ businessSpaceId, session }) {
   async function init() {
     setLoading(true)
     await Promise.all([fetchPortals(), fetchClients()])
+    const { byPortalProject } = await fetchPortalActivity(businessSpaceId)
+    setUnreadCounts(byPortalProject)
     setLoading(false)
   }
 
@@ -102,52 +105,6 @@ export default function ClientPortalManager({ businessSpaceId, session }) {
       .order('created_at', { ascending: false })
     setPortals(data || [])
     return data || []
-  }
-
-  async function fetchActivityForPortal(portal) {
-    const pps = portal.portal_projects || []
-    if (!pps.length) return
-
-    // Collect all project ids
-    const projectIds = pps.map(pp => pp.project_id)
-
-    // Fetch all deliverables for these projects
-    const { data: delivs } = await supabase
-      .from('deliverables')
-      .select('id, project_id')
-      .in('project_id', projectIds)
-
-    if (!delivs?.length) return
-
-    const delivIds = delivs.map(d => d.id)
-    const delivToProject = Object.fromEntries(delivs.map(d => [d.id, d.project_id]))
-
-    // Fetch all client comments for those deliverables
-    const { data: cmts } = await supabase
-      .from('deliverable_comments')
-      .select('deliverable_id, created_at, author_type')
-      .in('deliverable_id', delivIds)
-      .eq('author_type', 'client')
-
-    if (!cmts?.length) return
-
-    // Map project → portal_project for staff_last_viewed lookup
-    const projectToPP = Object.fromEntries(pps.map(pp => [pp.project_id, pp]))
-
-    // Count unread per portal_project
-    const counts = {}
-    for (const cmt of cmts) {
-      const projectId = delivToProject[cmt.deliverable_id]
-      const pp = projectToPP[projectId]
-      if (!pp) continue
-      const lastViewed = pp.staff_last_viewed ? new Date(pp.staff_last_viewed) : null
-      const isUnread = !lastViewed || new Date(cmt.created_at) > lastViewed
-      if (isUnread) {
-        counts[pp.id] = (counts[pp.id] || 0) + 1
-      }
-    }
-
-    setUnreadCounts(prev => ({ ...prev, ...counts }))
   }
 
   async function fetchClients() {
@@ -375,7 +332,6 @@ export default function ClientPortalManager({ businessSpaceId, session }) {
                   setExpandedDeliv(null)
                   if (next) {
                     await fetchClientProjects(portal.client_id)
-                    await fetchActivityForPortal(portal)
                   }
                 }}
               >
