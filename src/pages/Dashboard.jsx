@@ -227,7 +227,7 @@ function BudgetQuarterWidget({ summary, onNavigate }) {
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
-export default function Dashboard({ session, businessSpaceId, userRole, onNavigate }) {
+export default function Dashboard({ session, businessSpaceId, userRole, onNavigate, portalActivityVersion }) {
   const isDirector = ['owner', 'admin'].includes(userRole)
 
   const [settings, setSettings] = useState(null)
@@ -271,10 +271,14 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     fetchTasks()
     fetchSparkIdeas()
     fetchGoals()
-    fetchPortalUnread()
     if (isDirector) fetchBudgetSummary()
     else fetchContent()
   }, [businessSpaceId, isDirector])
+
+  useEffect(() => {
+    if (!businessSpaceId) return
+    fetchPortalUnread()
+  }, [businessSpaceId, portalActivityVersion])
 
   async function fetchPortalUnread() {
     const { total } = await fetchPortalActivity(businessSpaceId)

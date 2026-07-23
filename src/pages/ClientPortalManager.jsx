@@ -55,7 +55,7 @@ function timeAgo(dateStr) {
   return `${d}d ago`
 }
 
-export default function ClientPortalManager({ businessSpaceId, session }) {
+export default function ClientPortalManager({ businessSpaceId, session, onPortalActivityChange }) {
   const [portals, setPortals] = useState([])
   const [clients, setClients] = useState([])
   const [projectsByClient, setProjectsByClient] = useState({})
@@ -172,6 +172,7 @@ export default function ClientPortalManager({ businessSpaceId, session }) {
         pp.id === portalProjectId ? { ...pp, staff_last_viewed: now } : pp
       )
     })))
+    onPortalActivityChange?.()
   }
 
   async function createPortal() {

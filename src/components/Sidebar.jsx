@@ -85,7 +85,7 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId }) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId, portalActivityVersion }) {
   const [expanded, setExpanded] = useState([])
   const [portalUnread, setPortalUnread] = useState(0)
   const isDesktop = useIsDesktop()
@@ -94,7 +94,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
   useEffect(() => {
     if (!businessSpaceId) return
     fetchPortalActivity(businessSpaceId).then(({ total }) => setPortalUnread(total))
-  }, [businessSpaceId])
+  }, [businessSpaceId, portalActivityVersion])
 
   function toggleExpand(label) {
     setExpanded(prev =>

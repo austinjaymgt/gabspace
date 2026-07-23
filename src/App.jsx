@@ -61,6 +61,7 @@ export default function App() {
   const [resetSent, setResetSent] = useState(false)
   const [businessSpaceId, setBusinessSpaceId] = useState(null)
   const [businessIdentityVersion, setBusinessIdentityVersion] = useState(0)
+  const [portalActivityVersion, setPortalActivityVersion] = useState(0)
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
 const [showBetaWelcome, setShowBetaWelcome] = useState(false)
@@ -345,7 +346,11 @@ const WELCOME_SPLASH_MS = 2600
     setBusinessIdentityVersion(v => v + 1)
   }
 
-const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange: bumpBusinessIdentityVersion, onArchiveBusiness: handleArchiveBusinessSpace }
+  function bumpPortalActivity() {
+    setPortalActivityVersion(v => v + 1)
+  }
+
+const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange: bumpBusinessIdentityVersion, onArchiveBusiness: handleArchiveBusinessSpace, portalActivityVersion, onPortalActivityChange: bumpPortalActivity }
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
   const isStaff = ['owner', 'admin', 'member'].includes(userRole)
   const isClientOnly = userRole === 'client'
@@ -360,10 +365,6 @@ const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange
   }
 
 function renderPage() {
-  if (isClientOnly && currentPage !== 'client-portal') {
-    return <ClientPortal {...pageProps} />
-  }
-
   switch (currentPage) {
       case 'dashboard':
         return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
@@ -373,9 +374,6 @@ function renderPage() {
         return isStaff ? <AllClients {...pageProps} /> : <AccessDenied />
       case 'resources':
   return <Resources {...pageProps} />
-  
-      case 'client-portal':
-        return <ClientPortal {...pageProps} />
 
       case 'projects':
         return isStaff ? <Projects {...pageProps} /> : <AccessDenied />
@@ -687,7 +685,7 @@ function renderPage() {
 ) */}
 
       {overlays}
-{!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? '60px' : 0 }}>
+{!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? '60px' : 0 }}>
         <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
