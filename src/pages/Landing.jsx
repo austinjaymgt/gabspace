@@ -53,7 +53,7 @@ const FEATURES = [
 const STEPS = [
   { n: '01', label: 'Apply', title: 'Request access', body: 'Submit a short request below. We review every application and prioritize creatives who are actively managing clients and projects.' },
   { n: '02', label: 'Onboard', title: 'Get set up in minutes', body: "We'll walk you through a quick onboarding checklist. No complicated setup — you'll be managing your first client the same day." },
-  { n: '03', label: 'Use it', title: 'Run your business', body: "Use Gabspace for 4–6 weeks the way you'd use any real tool. Track clients, log revenue, update your portal, check your dashboard." },
+  { n: '03', label: 'Use it', title: 'Run your business', body: "Use gabspace for 4–6 weeks the way you'd use any real tool. Track clients, log revenue, update your portal, check your dashboard." },
   { n: '04', label: 'Share', title: 'Give us feedback', body: "A quick 20-minute call at the end. What worked? What didn't? What would you pay for? Your input directly shapes what gets built next." },
 ]
 
@@ -145,7 +145,7 @@ export default function Landing() {
       <header style={{ position: 'sticky', top: 0, zIndex: 20, background: c.bg, borderBottom: `1px solid ${c.borderLight}` }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={gabspaceWordmark} alt="Gabspace" style={{ height: 26, width: 'auto' }} />
+            <img src={gabspaceWordmark} alt="gabspace" style={{ height: 26, width: 'auto' }} />
           </div>
           <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('features') }} href="#features">Features</a>
@@ -298,7 +298,7 @@ export default function Landing() {
             Built around how creatives actually work
           </h2>
           <p style={{ fontSize: 16, color: c.textSecondary, lineHeight: 1.6 }}>
-            Not a generic CRM. Not a complicated suite. Gabspace is structured for the way creative businesses move — from first inquiry to final delivery.
+            Not a generic CRM. Not a complicated suite. gabspace is structured for the way creative businesses move — from first inquiry to final delivery.
           </p>
         </div>
         <div className="gs-features-grid">
@@ -319,7 +319,7 @@ export default function Landing() {
             Not too rigid. Not too complex.
           </h2>
           <p style={{ fontSize: 16, color: c.textSecondary, lineHeight: 1.6 }}>
-            HoneyBook locks you in. Dubsado takes weeks to configure. Gabspace works on day one — and grows with you.
+            HoneyBook locks you in. Dubsado takes weeks to configure. gabspace works on day one — and grows with you.
           </p>
         </div>
         <div className="gs-compare-grid">
@@ -328,7 +328,7 @@ export default function Landing() {
               { ok: true, t: 'Client management' }, { ok: true, t: 'Invoicing & contracts' },
               { ok: false, t: 'Rigid, template-driven' }, { ok: false, t: 'No marketing tracking' }, { ok: false, t: 'Limited flexibility' },
             ]},
-            { name: 'Gabspace', price: 'Free during beta', highlight: true, rows: [
+            { name: 'gabspace', price: 'Free during beta', highlight: true, rows: [
               { ok: true, t: 'Client management' }, { ok: true, t: 'Project + finance tracking' },
               { ok: true, t: 'Works immediately' }, { ok: true, t: 'Marketing & event tracking' }, { ok: true, t: 'Branded client portal' },
             ]},
@@ -367,7 +367,7 @@ export default function Landing() {
             How the beta works
           </h2>
           <p style={{ fontSize: 16, color: c.textSecondary, lineHeight: 1.6 }}>
-            Gabspace is in closed beta. We're working closely with a small group of creative entrepreneurs to make sure the product fits the way you actually run your business — before we open the doors wider.
+            gabspace is in closed beta. We're working closely with a small group of creative entrepreneurs to make sure the product fits the way you actually run your business — before we open the doors wider.
           </p>
         </div>
         <div className="gs-steps-grid">
@@ -426,7 +426,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: c.dark, marginBottom: 6 }}>How did you hear about Gabspace?</label>
+                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: c.dark, marginBottom: 6 }}>How did you hear about gabspace?</label>
                   <select className="gs-select" value={howHeard} onChange={(e) => setHowHeard(e.target.value)}>
                     <option value="">Select one</option>
                     {HOW_HEARD.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -463,7 +463,7 @@ export default function Landing() {
           Your business, finally organized.
         </h2>
         <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.65)', margin: '0 0 28px' }}>
-          Join creatives already using Gabspace to run clearer, calmer businesses.
+          Join creatives already using gabspace to run clearer, calmer businesses.
         </p>
         <button
           onClick={() => scrollToId('apply')}
@@ -476,7 +476,7 @@ export default function Landing() {
       {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer style={{ padding: '48px 32px', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-          <img src={gabspaceWordmark} alt="Gabspace" style={{ height: 22, width: 'auto' }} />
+          <img src={gabspaceWordmark} alt="gabspace" style={{ height: 22, width: 'auto' }} />
         </div>
         <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
           {[
@@ -500,7 +500,7 @@ export default function Landing() {
             </a>
           ))}
         </div>
-        <div style={{ fontSize: 12, color: c.textTertiary }}>© 2026 Gabspace. All rights reserved.</div>
+        <div style={{ fontSize: 12, color: c.textTertiary }}>© 2026 gabspace. All rights reserved.</div>
       </footer>
     </div>
   )

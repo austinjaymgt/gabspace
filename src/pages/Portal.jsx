@@ -281,7 +281,7 @@ export default function Portal() {
                   <div style={styles.updateMeta}>
                     <BrandMark size={32} />
                     <div>
-                      <div style={styles.updateAuthor}>Gabspace Team</div>
+                      <div style={styles.updateAuthor}>gabspace Team</div>
                       <div style={styles.updateDate}>
                         {new Date(update.created_at).toLocaleDateString('en-US', {
                           month: 'long', day: 'numeric', year: 'numeric'

@@ -468,7 +468,7 @@ function renderPage() {
     const isSignup = mode === 'signup'
     return (
       <div className="force-light-theme" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans }}>
-        <img src={gabspaceLockup} alt="Gabspace" style={{ height: '44px', width: 'auto' }} />
+        <img src={gabspaceLockup} alt="gabspace" style={{ height: '44px', width: 'auto' }} />
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
             {isSignup ? 'create your space.' : 'welcome back.'}

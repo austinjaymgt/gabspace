@@ -17,7 +17,7 @@ export default function SplashScreen({ tagline }) {
       <div style={s.orbWrap}>
         <Orb size={110} halo />
       </div>
-      <p style={s.wordmark}>Gabspace</p>
+      <p style={s.wordmark}>gabspace</p>
       {tagline && <p style={s.tagline}>{tagline}</p>}
     </div>
   )

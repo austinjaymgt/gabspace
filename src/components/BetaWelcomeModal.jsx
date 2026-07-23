@@ -85,7 +85,7 @@ export default function BetaWelcomeModal({ session, businessSpaceId, onComplete 
             </div>
             <h2 style={s.heading}>You're in. Welcome to the beta. 🎉</h2>
             <p style={s.body}>
-              We're really glad you're here. Gabspace is still being shaped, and having
+              We're really glad you're here. gabspace is still being shaped, and having
               real creative entrepreneurs using it — and telling us what's working and
               what isn't — is exactly how we make it better.
             </p>
@@ -107,7 +107,7 @@ export default function BetaWelcomeModal({ session, businessSpaceId, onComplete 
           <div style={s.stepBody}>
             <h2 style={s.heading}>Finding your way around</h2>
             <p style={s.body}>
-              Here's a quick tour of how Gabspace is organized — the sidebar, the main
+              Here's a quick tour of how gabspace is organized — the sidebar, the main
               sections, and where to go for clients, projects, tasks, and more.
             </p>
             <div style={s.videoWrap}>
@@ -116,7 +116,7 @@ export default function BetaWelcomeModal({ session, businessSpaceId, onComplete 
                 frameBorder="0"
                 allowFullScreen
                 style={s.video}
-                title="Gabspace navigation overview"
+                title="gabspace navigation overview"
               />
             </div>
             <div style={s.tipRow}>
@@ -176,7 +176,7 @@ export default function BetaWelcomeModal({ session, businessSpaceId, onComplete 
                 {[
                   { icon: 'lock',    text: 'Keep product features, design, and roadmap confidential' },
                   { icon: 'warning', text: 'Don\'t share screenshots or recordings without permission' },
-                  { icon: 'success', text: 'Your feedback belongs to Gabspace — we may use it to improve the product' },
+                  { icon: 'success', text: 'Your feedback belongs to gabspace — we may use it to improve the product' },
                   { icon: 'info',    text: 'This agreement lasts 2 years after the beta ends' },
                 ].map(({ icon, text }) => (
                   <div key={text} style={s.ndaPoint}>
@@ -209,7 +209,7 @@ export default function BetaWelcomeModal({ session, businessSpaceId, onComplete 
               <span style={s.checkboxText}>
                 I have read and agree to the{' '}
                 <a href={NDA_URL} target="_blank" rel="noreferrer" style={s.inlineLink}>
-                  Gabspace Beta NDA
+                  gabspace Beta NDA
                 </a>
                 . I understand this is a pre-release product and agree to keep
                 what I see confidential.

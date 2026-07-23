@@ -92,7 +92,7 @@ export default function BetaAdmin() {
           Beta Applicants
         </h2>
         <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
-          Review and manage access to the Gabspace beta.
+          Review and manage access to the gabspace beta.
         </p>
       </div>
 

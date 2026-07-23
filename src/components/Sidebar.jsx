@@ -126,7 +126,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
       }}>
         {!collapsed && (
           <div>
-            <img src={gabspaceLockup} alt="Gabspace" style={{ height: '26px', width: 'auto', display: 'block' }} />
+            <img src={gabspaceLockup} alt="gabspace" style={{ height: '26px', width: 'auto', display: 'block' }} />
             <div style={{
               fontSize: t.fontSizes.xs,
               color: 'rgba(255,255,255,0.35)',

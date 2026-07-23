@@ -139,7 +139,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
               letterSpacing: "-0.02em",
               lineHeight: 1.2,
             }}>
-              Welcome to Gabspace
+              Welcome to gabspace
             </h2>
             <p style={{
               color: t.colors.textSecondary, margin: 0,

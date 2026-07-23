@@ -392,7 +392,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
           Settings
         </h2>
         <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
-          Customize your Gabspace experience
+          Customize your gabspace experience
         </p>
       </div>
 
