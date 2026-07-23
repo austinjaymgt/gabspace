@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { getModules } from '../utils/businessModules'
+import Orb from '../components/Orb'
 
 function startOfToday() {
   const d = new Date()
@@ -190,21 +191,6 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes home-orb-enter {
-          from { opacity: 0; transform: scale(0.6); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes home-orb-drift {
-          0%   { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; }
-          25%  { border-radius: 58% 42% 40% 60% / 60% 55% 45% 40%; }
-          50%  { border-radius: 50% 50% 35% 65% / 40% 60% 40% 60%; }
-          75%  { border-radius: 40% 60% 55% 45% / 55% 45% 60% 40%; }
-          100% { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; }
-        }
-        @keyframes home-halo-pulse {
-          0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(1); }
-          50%      { opacity: 0.85; transform: translate(-50%, -50%) scale(1.08); }
-        }
       `}</style>
 
       <div style={s.glowTop} />
@@ -212,8 +198,7 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
 
       <div style={s.center}>
         <div style={s.orbWrap}>
-          <div style={s.orbHalo} />
-          <div style={s.orb} />
+          <Orb size={150} urgent={totalUrgent > 0} halo />
         </div>
 
         <div style={{ ...s.greeting, animation: riseAnim(0.3) }}>
@@ -329,31 +314,10 @@ const s = {
   },
   orbWrap: {
     position: 'relative',
-    width: '150px',
-    height: '150px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: '8px',
-  },
-  orbHalo: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: '260px',
-    height: '260px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(183,111,224,0.55) 0%, rgba(107,26,122,0.25) 55%, rgba(107,26,122,0) 75%)',
-    filter: 'blur(28px)',
-    animation: 'home-halo-pulse 3.4s ease-in-out infinite',
-  },
-  orb: {
-    position: 'relative',
-    width: '150px',
-    height: '150px',
-    background: 'linear-gradient(135deg, #6B1A7A 0%, #6EFFFFEB 55%, #b76fe0 100%)',
-    boxShadow: '0 0 60px rgba(190,111,224,0.55), 0 0 120px rgba(107,26,122,0.35)',
-    animation: 'home-orb-enter 0.8s cubic-bezier(0.16,1,0.3,1) backwards, home-orb-drift 7s ease-in-out infinite',
   },
   greeting: {
     fontFamily: '"Montserrat", sans-serif',

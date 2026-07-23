@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useIsMobile } from './hooks/useMediaQuery'
 import Gabi from './components/Gabi'
+import Orb from './components/Orb'
 import gabspaceLockup from './assets/gabspace-lockup-dark-bg.svg'
 import SplashScreen from './components/SplashScreen'
-import gabbyIdleGif from './assets/GABBY2.gif'
-import gabbyCelebrateGif from './assets/Gabby 4 tasks.gif'
 import { supabase } from './supabaseClient'
 import { Icon } from './components/Icon'
 import IntranetManager from './pages/IntranetManager'
@@ -461,7 +460,7 @@ function renderPage() {
 
 // Cold auth check — brands the gap while Supabase confirms the session
   if (!authChecked || !authSplashDone) {
-    return <SplashScreen gif={gabbyIdleGif} tagline="loading your space…" />
+    return <SplashScreen tagline="loading your space…" />
   }
 
 // Login / Signup screen
@@ -625,7 +624,7 @@ function renderPage() {
   }
 
   if (workspaceLoading || showDailySplash) {
-    return <SplashScreen gif={gabbyIdleGif} tagline="welcome back." />
+    return <SplashScreen tagline="welcome back." />
   }
 
   const overlays = (
@@ -645,7 +644,7 @@ function renderPage() {
 )}
 
       {showWelcomeSplash && (
-  <SplashScreen gif={gabbyCelebrateGif} tagline="you're all set — welcome to your space." />
+  <SplashScreen tagline="you're all set — welcome to your space." />
 )}
 
       {(showAddBusinessFlow || addBusinessForced) && (
@@ -697,7 +696,7 @@ function renderPage() {
       </div>
       {isMobile && <MobileTabBar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} businessSpaceId={businessSpaceId} />}
       <div style={{ position: 'fixed', bottom: isMobile ? 72 : 24, right: isMobile ? 12 : 24, zIndex: 999 }}>
-        <Gabi size={isMobile ? 52 : 80} />
+        <Orb size={isMobile ? 52 : 80} />
       </div>
     </div>
   )

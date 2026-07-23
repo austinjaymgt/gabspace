@@ -1,6 +1,7 @@
 import { theme as t } from '../theme'
+import Orb from './Orb'
 
-export default function SplashScreen({ gif, tagline }) {
+export default function SplashScreen({ tagline }) {
   return (
     <div className="force-light-theme" style={s.overlay}>
       <style>{`
@@ -13,8 +14,8 @@ export default function SplashScreen({ gif, tagline }) {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      <div style={s.gifWrap}>
-        <img src={gif} alt="" style={s.gif} />
+      <div style={s.orbWrap}>
+        <Orb size={110} halo />
       </div>
       <p style={s.wordmark}>Gabspace</p>
       {tagline && <p style={s.tagline}>{tagline}</p>}
@@ -36,17 +37,11 @@ const s = {
     fontFamily: t.fonts.sans,
     animation: 'splash-fade-in 0.25s ease',
   },
-  gifWrap: {
-    width: '140px',
+  orbWrap: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     animation: 'splash-rise 0.4s ease',
-  },
-  gif: {
-    width: '100%',
-    height: 'auto',
-    display: 'block',
   },
   wordmark: {
     fontFamily: t.fonts.heading,
