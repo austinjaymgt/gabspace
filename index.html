@@ -18,9 +18,15 @@
     <meta name="description" content="Business management for creative entrepreneurs. Clients, projects, finances — in one calm, flexible space." />
     <meta name="theme-color" content="#2b0f2a" />
 
-    <!-- Favicons -->
+    <!-- Favicons — SVG primary (crisp, theme-independent), PNG fallbacks so
+         the orb mark also renders correctly in bookmark bars / home screens,
+         where SVG support is inconsistent across browsers. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Open Graph (link previews in Slack, iMessage, Discord, etc.) -->
     <meta property="og:type" content="website" />
