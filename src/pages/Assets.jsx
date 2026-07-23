@@ -38,7 +38,7 @@ export default function Assets({ businessSpaceId }) {
     'Other': '📦',
   }
 
-  useEffect(() => { fetchAssets() }, [])
+  useEffect(() => { if (businessSpaceId) fetchAssets() }, [businessSpaceId])
 
   async function fetchAssets() {
     setLoading(true)

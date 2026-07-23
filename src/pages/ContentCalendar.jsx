@@ -52,10 +52,11 @@ export default function ContentCalendar({ businessSpaceId }) {
   }
 
   useEffect(() => {
+    if (!businessSpaceId) return
     fetchItems()
     fetchCampaigns()
     fetchProjects()
-  }, [])
+  }, [businessSpaceId])
 
   async function fetchItems() {
     setLoading(true)

@@ -26,13 +26,14 @@ export default function Resources({ businessSpaceId, session }) {
   const [kindFilter, setKindFilter] = useState('all') // 'all' | 'file' | 'link'
   const [searchQuery, setSearchQuery] = useState('')
 
-  useEffect(() => { fetchResources() }, [])
+  useEffect(() => { if (businessSpaceId) fetchResources() }, [businessSpaceId])
 
   async function fetchResources() {
     setLoading(true)
     const { data, error } = await supabase
       .from('resources')
       .select('*')
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     if (!error) setResources(data)
     setLoading(false)

@@ -29,7 +29,7 @@ export default function Clients({ businessSpaceId }) {
   const [filterStatus, setFilterStatus] = useState('all')
   const isMobile = useIsMobile()
 
-  useEffect(() => { fetchClients() }, [])
+  useEffect(() => { if (businessSpaceId) fetchClients() }, [businessSpaceId])
 
   async function fetchClients() {
     setLoading(true)

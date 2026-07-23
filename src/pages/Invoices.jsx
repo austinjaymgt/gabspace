@@ -98,11 +98,12 @@ export default function Invoices({ businessSpaceId }) {
   const [ruleError, setRuleError] = useState(null)
 
   useEffect(() => {
+    if (!businessSpaceId) return
     fetchInvoices()
     fetchClients()
     fetchProjects()
     fetchRecurringRules()
-  }, [])
+  }, [businessSpaceId])
 
   useEffect(() => {
     if (businessSpaceId) fetchAdditionalIncome()

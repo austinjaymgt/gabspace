@@ -20,9 +20,10 @@ export default function Events({ businessSpaceId }) {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!businessSpaceId) return
     fetchEvents()
     fetchProjects()
-  }, [])
+  }, [businessSpaceId])
 
   async function fetchEvents() {
     setLoading(true)

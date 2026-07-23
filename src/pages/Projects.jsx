@@ -137,9 +137,10 @@ export default function Projects({ businessSpaceId }) {
   })
 
   useEffect(() => {
+    if (!businessSpaceId) return
     fetchRecords()
     fetchClients()
-  }, [])
+  }, [businessSpaceId])
 
   async function fetchRecords() {
     setLoading(true)

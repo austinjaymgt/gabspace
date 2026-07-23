@@ -25,7 +25,7 @@ export default function Vendors({ businessSpaceId }) {
   const [error, setError] = useState(null)
   const [activeTagFilter, setActiveTagFilter] = useState(null)
 
-  useEffect(() => { fetchVendors() }, [])
+  useEffect(() => { if (businessSpaceId) fetchVendors() }, [businessSpaceId])
 
   async function fetchVendors() {
     setLoading(true)

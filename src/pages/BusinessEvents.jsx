@@ -41,7 +41,7 @@ export default function BusinessEvents({ businessSpaceId }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => { fetchEvents() }, [])
+  useEffect(() => { if (businessSpaceId) fetchEvents() }, [businessSpaceId])
 
   async function fetchEvents() {
     setLoading(true)

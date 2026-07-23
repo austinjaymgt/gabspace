@@ -27,7 +27,7 @@ export default function ClientPortal({ businessSpaceId }) {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('last_viewed')
 
-  useEffect(() => { fetchPortals() }, [])
+  useEffect(() => { if (businessSpaceId) fetchPortals() }, [businessSpaceId])
 
   async function fetchPortals() {
     setLoading(true)

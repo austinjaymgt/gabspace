@@ -1300,7 +1300,7 @@ export default function MyEvents({ businessSpaceId, userRole, session }) {
   const [error, setError] = useState(null)
   const [filterStatus, setFilterStatus] = useState('all')
 
-  useEffect(() => { fetchEvents(); fetchClients() }, [])
+  useEffect(() => { if (businessSpaceId) { fetchEvents(); fetchClients() } }, [businessSpaceId])
 
   async function fetchEvents() {
     setLoading(true)
