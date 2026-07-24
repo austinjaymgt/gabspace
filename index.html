@@ -11,12 +11,20 @@
 </script>
 
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- Primary meta -->
     <title>gabspace</title>
     <meta name="description" content="Business management for creative entrepreneurs. Clients, projects, finances — in one calm, flexible space." />
     <meta name="theme-color" content="#2b0f2a" />
+
+    <!-- Home screen install — makes "Add to Home Screen" launch fullscreen
+         (no browser chrome) instead of opening as a regular bookmarked tab.
+         iOS/Android both need these in addition to site.webmanifest below. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="gabspace" />
 
     <!-- Favicons — SVG primary (crisp, theme-independent), PNG fallbacks so
          the orb mark also renders correctly in bookmark bars / home screens,

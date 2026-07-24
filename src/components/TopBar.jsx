@@ -30,8 +30,10 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: isMobile ? '0 12px' : '0 24px',
-      height: '60px',
+      padding: isMobile
+        ? 'env(safe-area-inset-top) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left))'
+        : '0 24px',
+      height: isMobile ? 'calc(60px + env(safe-area-inset-top))' : '60px',
       backgroundColor: t.colors.bgCard,
       borderBottom: `1px solid ${t.colors.borderLight}`,
       fontFamily: t.fonts.sans,
