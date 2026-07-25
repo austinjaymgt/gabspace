@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t, taskStatusConfig } from '../theme'
+import { formatDate } from '../utils/dates'
 import EventHero from '../components/events/EventHero'
 import RunOfShow from '../components/events/RunOfShow'
 import Staffing from '../components/events/Staffing'
@@ -1029,7 +1030,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                           return (
                             <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
                               <span style={{ flex: 1, fontSize: t.fontSizes.base, color: task.status === 'done' ? t.colors.textTertiary : t.colors.textPrimary, textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>{task.title}</span>
-                              {task.due_date && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+                              {task.due_date && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{formatDate(task.due_date, { month: 'short', day: 'numeric' })}</span>}
                               <select
                                 value={task.status}
                                 onChange={e => updateTaskStatus(task, e.target.value)}

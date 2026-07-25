@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import CurrencyInput from '../components/CurrencyInput'
+import { formatDate } from '../utils/dates'
 
 const TYPES = ['Conference', 'Certification', 'Workshop', 'Course', 'Training', 'Webinar', 'Other']
 const STATUS_OPTIONS = ['registered', 'in-progress', 'completed', 'cancelled']
@@ -359,7 +360,7 @@ function ItemRow({ item, onEdit, onDelete, onStatusChange, isDirector }) {
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           {item.provider && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>📍 {item.provider}</span>}
-          {item.start_date && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>📅 {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+          {item.start_date && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>📅 {formatDate(item.start_date, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
           {item.cost > 0 && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>💰 {Number(item.cost).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</span>}
           {isDirector && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>👤 {item.member_name}</span>}
         </div>

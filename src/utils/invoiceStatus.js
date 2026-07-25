@@ -8,7 +8,12 @@ export const statusConfig = {
   overdue: { bg: t.colors.dangerLight,  color: t.colors.danger,       label: 'Overdue' },
 }
 
-export const todayISO = () => new Date().toISOString().slice(0, 10)
+// Local calendar date as YYYY-MM-DD — not new Date().toISOString(), which is
+// UTC and drifts a day off due_date comparisons for anyone not on UTC.
+export const todayISO = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 // due_date/status are the only stored fields — partial and overdue are
 // always derived so they can never drift out of sync with reality.

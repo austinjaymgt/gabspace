@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { theme as t } from '../../theme'
+import { formatDate } from '../../utils/dates'
 
 export default function CampaignPanel({ projectId, businessSpaceId }) {
   const [campaign, setCampaign] = useState(null)
@@ -66,7 +67,7 @@ export default function CampaignPanel({ projectId, businessSpaceId }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
-              {campaign.start_date && <span style={{ fontSize: '11px', color: t.colors.textTertiary }}>📅 {new Date(campaign.start_date).toLocaleDateString()} → {new Date(campaign.end_date).toLocaleDateString()}</span>}
+              {campaign.start_date && <span style={{ fontSize: '11px', color: t.colors.textTertiary }}>📅 {formatDate(campaign.start_date, { year: 'numeric', month: 'numeric', day: 'numeric' })} → {formatDate(campaign.end_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</span>}
               {campaign.budget > 0 && <span style={{ fontSize: '11px', color: t.colors.textTertiary }}>💰 {Number(campaign.budget).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</span>}
               {campaign.channel && <span style={{ fontSize: '11px', color: t.colors.textTertiary }}>📡 {campaign.channel}</span>}
               {campaign.platform && <span style={{ fontSize: '11px', color: t.colors.textTertiary }}>🖥 {campaign.platform}</span>}

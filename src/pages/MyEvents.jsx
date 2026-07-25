@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { parseLocalDate, formatDate as formatDateShared } from '../utils/dates'
+
+function startOfToday() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
 
 const EVENT_STATUSES = [
   { key: 'inquiry',        label: 'Inquiry',       color: '#8585A0', bg: '#F0EBF9' },
@@ -23,13 +30,11 @@ function getEventStatus(key) {
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return dateStr ? formatDateShared(dateStr.slice(0, 10), { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 }
 
 function formatDateLong(dateStr) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+  return dateStr ? formatDateShared(dateStr.slice(0, 10), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : '—'
 }
 
 function formatDateInput(dateStr) {
@@ -77,8 +82,9 @@ function EmptyState({ onAdd }) {
 // ── EVENT CARD ────────────────────────────────────────────────────────────────
 function EventCard({ event, onClick }) {
   const es = getEventStatus(event.event_status)
-  const isUpcoming = event.event_date && new Date(event.event_date) > new Date()
-  const daysUntil = event.event_date ? Math.ceil((new Date(event.event_date) - new Date()) / (1000 * 60 * 60 * 24)) : null
+  const eventDay = event.event_date ? parseLocalDate(event.event_date.slice(0, 10)) : null
+  const isUpcoming = eventDay && eventDay >= startOfToday()
+  const daysUntil = eventDay ? Math.round((eventDay - startOfToday()) / 86400000) : null
 
   return (
     <div onClick={onClick} style={{ backgroundColor: '#fff', borderRadius: '14px', border: '1px solid #f0f0eb', padding: '22px 24px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative', overflow: 'hidden' }}
@@ -742,7 +748,7 @@ function CampaignPanel({ projectId, businessSpaceId }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
-              {campaign.start_date && <span style={{ fontSize: '11px', color: '#8585A0' }}>📅 {new Date(campaign.start_date).toLocaleDateString()} → {new Date(campaign.end_date).toLocaleDateString()}</span>}
+              {campaign.start_date && <span style={{ fontSize: '11px', color: '#8585A0' }}>📅 {formatDateShared(campaign.start_date, { year: 'numeric', month: 'numeric', day: 'numeric' })} → {formatDateShared(campaign.end_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</span>}
               {campaign.budget > 0 && <span style={{ fontSize: '11px', color: '#8585A0' }}>💰 {Number(campaign.budget).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</span>}
               {campaign.channel && <span style={{ fontSize: '11px', color: '#8585A0' }}>📡 {campaign.channel}</span>}
               {campaign.platform && <span style={{ fontSize: '11px', color: '#8585A0' }}>🖥 {campaign.platform}</span>}
@@ -1337,9 +1343,9 @@ export default function MyEvents({ businessSpaceId, userRole, session }) {
   }
 
   const filtered = filterStatus === 'all' ? events : events.filter(e => e.event_status === filterStatus)
-  const now = new Date()
-  const upcoming = filtered.filter(e => !e.event_date || new Date(e.event_date) >= now)
-  const past = filtered.filter(e => e.event_date && new Date(e.event_date) < now)
+  const today0 = startOfToday()
+  const upcoming = filtered.filter(e => !e.event_date || parseLocalDate(e.event_date.slice(0, 10)) >= today0)
+  const past = filtered.filter(e => e.event_date && parseLocalDate(e.event_date.slice(0, 10)) < today0)
 
   if (selectedEvent) {
     return <EventDetail event={selectedEvent} onBack={() => setSelectedEvent(null)} onDelete={handleDelete} clients={clients} onRefresh={fetchEvents} businessSpaceId={businessSpaceId} />

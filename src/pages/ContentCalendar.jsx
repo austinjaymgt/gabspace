@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { formatDate } from '../utils/dates'
 
 
 export default function ContentCalendar({ businessSpaceId }) {
@@ -341,7 +342,7 @@ border: `1px solid ${selectedItem.status === s.value ? s.color : t.colors.border
                   <div style={styles.detailRow}>
                     <span style={styles.detailRowLabel}>📅 Scheduled</span>
                     <span style={styles.detailRowValue}>
-                      {new Date(selectedItem.scheduled_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                      {formatDate(selectedItem.scheduled_date, { weekday: 'long', month: 'long', day: 'numeric' })}
                     </span>
                   </div>
                 )}
@@ -453,7 +454,7 @@ style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans, marginTo
                 <span>
                   <span style={{ ...styles.statusPill, backgroundColor: s.bg, color: s.color }}>{s.label}</span>
                 </span>
-                <span style={styles.tableCell}>{item.scheduled_date ? new Date(item.scheduled_date).toLocaleDateString() : '—'}</span>
+                <span style={styles.tableCell}>{item.scheduled_date ? formatDate(item.scheduled_date, { year: 'numeric', month: 'numeric', day: 'numeric' }) : '—'}</span>
                 <span style={styles.tableCell}>{item.campaigns ? item.campaigns.name : '—'}</span>
                 <span style={styles.tableCell}>→</span>
               </div>
@@ -480,7 +481,7 @@ style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans, marginTo
                       </div>
                     )}
                     <div style={styles.kanbanCardTitle}>{item.title}</div>
-                    {item.scheduled_date && <div style={styles.kanbanDate}>📅 {new Date(item.scheduled_date).toLocaleDateString()}</div>}
+                    {item.scheduled_date && <div style={styles.kanbanDate}>📅 {formatDate(item.scheduled_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</div>}
                     {item.campaigns && <div style={styles.kanbanCampaign}>📣 {item.campaigns.name}</div>}
                   </div>
                 ))}

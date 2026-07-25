@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { formatDate } from '../utils/dates'
 
 function getSessionId() {
   let id = localStorage.getItem('portal_session_id')
@@ -250,7 +251,7 @@ export default function Portal() {
                           <div style={styles.eventName}>{event.name}</div>
                           {event.event_date && (
                             <div style={styles.eventDate}>
-                              {new Date(event.event_date).toLocaleDateString('en-US', {
+                              {formatDate(event.event_date, {
                                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                               })}
                             </div>

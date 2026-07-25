@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { formatDate } from '../utils/dates'
 
 export default function Events({ businessSpaceId }) {
   const [events, setEvents] = useState([])
@@ -111,7 +112,7 @@ export default function Events({ businessSpaceId }) {
               <div style={styles.detailField}>
                 <div style={styles.detailFieldLabel}>Event date</div>
                 <div style={styles.detailFieldValue}>
-                  {new Date(selectedEvent.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  {formatDate(selectedEvent.event_date, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
               </div>
             )}
@@ -270,7 +271,7 @@ export default function Events({ businessSpaceId }) {
                 </span>
                 <span style={styles.tableCell}>
                   {event.event_date
-                    ? new Date(event.event_date).toLocaleDateString()
+                    ? formatDate(event.event_date, { year: 'numeric', month: 'numeric', day: 'numeric' })
                     : '—'}
                 </span>
                 <span style={styles.tableCell}>{event.venue || '—'}</span>

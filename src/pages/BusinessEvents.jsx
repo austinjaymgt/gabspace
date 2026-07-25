@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { formatDate } from '../utils/dates'
 
 const eventTypes = [
   'Networking mixer', 'Trade show', 'Pop-up', 'Workshop',
@@ -298,7 +299,7 @@ export default function BusinessEvents({ businessSpaceId }) {
                 </span>
                 <span style={styles.tableCell}>{event.type || '—'}</span>
                 <span style={styles.tableCell}>
-                  {event.date ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                  {event.date ? formatDate(event.date, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                 </span>
                 <span style={styles.tableCell}>{event.location || '—'}</span>
                 <span style={styles.tableCell}>
@@ -540,7 +541,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                 <div style={{ backgroundColor: t.colors.bg, borderRadius: t.radius.md, padding: '10px 14px' }}>
                   <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px' }}>Date</div>
                   <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
-                    {new Date(data.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    {formatDate(data.date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                   </div>
                 </div>
               )}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { statusConfig, computeDisplayStatus } from '../utils/invoiceStatus'
-import { quarterFromDate, quarterInfoFromDate } from '../utils/dates'
+import { quarterFromDate, quarterInfoFromDate, formatDate } from '../utils/dates'
 import { useIsMobile } from '../hooks/useMediaQuery'
 
 const emptyLineItem = () => ({ description: '', quantity: '1', unit_price: '' })
@@ -592,7 +592,7 @@ export default function Invoices({ businessSpaceId }) {
               <div style={styles.detailField}>
                 <div style={styles.detailFieldLabel}>Due date</div>
                 <div style={styles.detailFieldValue}>
-                  {new Date(selectedInvoice.due_date).toLocaleDateString()}
+                  {formatDate(selectedInvoice.due_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}
                 </div>
               </div>
             )}
@@ -634,7 +634,7 @@ export default function Invoices({ businessSpaceId }) {
                   .sort((a, b) => new Date(b.paid_date) - new Date(a.paid_date))
                   .map(p => (
                     <div key={p.id} style={styles.paymentHistoryRow}>
-                      <span style={styles.tableCell}>{new Date(p.paid_date).toLocaleDateString()}</span>
+                      <span style={styles.tableCell}>{formatDate(p.paid_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</span>
                       <span style={{ ...styles.tableCell, color: t.colors.success, fontWeight: '600' }}>
                         ${parseFloat(p.amount).toLocaleString()}
                       </span>
@@ -889,7 +889,7 @@ export default function Invoices({ businessSpaceId }) {
                       </span>
                     </div>
                     {invoice.due_date && (
-                      <div style={styles.invoiceCardRow}>Due {new Date(invoice.due_date).toLocaleDateString()}</div>
+                      <div style={styles.invoiceCardRow}>Due {formatDate(invoice.due_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</div>
                     )}
                   </div>
                 )
@@ -932,7 +932,7 @@ export default function Invoices({ businessSpaceId }) {
                     </span>
                     <span style={styles.tableCell}>
                       {invoice.due_date
-                        ? new Date(invoice.due_date).toLocaleDateString()
+                        ? formatDate(invoice.due_date, { year: 'numeric', month: 'numeric', day: 'numeric' })
                         : '—'}
                     </span>
                     <span>
@@ -1111,7 +1111,7 @@ export default function Invoices({ businessSpaceId }) {
                   <span style={styles.tableCell}>
                     {FREQUENCY_LABELS[rule.frequency]}{rule.frequency === 'custom' ? ` (${rule.interval_days}d)` : ''}
                   </span>
-                  <span style={styles.tableCell}>{new Date(rule.next_run_date).toLocaleDateString()}</span>
+                  <span style={styles.tableCell}>{formatDate(rule.next_run_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</span>
                   <span style={styles.tableCell}>
                     ${lineItemsTotal(rule.recurring_invoice_rule_line_items || []).toLocaleString()}
                   </span>

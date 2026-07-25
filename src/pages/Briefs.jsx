@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import CurrencyInput from '../components/CurrencyInput'
+import { formatDate } from '../utils/dates'
 
 const STATUS_OPTIONS = ['draft', 'shared', 'approved']
 const statusStyles = {
@@ -268,7 +269,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
   <div class="section">
     <div class="section-label">Event Details</div>
     <div class="grid">
-      ${brief.event_date ? `<div><div class="field-label">Date</div><div class="field-value">${new Date(brief.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div></div>` : ''}
+      ${brief.event_date ? `<div><div class="field-label">Date</div><div class="field-value">${formatDate(brief.event_date, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div></div>` : ''}
       ${brief.venue ? `<div><div class="field-label">Venue</div><div class="field-value">${brief.venue}</div></div>` : ''}
       ${brief.headcount ? `<div><div class="field-label">Headcount</div><div class="field-value">${Number(brief.headcount).toLocaleString()} guests</div></div>` : ''}
       ${proj ? `<div><div class="field-label">Linked Project</div><div class="field-value">${proj.title}</div></div>` : ''}
@@ -534,7 +535,7 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
                   </div>
                   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     {pkg && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>📦 {pkg.name}</span>}
-                    {brief.event_date && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>📅 {new Date(brief.event_date).toLocaleDateString()}</span>}
+                    {brief.event_date && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>📅 {formatDate(brief.event_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</span>}
                     {brief.budget_amount > 0 && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>💰 {fmt(brief.budget_amount)}</span>}
                     {proj && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>🔗 {proj.title}</span>}
                   </div>

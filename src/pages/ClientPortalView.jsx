@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { statusConfig, computeDisplayStatus } from '../utils/invoiceStatus'
+import { formatDate } from '../utils/dates'
 
 const REACTIONS = ['👍', '❤️', '🔥', '🎉']
 
@@ -523,7 +524,7 @@ export default function ClientPortalView() {
                     </div>
                     {inv.due_date && (
                       <div style={{ fontSize: 12, color: '#999', fontFamily: '"Source Sans 3", sans-serif', marginTop: 2 }}>
-                        Due {new Date(inv.due_date).toLocaleDateString()}
+                        Due {formatDate(inv.due_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}
                       </div>
                     )}
                   </div>

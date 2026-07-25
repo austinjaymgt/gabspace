@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t, taskStatusConfig as statusConfig } from '../theme'
+import { formatDate } from '../utils/dates'
 
 const sortOptions = [
   { value: 'default',      label: 'Sort: manual' },
@@ -191,10 +192,10 @@ export default function Tasks({ businessSpaceId }) {
               <span style={styles.metaTag}>📋 {task.projects.title}</span>
             )}
             {task.start_date && (
-              <span style={styles.metaTag}>🗓 Starts {new Date(task.start_date).toLocaleDateString()}</span>
+              <span style={styles.metaTag}>🗓 Starts {formatDate(task.start_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</span>
             )}
             {task.due_date && (
-              <span style={styles.metaTag}>🗓 Due {new Date(task.due_date).toLocaleDateString()}</span>
+              <span style={styles.metaTag}>🗓 Due {formatDate(task.due_date, { year: 'numeric', month: 'numeric', day: 'numeric' })}</span>
             )}
             {task.assigned_to && (
               <span style={styles.metaTag}>👤 {task.assigned_to}</span>
