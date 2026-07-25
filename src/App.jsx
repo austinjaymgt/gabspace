@@ -475,7 +475,14 @@ function renderPage() {
           <form onSubmit={isSignup ? handleSignUp : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
               <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
-                {error}
+                {error.includes('approved for beta access') ? (
+                  <>
+                    This email isn't approved for beta access yet — request access at{' '}
+                    <a href="https://gabspace.io" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', fontWeight: '600', textDecoration: 'underline' }}>
+                      gabspace.io
+                    </a>.
+                  </>
+                ) : error}
               </div>
             )}
 
