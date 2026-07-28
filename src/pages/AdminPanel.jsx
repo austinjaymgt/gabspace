@@ -25,6 +25,7 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true)
   const [savingToggle, setSavingToggle] = useState(false)
   const [savingCap, setSavingCap] = useState(false)
+  const [savingPlanFor, setSavingPlanFor] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => { fetchAll() }, [])
@@ -72,6 +73,18 @@ export default function AdminPanel() {
     if (capError) setError(capError.message)
     else setSettings(prev => ({ ...prev, founding_member_cap: capValue }))
     setSavingCap(false)
+  }
+
+  async function handlePlanChange(userId, newPlan) {
+    setSavingPlanFor(userId)
+    setError(null)
+    const { error: planError } = await supabase.rpc('admin_set_user_plan', {
+      target_user_id: userId,
+      new_plan: newPlan,
+    })
+    if (planError) setError(planError.message)
+    else setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, plan: newPlan } : u))
+    setSavingPlanFor(null)
   }
 
   function exportWaitlist() {
@@ -200,7 +213,16 @@ export default function AdminPanel() {
               <span style={{ color: t.colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</span>
               <span style={{ color: t.colors.textTertiary }}>{new Date(u.created_at).toLocaleDateString()}</span>
               <span style={{ color: u.confirmed ? t.colors.success : t.colors.textTertiary }}>{u.confirmed ? 'Yes' : 'No'}</span>
-              <span style={{ color: t.colors.textTertiary }}>{PLAN_LABELS[u.plan] || u.plan || '—'}</span>
+              <select
+                value={u.plan || ''}
+                onChange={e => handlePlanChange(u.user_id, e.target.value)}
+                disabled={savingPlanFor === u.user_id}
+                style={{ padding: '4px 8px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, fontFamily: t.fonts.sans, backgroundColor: t.colors.bgCard, cursor: savingPlanFor === u.user_id ? 'not-allowed' : 'pointer' }}
+              >
+                {Object.entries(PLAN_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
             </div>
           ))}
         </div>
