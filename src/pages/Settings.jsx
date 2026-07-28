@@ -531,6 +531,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
               style={{ ...inputStyle, cursor: 'pointer', backgroundColor: t.colors.bgCard, maxWidth: '220px' }}
             >
               <option value="free">Free (1 business)</option>
+              <option value="founding">Founders Circle (3 businesses)</option>
               <option value="duo">Duo (2 businesses)</option>
               <option value="studio">Studio (3 businesses)</option>
               <option value="enterprise">Enterprise (uncapped)</option>

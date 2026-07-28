@@ -3,6 +3,8 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import Toggle from '../components/Toggle'
 
+const PLAN_LABELS = { free: 'Free', duo: 'Duo', studio: 'Studio', enterprise: 'Enterprise', founding: 'Founders Circle' }
+
 function downloadCsv(filename, rows) {
   const csv = rows.map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
@@ -198,7 +200,7 @@ export default function AdminPanel() {
               <span style={{ color: t.colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</span>
               <span style={{ color: t.colors.textTertiary }}>{new Date(u.created_at).toLocaleDateString()}</span>
               <span style={{ color: u.confirmed ? t.colors.success : t.colors.textTertiary }}>{u.confirmed ? 'Yes' : 'No'}</span>
-              <span style={{ color: t.colors.textTertiary }}>{u.plan || '—'}</span>
+              <span style={{ color: t.colors.textTertiary }}>{PLAN_LABELS[u.plan] || u.plan || '—'}</span>
             </div>
           ))}
         </div>
