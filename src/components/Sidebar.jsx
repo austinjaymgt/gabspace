@@ -85,11 +85,12 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId, portalActivityVersion }) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId, portalActivityVersion, isPlatformAdmin }) {
   const [expanded, setExpanded] = useState([])
   const [portalUnread, setPortalUnread] = useState(0)
   const isDesktop = useIsDesktop()
   const items = filterNavItems(getModules(businessSpaceId))
+  if (isPlatformAdmin) items.push({ label: 'Admin', icon: 'star', path: 'admin' })
 
   useEffect(() => {
     if (!businessSpaceId) return

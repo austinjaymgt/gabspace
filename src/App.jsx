@@ -13,7 +13,7 @@ import Briefs from './pages/Briefs'
 import Packages from './pages/Packages'
 import Expenses from './pages/Expenses'
 import Snapshot from './pages/Snapshot'
-import BetaAdmin from './pages/BetaAdmin'
+import AdminPanel from './pages/AdminPanel'
 import Sidebar from './components/Sidebar'
 import MobileTabBar from './components/MobileTabBar'
 import TopBar from './components/TopBar'
@@ -39,8 +39,6 @@ import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
 import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
-import BetaWelcomeModal from './components/BetaWelcomeModal'
-import BetaStatusScreen from './components/BetaStatusScreen'
 import AddBusinessFlow from './components/AddBusinessFlow'
 
 export default function App() {
@@ -64,7 +62,8 @@ export default function App() {
   const [portalActivityVersion, setPortalActivityVersion] = useState(0)
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
-const [showBetaWelcome, setShowBetaWelcome] = useState(false)
+const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
+const [signupsOpen, setSignupsOpen] = useState(true)
 const [showAddBusinessFlow, setShowAddBusinessFlow] = useState(false)
 const [addBusinessForced, setAddBusinessForced] = useState(false)
 const [authChecked, setAuthChecked] = useState(false)
@@ -130,17 +129,44 @@ const WELCOME_SPLASH_MS = 2600
     return () => clearTimeout(timer)
   }, [showWelcomeSplash])
 
- // useEffect(() => {
-//   if (!session) return
-//   supabase
-//     .from('user_settings')
-//     .select('onboarding_completed')
-//     .eq('user_id', session.user.id)
-//     .maybeSingle()
-//     .then(({ data }) => {
-//       if (data && !data.onboarding_completed) setShowOnboarding(true)
-//     })
-// }, [session])
+  // Post-confirmation landing spot (emailRedirectTo points signup
+  // confirmations here). Shows the onboarding checklist once, gated on
+  // user_settings.onboarding_completed rather than the path itself, so
+  // revisiting /welcome after finishing doesn't show it again.
+  useEffect(() => {
+    if (!session || window.location.pathname !== '/welcome') return
+    supabase
+      .from('user_settings')
+      .select('onboarding_completed')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && !data.onboarding_completed) setShowOnboarding(true)
+        else window.history.replaceState({}, '', '/')
+      })
+  }, [session])
+
+  // Platform-admin flag — is_platform_admin() server-side is the real
+  // boundary (RLS); this just mirrors it for UI-layer gating.
+  useEffect(() => {
+    if (!session) { setIsPlatformAdmin(false); return }
+    supabase
+      .from('user_settings')
+      .select('is_platform_admin')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => setIsPlatformAdmin(!!data?.is_platform_admin))
+  }, [session])
+
+  // Signup kill switch — checked pre-auth, so the signup form can fall back
+  // to a waitlist capture form when closed.
+  useEffect(() => {
+    supabase
+      .from('platform_settings')
+      .select('signups_open')
+      .single()
+      .then(({ data }) => { if (data) setSignupsOpen(data.signups_open) })
+  }, [])
 
   // Picks a fallback if the given business is archived (e.g. archived by a
   // co-owner in another session) — the active business_space_id should
@@ -182,7 +208,7 @@ const WELCOME_SPLASH_MS = 2600
 
     supabase
       .from('user_profiles')
-.select('business_space_id, role, onboarding_complete')
+.select('business_space_id, role')
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(async ({ data, error }) => {
@@ -198,20 +224,6 @@ const WELCOME_SPLASH_MS = 2600
     setBusinessSpaceId(resolved.businessSpaceId)
     setUserRole(resolved.role)
   }
-
-  // Beta welcome check
-  const { data: betaRow } = await supabase
-    .from('beta_requests')
-.select('status')
-.eq('email', session.user.email)
-    .maybeSingle()
-  if (betaRow?.status === 'approved' && !data.onboarding_complete) {
-  setShowBetaWelcome(true)
-  await supabase
-    .from('user_profiles')
-    .update({ is_beta: true })
-    .eq('user_id', session.user.id)
-}
 
   setWorkspaceLoading(false)
 } else {
@@ -244,15 +256,6 @@ const WELCOME_SPLASH_MS = 2600
     setLoading(true)
     setError(null)
 
-    const { data: betaCheck, error: betaCheckError } = await supabase.functions.invoke('check-beta-access', {
-      body: { email },
-    })
-    if (betaCheckError || !betaCheck?.approved) {
-      setError("This email isn't approved for beta access yet — request access at gabspace.io.")
-      setLoading(false)
-      return
-    }
-
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -260,11 +263,26 @@ const WELCOME_SPLASH_MS = 2600
         data: {
           full_name: fullName,
           workspace_name: workspaceName,
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/welcome`,
       }
     })
     if (error) setError(error.message)
     else setError('Check your email to confirm your account!')
+    setLoading(false)
+  }
+
+  async function handleWaitlistSubmit(e) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    const { error: waitlistError } = await supabase.from('waitlist').insert({ email })
+    if (waitlistError) {
+      setError(waitlistError.message.includes('duplicate') ? "You're already on the waitlist." : waitlistError.message)
+    } else {
+      setError("You're on the list — we'll email you when signups open back up.")
+      setEmail('')
+    }
     setLoading(false)
   }
 
@@ -354,12 +372,6 @@ const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange
   const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const isStaff = ['owner', 'co-owner', 'employee'].includes(userRole)
   const isClientOnly = userRole === 'client'
-  // Beta Admin manages the platform-wide beta waitlist, not this business's
-  // own team — being owner/admin of *some* business isn't enough, since
-  // that'll be true of every tenant once beta opens. Mirrors the
-  // is_platform_admin() check enforced server-side by the beta_requests RLS
-  // policy, so this is UI-layer defense in depth, not the real boundary.
-  const isPlatformAdmin = session?.user?.email === 'mgtostyn@gmail.com'
 
   function AccessDenied() {
     return (
@@ -425,8 +437,8 @@ function renderPage() {
         if (workspaceLoading) return null
         return isOwnerOrAdmin ? <Settings {...pageProps} /> : <AccessDenied />
 
-      case 'beta-admin':
-        return isPlatformAdmin ? <BetaAdmin {...pageProps} /> : <AccessDenied />
+      case 'admin':
+        return isPlatformAdmin ? <AdminPanel {...pageProps} /> : <AccessDenied />
       case 'packages':
         return <Packages {...pageProps} />
       case 'briefs':
@@ -456,12 +468,6 @@ function renderPage() {
     return <ClientPortalView />
   }
 
-// Beta approve/deny confirmation — redirected here from the approve-beta-request
-// edge function, since Supabase sandboxes HTML served directly from *.supabase.co.
-  if (new URLSearchParams(window.location.search).has('beta-status')) {
-    return <BetaStatusScreen />
-  }
-
 // Cold auth check — brands the gap while Supabase confirms the session
   if (!authChecked || !authSplashDone) {
     return <SplashScreen tagline="loading your space…" />
@@ -470,29 +476,23 @@ function renderPage() {
 // Login / Signup screen
   if (!session) {
     const isSignup = mode === 'signup'
+    const showWaitlistForm = isSignup && !signupsOpen
     return (
       <div className="force-light-theme" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans }}>
         <img src={gabspaceLockup} alt="gabspace" style={{ height: '44px', width: 'auto' }} />
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
-            {isSignup ? 'create your space.' : 'welcome back.'}
+            {showWaitlistForm ? "signups are paused — join the waitlist." : isSignup ? 'create your space.' : 'welcome back.'}
           </p>
 
-          <form onSubmit={isSignup ? handleSignUp : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={showWaitlistForm ? handleWaitlistSubmit : (isSignup ? handleSignUp : handleLogin)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
-              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
-                {error.includes('approved for beta access') ? (
-                  <>
-                    This email isn't approved for beta access yet — request access at{' '}
-                    <a href="https://gabspace.io" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', fontWeight: '600', textDecoration: 'underline' }}>
-                      gabspace.io
-                    </a>.
-                  </>
-                ) : error}
+              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') || error.includes('on the list') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') || error.includes('on the list') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
+                {error}
               </div>
             )}
 
-            {isSignup && (
+            {isSignup && !showWaitlistForm && (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Your name</label>
@@ -531,32 +531,36 @@ function renderPage() {
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Password</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans, width: '100%', boxSizing: 'border-box', paddingRight: '44px' }}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder={isSignup ? 'At least 8 characters' : '••••••••'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: t.colors.textTertiary, padding: '2px', lineHeight: 1 }}
-                >
-                  {showPassword ? '🙈' : '👁'}
-                </button>
+            {!showWaitlistForm && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans, width: '100%', boxSizing: 'border-box', paddingRight: '44px' }}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={isSignup ? 'At least 8 characters' : '••••••••'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: t.colors.textTertiary, padding: '2px', lineHeight: 1 }}
+                  >
+                    {showPassword ? '🙈' : '👁'}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               type="submit"
               disabled={loading}
               style={{ padding: '12px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
             >
-              {loading ? (isSignup ? 'Creating account...' : 'Signing in...') : (isSignup ? 'Create account' : 'Sign in')}
+              {showWaitlistForm
+                ? (loading ? 'Joining...' : 'Join waitlist')
+                : loading ? (isSignup ? 'Creating account...' : 'Signing in...') : (isSignup ? 'Create account' : 'Sign in')}
             </button>
 
             {!isSignup && (
@@ -640,17 +644,19 @@ function renderPage() {
 
   const overlays = (
     <>
-      {showBetaWelcome && (
-  <BetaWelcomeModal
-    session={session}
-    businessSpaceId={businessSpaceId}
+      {showOnboarding && (
+  <OnboardingModal
+    userId={session.user.id}
     onComplete={() => {
-      setShowBetaWelcome(false)
+      setShowOnboarding(false)
+      window.history.replaceState({}, '', '/')
       // Onboarding just finished — this is a once-per-user "you've arrived" moment,
       // not the daily splash, so mark today as seen to avoid showing both back to back.
       localStorage.setItem(DAILY_SPLASH_KEY, new Date().toDateString())
       setShowWelcomeSplash(true)
     }}
+    onSkip={() => { setShowOnboarding(false); window.history.replaceState({}, '', '/') }}
+    onNavigate={(page) => { setShowOnboarding(false); window.history.replaceState({}, '', '/'); setCurrentPage(page) }}
   />
 )}
 
@@ -688,17 +694,8 @@ function renderPage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans, display: 'flex' }}>
-      {/* showOnboarding && (
-  <OnboardingModal
-    userId={session.user.id}
-    onComplete={() => setShowOnboarding(false)}
-    onSkip={() => setShowOnboarding(false)}
-    onNavigate={(page) => setCurrentPage(page)}
-  />
-) */}
-
       {overlays}
-{!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? 'calc(60px + env(safe-area-inset-bottom))' : 0 }}>
+{!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} isPlatformAdmin={isPlatformAdmin} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? 'calc(60px + env(safe-area-inset-bottom))' : 0 }}>
         <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
