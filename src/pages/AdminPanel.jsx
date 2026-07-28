@@ -20,7 +20,6 @@ export default function AdminPanel() {
   const [settings, setSettings] = useState(null)
   const [waitlist, setWaitlist] = useState([])
   const [users, setUsers] = useState([])
-  const [foundingCount, setFoundingCount] = useState(0)
   const [capInput, setCapInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [savingToggle, setSavingToggle] = useState(false)
@@ -32,11 +31,10 @@ export default function AdminPanel() {
 
   async function fetchAll() {
     setLoading(true)
-    const [settingsRes, waitlistRes, usersRes, foundingRes] = await Promise.all([
+    const [settingsRes, waitlistRes, usersRes] = await Promise.all([
       supabase.from('platform_settings').select('*').single(),
       supabase.from('waitlist').select('id, email, created_at').order('created_at', { ascending: false }),
       supabase.rpc('admin_list_users'),
-      supabase.from('user_settings').select('id', { count: 'exact', head: true }).eq('plan', 'founding'),
     ])
     if (settingsRes.data) {
       setSettings(settingsRes.data)
@@ -44,7 +42,6 @@ export default function AdminPanel() {
     }
     setWaitlist(waitlistRes.data || [])
     setUsers(usersRes.data || [])
-    setFoundingCount(foundingRes.count || 0)
     setLoading(false)
   }
 
@@ -93,6 +90,8 @@ export default function AdminPanel() {
       [['email', 'captured_at'], ...waitlist.map(w => [w.email, w.created_at])]
     )
   }
+
+  const foundingCount = users.filter(u => u.plan === 'founding').length
 
   const cardStyle = { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }
   const headerStyle = { padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }
@@ -143,7 +142,9 @@ export default function AdminPanel() {
         </div>
         <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-end', gap: '24px', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary }}>{foundingCount}</div>
+            <div style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: settings?.founding_member_cap != null && foundingCount >= settings.founding_member_cap ? t.colors.warning : t.colors.textPrimary }}>
+              {foundingCount}{settings?.founding_member_cap != null ? ` / ${settings.founding_member_cap}` : ''}
+            </div>
             <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>on the founding plan</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
