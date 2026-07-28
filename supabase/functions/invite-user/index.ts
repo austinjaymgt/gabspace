@@ -16,20 +16,40 @@ function roleLabel(role: string): string {
   return role.charAt(0).toUpperCase() + role.slice(1)
 }
 
+// business_spaces.name is set by whoever owns that business, so it's
+// attacker-influenceable content by the time it lands in someone else's
+// inbox - escape before interpolating into the HTML email templates below.
+function escapeHtml(str: string): string {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function emailShell(eyebrow: string, eyebrowColor: string, heading: string, bodyHtml: string, ctaHref: string, ctaLabel: string, ctaColor: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8" /><title>${heading}</title></head>
-<body style="margin:0;padding:0;background:#F7F5F0;font-family:Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F7F5F0;padding:40px 20px;">
+<head>
+  <meta charset="UTF-8" />
+  <title>${heading}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+</head>
+<body style="margin:0;padding:0;background:#F5F5F7;font-family:'Manrope',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F7;padding:40px 20px;">
     <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:16px;border:1px solid rgba(26,26,46,0.08);max-width:560px;width:100%;">
-        <tr><td style="background:#1A1A2E;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
-          <span style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:-0.5px;">gabspace</span>
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:16px;border:1px solid #E2E2E4;max-width:560px;width:100%;">
+        <tr><td style="background:linear-gradient(135deg,#2b0f2a,#160814);padding:28px 40px;border-radius:16px 16px 0 0;">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7fd8ff,#4fa8e8 55%,#6a5cd0);"></td>
+            <td style="width:10px;"></td>
+            <td><span style="font-family:'Space Grotesk',Helvetica,Arial,sans-serif;font-size:20px;font-weight:700;color:#FFFFFF;letter-spacing:-0.02em;">gabspace</span></td>
+          </tr></table>
         </td></tr>
         <tr><td style="padding:36px 40px;">
           <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:${eyebrowColor};margin:0 0 12px;font-weight:600;">${eyebrow}</p>
-          <h1 style="font-size:26px;color:#1A1A2E;margin:0 0 16px;letter-spacing:-0.5px;">${heading}</h1>
+          <h1 style="font-family:'Space Grotesk',Helvetica,Arial,sans-serif;font-size:26px;color:#2b1a2a;margin:0 0 16px;letter-spacing:-0.02em;">${heading}</h1>
           ${bodyHtml}
           <table cellpadding="0" cellspacing="0" style="margin:28px 0 4px;">
             <tr><td style="border-radius:10px;background:${ctaColor};">
@@ -37,8 +57,8 @@ function emailShell(eyebrow: string, eyebrowColor: string, heading: string, body
             </td></tr>
           </table>
         </td></tr>
-        <tr><td style="padding:20px 40px;border-top:1px solid rgba(26,26,46,0.06);">
-          <p style="font-size:12px;color:#8585A0;margin:0;">© 2026 Gabspace · <a href="https://gabspace.io" style="color:#8585A0;text-decoration:none;">gabspace.io</a></p>
+        <tr><td style="padding:20px 40px;border-top:1px solid #E2E2E4;">
+          <p style="font-size:12px;color:#9CA3AF;margin:0;">© 2026 Gabspace · <a href="https://gabspace.io" style="color:#9CA3AF;text-decoration:none;">gabspace.io</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -48,13 +68,13 @@ function emailShell(eyebrow: string, eyebrowColor: string, heading: string, body
 }
 
 function newUserInviteEmail(businessName: string, role: string, actionLink: string): string {
-  const body = `<p style="font-size:15px;color:#3D3D5C;line-height:1.75;margin:0;">You've been invited to join <strong>${businessName}</strong> on Gabspace as ${role === 'admin' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. Accept the invite below to set up your account and get started.</p>`
-  return emailShell('You\'re invited', '#7C5CBF', `Join ${businessName} on Gabspace`, body, actionLink, 'Accept invite', '#7C5CBF')
+  const body = `<p style="font-size:15px;color:#6B7280;line-height:1.75;margin:0;">You've been invited to join <strong>${businessName}</strong> on Gabspace as ${role === 'admin' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. Accept the invite below to set up your account and get started.</p>`
+  return emailShell('You\'re invited', '#6a3f7a', `Join ${businessName} on Gabspace`, body, actionLink, 'Accept invite', '#6a3f7a')
 }
 
 function addedToBusinessEmail(businessName: string, role: string): string {
-  const body = `<p style="font-size:15px;color:#3D3D5C;line-height:1.75;margin:0;">You've been added to <strong>${businessName}</strong> on Gabspace as ${role === 'admin' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. It's now available from the business switcher in your top bar.</p>`
-  return emailShell('Added to a business', '#6B8F71', `You're in on ${businessName}`, body, APP_URL, 'Open Gabspace', '#6B8F71')
+  const body = `<p style="font-size:15px;color:#6B7280;line-height:1.75;margin:0;">You've been added to <strong>${businessName}</strong> on Gabspace as ${role === 'admin' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. It's now available from the business switcher in your top bar.</p>`
+  return emailShell('Added to a business', '#1f9c8f', `You're in on ${businessName}`, body, APP_URL, 'Open Gabspace', '#1f9c8f')
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -78,6 +98,30 @@ serve(async (req) => {
   }
 
   try {
+    // 1. Verify the caller's identity from their JWT — never trust an
+    // `invitedBy` field from the request body, since anyone with the
+    // public anon key could set it to any user id.
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    const { data: { user }, error: userError } = await userClient.auth.getUser()
+    if (userError || !user) {
+      console.log('auth error:', userError?.message)
+      return new Response(JSON.stringify({ error: 'Invalid or expired session' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const body = await req.text()
     console.log('body received:', body)
 
@@ -87,26 +131,59 @@ serve(async (req) => {
       })
     }
 
-    const { email, role, businessSpaceId, invitedBy } = JSON.parse(body)
-    console.log('parsed:', { email, role, businessSpaceId, invitedBy })
+    const { email, role, businessSpaceId } = JSON.parse(body)
+    console.log('parsed:', { email, role, businessSpaceId })
 
-    if (!email || !role || !businessSpaceId || !invitedBy) {
+    if (!email || !role || !businessSpaceId) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    const ALLOWED_ROLES = ['admin', 'member']
+    if (!ALLOWED_ROLES.includes(role)) {
+      return new Response(JSON.stringify({ error: 'Invalid role' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const invitedBy = user.id
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+    // 2. Authorize: the caller must actually be an owner/admin of the
+    // business they're trying to invite someone into. Without this,
+    // verify_jwt=true only proves *some* valid Supabase JWT was sent
+    // (the anon key itself qualifies) — it says nothing about who the
+    // caller is or what they're allowed to do.
+    const { data: callerMembership, error: callerError } = await adminClient
+      .from('business_space_members')
+      .select('role')
+      .eq('business_space_id', businessSpaceId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (callerError) {
+      return new Response(JSON.stringify({ error: callerError.message }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (!callerMembership || !['owner', 'admin'].includes(callerMembership.role)) {
+      return new Response(JSON.stringify({ error: 'Not authorized to invite members to this business' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const { data: business } = await adminClient
       .from('business_spaces')
       .select('name')
       .eq('id', businessSpaceId)
       .single()
-    const businessName = business?.name || 'a Gabspace business'
+    const businessName = escapeHtml(business?.name || 'a Gabspace business')
 
     const { data: insertedInvite, error: insertError } = await adminClient
       .from('invites')

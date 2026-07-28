@@ -5,9 +5,30 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
+const DB_WEBHOOK_SECRET = Deno.env.get('DB_WEBHOOK_SECRET')!
+
+// title/description ultimately trace back to a public inquiry form -
+// escape before interpolating into the HTML template below.
+function escapeHtml(str: string): string {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 serve(async (req) => {
   try {
+    // Invoked by a Supabase Database Webhook, not a browser - without
+    // this, anyone with the public anon key could forge a synthetic
+    // {record: {...}} body and get Gabspace's Resend account to email
+    // arbitrary addresses with attacker-controlled content. The webhook
+    // config must send this same secret as the `x-webhook-secret` header.
+    if (req.headers.get('x-webhook-secret') !== DB_WEBHOOK_SECRET) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    }
+
     const payload = await req.json()
     const record = payload.record
 
@@ -35,8 +56,8 @@ serve(async (req) => {
 
     // Parse event details from title: "EventType — Full Name (Org)"
     const title = record.title || ''
-    const eventTypePart = title.split('—')[0]?.trim() || 'your event'
-    const firstName = submitterName.split(' ')[0] || submitterName
+    const eventTypePart = escapeHtml(title.split('—')[0]?.trim() || 'your event')
+    const firstName = escapeHtml(submitterName.split(' ')[0] || submitterName)
 
     // Format date nicely
     let formattedDate = ''
@@ -53,9 +74,10 @@ serve(async (req) => {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>We received your inquiry</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
 </head>
-<body style="margin:0;padding:0;background:#F7F5F0;font-family:'DM Sans',Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F7F5F0;padding:48px 20px;">
+<body style="margin:0;padding:0;background:#F5F5F7;font-family:'Manrope',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F7;padding:48px 20px;">
     <tr>
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
@@ -66,24 +88,10 @@ serve(async (req) => {
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:10px;">
-                    <div style="width:36px;height:36px;background:linear-gradient(135deg,#7C5CBF,#6B8F71);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                      <table cellpadding="0" cellspacing="0" style="margin:auto;">
-                        <tr>
-                          <td style="width:8px;height:8px;background:rgba(255,255,255,0.9);border-radius:2px;margin:1px;display:inline-block;"></td>
-                          <td style="width:2px;"></td>
-                          <td style="width:8px;height:8px;background:rgba(255,255,255,0.5);border-radius:2px;display:inline-block;"></td>
-                        </tr>
-                        <tr><td colspan="3" style="height:2px;"></td></tr>
-                        <tr>
-                          <td style="width:8px;height:8px;background:rgba(255,255,255,0.5);border-radius:2px;display:inline-block;"></td>
-                          <td style="width:2px;"></td>
-                          <td style="width:8px;height:8px;background:rgba(255,255,255,0.9);border-radius:2px;display:inline-block;"></td>
-                        </tr>
-                      </table>
-                    </div>
+                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7fd8ff,#4fa8e8 55%,#6a5cd0);"></div>
                   </td>
                   <td style="vertical-align:middle;">
-                    <span style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#1A1A2E;letter-spacing:-0.5px;">gabspace</span>
+                    <span style="font-family:'Space Grotesk',Helvetica,Arial,sans-serif;font-size:20px;font-weight:700;color:#2b1a2a;letter-spacing:-0.02em;">gabspace</span>
                   </td>
                 </tr>
               </table>
@@ -92,9 +100,9 @@ serve(async (req) => {
 
           <!-- Hero card -->
           <tr>
-            <td style="background:#1A1A2E;border-radius:20px;padding:40px;margin-bottom:20px;">
+            <td style="background:linear-gradient(135deg,#2b0f2a,#160814);border-radius:20px;padding:40px;margin-bottom:20px;">
               <p style="font-size:12px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin:0 0 12px;">Event Inquiry Received</p>
-              <h1 style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#FFFFFF;margin:0 0 14px;line-height:1.2;letter-spacing:-0.5px;">
+              <h1 style="font-family:'Space Grotesk',Helvetica,Arial,sans-serif;font-size:28px;font-weight:700;color:#FFFFFF;margin:0 0 14px;line-height:1.2;letter-spacing:-0.02em;">
                 We've got your inquiry,<br/>${firstName}.
               </h1>
               <p style="font-size:15px;color:rgba(255,255,255,0.6);margin:0;line-height:1.7;font-weight:300;">
@@ -107,45 +115,45 @@ serve(async (req) => {
 
           <!-- Details card -->
           <tr>
-            <td style="background:#FFFFFF;border-radius:16px;padding:28px;border:1px solid rgba(0,0,0,0.06);">
-              <p style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#8585A0;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid #f0f0eb;">
+            <td style="background:#FFFFFF;border-radius:16px;padding:28px;border:1px solid #E2E2E4;">
+              <p style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid #F0F0F2;">
                 What we received
               </p>
 
               <table width="100%" cellpadding="0" cellspacing="0">
                 ${record.event_date ? `
                 <tr>
-                  <td style="padding:10px 0;border-bottom:1px solid #f9f9f7;vertical-align:top;">
-                    <span style="font-size:12px;color:#8585A0;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Date</span>
+                  <td style="padding:10px 0;border-bottom:1px solid #F0F0F2;vertical-align:top;">
+                    <span style="font-size:12px;color:#9CA3AF;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Date</span>
                   </td>
-                  <td style="padding:10px 0 10px 16px;border-bottom:1px solid #f9f9f7;text-align:right;">
-                    <span style="font-size:14px;color:#1A1A2E;font-weight:500;">${formattedDate}</span>
+                  <td style="padding:10px 0 10px 16px;border-bottom:1px solid #F0F0F2;text-align:right;">
+                    <span style="font-size:14px;color:#2b1a2a;font-weight:500;">${formattedDate}</span>
                   </td>
                 </tr>` : ''}
                 ${record.venue ? `
                 <tr>
-                  <td style="padding:10px 0;border-bottom:1px solid #f9f9f7;vertical-align:top;">
-                    <span style="font-size:12px;color:#8585A0;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Venue</span>
+                  <td style="padding:10px 0;border-bottom:1px solid #F0F0F2;vertical-align:top;">
+                    <span style="font-size:12px;color:#9CA3AF;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Venue</span>
                   </td>
-                  <td style="padding:10px 0 10px 16px;border-bottom:1px solid #f9f9f7;text-align:right;">
-                    <span style="font-size:14px;color:#1A1A2E;font-weight:500;">${record.venue}</span>
+                  <td style="padding:10px 0 10px 16px;border-bottom:1px solid #F0F0F2;text-align:right;">
+                    <span style="font-size:14px;color:#2b1a2a;font-weight:500;">${escapeHtml(record.venue)}</span>
                   </td>
                 </tr>` : ''}
                 ${record.headcount ? `
                 <tr>
-                  <td style="padding:10px 0;border-bottom:1px solid #f9f9f7;vertical-align:top;">
-                    <span style="font-size:12px;color:#8585A0;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Guests</span>
+                  <td style="padding:10px 0;border-bottom:1px solid #F0F0F2;vertical-align:top;">
+                    <span style="font-size:12px;color:#9CA3AF;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Guests</span>
                   </td>
-                  <td style="padding:10px 0 10px 16px;border-bottom:1px solid #f9f9f7;text-align:right;">
-                    <span style="font-size:14px;color:#1A1A2E;font-weight:500;">${record.headcount} estimated</span>
+                  <td style="padding:10px 0 10px 16px;border-bottom:1px solid #F0F0F2;text-align:right;">
+                    <span style="font-size:14px;color:#2b1a2a;font-weight:500;">${record.headcount} estimated</span>
                   </td>
                 </tr>` : ''}
                 <tr>
                   <td style="padding:10px 0;vertical-align:top;">
-                    <span style="font-size:12px;color:#8585A0;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Status</span>
+                    <span style="font-size:12px;color:#9CA3AF;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Status</span>
                   </td>
                   <td style="padding:10px 0 10px 16px;text-align:right;">
-                    <span style="font-size:12px;font-weight:600;background:#F0EBF9;color:#7C5CBF;padding:4px 12px;border-radius:20px;">Inquiry received</span>
+                    <span style="font-size:12px;font-weight:600;background:#EDE5F4;color:#6a3f7a;padding:4px 12px;border-radius:20px;">Inquiry received</span>
                   </td>
                 </tr>
               </table>
@@ -156,9 +164,9 @@ serve(async (req) => {
 
           <!-- What's next -->
           <tr>
-            <td style="background:#EAF2EA;border-radius:16px;padding:24px;">
-              <p style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#6B8F71;margin:0 0 10px;">What happens next</p>
-              <p style="font-size:14px;color:#3D3D5C;margin:0;line-height:1.7;">
+            <td style="background:#E0FBF7;border-radius:16px;padding:24px;">
+              <p style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#1f9c8f;margin:0 0 10px;">What happens next</p>
+              <p style="font-size:14px;color:#6B7280;margin:0;line-height:1.7;">
                 Our team will review your inquiry and reach out within <strong>48 hours</strong> to schedule a conversation. We'll talk through your vision, answer any questions, and explore how we can bring your event to life.
               </p>
             </td>
@@ -168,8 +176,8 @@ serve(async (req) => {
 
           <!-- Footer -->
           <tr>
-            <td style="text-align:center;padding-top:24px;border-top:1px solid rgba(0,0,0,0.08);">
-<p style="font-size:12px;color:#8585A0;margin:0 0 4px;">gabspace — creativity meets clarity</p>
+            <td style="text-align:center;padding-top:24px;border-top:1px solid #E2E2E4;">
+<p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">gabspace — creativity meets clarity</p>
               <p style="font-size:11px;color:#B0B0C0;margin:0;">You're receiving this because you submitted an event inquiry.</p>
             </td>
           </tr>

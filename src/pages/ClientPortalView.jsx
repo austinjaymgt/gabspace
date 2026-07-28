@@ -67,15 +67,11 @@ export default function ClientPortalView() {
 
   async function loadPortal() {
     setLoading(true)
-    const { data: link } = await supabase
-      .from('portal_links')
-      .select('*, clients(name, company), portal_projects(id, project_id, projects(id, title, status))')
-      .eq('token', token)
-      .maybeSingle()
+    const { data: ctx } = await supabase.rpc('get_portal_context', { p_token: token })
 
-    if (!link) { setNotFound(true); setLoading(false); return }
-    setPortalLink(link)
-    const projs = (link.portal_projects || []).map(pp => pp.projects).filter(Boolean)
+    if (!ctx) { setNotFound(true); setLoading(false); return }
+    setPortalLink({ clients: ctx.client })
+    const projs = ctx.projects || []
     setProjects(projs)
 
     const { data: invs } = await supabase.rpc('get_portal_invoices', { p_token: token })
@@ -87,38 +83,24 @@ export default function ClientPortalView() {
 
   async function loadProject(projectId) {
     setActiveProject(projectId)
-    const { data: delivs } = await supabase
-      .from('deliverables')
-      .select('*')
-      .eq('project_id', projectId)
-      .neq('status', 'draft')
-      .order('created_at', { ascending: false })
+    const { data: delivs } = await supabase.rpc('get_portal_deliverables', { p_token: token, p_project_id: projectId })
     setDeliverables(delivs || [])
 
-    const { data: ms } = await supabase
-      .from('project_milestones')
-      .select('id, title, target_date, status')
-      .eq('project_id', projectId)
-      .eq('show_in_portal', true)
-      .neq('status', 'done')
-      .order('target_date', { ascending: true, nullsFirst: false })
+    const { data: ms } = await supabase.rpc('get_portal_milestones', { p_token: token, p_project_id: projectId })
     setMilestones(ms || [])
 
     if (!delivs || delivs.length === 0) return
 
     const ids = delivs.map(d => d.id)
 
-    const { data: rxns } = await supabase
-      .from('deliverable_reactions')
-      .select('deliverable_id, emoji, client_token')
-      .in('deliverable_id', ids)
+    const { data: rxns } = await supabase.rpc('get_portal_reactions', { p_token: token, p_deliverable_ids: ids })
 
     const rxnMap = {}
     const myMap = {}
     for (const r of rxns || []) {
       rxnMap[r.deliverable_id] = rxnMap[r.deliverable_id] || {}
-      rxnMap[r.deliverable_id][r.emoji] = (rxnMap[r.deliverable_id][r.emoji] || 0) + 1
-      if (r.client_token === token) {
+      rxnMap[r.deliverable_id][r.emoji] = r.reaction_count
+      if (r.reacted_by_me) {
         myMap[r.deliverable_id] = myMap[r.deliverable_id] || new Set()
         myMap[r.deliverable_id].add(r.emoji)
       }
@@ -126,11 +108,7 @@ export default function ClientPortalView() {
     setReactions(rxnMap)
     setMyReactions(myMap)
 
-    const { data: cmts } = await supabase
-      .from('deliverable_comments')
-      .select('*')
-      .in('deliverable_id', ids)
-      .order('created_at', { ascending: true })
+    const { data: cmts } = await supabase.rpc('get_portal_comments', { p_token: token, p_deliverable_ids: ids })
 
     const cmtMap = {}
     for (const c of cmts || []) {
@@ -145,8 +123,7 @@ export default function ClientPortalView() {
     const has = mySet.has(emoji)
 
     if (has) {
-      await supabase.from('deliverable_reactions').delete()
-        .eq('deliverable_id', delivId).eq('client_token', token).eq('emoji', emoji)
+      await supabase.rpc('remove_portal_reaction', { p_token: token, p_deliverable_id: delivId, p_emoji: emoji })
       setReactions(prev => {
         const next = { ...prev }
         next[delivId] = { ...next[delivId] }
@@ -160,7 +137,7 @@ export default function ClientPortalView() {
         return { ...prev, [delivId]: s }
       })
     } else {
-      await supabase.from('deliverable_reactions').insert({ deliverable_id: delivId, client_token: token, emoji })
+      await supabase.rpc('add_portal_reaction', { p_token: token, p_deliverable_id: delivId, p_emoji: emoji })
       setReactions(prev => {
         const next = { ...prev }
         next[delivId] = { ...next[delivId], [emoji]: ((next[delivId] || {})[emoji] || 0) + 1 }
@@ -179,12 +156,12 @@ export default function ClientPortalView() {
     if (!body) return
     if (!commentName.trim()) { setPendingComment(delivId); setNamePrompt(true); return }
 
-    const { data: newComment } = await supabase.from('deliverable_comments').insert({
-      deliverable_id: delivId,
-      author_type: 'client',
-      author_name: commentName,
-      body,
-    }).select().single()
+    const { data: newComment } = await supabase.rpc('add_portal_comment', {
+      p_token: token,
+      p_deliverable_id: delivId,
+      p_author_name: commentName,
+      p_body: body,
+    })
 
     setComments(prev => ({ ...prev, [delivId]: [...(prev[delivId] || []), newComment] }))
     setCommentInput(prev => ({ ...prev, [delivId]: '' }))

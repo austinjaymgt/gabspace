@@ -354,6 +354,12 @@ const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange
   const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
   const isStaff = ['owner', 'admin', 'member'].includes(userRole)
   const isClientOnly = userRole === 'client'
+  // Beta Admin manages the platform-wide beta waitlist, not this business's
+  // own team — being owner/admin of *some* business isn't enough, since
+  // that'll be true of every tenant once beta opens. Mirrors the
+  // is_platform_admin() check enforced server-side by the beta_requests RLS
+  // policy, so this is UI-layer defense in depth, not the real boundary.
+  const isPlatformAdmin = session?.user?.email === 'mgtostyn@gmail.com'
 
   function AccessDenied() {
     return (
@@ -420,7 +426,7 @@ function renderPage() {
         return isOwnerOrAdmin ? <Settings {...pageProps} /> : <AccessDenied />
 
       case 'beta-admin':
-        return isOwnerOrAdmin ? <BetaAdmin {...pageProps} /> : <AccessDenied />
+        return isPlatformAdmin ? <BetaAdmin {...pageProps} /> : <AccessDenied />
       case 'packages':
         return <Packages {...pageProps} />
       case 'briefs':

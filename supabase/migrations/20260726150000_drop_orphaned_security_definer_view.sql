@@ -1,0 +1,14 @@
+-- gabi_priority_feed was an earlier server-side approach for the Orbi
+-- assistant's priority feed. The current implementation
+-- (src/utils/orbiItems.js) queries tasks/invoices/events/business_events/
+-- projects directly, scoped by business_space_id under normal RLS - this
+-- view is unreferenced anywhere in the app.
+--
+-- It's also a serious bug on its own: views run with the *creator's*
+-- privileges by default (Postgres's security-definer-equivalent
+-- behavior), bypassing RLS on the underlying tables entirely, and it was
+-- GRANTed to anon - meaning anyone with the public anon key could read
+-- every business's invoice due dates, client names, overdue tasks, and
+-- upcoming event/project deadlines platform-wide with zero auth. Since
+-- nothing depends on it, drop it rather than patch it.
+DROP VIEW IF EXISTS public.gabi_priority_feed;
