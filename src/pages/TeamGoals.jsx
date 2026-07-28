@@ -139,7 +139,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
     category: 'team', categoryLabel: '', progress: 0, startDate: '', dueDate: '',
   })
 
-  const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
+  const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const ro = !isOwnerOrAdmin
 
   useEffect(() => {

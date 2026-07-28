@@ -68,12 +68,12 @@ function emailShell(eyebrow: string, eyebrowColor: string, heading: string, body
 }
 
 function newUserInviteEmail(businessName: string, role: string, actionLink: string): string {
-  const body = `<p style="font-size:15px;color:#6B7280;line-height:1.75;margin:0;">You've been invited to join <strong>${businessName}</strong> on Gabspace as ${role === 'admin' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. Accept the invite below to set up your account and get started.</p>`
+  const body = `<p style="font-size:15px;color:#6B7280;line-height:1.75;margin:0;">You've been invited to join <strong>${businessName}</strong> on Gabspace as ${role === 'employee' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. Accept the invite below to set up your account and get started.</p>`
   return emailShell('You\'re invited', '#6a3f7a', `Join ${businessName} on Gabspace`, body, actionLink, 'Accept invite', '#6a3f7a')
 }
 
 function addedToBusinessEmail(businessName: string, role: string): string {
-  const body = `<p style="font-size:15px;color:#6B7280;line-height:1.75;margin:0;">You've been added to <strong>${businessName}</strong> on Gabspace as ${role === 'admin' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. It's now available from the business switcher in your top bar.</p>`
+  const body = `<p style="font-size:15px;color:#6B7280;line-height:1.75;margin:0;">You've been added to <strong>${businessName}</strong> on Gabspace as ${role === 'employee' ? 'an' : 'a'} <strong>${roleLabel(role)}</strong>. It's now available from the business switcher in your top bar.</p>`
   return emailShell('Added to a business', '#1f9c8f', `You're in on ${businessName}`, body, APP_URL, 'Open Gabspace', '#1f9c8f')
 }
 
@@ -140,12 +140,18 @@ serve(async (req) => {
       })
     }
 
-    const ALLOWED_ROLES = ['admin', 'member']
+    const ALLOWED_ROLES = ['co-owner', 'employee']
     if (!ALLOWED_ROLES.includes(role)) {
       return new Response(JSON.stringify({ error: 'Invalid role' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    // Hardcoded caps, not yet tied to a pricing plan: co-owner max 1,
+    // employee max 3 per business. Counts accepted members plus pending
+    // invites for this role so two simultaneous invites can't both land
+    // once accepted.
+    const ROLE_CAPS: Record<string, number> = { 'co-owner': 1, employee: 3 }
 
     const invitedBy = user.id
 
@@ -154,7 +160,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // 2. Authorize: the caller must actually be an owner/admin of the
+    // 2. Authorize: the caller must actually be an owner/co-owner of the
     // business they're trying to invite someone into. Without this,
     // verify_jwt=true only proves *some* valid Supabase JWT was sent
     // (the anon key itself qualifies) — it says nothing about who the
@@ -172,10 +178,32 @@ serve(async (req) => {
       })
     }
 
-    if (!callerMembership || !['owner', 'admin'].includes(callerMembership.role)) {
+    if (!callerMembership || !['owner', 'co-owner'].includes(callerMembership.role)) {
       return new Response(JSON.stringify({ error: 'Not authorized to invite members to this business' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
+    }
+
+    const roleCap = ROLE_CAPS[role]
+    if (roleCap !== undefined) {
+      const [{ count: memberCount }, { count: inviteCount }] = await Promise.all([
+        adminClient
+          .from('business_space_members')
+          .select('id', { count: 'exact', head: true })
+          .eq('business_space_id', businessSpaceId)
+          .eq('role', role),
+        adminClient
+          .from('invites')
+          .select('id', { count: 'exact', head: true })
+          .eq('business_space_id', businessSpaceId)
+          .eq('role', role)
+          .eq('accepted', false),
+      ])
+      if ((memberCount ?? 0) + (inviteCount ?? 0) >= roleCap) {
+        return new Response(JSON.stringify({ error: `${roleLabel(role)} limit reached (${roleCap} max on your current plan)` }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
     }
 
     const { data: business } = await adminClient

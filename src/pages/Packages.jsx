@@ -52,7 +52,7 @@ export default function Packages({ businessSpaceId, userRole }) {
   const [search, setSearch] = useState('')
   const [filterTrack, setFilterTrack] = useState('all')
 
-  const isDirector = ['owner', 'admin'].includes(userRole)
+  const isDirector = ['owner', 'co-owner'].includes(userRole)
 
   const [form, setForm] = useState({
     name: '',

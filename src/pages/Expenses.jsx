@@ -51,7 +51,7 @@ export default function Expenses({ businessSpaceId, userRole }) {
 
   const [confirmModal, setConfirmModal] = useState(null) // { item, amount }
 
-  const isDirector = ['owner', 'admin'].includes(userRole)
+  const isDirector = ['owner', 'co-owner'].includes(userRole)
 
   useEffect(() => {
     if (businessSpaceId) fetchAll()

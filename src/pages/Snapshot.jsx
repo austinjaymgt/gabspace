@@ -20,7 +20,7 @@ export default function Snapshot({ businessSpaceId, userRole, onNavigate }) {
   const [year, setYear] = useState(CURRENT_YEAR)
   const [quarter, setQuarter] = useState(CURRENT_QUARTER)
 
-  const isDirector = ['owner', 'admin'].includes(userRole)
+  const isDirector = ['owner', 'co-owner'].includes(userRole)
 
   useEffect(() => {
     if (businessSpaceId) fetchAll()

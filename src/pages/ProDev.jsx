@@ -38,7 +38,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
   const [filterMember, setFilterMember] = useState('all')
   const [search, setSearch] = useState('')
 
-  const isDirector = ['owner', 'admin'].includes(userRole)
+  const isDirector = ['owner', 'co-owner'].includes(userRole)
 
   const [form, setForm] = useState({
     member_name: '',

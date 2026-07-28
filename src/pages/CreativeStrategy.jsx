@@ -55,7 +55,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     project_id: '',
   })
 
-  const isCreativeOrDirector = ['owner', 'admin', 'member'].includes(userRole)
+  const isCreativeOrDirector = ['owner', 'co-owner', 'employee'].includes(userRole)
 
   useEffect(() => {
     if (businessSpaceId) fetchAll()

@@ -302,7 +302,7 @@ const WELCOME_SPLASH_MS = 2600
 
     const { error } = await supabase
       .from('user_profiles')
-      .update({ business_space_id: newId, role: membership?.role || 'member' })
+      .update({ business_space_id: newId, role: membership?.role || 'employee' })
       .eq('user_id', session.user.id)
     if (!error) {
       setBusinessSpaceId(newId)
@@ -351,8 +351,8 @@ const WELCOME_SPLASH_MS = 2600
   }
 
 const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange: bumpBusinessIdentityVersion, onArchiveBusiness: handleArchiveBusinessSpace, portalActivityVersion, onPortalActivityChange: bumpPortalActivity }
-  const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
-  const isStaff = ['owner', 'admin', 'member'].includes(userRole)
+  const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
+  const isStaff = ['owner', 'co-owner', 'employee'].includes(userRole)
   const isClientOnly = userRole === 'client'
   // Beta Admin manages the platform-wide beta waitlist, not this business's
   // own team — being owner/admin of *some* business isn't enough, since

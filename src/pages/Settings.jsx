@@ -7,16 +7,16 @@ import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModul
 
 const ROLE_LABELS = {
   owner: 'Owner',
-  admin: 'Admin',
-  member: 'Member',
+  'co-owner': 'Co-Owner',
+  employee: 'Employee',
   client: 'Client',
 }
 
 const ROLE_COLORS = {
-  owner:  { bg: '#F0EBF9', color: '#7C5CBF' },
-  admin:  { bg: '#EAF2EA', color: '#6B8F71' },
-  member: { bg: '#FBF0E6', color: '#D4874E' },
-  client: { bg: '#FAF0F2', color: '#C06B7A' },
+  owner:      { bg: '#F0EBF9', color: '#7C5CBF' },
+  'co-owner': { bg: '#EAF2EA', color: '#6B8F71' },
+  employee:   { bg: '#FBF0E6', color: '#D4874E' },
+  client:     { bg: '#FAF0F2', color: '#C06B7A' },
 }
 
 export default function Settings({ session, businessSpaceId, userRole, onBusinessIdentityChange, onArchiveBusiness }) {
@@ -38,7 +38,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   const [members, setMembers] = useState([])
   const [invites, setInvites] = useState([])
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('member')
+  const [inviteRole, setInviteRole] = useState('employee')
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState(null)
   const [inviteSent, setInviteSent] = useState(false)
@@ -51,7 +51,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   const [deleteError, setDeleteError] = useState(null)
   const [blockedWorkspaces, setBlockedWorkspaces] = useState(null)
 
-  const isOwnerOrAdmin = ['owner', 'admin'].includes(userRole)
+  const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const isOwner = userRole === 'owner'
 
   // Archive business
@@ -197,7 +197,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
 
     setInviteSent(true)
     setInviteEmail('')
-    setInviteRole('member')
+    setInviteRole('employee')
     setInviting(false)
     fetchInvites()
     if (result.alreadyMember) fetchMembers()
@@ -372,7 +372,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
   }
 
   function RoleBadge({ role }) {
-    const c = ROLE_COLORS[role] || ROLE_COLORS.member
+    const c = ROLE_COLORS[role] || ROLE_COLORS.employee
     return (
       <span style={{
         padding: '3px 10px', borderRadius: '100px',
@@ -566,8 +566,8 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                 onChange={e => setInviteRole(e.target.value)}
                 style={{ ...inputStyle, cursor: 'pointer', backgroundColor: t.colors.bgCard }}
               >
-                <option value="admin">Admin</option>
-                <option value="member">Member</option>
+                <option value="co-owner">Co-Owner</option>
+                <option value="employee">Employee</option>
               </select>
               <button
                 onClick={handleInvite}
@@ -620,8 +620,8 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
                         onChange={e => handleUpdateRole(m.user_id, e.target.value)}
                         style={{ padding: '4px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, fontFamily: t.fonts.sans, backgroundColor: t.colors.bgCard, cursor: 'pointer' }}
                       >
-                        <option value="admin">Admin</option>
-                        <option value="member">Member</option>
+                        <option value="co-owner">Co-Owner</option>
+                        <option value="employee">Employee</option>
                       </select>
                     )}
                     {m.role !== 'owner' && (
