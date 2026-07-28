@@ -4,19 +4,46 @@ import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
 import Toggle from '../components/Toggle'
 import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModules, toggleModuleState } from '../utils/businessModules'
+import RoleBadge from '../components/RoleBadge'
 
-const ROLE_LABELS = {
-  owner: 'Owner',
-  'co-owner': 'Co-Owner',
-  employee: 'Employee',
-  client: 'Client',
+const PLAN_LABELS = {
+  free: 'Free (1 business)',
+  founding: 'Founders Circle (3 businesses)',
+  duo: 'Duo (2 businesses)',
+  studio: 'Studio (3 businesses)',
+  enterprise: 'Enterprise (uncapped)',
 }
 
-const ROLE_COLORS = {
-  owner:      { bg: '#F0EBF9', color: '#7C5CBF' },
-  'co-owner': { bg: '#EAF2EA', color: '#6B8F71' },
-  employee:   { bg: '#FBF0E6', color: '#D4874E' },
-  client:     { bg: '#FAF0F2', color: '#C06B7A' },
+function SectionCard({ title, subtitle, titleColor, borderColor, defaultOpen = true, children }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${borderColor || t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+          padding: '20px 24px',
+          background: 'none',
+          border: 'none',
+          borderBottom: open ? `1px solid ${t.colors.borderLight}` : 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+          fontFamily: t.fonts.sans,
+        }}
+      >
+        <div>
+          <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: titleColor || t.colors.textPrimary, margin: '0 0 4px' }}>{title}</h3>
+          {subtitle && <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>{subtitle}</p>}
+        </div>
+        <span style={{ color: t.colors.textTertiary, flexShrink: 0, display: 'flex', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.15s' }}>
+          <Icon name="expand" size="sm" />
+        </span>
+      </button>
+      {open && <div>{children}</div>}
+    </div>
+  )
 }
 
 export default function Settings({ session, businessSpaceId, userRole, onBusinessIdentityChange, onArchiveBusiness }) {
@@ -33,16 +60,6 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   const [saved, setSaved] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
-
-  // Team
-  const [members, setMembers] = useState([])
-  const [invites, setInvites] = useState([])
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('employee')
-  const [inviting, setInviting] = useState(false)
-  const [inviteError, setInviteError] = useState(null)
-  const [inviteSent, setInviteSent] = useState(false)
-  const [memberError, setMemberError] = useState(null)
 
 // Delete account
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -77,7 +94,6 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
 
   useEffect(() => { fetchSettings() }, [])
   useEffect(() => { if (businessSpaceId) fetchBusinessIdentity() }, [businessSpaceId])
-  useEffect(() => { if (businessSpaceId && isOwnerOrAdmin) { fetchMembers(); fetchInvites() } }, [businessSpaceId])
   useEffect(() => {
     setModulesState(getModules(businessSpaceId))
     setModuleNote(null)
@@ -135,107 +151,11 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     }))
   }
 
-  async function fetchMembers() {
-    const { data: memberRows } = await supabase
-      .from('business_space_members')
-      .select('id, user_id, role, display_name, created_at')
-      .eq('business_space_id', businessSpaceId)
-      .order('created_at', { ascending: true })
-    if (!memberRows) return
-
-    // Fall back to the person's global first name for anyone who hasn't
-    // set a display name for this specific business yet.
-    const { data: settingsRows } = await supabase
-      .from('user_settings')
-      .select('user_id, first_name')
-      .in('user_id', memberRows.map(m => m.user_id))
-
-    const firstNameByUser = Object.fromEntries((settingsRows || []).map(s => [s.user_id, s.first_name]))
-    setMembers(memberRows.map(m => ({ ...m, display_name: m.display_name || firstNameByUser[m.user_id] })))
-  }
-
-  async function fetchInvites() {
-    const { data } = await supabase
-      .from('invites')
-      .select('id, email, role, accepted, created_at')
-      .eq('business_space_id', businessSpaceId)
-      .eq('accepted', false)
-      .order('created_at', { ascending: false })
-    if (data) setInvites(data)
-  }
- async function handleInvite() {
-    if (!inviteEmail) return setInviteError('Enter an email address.')
-    setInviting(true)
-    setInviteError(null)
-    setInviteSent(false)
-
-    const { data: { session: currentSession } } = await supabase.auth.getSession()
-
-const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${currentSession.access_token}`,
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({
-        email: inviteEmail,
-        role: inviteRole,
-        businessSpaceId,
-        invitedBy: currentSession.user.id,
-      }),
-    })
-
-    const result = await res.json()
-    if (import.meta.env.DEV) console.log('invite result:', result)
-
-    if (result.error) {
-      setInviteError(result.error.includes('unique') ? 'This email has already been invited.' : result.error)
-      setInviting(false)
-      return
-    }
-
-    setInviteSent(true)
-    setInviteEmail('')
-    setInviteRole('employee')
-    setInviting(false)
-    fetchInvites()
-    if (result.alreadyMember) fetchMembers()
-    setTimeout(() => setInviteSent(false), 3000)
-  }
-
-  async function handleRevokeInvite(inviteId) {
-    await supabase.from('invites').delete().eq('id', inviteId)
-    fetchInvites()
-  }
-
-  async function handleUpdateRole(userId, newRole) {
-    const { error } = await supabase.rpc('update_member_role', {
-      target_user_id: userId,
-      target_business_space_id: businessSpaceId,
-      new_role: newRole,
-    })
-    if (error) { setMemberError(error.message); return }
-    setMemberError(null)
-    fetchMembers()
-  }
-
-  async function handleRemoveMember(userId) {
-    if (!window.confirm('Remove this member from the workspace?')) return
-    const { error } = await supabase.rpc('remove_business_member', {
-      target_user_id: userId,
-      target_business_space_id: businessSpaceId,
-    })
-    if (error) { setMemberError(error.message); return }
-    setMemberError(null)
-    fetchMembers()
-  }
-
   async function handleSave() {
     setSaving(true)
     setError(null)
 
-    const personalPayload = { first_name: form.first_name, plan: form.plan }
+    const personalPayload = { first_name: form.first_name }
     if (settings) {
       await supabase.from('user_settings').update(personalPayload).eq('user_id', session.user.id)
     } else {
@@ -371,20 +291,6 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
     gap: '8px',
   }
 
-  function RoleBadge({ role }) {
-    const c = ROLE_COLORS[role] || ROLE_COLORS.employee
-    return (
-      <span style={{
-        padding: '3px 10px', borderRadius: '100px',
-        fontSize: t.fontSizes.xs, fontWeight: '500',
-        backgroundColor: c.bg, color: c.color,
-        letterSpacing: '0.04em', textTransform: 'uppercase',
-      }}>
-        {ROLE_LABELS[role] || role}
-      </span>
-    )
-  }
-
   return (
     <div style={{ padding: '32px', maxWidth: '640px', fontFamily: t.fonts.sans }}>
       <div style={{ marginBottom: '32px' }}>
@@ -397,11 +303,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
       </div>
 
       {/* ── Business Identity ── */}
-      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
-        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
-          <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Business identity</h3>
-          <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>Shows in the sub-header across all pages</p>
-        </div>
+      <SectionCard title="Business identity" subtitle="Shows in the sub-header across all pages">
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={fieldStyle}>
             <label style={labelStyle}>Your first name</label>
@@ -473,15 +375,11 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
             )}
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* ── Modules ── */}
       {isOwnerOrAdmin && (
-        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
-          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
-            <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Modules</h3>
-            <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>Turn features on or off for this business — the sidebar updates to match</p>
-          </div>
+        <SectionCard title="Modules" subtitle="Turn features on or off for this business — the sidebar updates to match">
           <div style={{ padding: '8px 24px 24px' }}>
             {MODULE_DEFS.map(m => (
               <div key={m.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 0', borderBottom: `1px solid ${t.colors.borderLight}` }}>
@@ -507,14 +405,11 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
               </div>
             )}
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {/* ── Account ── */}
-      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
-        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
-          <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Account</h3>
-        </div>
+      <SectionCard title="Account">
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
             <div>
@@ -524,156 +419,19 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
             <RoleBadge role={userRole} />
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Plan (testing only — no billing yet)</label>
-            <select
-              value={form.plan}
-              onChange={e => setForm({ ...form, plan: e.target.value })}
-              style={{ ...inputStyle, cursor: 'pointer', backgroundColor: t.colors.bgCard, maxWidth: '220px' }}
-            >
-              <option value="free">Free (1 business)</option>
-              <option value="founding">Founders Circle (3 businesses)</option>
-              <option value="duo">Duo (2 businesses)</option>
-              <option value="studio">Studio (3 businesses)</option>
-              <option value="enterprise">Enterprise (uncapped)</option>
-            </select>
+            <label style={labelStyle}>Plan</label>
+            <div style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary }}>
+              {PLAN_LABELS[form.plan] || form.plan}
+            </div>
             <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
-              Controls how many business spaces you can create. Manual override until real billing ships.
+              Controls how many business spaces you can create. Contact support to change your plan.
             </span>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
-      {/* ── Team ── */}
-      {isOwnerOrAdmin && (
-        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
-          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
-            <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, margin: '0 0 4px' }}>Team</h3>
-            <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>Invite staff and clients to your workspace</p>
-          </div>
-
-          {/* Invite form */}
-          <div style={{ padding: '24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <input
-                style={{ ...inputStyle, flex: 1, minWidth: '200px' }}
-                type="email"
-                placeholder="teammate@email.com"
-                value={inviteEmail}
-                onChange={e => setInviteEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleInvite()}
-              />
-              <select
-                value={inviteRole}
-                onChange={e => setInviteRole(e.target.value)}
-                style={{ ...inputStyle, cursor: 'pointer', backgroundColor: t.colors.bgCard }}
-              >
-                <option value="co-owner">Co-Owner</option>
-                <option value="employee">Employee</option>
-              </select>
-              <button
-                onClick={handleInvite}
-                disabled={inviting}
-                style={{
-                  padding: '10px 20px', borderRadius: t.radius.full, border: 'none',
-                  backgroundColor: inviteSent ? t.colors.success : t.colors.primary,
-                  color: t.colors.textInverse, fontSize: t.fontSizes.md,
-                  fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans,
-                  transition: 'background 0.2s', whiteSpace: 'nowrap',
-                }}
-              >
-                {inviteSent ? '✓ Sent!' : inviting ? 'Sending...' : 'Send invite'}
-              </button>
-            </div>
-            {inviteError && (
-              <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
-                {inviteError}
-              </div>
-            )}
-          </div>
-
-          {/* Current members */}
-          <div style={{ padding: '16px 24px' }}>
-            <div style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textTertiary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Members ({members.length})
-            </div>
-            {memberError && (
-              <div style={{ marginBottom: '12px', padding: '8px 12px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
-                {memberError}
-              </div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {members.map(m => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: t.colors.borderLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: t.colors.textTertiary, fontWeight: '600' }}>
-                      {(m.display_name || '?')[0].toUpperCase()}
-                    </div>
-                    <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
-                      {m.display_name || 'No name set'}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {m.role === 'owner' ? (
-                      <RoleBadge role="owner" />
-                    ) : (
-                      <select
-                        value={m.role}
-                        onChange={e => handleUpdateRole(m.user_id, e.target.value)}
-                        style={{ padding: '4px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, fontFamily: t.fonts.sans, backgroundColor: t.colors.bgCard, cursor: 'pointer' }}
-                      >
-                        <option value="co-owner">Co-Owner</option>
-                        <option value="employee">Employee</option>
-                      </select>
-                    )}
-                    {m.role !== 'owner' && (
-                      <button
-                        onClick={() => handleRemoveMember(m.user_id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '16px', padding: '2px 6px', borderRadius: t.radius.full, lineHeight: 1 }}
-                        title="Remove member"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pending invites */}
-          {invites.length > 0 && (
-            <div style={{ padding: '0 24px 16px' }}>
-              <div style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textTertiary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                Pending invites ({invites.length})
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {invites.map(inv => (
-                  <div key={inv.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', backgroundColor: t.colors.bg, borderRadius: t.radius.md, border: `1px dashed ${t.colors.border}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>{inv.email}</div>
-                      <RoleBadge role={inv.role} />
-                    </div>
-                    <button
-                      onClick={() => handleRevokeInvite(inv.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: '16px', padding: '2px 6px', borderRadius: t.radius.full, lineHeight: 1 }}
-                      title="Revoke invite"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-{/* ── Danger Zone ── */}
-      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.dangerLight}`, overflow: 'hidden', marginBottom: '24px' }}>
-        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
-          <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.danger, margin: '0 0 4px' }}>Danger zone</h3>
-          <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: 0 }}>Permanent actions that can't be undone</p>
-        </div>
+      {/* ── Danger Zone ── */}
+      <SectionCard title="Danger zone" subtitle="Permanent actions that can't be undone" titleColor={t.colors.danger} borderColor={t.colors.dangerLight} defaultOpen={false}>
         {isOwner && (
           <div style={{ padding: '24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -725,7 +483,7 @@ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invit
             Delete account
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* ── Actions ── */}
       <div style={{ display: 'flex', gap: '12px' }}>
