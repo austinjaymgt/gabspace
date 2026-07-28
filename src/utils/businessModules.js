@@ -16,6 +16,9 @@ export const MODULE_DEFS = [
 
 // Sidebar nav paths gated by each module — one entry per top-level sidebar
 // section, listing every path under it (parent + children).
+// 'team-members' (invites/roster) is intentionally excluded here — it's
+// core account management, not an optional feature, so toggling the Team
+// module off must not also hide the ability to manage who's on the team.
 export const MODULE_NAV_PATHS = {
   clientManagement: ['allclients', 'projects', 'tasks'],
   portals: ['client-portal-manager'],

@@ -32,6 +32,7 @@ const allPages = [
   { path: 'spark',             label: 'Spark',             icon: 'sparkles' },
 
   // Team
+  { path: 'team-members',      label: 'Members',      icon: 'guests' },
   { path: 'team-goals',        label: 'Goals',        icon: 'team-goals' },
   { path: 'pro-dev',           label: 'Pro Dev',           icon: 'star' },
   { path: 'business-events',   label: 'Networking',  icon: 'events' },
@@ -80,6 +81,7 @@ const CATEGORY_CHILDREN = [
   {
     label: 'Team',
     children: [
+      { path: 'team-members', label: 'Members', icon: 'guests' },
       { path: 'team-goals', label: 'Goals', icon: 'team-goals' },
       { path: 'pro-dev', label: 'Pro Dev', icon: 'star' },
       { path: 'business-events', label: 'Networking', icon: 'events' },

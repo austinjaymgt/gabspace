@@ -37,6 +37,7 @@ import ClientPortalView from './pages/ClientPortalView'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
+import TeamMembers from './pages/TeamMembers'
 import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
 import AddBusinessFlow from './components/AddBusinessFlow'
@@ -426,6 +427,9 @@ function renderPage() {
 
       case 'team-goals':
         return isStaff ? <TeamGoals {...pageProps} /> : <AccessDenied />
+
+      case 'team-members':
+        return isOwnerOrAdmin ? <TeamMembers {...pageProps} /> : <AccessDenied />
 
       case 'intranet':
         return <Intranet />

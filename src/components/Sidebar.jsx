@@ -51,6 +51,7 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
   },
   {
     label: 'Team', icon: 'team', path: 'team', children: [
+      { label: 'Members', path: 'team-members', ownerOrAdminOnly: true },
       { label: ' Goals', path: 'team-goals' },
       { label: 'Professional Development', path: 'pro-dev' },
       { label: 'Networking', path: 'business-events' },
@@ -59,7 +60,7 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
   { label: 'Settings', icon: 'settings', path: 'settings' },
 ]
 
-function filterNavItems(modules) {
+function filterNavItems(modules, isOwnerOrAdmin) {
   const hiddenPaths = new Set()
   Object.entries(MODULE_NAV_PATHS).forEach(([key, paths]) => {
     if (!modules[key]) paths.forEach(p => hiddenPaths.add(p))
@@ -67,7 +68,7 @@ function filterNavItems(modules) {
 
   return navItems
     .map(item => item.children
-      ? { ...item, children: item.children.filter(c => !hiddenPaths.has(c.path)) }
+      ? { ...item, children: item.children.filter(c => !hiddenPaths.has(c.path) && (!c.ownerOrAdminOnly || isOwnerOrAdmin)) }
       : item)
     .filter(item => item.children ? item.children.length > 0 : !hiddenPaths.has(item.path))
 }
@@ -85,11 +86,12 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId, portalActivityVersion, isPlatformAdmin }) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId, portalActivityVersion, isPlatformAdmin, userRole }) {
   const [expanded, setExpanded] = useState([])
   const [portalUnread, setPortalUnread] = useState(0)
   const isDesktop = useIsDesktop()
-  const items = filterNavItems(getModules(businessSpaceId))
+  const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
+  const items = filterNavItems(getModules(businessSpaceId), isOwnerOrAdmin)
   if (isPlatformAdmin) items.push({ label: 'Admin', icon: 'star', path: 'admin' })
 
   useEffect(() => {
