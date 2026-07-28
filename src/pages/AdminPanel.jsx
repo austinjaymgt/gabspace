@@ -33,7 +33,7 @@ export default function AdminPanel() {
     setLoading(true)
     const [settingsRes, waitlistRes, usersRes] = await Promise.all([
       supabase.from('platform_settings').select('*').single(),
-      supabase.from('waitlist').select('id, email, created_at').order('created_at', { ascending: false }),
+      supabase.from('waitlist').select('id, email, created_at, name, creative_type, social_link, how_heard').order('created_at', { ascending: false }),
       supabase.rpc('admin_list_users'),
     ])
     if (settingsRes.data) {
@@ -87,7 +87,10 @@ export default function AdminPanel() {
   function exportWaitlist() {
     downloadCsv(
       `waitlist-${new Date().toISOString().slice(0, 10)}.csv`,
-      [['email', 'captured_at'], ...waitlist.map(w => [w.email, w.created_at])]
+      [
+        ['email', 'name', 'creative_type', 'social_link', 'how_heard', 'captured_at'],
+        ...waitlist.map(w => [w.email, w.name, w.creative_type, w.social_link, w.how_heard, w.created_at]),
+      ]
     )
   }
 
@@ -174,7 +177,7 @@ export default function AdminPanel() {
         <div style={{ ...headerStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h3 style={titleStyle}>Waitlist ({waitlist.length})</h3>
-            <p style={descStyle}>Captured while signups were closed.</p>
+            <p style={descStyle}>Captured while signups were closed, plus Founders Circle applications from gabspace.io.</p>
           </div>
           <button
             onClick={exportWaitlist}
@@ -187,9 +190,16 @@ export default function AdminPanel() {
         {waitlist.length > 0 && (
           <div style={{ padding: '8px 24px 20px', maxHeight: '320px', overflowY: 'auto' }}>
             {waitlist.map(w => (
-              <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm }}>
-                <span style={{ color: t.colors.textPrimary }}>{w.email}</span>
-                <span style={{ color: t.colors.textTertiary }}>{new Date(w.created_at).toLocaleDateString()}</span>
+              <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderBottom: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm }}>
+                <div>
+                  <div style={{ color: t.colors.textPrimary }}>{w.name ? `${w.name} · ${w.email}` : w.email}</div>
+                  {w.creative_type && (
+                    <div style={{ color: t.colors.textTertiary, fontSize: t.fontSizes.xs, marginTop: '2px' }}>
+                      {w.creative_type}{w.social_link ? ` · ${w.social_link}` : ''}
+                    </div>
+                  )}
+                </div>
+                <span style={{ color: t.colors.textTertiary, whiteSpace: 'nowrap', marginLeft: '12px' }}>{new Date(w.created_at).toLocaleDateString()}</span>
               </div>
             ))}
           </div>
