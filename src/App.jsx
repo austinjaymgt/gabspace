@@ -706,7 +706,7 @@ function renderPage() {
           {renderPage()}
         </div>
       </div>
-      {isMobile && <MobileTabBar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} businessSpaceId={businessSpaceId} />}
+      {isMobile && <MobileTabBar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} businessSpaceId={businessSpaceId} isPlatformAdmin={isPlatformAdmin} />}
       <div style={{ position: 'fixed', bottom: isMobile ? 'calc(72px + env(safe-area-inset-bottom))' : 24, right: isMobile ? 12 : 24, zIndex: 999 }}>
         <OrbiWidget businessSpaceId={businessSpaceId} isMobile={isMobile} onNavigate={setCurrentPage} />
       </div>
