@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from './Icon'
-import Pixel from './Pixel'
+import Orb from './Orb'
 
 // ─── Swap these URLs once your Loom recordings are ready ───────────────────
 const LOOM_NAVIGATION = 'https://www.loom.com/embed/YOUR_NAVIGATION_VIDEO_ID'
@@ -80,14 +80,19 @@ export default function BetaWelcomeModal({ session, businessSpaceId, onComplete 
         ══════════════════════════════════════ */}
         {step === 1 && (
           <div style={s.stepBody}>
-            <div style={s.pixelWrap}>
-              <Pixel mood="celebrating" size={96} sparkles animated wave />
+            <div style={s.orbWrap}>
+              <Orb size={96} halo />
             </div>
             <h2 style={s.heading}>You're in. Welcome to the beta. 🎉</h2>
             <p style={s.body}>
               We're really glad you're here. gabspace is still being shaped, and having
               real creative entrepreneurs using it — and telling us what's working and
               what isn't — is exactly how we make it better.
+            </p>
+            <p style={s.body}>
+              That glowing orb is Orbi — your assistant in the corner of every page.
+              Click it any time for a quick rundown of what's overdue, upcoming, or
+              needs your attention.
             </p>
             <p style={s.body}>
               This short walkthrough covers the three things you need to know before
@@ -119,11 +124,19 @@ export default function BetaWelcomeModal({ session, businessSpaceId, onComplete 
                 title="gabspace navigation overview"
               />
             </div>
-            <div style={s.tipRow}>
+            <div style={{ ...s.tipRow, marginBottom: '10px' }}>
               <Icon name="info" size="sm" />
               <span style={s.tipText}>
                 Use the sidebar to switch sections. Your favorites bar at the top gives
                 you quick access to the pages you visit most.
+              </span>
+            </div>
+            <div style={s.tipRow}>
+              <Icon name="intranet" size="sm" />
+              <span style={s.tipText}>
+                Running more than one brand? Click your business name next to your
+                avatar in the top bar to switch between business spaces or create a
+                new one.
               </span>
             </div>
           </div>
@@ -336,7 +349,7 @@ const s = {
     padding:         '24px 28px 8px',
     flex:            1,
   },
-  pixelWrap: {
+  orbWrap: {
     display:         'flex',
     justifyContent:  'center',
     marginBottom:    '20px',
