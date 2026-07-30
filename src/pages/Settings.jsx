@@ -326,12 +326,12 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
             <div style={fieldStyle}>
               <label style={labelStyle}>Display name</label>
               <input style={inputStyle} placeholder="e.g. Alex Rivera" value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} />
-              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Used on proposals and documents</span>
+              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Shown next to your name in Team members</span>
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Job title</label>
               <input style={inputStyle} placeholder="e.g. Founder & Creative Director" value={form.job_title} onChange={e => setForm({ ...form, job_title: e.target.value })} />
-              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Appears under your name on proposals</span>
+              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Shown under your name in Team members</span>
             </div>
           </div>
           <div style={fieldStyle}>

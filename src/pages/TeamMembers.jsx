@@ -18,7 +18,7 @@ export default function TeamMembers({ businessSpaceId }) {
   async function fetchMembers() {
     const { data: memberRows } = await supabase
       .from('business_space_members')
-      .select('id, user_id, role, display_name, created_at')
+      .select('id, user_id, role, display_name, job_title, created_at')
       .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: true })
     if (!memberRows) return
@@ -191,8 +191,15 @@ export default function TeamMembers({ businessSpaceId }) {
                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: t.colors.borderLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: t.colors.textTertiary, fontWeight: '600' }}>
                     {(m.display_name || '?')[0].toUpperCase()}
                   </div>
-                  <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
-                    {m.display_name || 'No name set'}
+                  <div>
+                    <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
+                      {m.display_name || 'No name set'}
+                    </div>
+                    {m.job_title && (
+                      <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
+                        {m.job_title}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
