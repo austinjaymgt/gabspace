@@ -126,18 +126,19 @@ export default function Invoices({ businessSpaceId }) {
     const { data, error } = await supabase
       .from('invoices')
       .select('*, clients(name, company), projects(title), line_items(*), invoice_payments(*)')
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     if (!error) setInvoices(data)
     setLoading(false)
   }
 
   async function fetchClients() {
-    const { data } = await supabase.from('clients').select('id, name, company')
+    const { data } = await supabase.from('clients').select('id, name, company').eq('business_space_id', businessSpaceId)
     if (data) setClients(data)
   }
 
   async function fetchProjects() {
-    const { data } = await supabase.from('projects').select('id, title')
+    const { data } = await supabase.from('projects').select('id, title').eq('business_space_id', businessSpaceId)
     if (data) setProjects(data)
   }
 
@@ -145,6 +146,7 @@ export default function Invoices({ businessSpaceId }) {
     const { data } = await supabase
       .from('recurring_invoice_rules')
       .select('*, clients(name, company), projects(title), recurring_invoice_rule_line_items(*)')
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     if (data) setRecurringRules(data)
   }

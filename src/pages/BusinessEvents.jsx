@@ -49,6 +49,7 @@ export default function BusinessEvents({ businessSpaceId }) {
     const { data } = await supabase
       .from('business_events')
       .select('*')
+      .eq('business_space_id', businessSpaceId)
       .order('date', { ascending: false })
     if (data) setEvents(data)
     setLoading(false)

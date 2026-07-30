@@ -65,7 +65,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     setLoading(true)
     const [campRes, projRes] = await Promise.all([
       supabase.from('campaigns').select('*').eq('business_space_id', businessSpaceId).order('created_at', { ascending: false }),
-      supabase.from('projects').select('id, title, event_date, event_status').order('title'),
+      supabase.from('projects').select('id, title, event_date, event_status').eq('business_space_id', businessSpaceId).order('title'),
     ])
     setCampaigns(campRes.data || [])
     setProjects(projRes.data || [])

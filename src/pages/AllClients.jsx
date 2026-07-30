@@ -36,6 +36,7 @@ export default function Clients({ businessSpaceId }) {
     const { data, error } = await supabase
       .from('clients')
       .select('*')
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     if (!error) setClients(data)
     setLoading(false)

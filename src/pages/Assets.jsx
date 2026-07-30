@@ -45,6 +45,7 @@ export default function Assets({ businessSpaceId }) {
     const { data, error } = await supabase
       .from('assets')
       .select('*')
+      .eq('business_space_id', businessSpaceId)
       .order('created_at', { ascending: false })
     if (!error) setAssets(data)
     setLoading(false)

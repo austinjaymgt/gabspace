@@ -64,18 +64,19 @@ export default function ContentCalendar({ businessSpaceId }) {
     const { data, error } = await supabase
       .from('content_calendar')
       .select('*, campaigns(name), projects(title)')
+      .eq('business_space_id', businessSpaceId)
       .order('scheduled_date', { ascending: true })
     if (!error) setItems(data)
     setLoading(false)
   }
 
   async function fetchCampaigns() {
-    const { data } = await supabase.from('campaigns').select('id, name')
+    const { data } = await supabase.from('campaigns').select('id, name').eq('business_space_id', businessSpaceId)
     if (data) setCampaigns(data)
   }
 
   async function fetchProjects() {
-    const { data } = await supabase.from('projects').select('id, title')
+    const { data } = await supabase.from('projects').select('id, title').eq('business_space_id', businessSpaceId)
     if (data) setProjects(data)
   }
 

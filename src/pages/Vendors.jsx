@@ -32,6 +32,7 @@ export default function Vendors({ businessSpaceId }) {
     const { data, error } = await supabase
       .from('vendors')
       .select('*')
+      .eq('business_space_id', businessSpaceId)
       .order('name', { ascending: true })
     if (!error) setVendors(data)
     setLoading(false)
