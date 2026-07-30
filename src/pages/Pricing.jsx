@@ -2,54 +2,13 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
+import { TIERS } from '../utils/pricingTiers'
+import { createCheckoutSession } from '../utils/checkout'
 
-// Price IDs come from Stripe — swap the placeholders for the real ones from
-// the Stripe dashboard before going live. Tier `key` must match the `tier`
-// metadata set on each Stripe Price (see API/stripe-webhook.js).
-const TIERS = [
-  {
-    key: 'business',
-    name: 'Business',
-    tagline: 'For running one thing, beautifully.',
-    monthlyPrice: 34,
-    annualPrice: 326.4,
-    priceIds: {
-      monthly: 'price_1Tz1wNEv4OEMA57Ns4eKwbcS',
-      annual: 'price_1Tz21jEv4OEMA57Nr7Xul0zs',
-    },
-    features: ['1 business profile', 'Clients, projects & deadlines', 'Core gabspace tools'],
-  },
-  {
-    key: 'duo',
-    name: 'Duo',
-    tagline: 'For the people who run more than one thing.',
-    monthlyPrice: 54,
-    annualPrice: 518.4,
-    priceIds: {
-      monthly: 'price_1Tz1wqEv4OEMA57N53bR4wWd',
-      annual: 'price_1Tz22iEv4OEMA57NsSRwBVWw',
-    },
-    features: ['2 business profiles', 'Orbi cross-business homescreen', 'Everything in Business'],
-    popular: true,
-  },
-  {
-    key: 'studio',
-    name: 'Studio',
-    tagline: 'For the full operation.',
-    monthlyPrice: 89,
-    annualPrice: 854.4,
-    priceIds: {
-      monthly: 'price_1Tz1xIEv4OEMA57NXegRQAym',
-      annual: 'price_1Tz20XEv4OEMA57NlhNldIbH',
-    },
-    features: ['3+ business profiles', 'Orbi scaled across every business', 'Everything in Duo'],
-  },
-]
-
-export default function Pricing({ session, onNavigate, mandatory = false, onLogout }) {
+export default function Pricing({ session, onNavigate, mandatory = false, onLogout, initialError = null }) {
   const [billingPeriod, setBillingPeriod] = useState('monthly')
   const [loadingTier, setLoadingTier] = useState(null)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(initialError)
   const [currentPlan, setCurrentPlan] = useState(null)
   const [isFounder, setIsFounder] = useState(false)
 
@@ -80,20 +39,12 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
         return
       }
 
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: tier.priceIds[billingPeriod],
-          userId: activeSession.user.id,
-          isFounder,
-        }),
+      const url = await createCheckoutSession({
+        priceId: tier.priceIds[billingPeriod],
+        userId: activeSession.user.id,
+        isFounder,
       })
-
-      if (!res.ok) throw new Error('Checkout session failed')
-
-      const { url } = await res.json()
-      window.location.href = url
+      window.location.assign(url)
     } catch (err) {
       console.error(err)
       setError('Something went wrong starting checkout. Try again.')

@@ -42,16 +42,17 @@ import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
 import AddBusinessFlow from './components/AddBusinessFlow'
 import Pricing from './pages/Pricing'
+import GetStarted from './pages/GetStarted'
+import { TIERS } from './utils/pricingTiers'
+import { createCheckoutSession } from './utils/checkout'
 
 export default function App() {
   const isMobile = useIsMobile()
   const [session, setSession] = useState(null)
   const [currentPage, setCurrentPage] = useState('home')
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup'
+  const [showGetStarted, setShowGetStarted] = useState(() => window.location.pathname === '/get-started')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [workspaceName, setWorkspaceName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -65,7 +66,6 @@ export default function App() {
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
 const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
-const [signupsOpen, setSignupsOpen] = useState(true)
 const [showAddBusinessFlow, setShowAddBusinessFlow] = useState(false)
 const [addBusinessForced, setAddBusinessForced] = useState(false)
 const [authChecked, setAuthChecked] = useState(false)
@@ -75,6 +75,9 @@ const [showWelcomeSplash, setShowWelcomeSplash] = useState(false)
 const [requiresCheckout, setRequiresCheckout] = useState(false)
 const [checkoutStatusLoading, setCheckoutStatusLoading] = useState(true)
 const [billingSuccessPending, setBillingSuccessPending] = useState(() => window.location.pathname === '/billing/success')
+const [autoCheckoutTried, setAutoCheckoutTried] = useState(false)
+const [autoCheckoutInFlight, setAutoCheckoutInFlight] = useState(false)
+const [autoCheckoutError, setAutoCheckoutError] = useState(null)
 const splashStartRef = useRef(null)
 const authStartRef = useRef(null)
 const DAILY_SPLASH_KEY = 'gabspace_splash_last_shown'
@@ -217,15 +220,28 @@ const WELCOME_SPLASH_MS = 2600
     return () => { cancelled = true }
   }, [billingSuccessPending, session])
 
-  // Signup kill switch — checked pre-auth, so the signup form can fall back
-  // to a waitlist capture form when closed.
+  // GetStarted stashes the plan the user picked during signup in
+  // user_metadata (selected_tier/selected_billing_period) since no session
+  // exists yet to start Checkout at that point. The instant one shows up
+  // post-confirmation, fire that checkout automatically instead of making
+  // them pick again on the manual mandatory-checkout gate below.
   useEffect(() => {
-    supabase
-      .from('platform_settings')
-      .select('signups_open')
-      .single()
-      .then(({ data }) => { if (data) setSignupsOpen(data.signups_open) })
-  }, [])
+    if (checkoutStatusLoading || !requiresCheckout || !session || autoCheckoutTried) return
+    const tierKey = session.user.user_metadata?.selected_tier
+    const tier = TIERS.find(x => x.key === tierKey)
+    const period = session.user.user_metadata?.selected_billing_period === 'annual' ? 'annual' : 'monthly'
+    const priceId = tier?.priceIds?.[period]
+    if (!priceId) { setAutoCheckoutTried(true); return }
+
+    setAutoCheckoutTried(true)
+    setAutoCheckoutInFlight(true)
+    createCheckoutSession({ priceId, userId: session.user.id, isFounder: false })
+      .then(url => { window.location.assign(url) })
+      .catch(() => {
+        setAutoCheckoutInFlight(false)
+        setAutoCheckoutError('Something went wrong starting checkout — pick a plan below.')
+      })
+  }, [checkoutStatusLoading, requiresCheckout, session, autoCheckoutTried])
 
   // Picks a fallback if the given business is archived (e.g. archived by a
   // co-owner in another session) — the active business_space_id should
@@ -307,41 +323,6 @@ const WELCOME_SPLASH_MS = 2600
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) setError(error.message)
     else setSession(data.session)
-    setLoading(false)
-  }
-
-  async function handleSignUp(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          workspace_name: workspaceName,
-        },
-        emailRedirectTo: `${window.location.origin}/welcome`,
-      }
-    })
-    if (error) setError(error.message)
-    else setError('Check your email to confirm your account!')
-    setLoading(false)
-  }
-
-  async function handleWaitlistSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    const { error: waitlistError } = await supabase.from('waitlist').insert({ email })
-    if (waitlistError) {
-      setError(waitlistError.message.includes('duplicate') ? "You're already on the waitlist." : waitlistError.message)
-    } else {
-      setError("You're on the list — we'll email you when signups open back up.")
-      setEmail('')
-    }
     setLoading(false)
   }
 
@@ -538,51 +519,34 @@ function renderPage() {
     return <SplashScreen tagline="loading your space…" />
   }
 
-// Login / Signup screen
+// Login screen — account creation (with plan/checkout built in) lives on
+  // the dedicated GetStarted flow instead, reached via /get-started (the
+  // marketing site's "Get started" links there directly) or the "Sign up"
+  // link below.
   if (!session) {
-    const isSignup = mode === 'signup'
-    const showWaitlistForm = isSignup && !signupsOpen
+    if (showGetStarted) {
+      return (
+        <GetStarted
+          onBackToLogin={() => {
+            window.history.replaceState({}, '', '/')
+            setShowGetStarted(false)
+          }}
+        />
+      )
+    }
     return (
       <div className="force-light-theme" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans }}>
         <img src={gabspaceLockup} alt="gabspace" style={{ height: '44px', width: 'auto' }} />
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
-            {showWaitlistForm ? "signups are paused — join the waitlist." : isSignup ? 'create your space.' : 'welcome back.'}
+            welcome back.
           </p>
 
-          <form onSubmit={showWaitlistForm ? handleWaitlistSubmit : (isSignup ? handleSignUp : handleLogin)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
               <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: error.includes('Check') || error.includes('on the list') ? t.colors.successLight : t.colors.dangerLight, color: error.includes('Check') || error.includes('on the list') ? t.colors.success : t.colors.danger, fontSize: t.fontSizes.base }}>
                 {error}
               </div>
-            )}
-
-            {isSignup && !showWaitlistForm && (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Your name</label>
-                  <input
-                    style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
-                    type="text"
-                    placeholder="Jane Doe"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Workspace name</label>
-                  <input
-                    style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
-                    type="text"
-                    placeholder="Jane Doe Studio"
-                    value={workspaceName}
-                    onChange={e => setWorkspaceName(e.target.value)}
-                    required
-                  />
-                </div>
-              </>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -596,63 +560,61 @@ function renderPage() {
               />
             </div>
 
-            {!showWaitlistForm && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Password</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans, width: '100%', boxSizing: 'border-box', paddingRight: '44px' }}
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder={isSignup ? 'At least 8 characters' : '••••••••'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(prev => !prev)}
-                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: t.colors.textTertiary, padding: '2px', lineHeight: 1 }}
-                  >
-                    {showPassword ? '🙈' : '👁'}
-                  </button>
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Password</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans, width: '100%', boxSizing: 'border-box', paddingRight: '44px' }}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: t.colors.textTertiary, padding: '2px', lineHeight: 1 }}
+                >
+                  {showPassword ? '🙈' : '👁'}
+                </button>
               </div>
-            )}
+            </div>
 
             <button
               type="submit"
               disabled={loading}
               style={{ padding: '12px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
             >
-              {showWaitlistForm
-                ? (loading ? 'Joining...' : 'Join waitlist')
-                : loading ? (isSignup ? 'Creating account...' : 'Signing in...') : (isSignup ? 'Create account' : 'Sign in')}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
 
-            {!isSignup && (
-              resetSent ? (
-                <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight, color: t.colors.success, fontSize: t.fontSizes.base, textAlign: 'center' }}>
-                  ✓ Password reset email sent — check your inbox
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  disabled={loading}
-                  style={{ background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.sm, cursor: 'pointer', textAlign: 'center', fontFamily: t.fonts.sans, textDecoration: 'underline', padding: 0 }}
-                >
-                  Forgot password?
-                </button>
-              )
+            {resetSent ? (
+              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight, color: t.colors.success, fontSize: t.fontSizes.base, textAlign: 'center' }}>
+                ✓ Password reset email sent — check your inbox
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={loading}
+                style={{ background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.sm, cursor: 'pointer', textAlign: 'center', fontFamily: t.fonts.sans, textDecoration: 'underline', padding: 0 }}
+              >
+                Forgot password?
+              </button>
             )}
 
             <div style={{ textAlign: 'center', marginTop: '8px', paddingTop: '16px', borderTop: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontFamily: t.fonts.sans }}>
-              {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
+              Don't have an account?{' '}
               <button
                 type="button"
-                onClick={() => { setMode(isSignup ? 'signin' : 'signup'); setError(null); }}
+                onClick={() => {
+                  window.history.pushState({}, '', '/get-started')
+                  setShowGetStarted(true)
+                  setError(null)
+                }}
                 style={{ background: 'none', border: 'none', color: t.colors.primary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, padding: 0 }}
               >
-                {isSignup ? 'Sign in' : 'Sign up'}
+                Sign up
               </button>
             </div>
           </form>
@@ -670,7 +632,10 @@ function renderPage() {
   }
 
   if (requiresCheckout) {
-    return <Pricing session={session} mandatory onLogout={handleLogout} />
+    if (autoCheckoutInFlight) {
+      return <SplashScreen tagline="setting up your trial…" />
+    }
+    return <Pricing session={session} mandatory onLogout={handleLogout} initialError={autoCheckoutError} />
   }
 
   // Temporary GABi visual test — visit /?gabi to see all moods
