@@ -149,6 +149,7 @@ export default function Projects({ businessSpaceId }) {
     const { data } = await supabase
       .from('projects')
       .select('*, clients(name, company)')
+      .eq('business_space_id', businessSpaceId)
       .eq('type', 'project')
       .order('created_at', { ascending: false })
     if (data) setRecords(data)
@@ -156,7 +157,7 @@ export default function Projects({ businessSpaceId }) {
   }
 
   async function fetchClients() {
-    const { data } = await supabase.from('clients').select('id, name, company')
+    const { data } = await supabase.from('clients').select('id, name, company').eq('business_space_id', businessSpaceId)
     if (data) setClients(data)
   }
 
