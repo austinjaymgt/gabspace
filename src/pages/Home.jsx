@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { getModules } from '../utils/businessModules'
+import { formatDate } from '../utils/dates'
 import Orb from '../components/Orb'
 
 function startOfToday() {
@@ -33,7 +34,7 @@ function riseAnim(delay, duration = 0.5) {
   return `home-enter-rise ${duration}s cubic-bezier(0.16,1,0.3,1) ${delay}s backwards`
 }
 
-// ── Urgent feed ──────────────────────────────────────────────────────────
+// ── Task feed ────────────────────────────────────────────────────────────
 
 function FeedTaskRow({ task, dueLabelColor, onComplete }) {
   return (
@@ -49,7 +50,7 @@ function FeedTaskRow({ task, dueLabelColor, onComplete }) {
         <div style={s.taskBusiness}>{task.business_name}</div>
       </div>
       {task.due_date && (
-        <span style={{ ...s.taskDue, color: dueLabelColor }}>{dueLabel(task.due_date)}</span>
+        <span style={{ ...s.taskDue, color: dueLabelColor }}>{dueLabel(task.due_date)} · {formatDate(task.due_date)}</span>
       )}
     </div>
   )
@@ -176,13 +177,13 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
     else if (due.getTime() === today0.getTime()) todayTasks.push(task)
     else if (due <= weekEnd) weekTasks.push(task)
   }
-  const totalUrgent = overdueTasks.length + todayTasks.length + weekTasks.length
+  const totalUpcoming = overdueTasks.length + todayTasks.length + weekTasks.length
 
   const statusLine = loadingTasks
     ? 'Loading your day…'
-    : totalUrgent === 0
+    : totalUpcoming === 0
       ? "You're all caught up"
-      : `${totalUrgent} urgent item${totalUrgent === 1 ? '' : 's'} across your businesses`
+      : `${totalUpcoming} item${totalUpcoming === 1 ? '' : 's'} across your businesses`
 
   return (
     <div style={s.screen} onClick={handleEnterWorkspace}>
@@ -198,7 +199,7 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
 
       <div style={s.center}>
         <div style={s.orbWrap}>
-          <Orb size={150} urgent={totalUrgent > 0} halo />
+          <Orb size={150} halo />
         </div>
 
         <div style={{ ...s.greeting, animation: riseAnim(0.3) }}>
@@ -229,7 +230,7 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
           </div>
         )}
 
-        {!loadingTasks && totalUrgent > 0 && (
+        {!loadingTasks && totalUpcoming > 0 && (
           <div style={{ ...s.feedPanel, animation: riseAnim(0.8) }} onClick={e => e.stopPropagation()}>
             <FeedGroup label="Overdue" color="rgba(192,80,110,0.9)" tasks={overdueTasks} onComplete={completeTask} />
             <FeedGroup label="Today" color="rgba(169,174,187,0.9)" tasks={todayTasks} onComplete={completeTask} />

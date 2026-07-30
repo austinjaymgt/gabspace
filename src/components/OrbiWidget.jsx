@@ -1,21 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
 import { theme as t } from '../theme'
+import { supabase } from '../supabaseClient'
 import Orb from './Orb'
 import { fetchOrbiItems } from '../utils/orbiItems'
 import { getOrbiBrief } from '../lib/orbi'
 
-// Wraps the corner Orb with Orbi: on click, it looks at the current
-// business space's overdue/upcoming tasks, invoices, events, and projects
-// and shows a short friendly rundown. Fetched once per business space and
-// cached until the user asks to refresh or switches business spaces.
-export default function OrbiWidget({ businessSpaceId, isMobile, onNavigate }) {
+// Wraps the corner Orb with Orbi: on click, it looks across every business
+// space the user belongs to for overdue/upcoming tasks, invoices, events,
+// and projects and shows a short friendly rundown. This is deliberately
+// cross-business (like Home.jsx's feed) rather than scoped to whichever
+// space is currently active — the active space's own items are already
+// visible on its Dashboard, so repeating just that one space here would
+// add nothing. Fetched once per session and cached until the user asks
+// to refresh.
+export default function OrbiWidget({ session, businessSpaceId, onSwitchBusinessSpace, isMobile, onNavigate }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [items, setItems] = useState(null)
-  // This widget stays mounted across business-space switches (it's part of
-  // the persistent app shell), so a stale in-flight fetch from the previous
-  // business space could otherwise land after a newer one and clobber it.
+  const [windowDays, setWindowDays] = useState(3)
   const requestIdRef = useRef(0)
 
   async function loadBrief() {
@@ -23,7 +26,21 @@ export default function OrbiWidget({ businessSpaceId, isMobile, onNavigate }) {
     setLoading(true)
     setError('')
     try {
-      const orbiItems = await fetchOrbiItems(businessSpaceId)
+      const [{ data }, { data: settings }] = await Promise.all([
+        supabase
+          .from('business_space_members')
+          .select('business_space_id, business_spaces(id, name, archived_at)')
+          .eq('user_id', session.user.id),
+        supabase.from('user_settings').select('orbi_window_days').eq('user_id', session.user.id).maybeSingle(),
+      ])
+      const businesses = (data || [])
+        .filter(r => r.business_spaces && !r.business_spaces.archived_at)
+        .map(r => ({ id: r.business_spaces.id, name: r.business_spaces.name }))
+      const days = settings?.orbi_window_days || 3
+      if (requestId !== requestIdRef.current) return
+      setWindowDays(days)
+
+      const orbiItems = await fetchOrbiItems(businesses, days)
       if (requestId !== requestIdRef.current) return
       if (!orbiItems.length) {
         setItems([])
@@ -40,10 +57,12 @@ export default function OrbiWidget({ businessSpaceId, isMobile, onNavigate }) {
     if (requestId === requestIdRef.current) setLoading(false)
   }
 
-  // Switching business spaces invalidates whatever Orbi last fetched —
-  // otherwise it'd keep narrating the previous business's items, and its
-  // action buttons would navigate you to a page scoped to the *new*
-  // business space while describing a record that belongs to the old one.
+  // Orbi's own item set is cross-business and doesn't strictly depend on
+  // which space is active, but the business list it aggregates over can
+  // change the moment you switch (e.g. you just joined or created one) —
+  // and a switch is also the clearest signal the user wants a fresh read.
+  // Invalidate the cache so the next open (or an already-open panel)
+  // refetches instead of showing whatever was cached from before.
   useEffect(() => {
     setItems(null)
     setError('')
@@ -57,8 +76,12 @@ export default function OrbiWidget({ businessSpaceId, isMobile, onNavigate }) {
     if (next && items === null && !loading) loadBrief()
   }
 
-  function handleAction(action) {
+  async function handleAction(action) {
     setOpen(false)
+    // An item can belong to a business space other than the one currently
+    // active, since Orbi's feed spans every business the user is in —
+    // switch into it first so the target page shows the right record.
+    if (action.business_space_id) await onSwitchBusinessSpace?.(action.business_space_id)
     onNavigate?.(action.handler)
   }
 
@@ -66,7 +89,10 @@ export default function OrbiWidget({ businessSpaceId, isMobile, onNavigate }) {
     <div style={{ position: 'relative' }}>
       {open && (
         <div style={s.panel}>
-          <div style={s.header}>Orbi</div>
+          <div style={s.headerRow}>
+            <div style={s.header}>Orbi</div>
+            <div style={s.windowLabel}>next {windowDays} {windowDays === 1 ? 'day' : 'days'}</div>
+          </div>
 
           {loading && <div style={s.status}>Catching up on things…</div>}
 
@@ -84,8 +110,8 @@ export default function OrbiWidget({ businessSpaceId, isMobile, onNavigate }) {
           {!loading && !error && items?.length > 0 && (
             <div style={s.list}>
               {items.map((item, i) => (
-                <div key={i} style={s.row}>
-                  <div style={s.phrase}>{item.phrase}</div>
+                <div key={i} style={{ ...s.row, ...(item.urgent ? s.rowUrgent : null) }}>
+                  <div style={{ ...s.phrase, ...(item.urgent ? s.phraseUrgent : null) }}>{item.phrase}</div>
                   {item.action && (
                     <button style={s.actionBtn} onClick={() => handleAction(item.action)}>
                       {item.action.label}
@@ -98,7 +124,7 @@ export default function OrbiWidget({ businessSpaceId, isMobile, onNavigate }) {
           )}
         </div>
       )}
-      <Orb size={isMobile ? 52 : 80} urgent={items?.length > 0} onClick={handleToggle} />
+      <Orb size={isMobile ? 52 : 80} urgent={items?.some(item => item.urgent) || false} onClick={handleToggle} />
     </div>
   )
 }
@@ -120,11 +146,21 @@ const s = {
     fontFamily: t.fonts.sans,
     padding: '14px 16px',
   },
+  headerRow: {
+    display: 'flex',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: '8px',
+    marginBottom: '8px',
+  },
   header: {
     fontSize: t.fontSizes.sm,
     fontWeight: 600,
     color: t.colors.textPrimary,
-    marginBottom: '8px',
+  },
+  windowLabel: {
+    fontSize: t.fontSizes.xs,
+    color: t.colors.textTertiary,
   },
   status: {
     fontSize: t.fontSizes.sm,
@@ -157,13 +193,21 @@ const s = {
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: '6px',
-    padding: '8px 0',
+    padding: '8px 0 8px 10px',
     borderTop: `1px solid ${t.colors.borderLight}`,
+    borderLeft: '3px solid transparent',
+  },
+  rowUrgent: {
+    borderLeft: `3px solid ${t.colors.danger}`,
   },
   phrase: {
     fontSize: t.fontSizes.sm,
     color: t.colors.textPrimary,
     lineHeight: 1.4,
+  },
+  phraseUrgent: {
+    fontWeight: 600,
+    color: t.colors.danger,
   },
   actionBtn: {
     padding: '4px 12px',

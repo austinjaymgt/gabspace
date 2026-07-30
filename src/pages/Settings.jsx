@@ -55,6 +55,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     display_name: '',
     job_title: '',
     plan: 'free',
+    orbi_window_days: 3,
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -124,7 +125,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       .maybeSingle()
     if (data) {
       setSettings(data)
-      setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'free' }))
+      setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'free', orbi_window_days: data.orbi_window_days || 3 }))
     }
   }
 
@@ -155,7 +156,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     setSaving(true)
     setError(null)
 
-    const personalPayload = { first_name: form.first_name }
+    const personalPayload = { first_name: form.first_name, orbi_window_days: form.orbi_window_days }
     if (settings) {
       await supabase.from('user_settings').update(personalPayload).eq('user_id', session.user.id)
     } else {
@@ -407,6 +408,25 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
           </div>
         </SectionCard>
       )}
+
+      {/* ── Orbi ── */}
+      <SectionCard title="Orbi" subtitle="Your assistant for upcoming projects, events, and content — across every business you're in">
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Look-ahead window</label>
+            <select
+              style={{ ...inputStyle, maxWidth: '160px' }}
+              value={form.orbi_window_days}
+              onChange={e => setForm({ ...form, orbi_window_days: Number(e.target.value) })}
+            >
+              {[1, 2, 3, 4, 5, 6, 7].map(n => (
+                <option key={n} value={n}>{n} {n === 1 ? 'day' : 'days'}</option>
+              ))}
+            </select>
+            <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>How far ahead Orbi looks for upcoming items</span>
+          </div>
+        </div>
+      </SectionCard>
 
       {/* ── Account ── */}
       <SectionCard title="Account">

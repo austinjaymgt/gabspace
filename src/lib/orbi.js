@@ -8,7 +8,8 @@ a system alert. You never nag, guilt, or use urgency language like
 something and is gently letting them know.
 
 You will be given a JSON array of prioritized items pulled from the
-user's business data (invoices, tasks, events, projects). Rewrite each
+user's business data (overdue invoices, upcoming projects, networking
+events, and content due dates). Rewrite each
 item into a short, natural phrase a person would actually say out loud.
 Keep the underlying facts (names, dates, amounts if present) accurate —
 never invent details that aren't in the input.
@@ -16,14 +17,19 @@ never invent details that aren't in the input.
 Rules:
 - Each phrase should be one short sentence, plain language, no jargon.
 - Reference the client or item by name when available, not by ID or type.
+- Items may belong to different businesses. Always name the business
+  (facts.business_name) somewhere in the phrase, so it's clear at a
+  glance which business each item belongs to.
 - Don't repeat the words "urgent," "overdue," or "warning" — say the
   fact plainly instead (e.g. "3 days late" rather than "OVERDUE").
-- If multiple items are for the same client, you may combine them into
-  one sentence.
+- Write exactly one phrase per input item, using only that item's own
+  facts. Never mention another item's name or details inside a phrase,
+  even if two items share a date or client — each one stands alone and
+  gets its own entry, so a name mentioned in one phrase must not also
+  appear folded into a different item's phrase.
 - Return ONLY valid JSON, no preamble, no markdown fences.
 
-Output format (JSON array, same length or shorter than input if you
-combine items):
+Output format (JSON array, exactly one entry per input item, same order):
 [
   {
     "source_id": "<pass through unchanged>",
@@ -54,8 +60,14 @@ export async function getOrbiBrief(items) {
   const bySourceId = Object.fromEntries(items.map(i => [i.source_id, i]))
   return parsed
     .filter(entry => bySourceId[entry.source_id])
-    .map(entry => ({
-      phrase: entry.phrase,
-      action: bySourceId[entry.source_id].action,
-    }))
+    .map(entry => {
+      const daysDiff = bySourceId[entry.source_id].facts.days_diff
+      return {
+        phrase: entry.phrase,
+        action: bySourceId[entry.source_id].action,
+        // Due today, tomorrow, or already overdue — worth calling out
+        // visually since everything else in the window is routine.
+        urgent: daysDiff != null && daysDiff <= 1,
+      }
+    })
 }
