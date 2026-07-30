@@ -93,6 +93,15 @@ async function syncSubscription(subscription) {
 
   // Enforce profile limit — flip least-recently-active spaces to read_only if over limit
   await enforceProfileLimit(ownerId, profileLimit);
+
+  // Mirror the tier onto user_settings.plan — that's what create_business_space()
+  // reads for the per-user business cap, and what Settings/Pricing display.
+  // Runs as service_role, which enforce_plan_immutable() (see the
+  // 20260730120000 migration) lets bypass the admin-only guard.
+  await supabase
+    .from('user_settings')
+    .update({ plan: tier, is_founder: isFounder })
+    .eq('user_id', ownerId);
 }
 
 async function enforceProfileLimit(ownerId, profileLimit) {

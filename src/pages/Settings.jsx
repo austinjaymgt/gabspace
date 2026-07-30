@@ -7,8 +7,7 @@ import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModul
 import RoleBadge from '../components/RoleBadge'
 
 const PLAN_LABELS = {
-  free: 'Free (1 business)',
-  founding: 'Founders Circle (3 businesses)',
+  business: 'Business (1 business)',
   duo: 'Duo (2 businesses)',
   studio: 'Studio (3 businesses)',
   enterprise: 'Enterprise (uncapped)',
@@ -46,7 +45,7 @@ function SectionCard({ title, subtitle, titleColor, borderColor, defaultOpen = t
   )
 }
 
-export default function Settings({ session, businessSpaceId, userRole, onBusinessIdentityChange, onArchiveBusiness }) {
+export default function Settings({ session, businessSpaceId, userRole, onBusinessIdentityChange, onArchiveBusiness, onNavigate }) {
   const [settings, setSettings] = useState(null)
   const [form, setForm] = useState({
     first_name: '',
@@ -54,9 +53,10 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     logo_url: '',
     display_name: '',
     job_title: '',
-    plan: 'free',
+    plan: 'business',
     orbi_window_days: 3,
   })
+  const [isFounder, setIsFounder] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -125,7 +125,8 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       .maybeSingle()
     if (data) {
       setSettings(data)
-      setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'free', orbi_window_days: data.orbi_window_days || 3 }))
+      setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'business', orbi_window_days: data.orbi_window_days || 3 }))
+      setIsFounder(!!data.is_founder)
     }
   }
 
@@ -438,14 +439,35 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
             </div>
             <RoleBadge role={userRole} />
           </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Plan</label>
-            <div style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary }}>
-              {PLAN_LABELS[form.plan] || form.plan}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', padding: '14px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
+            <div>
+              <div style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, marginBottom: '4px' }}>Plan</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary }}>
+                  {PLAN_LABELS[form.plan] || form.plan}
+                </span>
+                {isFounder && (
+                  <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.primary, backgroundColor: t.colors.primaryLight, padding: '2px 8px', borderRadius: t.radius.full }}>
+                    Founder pricing
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
+                Controls how many business spaces you can create.
+              </span>
             </div>
-            <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
-              Controls how many business spaces you can create. Contact support to change your plan.
-            </span>
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('pricing')}
+                style={{
+                  padding: '10px 20px', borderRadius: t.radius.full, border: 'none',
+                  backgroundColor: t.colors.primary, color: t.colors.textInverse,
+                  fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap',
+                }}
+              >
+                Change plan
+              </button>
+            )}
           </div>
         </div>
       </SectionCard>

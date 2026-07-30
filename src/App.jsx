@@ -41,6 +41,7 @@ import TeamMembers from './pages/TeamMembers'
 import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
 import AddBusinessFlow from './components/AddBusinessFlow'
+import Pricing from './pages/Pricing'
 
 export default function App() {
   const isMobile = useIsMobile()
@@ -439,7 +440,10 @@ function renderPage() {
 
       case 'settings':
         if (workspaceLoading) return null
-        return isOwnerOrAdmin ? <Settings {...pageProps} /> : <AccessDenied />
+        return isOwnerOrAdmin ? <Settings {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
+
+      case 'pricing':
+        return isOwnerOrAdmin ? <Pricing {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
 
       case 'admin':
         return isPlatformAdmin ? <AdminPanel {...pageProps} /> : <AccessDenied />

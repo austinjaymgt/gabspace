@@ -50,6 +50,37 @@ const FEATURES = [
   { title: 'Business dashboard', body: "A personalized overview of your business health — KPIs, recent activity, and upcoming work at a glance." },
 ]
 
+// Cosmetic only — mirrors src/pages/Pricing.jsx (the real, checkout-wired
+// version lives inside the app). Keep the numbers in sync by hand; this copy
+// never talks to Stripe since visitors here aren't signed in yet.
+const PRICING_TIERS = [
+  {
+    key: 'business',
+    name: 'Business',
+    tagline: 'For running one thing, beautifully.',
+    monthlyPrice: 34,
+    annualPrice: 326.4,
+    features: ['1 business profile', 'Clients, projects & deadlines', 'Core gabspace tools'],
+  },
+  {
+    key: 'duo',
+    name: 'Duo',
+    tagline: 'For the people who run more than one thing.',
+    monthlyPrice: 54,
+    annualPrice: 518.4,
+    features: ['2 business profiles', 'Orbi cross-business homescreen', 'Everything in Business'],
+    popular: true,
+  },
+  {
+    key: 'studio',
+    name: 'Studio',
+    tagline: 'For the full operation.',
+    monthlyPrice: 89,
+    annualPrice: 854.4,
+    features: ['3+ business profiles', 'Orbi scaled across every business', 'Everything in Duo'],
+  },
+]
+
 const STEPS = [
   { n: '01', label: 'Apply', title: 'Request access', body: 'Submit a short request below. We review every application and prioritize creatives who are actively managing clients and projects.' },
   { n: '02', label: 'Onboard', title: 'Get set up in minutes', body: "We'll walk you through a quick onboarding checklist. No complicated setup — you'll be managing your first client the same day." },
@@ -93,6 +124,7 @@ export default function Landing() {
   const [creativeType, setCreativeType] = useState('')
   const [socialLink, setSocialLink] = useState('')
   const [howHeard, setHowHeard] = useState('')
+  const [billingPeriod, setBillingPeriod] = useState('monthly')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState(null)
@@ -150,6 +182,7 @@ export default function Landing() {
           <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('features') }} href="#features">Features</a>
             <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('how-it-works') }} href="#how-it-works">How it works</a>
+            <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('pricing') }} href="#pricing">Pricing</a>
             <a className="gs-nav-link" onClick={(e) => { e.preventDefault(); scrollToId('apply') }} href="#apply">Early access</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -382,6 +415,96 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Pricing ────────────────────────────────────────────────── */}
+      <section id="pricing" style={{ maxWidth: 1100, margin: '0 auto', padding: '0 32px 96px' }}>
+        <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', color: c.purple, marginBottom: 12 }}>PRICING</div>
+          <h2 style={{ fontFamily: fonts.heading, fontWeight: 800, fontSize: 'clamp(28px, 4vw, 38px)', color: c.dark, margin: '0 0 14px' }}>
+            Simple plans, room to grow.
+          </h2>
+          <p style={{ fontSize: 16, color: c.textSecondary, lineHeight: 1.6, margin: '0 0 24px' }}>
+            Every plan gets the full toolkit — the difference is how many businesses you can run at once. Free for everyone during the beta.
+          </p>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 2,
+            background: c.bg, border: `1px solid ${c.border}`, borderRadius: 100, padding: 4,
+          }}>
+            {['monthly', 'annual'].map((period) => (
+              <button
+                key={period}
+                onClick={() => setBillingPeriod(period)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '8px 18px', borderRadius: 100, border: 'none',
+                  background: billingPeriod === period ? c.card : 'transparent',
+                  boxShadow: billingPeriod === period ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  color: billingPeriod === period ? c.dark : c.textTertiary,
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: fonts.body,
+                }}
+              >
+                {period === 'monthly' ? 'Monthly' : 'Annual'}
+                {period === 'annual' && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: c.green, background: '#E6F0E8', padding: '2px 8px', borderRadius: 100 }}>
+                    Save 20%
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="gs-compare-grid">
+          {PRICING_TIERS.map((tier) => {
+            const price = billingPeriod === 'monthly' ? tier.monthlyPrice : tier.annualPrice / 12
+            return (
+              <div key={tier.key} style={{
+                position: 'relative',
+                background: c.card,
+                border: tier.popular ? `2px solid ${c.purple}` : `1px solid ${c.borderLight}`,
+                boxShadow: tier.popular ? '0 20px 40px rgba(127,87,147,0.14)' : 'none',
+                borderRadius: 16, padding: 26,
+              }}>
+                {tier.popular && (
+                  <div style={{
+                    position: 'absolute', top: -13, left: 26,
+                    background: c.purple, color: '#fff', fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.04em', padding: '4px 12px', borderRadius: 100,
+                  }}>
+                    MOST POPULAR
+                  </div>
+                )}
+                <h3 style={{ fontSize: 17, fontWeight: 700, color: c.dark, margin: '0 0 4px' }}>{tier.name}</h3>
+                <p style={{ fontSize: 13.5, color: c.textSecondary, margin: '0 0 18px', minHeight: 34 }}>{tier.tagline}</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                  <span style={{ fontFamily: fonts.heading, fontSize: 32, fontWeight: 800, color: c.dark }}>${price.toFixed(0)}</span>
+                  <span style={{ fontSize: 13, color: c.textTertiary }}>/mo</span>
+                </div>
+                <div style={{ fontSize: 12, color: c.textTertiary, marginBottom: 18, minHeight: 16 }}>
+                  {billingPeriod === 'annual' ? `billed $${tier.annualPrice.toFixed(2)}/yr` : ' '}
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 22px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+                  {tier.features.map((f) => (
+                    <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13.5, color: c.textSecondary }}>
+                      <Check /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => scrollToId('apply')}
+                  className={tier.popular ? 'gs-btn-dark' : 'gs-btn-outline'}
+                  style={{ width: '100%', boxSizing: 'border-box', borderRadius: 100, padding: '13px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: fonts.body, border: tier.popular ? 'none' : undefined }}
+                >
+                  Request {tier.name}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+        <p style={{ fontSize: 12.5, color: c.textTertiary, textAlign: 'center', marginTop: 28 }}>
+          Free during beta &nbsp;·&nbsp; No credit card needed &nbsp;·&nbsp; 14-day trial once billing starts
+        </p>
+      </section>
+
       {/* ── Apply form ─────────────────────────────────────────────── */}
       <section id="apply" style={{ maxWidth: 720, margin: '0 auto', padding: '0 32px 96px' }}>
         <div style={{ background: c.card, border: `1px solid ${c.borderLight}`, borderRadius: 20, padding: 40, boxShadow: '0 20px 50px rgba(26,26,46,0.06)' }}>
@@ -482,6 +605,7 @@ export default function Landing() {
           {[
             { label: 'Features', onClick: () => scrollToId('features') },
             { label: 'How it works', onClick: () => scrollToId('how-it-works') },
+            { label: 'Pricing', onClick: () => scrollToId('pricing') },
             { label: 'Early access', onClick: () => scrollToId('apply') },
             { label: 'Terms', href: '/terms.html' },
             { label: 'Privacy', href: '/privacy.html' },

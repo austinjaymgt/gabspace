@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import Toggle from '../components/Toggle'
 
-const PLAN_LABELS = { free: 'Free', duo: 'Duo', studio: 'Studio', enterprise: 'Enterprise', founding: 'Founders Circle' }
+const PLAN_LABELS = { business: 'Business', duo: 'Duo', studio: 'Studio', enterprise: 'Enterprise' }
 
 function downloadCsv(filename, rows) {
   const csv = rows.map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
@@ -84,6 +84,18 @@ export default function AdminPanel() {
     setSavingPlanFor(null)
   }
 
+  async function handleFounderToggle(userId, nextIsFounder) {
+    setSavingPlanFor(userId)
+    setError(null)
+    const { error: founderError } = await supabase.rpc('admin_set_founder_status', {
+      target_user_id: userId,
+      new_is_founder: nextIsFounder,
+    })
+    if (founderError) setError(founderError.message)
+    else setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, is_founder: nextIsFounder } : u))
+    setSavingPlanFor(null)
+  }
+
   function exportWaitlist() {
     downloadCsv(
       `waitlist-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -94,7 +106,7 @@ export default function AdminPanel() {
     )
   }
 
-  const foundingCount = users.filter(u => u.plan === 'founding').length
+  const founderCount = users.filter(u => u.is_founder).length
 
   const cardStyle = { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }
   const headerStyle = { padding: '20px 24px', borderBottom: `1px solid ${t.colors.borderLight}` }
@@ -141,14 +153,14 @@ export default function AdminPanel() {
       <div style={cardStyle}>
         <div style={headerStyle}>
           <h3 style={titleStyle}>Founding members</h3>
-          <p style={descStyle}>Informational only — set a cap to know when to stop offering the founding tier, nothing blocks automatically.</p>
+          <p style={descStyle}>Informational only — set a cap to know when to stop offering founder pricing, nothing blocks automatically.</p>
         </div>
         <div style={{ padding: '24px', display: 'flex', alignItems: 'flex-end', gap: '24px', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: settings?.founding_member_cap != null && foundingCount >= settings.founding_member_cap ? t.colors.warning : t.colors.textPrimary }}>
-              {foundingCount}{settings?.founding_member_cap != null ? ` / ${settings.founding_member_cap}` : ''}
+            <div style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: settings?.founding_member_cap != null && founderCount >= settings.founding_member_cap ? t.colors.warning : t.colors.textPrimary }}>
+              {founderCount}{settings?.founding_member_cap != null ? ` / ${settings.founding_member_cap}` : ''}
             </div>
-            <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>on the founding plan</div>
+            <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>on founder pricing</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Cap (blank = uncapped)</label>
@@ -213,14 +225,15 @@ export default function AdminPanel() {
           <p style={descStyle}>Everyone with an account, across every business.</p>
         </div>
         <div style={{ padding: '8px 24px 20px', maxHeight: '420px', overflowY: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '8px', padding: '8px 0', fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '8px', padding: '8px 0', fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             <span>Email</span>
             <span>Signed up</span>
             <span>Confirmed</span>
             <span>Plan</span>
+            <span>Founder</span>
           </div>
           {users.map(u => (
-            <div key={u.user_id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderTop: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm }}>
+            <div key={u.user_id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderTop: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, alignItems: 'center' }}>
               <span style={{ color: t.colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</span>
               <span style={{ color: t.colors.textTertiary }}>{new Date(u.created_at).toLocaleDateString()}</span>
               <span style={{ color: u.confirmed ? t.colors.success : t.colors.textTertiary }}>{u.confirmed ? 'Yes' : 'No'}</span>
@@ -234,6 +247,7 @@ export default function AdminPanel() {
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
+              <Toggle checked={!!u.is_founder} onChange={() => handleFounderToggle(u.user_id, !u.is_founder)} disabled={savingPlanFor === u.user_id} />
             </div>
           ))}
         </div>

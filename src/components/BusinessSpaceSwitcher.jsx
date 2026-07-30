@@ -5,9 +5,9 @@ import { Icon } from './Icon'
 
 const AVATAR_COLORS = [t.colors.primary, t.colors.accent, t.colors.highlight]
 
-const PLAN_CAPS = { free: 1, duo: 2, studio: 3, enterprise: null }
-const NEXT_PLAN = { free: 'Duo', duo: 'Studio', studio: 'Enterprise' }
-const PLAN_LABELS = { free: 'Free', duo: 'Duo', studio: 'Studio', enterprise: 'Enterprise' }
+const PLAN_CAPS = { business: 1, duo: 2, studio: 3, enterprise: null }
+const NEXT_PLAN = { business: 'Duo', duo: 'Studio', studio: 'Enterprise' }
+const PLAN_LABELS = { business: 'Business', duo: 'Duo', studio: 'Studio', enterprise: 'Enterprise' }
 
 function colorFor(id) {
   let hash = 0
@@ -43,7 +43,7 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate, se
   const [open, setOpen] = useState(false)
   const [switching, setSwitching] = useState(false)
   const [restoringId, setRestoringId] = useState(null)
-  const [plan, setPlan] = useState('free')
+  const [plan, setPlan] = useState('business')
   const [capBlocked, setCapBlocked] = useState(false)
   const containerRef = useRef(null)
 
@@ -83,7 +83,7 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate, se
       .select('plan')
       .eq('user_id', session.user.id)
       .maybeSingle()
-      .then(({ data }) => setPlan(data?.plan || 'free'))
+      .then(({ data }) => setPlan(data?.plan || 'business'))
   }
 
   useEffect(fetchBusinesses, [session, refreshKey])
@@ -252,8 +252,8 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate, se
       <div style={{ borderTop: `1px solid ${t.colors.borderLight}` }}>
         {capBlocked ? (
           <div style={{ padding: '12px 14px', fontSize: t.fontSizes.sm, color: t.colors.textSecondary, lineHeight: 1.5 }}>
-            <strong style={{ color: t.colors.textPrimary }}>You've reached your {PLAN_LABELS[plan] || 'Free'} plan limit.</strong>
-            {NEXT_PLAN[plan] && <> Upgrade to {NEXT_PLAN[plan]} for {plan === 'free' ? 'a second' : 'another'} business.</>}
+            <strong style={{ color: t.colors.textPrimary }}>You've reached your {PLAN_LABELS[plan] || 'Business'} plan limit.</strong>
+            {NEXT_PLAN[plan] && <> Upgrade to {NEXT_PLAN[plan]} for {plan === 'business' ? 'a second' : 'another'} business.</>}
           </div>
         ) : (
           <div
