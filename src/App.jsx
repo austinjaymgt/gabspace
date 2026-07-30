@@ -72,6 +72,9 @@ const [authChecked, setAuthChecked] = useState(false)
 const [authSplashDone, setAuthSplashDone] = useState(false)
 const [showDailySplash, setShowDailySplash] = useState(false)
 const [showWelcomeSplash, setShowWelcomeSplash] = useState(false)
+const [requiresCheckout, setRequiresCheckout] = useState(false)
+const [checkoutStatusLoading, setCheckoutStatusLoading] = useState(true)
+const [billingSuccessPending, setBillingSuccessPending] = useState(() => window.location.pathname === '/billing/success')
 const splashStartRef = useRef(null)
 const authStartRef = useRef(null)
 const DAILY_SPLASH_KEY = 'gabspace_splash_last_shown'
@@ -159,6 +162,60 @@ const WELCOME_SPLASH_MS = 2600
       .maybeSingle()
       .then(({ data }) => setIsPlatformAdmin(!!data?.is_platform_admin))
   }, [session])
+
+  // Mandatory-checkout gate for brand-new self-serve owners (see the
+  // 20260730130000 migration) — invited teammates and grandfathered
+  // pre-Stripe accounts have requires_checkout=false and skip this.
+  useEffect(() => {
+    if (!session) { setRequiresCheckout(false); setCheckoutStatusLoading(false); return }
+    setCheckoutStatusLoading(true)
+    supabase
+      .from('user_settings')
+      .select('requires_checkout')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setRequiresCheckout(!!data?.requires_checkout)
+        setCheckoutStatusLoading(false)
+      })
+  }, [session])
+
+  // Stripe redirects here after Checkout completes (see success_url in
+  // API/create-checkout-session.js). The webhook that actually flips
+  // requires_checkout to false runs async, so poll briefly instead of
+  // trusting it's already landed the instant we arrive.
+  useEffect(() => {
+    if (!billingSuccessPending || !session) return
+    let cancelled = false
+    let attempts = 0
+    const poll = () => {
+      if (cancelled) return
+      attempts += 1
+      supabase
+        .from('user_settings')
+        .select('requires_checkout')
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (cancelled) return
+          if (!data?.requires_checkout) {
+            setRequiresCheckout(false)
+            setBillingSuccessPending(false)
+            window.history.replaceState({}, '', '/')
+          } else if (attempts < 12) {
+            setTimeout(poll, 1500)
+          } else {
+            // Webhook is taking unusually long — stop blocking on the splash
+            // and fall back to the normal mandatory-checkout gate, which the
+            // user can retry from.
+            setBillingSuccessPending(false)
+            window.history.replaceState({}, '', '/')
+          }
+        })
+    }
+    poll()
+    return () => { cancelled = true }
+  }, [billingSuccessPending, session])
 
   // Signup kill switch — checked pre-auth, so the signup form can fall back
   // to a waitlist capture form when closed.
@@ -602,6 +659,18 @@ function renderPage() {
         </div>
       </div>
     )
+  }
+
+  if (billingSuccessPending) {
+    return <SplashScreen tagline="confirming your subscription…" />
+  }
+
+  if (checkoutStatusLoading) {
+    return <SplashScreen tagline="loading your space…" />
+  }
+
+  if (requiresCheckout) {
+    return <Pricing session={session} mandatory onLogout={handleLogout} />
   }
 
   // Temporary GABi visual test — visit /?gabi to see all moods

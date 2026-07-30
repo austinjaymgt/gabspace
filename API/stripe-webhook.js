@@ -96,11 +96,13 @@ async function syncSubscription(subscription) {
 
   // Mirror the tier onto user_settings.plan — that's what create_business_space()
   // reads for the per-user business cap, and what Settings/Pricing display.
-  // Runs as service_role, which enforce_plan_immutable() (see the
-  // 20260730120000 migration) lets bypass the admin-only guard.
+  // requires_checkout=false clears the mandatory checkout gate new owners
+  // hit post-signup (see the 20260730130000 migration). Runs as
+  // service_role, which enforce_plan_immutable() lets bypass the admin-only
+  // guard.
   await supabase
     .from('user_settings')
-    .update({ plan: tier, is_founder: isFounder })
+    .update({ plan: tier, is_founder: isFounder, requires_checkout: false })
     .eq('user_id', ownerId);
 }
 

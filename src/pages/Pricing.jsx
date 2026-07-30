@@ -46,7 +46,7 @@ const TIERS = [
   },
 ]
 
-export default function Pricing({ session, onNavigate }) {
+export default function Pricing({ session, onNavigate, mandatory = false, onLogout }) {
   const [billingPeriod, setBillingPeriod] = useState('monthly')
   const [loadingTier, setLoadingTier] = useState(null)
   const [error, setError] = useState(null)
@@ -101,9 +101,9 @@ export default function Pricing({ session, onNavigate }) {
     }
   }
 
-  return (
-    <div style={{ padding: '32px', maxWidth: '1040px', fontFamily: t.fonts.sans }}>
-      {onNavigate && (
+  const content = (
+    <div style={{ padding: mandatory ? '0' : '32px', maxWidth: '1040px', fontFamily: t.fonts.sans }}>
+      {!mandatory && onNavigate && (
         <button
           onClick={() => onNavigate('settings')}
           style={{
@@ -117,12 +117,28 @@ export default function Pricing({ session, onNavigate }) {
         </button>
       )}
 
-      <div style={{ marginBottom: '32px' }}>
+      {mandatory && onLogout && (
+        <button
+          onClick={onLogout}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontFamily: t.fonts.sans,
+            marginBottom: '20px',
+          }}
+        >
+          Sign out
+        </button>
+      )}
+
+      <div style={{ marginBottom: '32px', textAlign: mandatory ? 'center' : 'left' }}>
         <h2 style={{ fontSize: t.fontSizes.h1, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading }}>
-          Choose your plan
+          {mandatory ? "You're almost in" : 'Choose your plan'}
         </h2>
-        <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0, maxWidth: '520px' }}>
-          Every plan includes the full gabspace toolkit — the difference is how many businesses you can run at once. 14-day trial on all plans.
+        <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: mandatory ? '0 auto' : 0, maxWidth: '520px' }}>
+          {mandatory
+            ? 'Pick a plan to start your trial and get into your workspace.'
+            : 'Every plan includes the full gabspace toolkit — the difference is how many businesses you can run at once. 14-day trial on all plans.'}
         </p>
       </div>
 
@@ -252,9 +268,23 @@ export default function Pricing({ session, onNavigate }) {
           You're on founding-member pricing — locked in permanently.
         </p>
       )}
-      <p style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '12px' }}>
+      <p style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '12px', textAlign: mandatory ? 'center' : 'left' }}>
         14-day trial on all plans. Cancel anytime.
       </p>
+    </div>
+  )
+
+  if (!mandatory) return content
+
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      backgroundColor: t.colors.bg, backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans,
+      padding: '40px 24px', boxSizing: 'border-box',
+    }}>
+      <div style={{ width: '100%', maxWidth: '1040px' }}>
+        {content}
+      </div>
     </div>
   )
 }
