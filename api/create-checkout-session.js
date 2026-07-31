@@ -42,7 +42,9 @@ export default async function handler(req, res) {
 
     const sessionParams = {
       customer: customerId,
-      payment_method_types: ['card'],
+      // Managed Payments (enabled by default on this Stripe account) picks
+      // payment methods itself — passing payment_method_types explicitly is
+      // now a hard error on session creation.
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
       success_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
