@@ -32,17 +32,23 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
       })
   }, [session])
 
-  // Fallback for someone who picked a plan during signup (GetStarted.jsx)
-  // but landed here without finishing payment — e.g. closed the tab
-  // mid-checkout. Pre-highlight what they already chose instead of making
-  // them pick again from scratch.
+  // GetStarted.jsx stashes the plan someone picked during signup in
+  // user_metadata — by the time this mandatory gate can render, App.jsx has
+  // already swapped GetStarted out (session appearing unmounts it
+  // immediately, before GetStarted's own local state can show anything),
+  // so this is what actually carries "step 3" of the signup flow: skip
+  // straight to embedded payment for the tier they already chose, instead
+  // of making them pick again from a blank grid.
   useEffect(() => {
-    if (!mandatory) return
+    if (!mandatory || checkoutTier) return
     const key = session?.user?.user_metadata?.selected_tier
     const period = session?.user?.user_metadata?.selected_billing_period
-    if (key && TIERS.some(tier => tier.key === key)) {
+    const tier = TIERS.find(t => t.key === key)
+    if (tier) {
       if (period === 'annual' || period === 'monthly') setBillingPeriod(period)
+      setCheckoutTier(tier)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mandatory, session])
 
   function handleChooseTier(tier) {
@@ -174,7 +180,11 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
       }}>
         {TIERS.map((tier) => {
           const price = billingPeriod === 'monthly' ? tier.monthlyPrice : tier.annualPrice / 12
-          const isCurrent = currentPlan === tier.key
+          // Mandatory means nobody has actually subscribed yet — currentPlan
+          // there is just user_settings.plan's seed default, not evidence of
+          // a real subscription, so it must never disable a tier as "already
+          // on it" in that context.
+          const isCurrent = !mandatory && currentPlan === tier.key
           return (
             <div
               key={tier.key}

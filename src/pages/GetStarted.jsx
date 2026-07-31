@@ -3,7 +3,6 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
 import { TIERS } from '../utils/pricingTiers'
-import EmbeddedCheckout from '../components/EmbeddedCheckout'
 
 // Reads ?tier=business|duo|studio from a marketing-site pricing card link
 // (see gabspace-marketing/index.html) so the plan step arrives pre-selected.
@@ -25,7 +24,7 @@ const labelStyle = { fontSize: t.fontSizes.sm, fontWeight: '500', color: t.color
 export default function GetStarted({ onBackToLogin }) {
   const [signupsOpen, setSignupsOpen] = useState(true)
   const [checkingSignups, setCheckingSignups] = useState(true)
-  const [step, setStep] = useState('account') // 'account' | 'plan' | 'checkout' | 'sent'
+  const [step, setStep] = useState('account') // 'account' | 'plan' | 'sent'
   const [fullName, setFullName] = useState('')
   const [workspaceName, setWorkspaceName] = useState('')
   const [email, setEmail] = useState('')
@@ -34,7 +33,6 @@ export default function GetStarted({ onBackToLogin }) {
   const [billingPeriod, setBillingPeriod] = useState('monthly')
   const [selectedTierKey, setSelectedTierKey] = useState(initialTierFromUrl)
   const [submittingTier, setSubmittingTier] = useState(null)
-  const [newUserId, setNewUserId] = useState(null)
   const [error, setError] = useState(null)
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false)
   const [waitlistDone, setWaitlistDone] = useState(false)
@@ -97,30 +95,30 @@ export default function GetStarted({ onBackToLogin }) {
       return
     }
 
-    setSubmittingTier(null)
-
     // Email confirmation is off for this project, so signUp() already
-    // returns an active session — move straight into the embedded payment
-    // step, right here on the same page. If confirmation ever gets turned
-    // back on, signUp() won't return a session yet and this falls through
-    // to the "check your email" step instead.
-    if (data.session) {
-      setNewUserId(data.session.user.id)
-      setStep('checkout')
-      return
-    }
+    // returns an active session — App.jsx's session listener picks it up
+    // and swaps this whole page out for the mandatory-checkout gate
+    // (Pricing.jsx, mandatory mode) within a render or two, which reads the
+    // selected_tier/selected_billing_period stashed above and goes straight
+    // into embedded payment for it. That handoff happens too fast for a
+    // local step change here to ever actually render, so intentionally
+    // don't touch step/submittingTier on this path — just let it happen.
+    // If confirmation ever gets turned back on, signUp() won't return a
+    // session yet and this falls through to the "check your email" step.
+    if (data.session) return
 
+    setSubmittingTier(null)
     setStep('sent')
   }
 
   const selectedTier = TIERS.find(x => x.key === selectedTierKey) || TIERS[0]
-  const cardMaxWidth = step === 'plan' || step === 'checkout' ? '1040px' : '440px'
+  const cardMaxWidth = step === 'plan' ? '1040px' : '440px'
 
   return (
     <div className="force-light-theme" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', backgroundImage: LIGHT_BG, fontFamily: t.fonts.sans, padding: '40px 16px', boxSizing: 'border-box' }}>
       <img src={gabspaceLockup} alt="gabspace" style={{ height: '44px', width: 'auto' }} />
 
-      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: step === 'plan' || step === 'checkout' ? '40px' : '48px', width: '100%', maxWidth: cardMaxWidth, boxShadow: t.shadows.lg, transition: 'max-width 0.2s' }}>
+      <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: step === 'plan' ? '40px' : '48px', width: '100%', maxWidth: cardMaxWidth, boxShadow: t.shadows.lg, transition: 'max-width 0.2s' }}>
         {checkingSignups ? (
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, textAlign: 'center', margin: 0 }}>Loading…</p>
         ) : !signupsOpen ? (
@@ -160,7 +158,7 @@ export default function GetStarted({ onBackToLogin }) {
         ) : step === 'account' ? (
           <>
             <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 8px', fontStyle: 'italic' }}>create your space.</p>
-            <p style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, margin: '0 0 24px' }}>Step 1 of 3 — your account</p>
+            <p style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, margin: '0 0 24px' }}>Step 1 of 2 — your account</p>
             <form onSubmit={handleAccountSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {error && (
                 <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base }}>{error}</div>
@@ -197,23 +195,6 @@ export default function GetStarted({ onBackToLogin }) {
               </div>
             </form>
           </>
-        ) : step === 'checkout' ? (
-          <>
-            <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-              <p style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, margin: '0 0 10px' }}>Step 3 of 3 — payment</p>
-              <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading }}>
-                Start your {selectedTier.name} trial
-              </h2>
-              <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
-                14 days free, then ${billingPeriod === 'monthly' ? selectedTier.monthlyPrice.toFixed(0) : (selectedTier.annualPrice / 12).toFixed(0)}/mo. Cancel anytime.
-              </p>
-            </div>
-            <EmbeddedCheckout
-              priceId={selectedTier.priceIds[billingPeriod]}
-              userId={newUserId}
-              isFounder={false}
-            />
-          </>
         ) : (
           <>
             <button
@@ -225,7 +206,7 @@ export default function GetStarted({ onBackToLogin }) {
             </button>
 
             <div style={{ marginBottom: '28px', textAlign: 'center' }}>
-              <p style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, margin: '0 0 10px' }}>Step 2 of 3 — your plan</p>
+              <p style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, margin: '0 0 10px' }}>Step 2 of 2 — your plan</p>
               <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading }}>
                 Choose your plan to start your trial
               </h2>
