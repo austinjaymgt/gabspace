@@ -49,8 +49,10 @@ export default async function handler(req, res) {
       mode: 'subscription',
       // Embedded (renders inline on gabspace instead of redirecting to
       // checkout.stripe.com) — the frontend mounts this via client_secret
-      // rather than navigating to a hosted url.
-      ui_mode: 'embedded',
+      // rather than navigating to a hosted url. 'embedded' is rejected on
+      // this account's pinned API version ("no longer supported, use
+      // embedded_page instead" — confirmed via a live 400 from Stripe).
+      ui_mode: 'embedded_page',
       return_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     };
 
