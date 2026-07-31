@@ -4,6 +4,7 @@ import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
 import { TIERS } from '../utils/pricingTiers'
 import EmbeddedCheckoutForm from '../components/EmbeddedCheckout'
+import { changeSubscription } from '../utils/checkout'
 
 // Same plain light radial GetStarted.jsx uses — see the comment there for
 // why this isn't var(--gradient-bg) (that resolves to the dark brand
@@ -15,7 +16,10 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
   const [error, setError] = useState(null)
   const [currentPlan, setCurrentPlan] = useState(null)
   const [isFounder, setIsFounder] = useState(false)
+  const [hasSubscription, setHasSubscription] = useState(false)
   const [checkoutTier, setCheckoutTier] = useState(null)
+  const [swappingTier, setSwappingTier] = useState(null)
+  const [swapDone, setSwapDone] = useState(null)
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -30,6 +34,15 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
           setIsFounder(!!data.is_founder)
         }
       })
+    // Whether there's a real Stripe subscription to update in place, vs.
+    // no billing history yet (grandfathered founders, or mandatory
+    // first-time signup) where a plan "change" actually has to create one.
+    supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id')
+      .eq('owner_id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => setHasSubscription(!!data?.stripe_subscription_id))
   }, [session])
 
   // GetStarted.jsx stashes the plan someone picked during signup in
@@ -51,13 +64,34 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mandatory, session])
 
-  function handleChooseTier(tier) {
+  async function handleChooseTier(tier) {
     if (!session?.user?.id) {
       setError('Please log in first.')
       return
     }
     setError(null)
-    setCheckoutTier(tier)
+    setSwapDone(null)
+
+    // Mandatory (signup) or no existing subscription — nothing to update,
+    // this is a brand-new subscription, so it needs a payment method via
+    // embedded Checkout. An existing subscriber instead gets their current
+    // subscription's price swapped in place, prorated, no new payment UI.
+    if (mandatory || !hasSubscription) {
+      setCheckoutTier(tier)
+      return
+    }
+
+    setSwappingTier(tier.key)
+    try {
+      await changeSubscription({ userId: session.user.id, priceId: tier.priceIds[billingPeriod] })
+      setCurrentPlan(tier.key)
+      setSwapDone(tier.name)
+    } catch (err) {
+      console.error(err)
+      setError(err.message || 'Something went wrong changing your plan. Try again.')
+    } finally {
+      setSwappingTier(null)
+    }
   }
 
   const content = checkoutTier ? (
@@ -171,6 +205,15 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
         </div>
       )}
 
+      {swapDone && (
+        <div style={{
+          padding: '12px 16px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight,
+          color: t.colors.success, fontSize: t.fontSizes.sm, marginBottom: '24px',
+        }}>
+          You're now on {swapDone}. Stripe prorates the difference on your next invoice.
+        </div>
+      )}
+
       {/* ── Tier cards ── */}
       <div style={{
         display: 'grid',
@@ -237,16 +280,21 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
 
               <button
                 onClick={() => handleChooseTier(tier)}
-                disabled={isCurrent}
+                disabled={isCurrent || swappingTier === tier.key}
                 style={{
                   padding: '13px 20px', borderRadius: t.radius.full, border: 'none',
                   backgroundColor: isCurrent ? t.colors.bg : (tier.popular ? t.colors.primary : t.colors.textPrimary),
                   color: isCurrent ? t.colors.textTertiary : t.colors.textInverse,
                   fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans,
-                  cursor: isCurrent ? 'default' : 'pointer',
+                  cursor: (isCurrent || swappingTier === tier.key) ? 'default' : 'pointer',
+                  opacity: swappingTier === tier.key ? 0.7 : 1,
                 }}
               >
-                {isCurrent ? 'Current plan' : `Choose ${tier.name}`}
+                {isCurrent
+                  ? 'Current plan'
+                  : swappingTier === tier.key
+                    ? 'Switching…'
+                    : hasSubscription ? `Switch to ${tier.name}` : `Choose ${tier.name}`}
               </button>
             </div>
           )
