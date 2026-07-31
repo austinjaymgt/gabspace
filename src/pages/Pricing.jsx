@@ -3,14 +3,19 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
 import { TIERS } from '../utils/pricingTiers'
-import { createCheckoutSession } from '../utils/checkout'
+import EmbeddedCheckoutForm from '../components/EmbeddedCheckout'
 
-export default function Pricing({ session, onNavigate, mandatory = false, onLogout, initialError = null }) {
+// Same plain light radial GetStarted.jsx uses — see the comment there for
+// why this isn't var(--gradient-bg) (that resolves to the dark brand
+// gradient under .force-light-theme).
+const LIGHT_BG = 'radial-gradient(circle at 50% 0%, #f7f0f6 0%, #F5F5F7 70%)'
+
+export default function Pricing({ session, onNavigate, mandatory = false, onLogout }) {
   const [billingPeriod, setBillingPeriod] = useState('monthly')
-  const [loadingTier, setLoadingTier] = useState(null)
-  const [error, setError] = useState(initialError)
+  const [error, setError] = useState(null)
   const [currentPlan, setCurrentPlan] = useState(null)
   const [isFounder, setIsFounder] = useState(false)
+  const [checkoutTier, setCheckoutTier] = useState(null)
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -27,32 +32,57 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
       })
   }, [session])
 
-  async function handleSubscribe(tier) {
-    setError(null)
-    setLoadingTier(tier.key)
-
-    try {
-      const { data: { session: activeSession } } = await supabase.auth.getSession()
-      if (!activeSession) {
-        setError('Please log in first.')
-        setLoadingTier(null)
-        return
-      }
-
-      const url = await createCheckoutSession({
-        priceId: tier.priceIds[billingPeriod],
-        userId: activeSession.user.id,
-        isFounder,
-      })
-      window.location.assign(url)
-    } catch (err) {
-      console.error(err)
-      setError('Something went wrong starting checkout. Try again.')
-      setLoadingTier(null)
+  // Fallback for someone who picked a plan during signup (GetStarted.jsx)
+  // but landed here without finishing payment — e.g. closed the tab
+  // mid-checkout. Pre-highlight what they already chose instead of making
+  // them pick again from scratch.
+  useEffect(() => {
+    if (!mandatory) return
+    const key = session?.user?.user_metadata?.selected_tier
+    const period = session?.user?.user_metadata?.selected_billing_period
+    if (key && TIERS.some(tier => tier.key === key)) {
+      if (period === 'annual' || period === 'monthly') setBillingPeriod(period)
     }
+  }, [mandatory, session])
+
+  function handleChooseTier(tier) {
+    if (!session?.user?.id) {
+      setError('Please log in first.')
+      return
+    }
+    setError(null)
+    setCheckoutTier(tier)
   }
 
-  const content = (
+  const content = checkoutTier ? (
+    <div style={{ padding: mandatory ? '0' : '32px', maxWidth: '560px', margin: mandatory ? '0 auto' : 0, fontFamily: t.fonts.sans }}>
+      <button
+        type="button"
+        onClick={() => setCheckoutTier(null)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+          fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontFamily: t.fonts.sans,
+          marginBottom: '20px',
+        }}
+      >
+        <Icon name="back" size="sm" /> Choose a different plan
+      </button>
+      <div style={{ marginBottom: '20px', textAlign: mandatory ? 'center' : 'left' }}>
+        <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 8px', fontFamily: t.fonts.heading }}>
+          Start your {checkoutTier.name} trial
+        </h2>
+        <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>
+          14 days free, then ${(billingPeriod === 'monthly' ? checkoutTier.monthlyPrice : checkoutTier.annualPrice / 12).toFixed(0)}/mo. Cancel anytime.
+        </p>
+      </div>
+      <EmbeddedCheckoutForm
+        priceId={checkoutTier.priceIds[billingPeriod]}
+        userId={session.user.id}
+        isFounder={isFounder}
+      />
+    </div>
+  ) : (
     <div style={{ padding: mandatory ? '0' : '32px', maxWidth: '1040px', fontFamily: t.fonts.sans }}>
       {!mandatory && onNavigate && (
         <button
@@ -183,7 +213,7 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
                 <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>/mo</span>
               </div>
               <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginBottom: '20px', minHeight: '16px' }}>
-                {billingPeriod === 'annual' ? `billed $${tier.annualPrice.toFixed(2)}/yr` : ' '}
+                {billingPeriod === 'annual' ? `billed $${tier.annualPrice.toFixed(2)}/yr` : ' '}
               </div>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
@@ -196,18 +226,17 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
               </ul>
 
               <button
-                onClick={() => handleSubscribe(tier)}
-                disabled={loadingTier === tier.key || isCurrent}
+                onClick={() => handleChooseTier(tier)}
+                disabled={isCurrent}
                 style={{
                   padding: '13px 20px', borderRadius: t.radius.full, border: 'none',
                   backgroundColor: isCurrent ? t.colors.bg : (tier.popular ? t.colors.primary : t.colors.textPrimary),
                   color: isCurrent ? t.colors.textTertiary : t.colors.textInverse,
                   fontSize: t.fontSizes.md, fontWeight: '600', fontFamily: t.fonts.sans,
-                  cursor: (loadingTier === tier.key || isCurrent) ? 'default' : 'pointer',
-                  opacity: loadingTier === tier.key ? 0.7 : 1,
+                  cursor: isCurrent ? 'default' : 'pointer',
                 }}
               >
-                {isCurrent ? 'Current plan' : loadingTier === tier.key ? 'Loading…' : `Choose ${tier.name}`}
+                {isCurrent ? 'Current plan' : `Choose ${tier.name}`}
               </button>
             </div>
           )
@@ -228,9 +257,9 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
   if (!mandatory) return content
 
   return (
-    <div style={{
+    <div className="force-light-theme" style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      backgroundColor: t.colors.bg, backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans,
+      backgroundColor: t.colors.bg, backgroundImage: LIGHT_BG, fontFamily: t.fonts.sans,
       padding: '40px 24px', boxSizing: 'border-box',
     }}>
       <div style={{ width: '100%', maxWidth: '1040px' }}>

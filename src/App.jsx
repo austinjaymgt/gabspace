@@ -43,8 +43,6 @@ import Resources from './pages/Resources'
 import AddBusinessFlow from './components/AddBusinessFlow'
 import Pricing from './pages/Pricing'
 import GetStarted from './pages/GetStarted'
-import { TIERS } from './utils/pricingTiers'
-import { createCheckoutSession } from './utils/checkout'
 
 export default function App() {
   const isMobile = useIsMobile()
@@ -75,9 +73,6 @@ const [showWelcomeSplash, setShowWelcomeSplash] = useState(false)
 const [requiresCheckout, setRequiresCheckout] = useState(false)
 const [checkoutStatusLoading, setCheckoutStatusLoading] = useState(true)
 const [billingSuccessPending, setBillingSuccessPending] = useState(() => window.location.pathname === '/billing/success')
-const [autoCheckoutTried, setAutoCheckoutTried] = useState(false)
-const [autoCheckoutInFlight, setAutoCheckoutInFlight] = useState(false)
-const [autoCheckoutError, setAutoCheckoutError] = useState(null)
 const splashStartRef = useRef(null)
 const authStartRef = useRef(null)
 const DAILY_SPLASH_KEY = 'gabspace_splash_last_shown'
@@ -219,29 +214,6 @@ const WELCOME_SPLASH_MS = 2600
     poll()
     return () => { cancelled = true }
   }, [billingSuccessPending, session])
-
-  // GetStarted stashes the plan the user picked during signup in
-  // user_metadata (selected_tier/selected_billing_period) since no session
-  // exists yet to start Checkout at that point. The instant one shows up
-  // post-confirmation, fire that checkout automatically instead of making
-  // them pick again on the manual mandatory-checkout gate below.
-  useEffect(() => {
-    if (checkoutStatusLoading || !requiresCheckout || !session || autoCheckoutTried) return
-    const tierKey = session.user.user_metadata?.selected_tier
-    const tier = TIERS.find(x => x.key === tierKey)
-    const period = session.user.user_metadata?.selected_billing_period === 'annual' ? 'annual' : 'monthly'
-    const priceId = tier?.priceIds?.[period]
-    if (!priceId) { setAutoCheckoutTried(true); return }
-
-    setAutoCheckoutTried(true)
-    setAutoCheckoutInFlight(true)
-    createCheckoutSession({ priceId, userId: session.user.id, isFounder: false })
-      .then(url => { window.location.assign(url) })
-      .catch(() => {
-        setAutoCheckoutInFlight(false)
-        setAutoCheckoutError('Something went wrong starting checkout — pick a plan below.')
-      })
-  }, [checkoutStatusLoading, requiresCheckout, session, autoCheckoutTried])
 
   // Picks a fallback if the given business is archived (e.g. archived by a
   // co-owner in another session) — the active business_space_id should
@@ -632,10 +604,7 @@ function renderPage() {
   }
 
   if (requiresCheckout) {
-    if (autoCheckoutInFlight) {
-      return <SplashScreen tagline="setting up your trial…" />
-    }
-    return <Pricing session={session} mandatory onLogout={handleLogout} initialError={autoCheckoutError} />
+    return <Pricing session={session} mandatory onLogout={handleLogout} />
   }
 
   // Temporary GABi visual test — visit /?gabi to see all moods

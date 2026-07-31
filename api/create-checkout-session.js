@@ -44,11 +44,14 @@ export default async function handler(req, res) {
       customer: customerId,
       // Managed Payments (enabled by default on this Stripe account) picks
       // payment methods itself — passing payment_method_types explicitly is
-      // now a hard error on session creation.
+      // a hard error on session creation.
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
-      success_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.APP_URL}/pricing`,
+      // Embedded (renders inline on gabspace instead of redirecting to
+      // checkout.stripe.com) — the frontend mounts this via client_secret
+      // rather than navigating to a hosted url.
+      ui_mode: 'embedded',
+      return_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     };
 
     // Apply the permanent founders coupon if this user qualifies
@@ -60,7 +63,7 @@ export default async function handler(req, res) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    res.status(200).json({ url: session.url });
+    res.status(200).json({ clientSecret: session.client_secret });
   } catch (err) {
     console.error('Checkout session error:', err);
     res.status(500).json({ error: 'Failed to create checkout session' });
