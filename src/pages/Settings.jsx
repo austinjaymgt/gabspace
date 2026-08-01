@@ -5,6 +5,7 @@ import { Icon } from '../components/Icon'
 import Toggle from '../components/Toggle'
 import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModules, toggleModuleState } from '../utils/businessModules'
 import RoleBadge from '../components/RoleBadge'
+import { cancelSubscription, resumeSubscription } from '../utils/checkout'
 
 const PLAN_LABELS = {
   business: 'Business (1 business)',
@@ -76,6 +77,12 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   const [archiving, setArchiving] = useState(false)
   const [archiveError, setArchiveError] = useState(null)
 
+  // Subscription (cancel / resume)
+  const [subscription, setSubscription] = useState(null)
+  const [canceling, setCanceling] = useState(false)
+  const [resuming, setResuming] = useState(false)
+  const [subscriptionError, setSubscriptionError] = useState(null)
+
   // Modules
   const [modules, setModulesState] = useState(getModules(businessSpaceId))
   const [moduleDataCounts, setModuleDataCounts] = useState({})
@@ -94,6 +101,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   }
 
   useEffect(() => { fetchSettings() }, [])
+  useEffect(() => { fetchSubscription() }, [])
   useEffect(() => { if (businessSpaceId) fetchBusinessIdentity() }, [businessSpaceId])
   useEffect(() => {
     setModulesState(getModules(businessSpaceId))
@@ -128,6 +136,40 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'business', orbi_window_days: data.orbi_window_days || 3 }))
       setIsFounder(!!data.is_founder)
     }
+  }
+
+  async function fetchSubscription() {
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('status, cancel_at_period_end, current_period_end')
+      .eq('owner_id', session.user.id)
+      .maybeSingle()
+    setSubscription(data || null)
+  }
+
+  async function handleCancelSubscription() {
+    if (!window.confirm("Cancel your subscription? You'll keep access through the end of your current billing period, then it stops — nothing is deleted.")) return
+    setCanceling(true)
+    setSubscriptionError(null)
+    try {
+      await cancelSubscription({ userId: session.user.id })
+      await fetchSubscription()
+    } catch (err) {
+      setSubscriptionError(err.message)
+    }
+    setCanceling(false)
+  }
+
+  async function handleResumeSubscription() {
+    setResuming(true)
+    setSubscriptionError(null)
+    try {
+      await resumeSubscription({ userId: session.user.id })
+      await fetchSubscription()
+    } catch (err) {
+      setSubscriptionError(err.message)
+    }
+    setResuming(false)
   }
 
   async function fetchBusinessIdentity() {
@@ -455,20 +497,47 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
               <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>
                 Controls how many business spaces you can create.
               </span>
+              {subscription?.cancel_at_period_end && (
+                <div style={{ fontSize: t.fontSizes.xs, color: t.colors.danger, marginTop: '6px', fontWeight: '500' }}>
+                  Cancels on {new Date(subscription.current_period_end).toLocaleDateString()}
+                </div>
+              )}
             </div>
-            {onNavigate && (
-              <button
-                onClick={() => onNavigate('pricing')}
-                style={{
-                  padding: '10px 20px', borderRadius: t.radius.full, border: 'none',
-                  backgroundColor: t.colors.primary, color: t.colors.textInverse,
-                  fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap',
-                }}
-              >
-                Change plan
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {subscription?.cancel_at_period_end && (
+                <button
+                  onClick={handleResumeSubscription}
+                  disabled={resuming}
+                  style={{
+                    padding: '10px 20px', borderRadius: t.radius.full,
+                    border: `1px solid ${t.colors.border}`,
+                    backgroundColor: t.colors.bgCard, color: t.colors.textPrimary,
+                    fontSize: t.fontSizes.sm, fontWeight: '600', cursor: resuming ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap',
+                    opacity: resuming ? 0.6 : 1,
+                  }}
+                >
+                  {resuming ? 'Resuming…' : 'Resume subscription'}
+                </button>
+              )}
+              {onNavigate && (
+                <button
+                  onClick={() => onNavigate('pricing')}
+                  style={{
+                    padding: '10px 20px', borderRadius: t.radius.full, border: 'none',
+                    backgroundColor: t.colors.primary, color: t.colors.textInverse,
+                    fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap',
+                  }}
+                >
+                  Change plan
+                </button>
+              )}
+            </div>
           </div>
+          {subscriptionError && (
+            <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
+              {subscriptionError}
+            </div>
+          )}
         </div>
       </SectionCard>
 
@@ -503,6 +572,32 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
                 {archiveError}
               </div>
             )}
+          </div>
+        )}
+        {isOwner && subscription && !subscription.cancel_at_period_end && (
+          <div style={{ padding: '24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, marginBottom: '4px' }}>Cancel subscription</div>
+                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, maxWidth: '380px' }}>
+                  Keep access through the end of your current billing period, then it stops. You can resume anytime before then.
+                </div>
+              </div>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={canceling}
+                style={{
+                  padding: '10px 20px', borderRadius: t.radius.full,
+                  border: `1px solid ${t.colors.danger}`,
+                  backgroundColor: t.colors.bgCard, color: t.colors.danger,
+                  fontSize: t.fontSizes.sm, fontWeight: '500',
+                  cursor: canceling ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap',
+                  opacity: canceling ? 0.6 : 1,
+                }}
+              >
+                {canceling ? 'Canceling…' : 'Cancel subscription'}
+              </button>
+            </div>
           </div>
         )}
         <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>

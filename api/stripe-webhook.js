@@ -88,6 +88,7 @@ async function syncSubscription(subscription) {
     profile_limit: profileLimit,
     is_founder: isFounder,
     current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'owner_id' });
 

@@ -33,3 +33,29 @@ export async function changeSubscription({ userId, priceId }) {
     throw new Error(error || 'Failed to change subscription')
   }
 }
+
+// Cancels at the end of the current paid period — see api/cancel-subscription.js.
+export async function cancelSubscription({ userId }) {
+  const res = await fetch('/api/cancel-subscription', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+  if (!res.ok) {
+    const { error } = await res.json().catch(() => ({}))
+    throw new Error(error || 'Failed to cancel subscription')
+  }
+}
+
+// Undoes a pending cancellation before the period ends — see api/resume-subscription.js.
+export async function resumeSubscription({ userId }) {
+  const res = await fetch('/api/resume-subscription', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+  if (!res.ok) {
+    const { error } = await res.json().catch(() => ({}))
+    throw new Error(error || 'Failed to resume subscription')
+  }
+}
