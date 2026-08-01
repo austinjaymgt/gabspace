@@ -72,7 +72,10 @@ async function syncSubscription(subscription) {
   const tier = price.metadata.tier; // e.g. 'business', 'duo', 'studio'
   const profileLimit = parseInt(price.metadata.profile_limit, 10);
   const billingPeriod = price.recurring.interval === 'year' ? 'annual' : 'monthly';
-  const isFounder = subscription.discount?.coupon?.name === 'founders'; // adjust to your coupon's actual name/id
+  // Match by coupon ID, not display name — coupon names are freeform ("Founder's
+  // Circle") and drift, but the ID is the same one used to apply the discount
+  // in create-checkout-session.js.
+  const isFounder = subscription.discount?.coupon?.id === process.env.STRIPE_FOUNDERS_COUPON_ID;
 
   const customer = await stripe.customers.retrieve(subscription.customer);
   const ownerId = customer.metadata.owner_id; // set this when creating the customer at checkout
@@ -93,7 +96,7 @@ async function syncSubscription(subscription) {
   }, { onConflict: 'owner_id' });
 
   // Enforce profile limit — flip least-recently-active spaces to read_only if over limit
-  await enforceProfileLimit(ownerId, profileLimit);
+  await enforceProfileLimit(ownerId, profileLimit, isFounder);
 
   // Mirror the tier onto user_settings.plan — that's what create_business_space()
   // reads for the per-user business cap, and what Settings/Pricing display.
@@ -107,13 +110,25 @@ async function syncSubscription(subscription) {
     .eq('user_id', ownerId);
 }
 
-async function enforceProfileLimit(ownerId, profileLimit) {
+async function enforceProfileLimit(ownerId, profileLimit, isFounder) {
   const { data: spaces } = await supabase
     .from('business_spaces')
     .select('id, last_active_at')
     .eq('owner_id', ownerId)
     .is('archived_at', null)
     .order('last_active_at', { ascending: false }); // most recent first
+
+  // Founders are unlimited regardless of the price tier's profile_limit —
+  // billing status shouldn't be able to cap founder access.
+  if (isFounder) {
+    if (spaces?.length) {
+      await supabase
+        .from('business_spaces')
+        .update({ access_status: 'active' })
+        .in('id', spaces.map(s => s.id));
+    }
+    return;
+  }
 
   if (!spaces || spaces.length <= profileLimit) {
     // Under or at limit — make sure everything's active

@@ -56,11 +56,14 @@ export default async function handler(req, res) {
       return_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     };
 
-    // Apply the permanent founders coupon if this user qualifies
+    // Apply the permanent founders coupon if this user was already flagged as
+    // a founder (e.g. via admin panel). Otherwise let anyone self-serve enter
+    // a promo code (like the founders code) at checkout — discounts and
+    // allow_promotion_codes are mutually exclusive on a Checkout Session.
     if (isFounder) {
       sessionParams.discounts = [{ coupon: process.env.STRIPE_FOUNDERS_COUPON_ID }];
     } else {
-      sessionParams.allow_promotion_codes = false; // no self-serve codes needed since you're applying founders directly
+      sessionParams.allow_promotion_codes = true;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
