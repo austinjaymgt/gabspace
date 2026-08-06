@@ -88,6 +88,59 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   const [moduleDataCounts, setModuleDataCounts] = useState({})
   const [moduleNote, setModuleNote] = useState(null)
 
+  // Change password
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [showChangePasswordFields, setShowChangePasswordFields] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [changeNewPassword, setChangeNewPassword] = useState('')
+  const [changeConfirmPassword, setChangeConfirmPassword] = useState('')
+  const [changePasswordError, setChangePasswordError] = useState(null)
+  const [changePasswordLoading, setChangePasswordLoading] = useState(false)
+  const [changePasswordSuccess, setChangePasswordSuccess] = useState(false)
+
+  async function handleChangePassword(e) {
+    e.preventDefault()
+    setChangePasswordError(null)
+    if (!currentPassword) return setChangePasswordError('Enter your current password.')
+    if (changeNewPassword.length < 8) return setChangePasswordError('New password must be at least 8 characters.')
+    if (changeNewPassword !== changeConfirmPassword) return setChangePasswordError("New passwords don't match.")
+
+    setChangePasswordLoading(true)
+
+    // Verify the current password before allowing the change — protects
+    // against someone using an unattended, already-logged-in device.
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: session.user.email,
+      password: currentPassword,
+    })
+    if (verifyError) {
+      setChangePasswordLoading(false)
+      return setChangePasswordError('Current password is incorrect.')
+    }
+
+    const { data: updateData, error: updateError } = await supabase.auth.updateUser({ password: changeNewPassword })
+    setChangePasswordLoading(false)
+
+    if (updateError) return setChangePasswordError(updateError.message)
+
+    const token = updateData?.session?.access_token || session?.access_token
+    if (token) {
+      fetch('/api/send-password-changed-email', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {})
+    }
+
+    setCurrentPassword('')
+    setChangeNewPassword('')
+    setChangeConfirmPassword('')
+    setChangePasswordSuccess(true)
+    setTimeout(() => {
+      setChangePasswordSuccess(false)
+      setShowChangePassword(false)
+    }, 2000)
+  }
+
   async function fetchModuleDataCounts() {
     const counts = {}
     await Promise.all(Object.entries(MODULE_DATA_TABLES).map(async ([key, table]) => {
@@ -480,6 +533,106 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
               <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{session?.user?.email}</div>
             </div>
             <RoleBadge role={userRole} />
+          </div>
+
+          <div style={{ padding: '14px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+              <div>
+                <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>Password</div>
+                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>••••••••</div>
+              </div>
+              {!showChangePassword && (
+                <button
+                  type="button"
+                  onClick={() => { setShowChangePassword(true); setChangePasswordError(null) }}
+                  style={{ padding: '10px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap' }}
+                >
+                  Change password
+                </button>
+              )}
+            </div>
+
+            {showChangePassword && (
+              changePasswordSuccess ? (
+                <div style={{ marginTop: '14px', padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight, color: t.colors.success, fontSize: t.fontSizes.sm, textAlign: 'center' }}>
+                  ✓ Password updated
+                </div>
+              ) : (
+                <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}>
+                  {changePasswordError && (
+                    <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
+                      {changePasswordError}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Current password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans, width: '100%', boxSizing: 'border-box', paddingRight: '44px' }}
+                        type={showChangePasswordFields ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={currentPassword}
+                        onChange={e => setCurrentPassword(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowChangePasswordFields(prev => !prev)}
+                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: t.colors.textTertiary, padding: '2px', lineHeight: 1 }}
+                      >
+                        {showChangePasswordFields ? '🙈' : '👁'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>New password</label>
+                    <input
+                      style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                      type={showChangePasswordFields ? 'text' : 'password'}
+                      placeholder="At least 8 characters"
+                      value={changeNewPassword}
+                      onChange={e => setChangeNewPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Confirm new password</label>
+                    <input
+                      style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                      type={showChangePasswordFields ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={changeConfirmPassword}
+                      onChange={e => setChangeConfirmPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="submit"
+                      disabled={changePasswordLoading}
+                      style={{ padding: '10px 20px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: changePasswordLoading ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans, opacity: changePasswordLoading ? 0.6 : 1 }}
+                    >
+                      {changePasswordLoading ? 'Updating…' : 'Update password'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowChangePassword(false)
+                        setChangePasswordError(null)
+                        setCurrentPassword('')
+                        setChangeNewPassword('')
+                        setChangeConfirmPassword('')
+                      }}
+                      style={{ padding: '10px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )
+            )}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', padding: '14px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
             <div>
