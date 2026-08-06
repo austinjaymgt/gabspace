@@ -14,7 +14,7 @@ const PLAN_LABELS = {
   enterprise: 'Enterprise (uncapped)',
 }
 
-function SectionCard({ title, subtitle, titleColor, borderColor, defaultOpen = true, children }) {
+function SectionCard({ title, subtitle, titleColor, borderColor, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${borderColor || t.colors.borderLight}`, overflow: 'hidden', marginBottom: '24px' }}>
