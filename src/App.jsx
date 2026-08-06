@@ -58,6 +58,11 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [newPasswordError, setNewPasswordError] = useState(null)
+  const [newPasswordLoading, setNewPasswordLoading] = useState(false)
   const [businessSpaceId, setBusinessSpaceId] = useState(null)
   const [businessIdentityVersion, setBusinessIdentityVersion] = useState(0)
   const [portalActivityVersion, setPortalActivityVersion] = useState(0)
@@ -87,6 +92,12 @@ const WELCOME_SPLASH_MS = 2600
       setAuthChecked(true)
     })
     supabase.auth.onAuthStateChange((_event, session) => {
+      // Clicking the password-reset email link fires this with a fresh
+      // session before the user has actually chosen a new password — gate
+      // into the set-new-password screen instead of dropping them straight
+      // into the app still on their old (unknown-to-them) password.
+      if (_event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
+
       // Supabase re-validates the session on tab focus and hands back a new
       // object each time (even when the user hasn't changed), which would
       // otherwise re-trigger the [session] workspace fetch below and blow
@@ -302,10 +313,29 @@ const WELCOME_SPLASH_MS = 2600
     if (!email) return setError('Enter your email above first.')
     setLoading(true)
     setError(null)
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email)
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    })
     if (resetError) setError(resetError.message)
     else setResetSent(true)
     setLoading(false)
+  }
+
+  async function handleSetNewPassword(e) {
+    e.preventDefault()
+    setNewPasswordError(null)
+    if (newPassword.length < 8) return setNewPasswordError('Password must be at least 8 characters.')
+    if (newPassword !== confirmNewPassword) return setNewPasswordError('Passwords don\'t match.')
+
+    setNewPasswordLoading(true)
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+    setNewPasswordLoading(false)
+
+    if (updateError) return setNewPasswordError(updateError.message)
+
+    setPasswordRecovery(false)
+    setNewPassword('')
+    setConfirmNewPassword('')
   }
 
   async function handleLogout() {
@@ -489,6 +519,62 @@ function renderPage() {
 // Cold auth check — brands the gap while Supabase confirms the session
   if (!authChecked || !authSplashDone) {
     return <SplashScreen tagline="loading your space…" />
+  }
+
+  // Password-reset completion — the recovery link logs the user in via a
+  // PASSWORD_RECOVERY session before they've picked a new password, so this
+  // gate takes priority over everything else (including the normal app)
+  // until they actually set one.
+  if (passwordRecovery) {
+    return (
+      <div className="force-light-theme" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans }}>
+        <img src={gabspaceLockup} alt="gabspace" style={{ height: '44px', width: 'auto' }} />
+        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
+          <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
+            set a new password.
+          </p>
+
+          <form onSubmit={handleSetNewPassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {newPasswordError && (
+              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base }}>
+                {newPasswordError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>New password</label>
+              <input
+                style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Confirm new password</label>
+              <input
+                style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                type="password"
+                placeholder="••••••••"
+                value={confirmNewPassword}
+                onChange={e => setConfirmNewPassword(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={newPasswordLoading}
+              style={{ padding: '12px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+            >
+              {newPasswordLoading ? 'Updating…' : 'Set new password'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
 // Login screen — account creation (with plan/checkout built in) lives on
