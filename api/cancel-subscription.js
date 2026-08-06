@@ -36,7 +36,9 @@ export default async function handler(req, res) {
     // the subscriptions row — nothing else to do here.
     res.status(200).json({
       cancelAtPeriodEnd: updated.cancel_at_period_end,
-      currentPeriodEnd: updated.current_period_end,
+      // current_period_end lives on the subscription item, not the
+      // subscription itself, on this account's pinned API version.
+      currentPeriodEnd: updated.items.data[0]?.current_period_end,
     });
   } catch (err) {
     console.error('Cancel subscription error:', err);

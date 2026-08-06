@@ -68,7 +68,8 @@ export default async function handler(req, res) {
 }
 
 async function syncSubscription(subscription) {
-  const price = subscription.items.data[0].price;
+  const item = subscription.items.data[0];
+  const price = item.price;
   const tier = price.metadata.tier; // e.g. 'business', 'duo', 'studio'
   const profileLimit = parseInt(price.metadata.profile_limit, 10);
   const billingPeriod = price.recurring.interval === 'year' ? 'annual' : 'monthly';
@@ -90,7 +91,9 @@ async function syncSubscription(subscription) {
     status: subscription.status,
     profile_limit: profileLimit,
     is_founder: isFounder,
-    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    // current_period_end moved from the top-level Subscription object down to
+    // each subscription item in this account's pinned API version.
+    current_period_end: new Date(item.current_period_end * 1000).toISOString(),
     cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'owner_id' });
