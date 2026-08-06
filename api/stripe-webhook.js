@@ -36,14 +36,19 @@ export default async function handler(req, res) {
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed':
+      // Only checkout.session.completed triggers the welcome email — it fires
+      // once per successful checkout, unlike subscription.created/updated
+      // which also fire on renewals, upgrades, and cancellations.
+      case 'checkout.session.completed': {
+        const subscription = await stripe.subscriptions.retrieve(event.data.object.subscription);
+        const details = await syncSubscription(subscription);
+        await sendWelcomeEmail(details);
+        break;
+      }
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        const subscription = event.type === 'checkout.session.completed'
-          ? await stripe.subscriptions.retrieve(event.data.object.subscription)
-          : event.data.object;
-
-        await syncSubscription(subscription);
+        await syncSubscription(event.data.object);
         break;
       }
 
@@ -81,6 +86,10 @@ async function syncSubscription(subscription) {
   const customer = await stripe.customers.retrieve(subscription.customer);
   const ownerId = customer.metadata.owner_id; // set this when creating the customer at checkout
 
+  const { data: userData } = await supabase.auth.admin.getUserById(ownerId);
+  const fullName = userData?.user?.user_metadata?.full_name;
+  const workspaceName = userData?.user?.user_metadata?.workspace_name;
+
   // Upsert subscription row
   await supabase.from('subscriptions').upsert({
     owner_id: ownerId,
@@ -111,6 +120,56 @@ async function syncSubscription(subscription) {
     .from('user_settings')
     .update({ plan: tier, is_founder: isFounder, requires_checkout: false })
     .eq('user_id', ownerId);
+
+  return {
+    email: customer.email,
+    fullName,
+    workspaceName,
+    tier,
+    billingPeriod,
+    isFounder,
+    monthlyAmount: price.unit_amount / 100,
+    interval: price.recurring.interval,
+  };
+}
+
+async function sendWelcomeEmail(details) {
+  if (!process.env.RESEND_API_KEY || !details?.email) return;
+
+  const { email, fullName, workspaceName, tier, isFounder, monthlyAmount, interval } = details;
+  const firstName = fullName?.split(' ')[0] || 'there';
+  const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
+
+  const planLine = isFounder
+    ? `You're in as a Founder — 100% off the ${tierName} plan, forever. Thanks for being one of the first in.`
+    : `Your 14-day free trial of the ${tierName} plan has started. After that, you'll be billed $${monthlyAmount}/${interval} — cancel anytime from Settings.`;
+
+  const html = `
+    <p>Hi ${firstName},</p>
+    <p>Welcome to gabspace${workspaceName ? ` — ${workspaceName} is ready to go` : ''}.</p>
+    <p>${planLine}</p>
+    <p><a href="${process.env.APP_URL}">Head into your workspace →</a></p>
+  `;
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL,
+        to: email,
+        subject: 'Welcome to gabspace',
+        html,
+      }),
+    });
+  } catch (err) {
+    // Don't fail the webhook over a non-critical email delivery issue —
+    // Stripe would retry the whole event otherwise.
+    console.error('Welcome email failed:', err);
+  }
 }
 
 async function enforceProfileLimit(ownerId, profileLimit, isFounder) {
