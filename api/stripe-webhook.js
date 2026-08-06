@@ -152,7 +152,7 @@ async function sendWelcomeEmail(details) {
   `;
 
   try {
-    await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -165,6 +165,9 @@ async function sendWelcomeEmail(details) {
         html,
       }),
     });
+    if (!res.ok) {
+      console.error('Welcome email rejected by Resend:', res.status, await res.text());
+    }
   } catch (err) {
     // Don't fail the webhook over a non-critical email delivery issue —
     // Stripe would retry the whole event otherwise.
