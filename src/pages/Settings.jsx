@@ -6,6 +6,7 @@ import Toggle from '../components/Toggle'
 import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModules, toggleModuleState } from '../utils/businessModules'
 import RoleBadge from '../components/RoleBadge'
 import { cancelSubscription, resumeSubscription } from '../utils/checkout'
+import PasswordRequirements from '../components/PasswordRequirements'
 
 const PLAN_LABELS = {
   business: 'Business (1 business)',
@@ -595,6 +596,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
                       value={changeNewPassword}
                       onChange={e => setChangeNewPassword(e.target.value)}
                     />
+                    {changeNewPassword && <PasswordRequirements password={changeNewPassword} />}
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
 import { TIERS } from '../utils/pricingTiers'
+import PasswordRequirements from '../components/PasswordRequirements'
 
 // Reads ?tier=business|duo|studio from a marketing-site pricing card link
 // (see gabspace-marketing/index.html) so the plan step arrives pre-selected.
@@ -183,6 +184,7 @@ export default function GetStarted({ onBackToLogin }) {
                     {showPassword ? '🙈' : '👁'}
                   </button>
                 </div>
+                {password && <PasswordRequirements password={password} />}
               </div>
               <button type="submit" style={{ padding: '12px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}>
                 Continue to plan →

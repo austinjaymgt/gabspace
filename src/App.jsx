@@ -43,6 +43,7 @@ import Resources from './pages/Resources'
 import AddBusinessFlow from './components/AddBusinessFlow'
 import Pricing from './pages/Pricing'
 import GetStarted from './pages/GetStarted'
+import PasswordRequirements from './components/PasswordRequirements'
 
 export default function App() {
   const isMobile = useIsMobile()
@@ -582,6 +583,7 @@ function renderPage() {
                     {showNewPassword ? '🙈' : '👁'}
                   </button>
                 </div>
+                {newPassword && <PasswordRequirements password={newPassword} />}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
