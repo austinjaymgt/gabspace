@@ -239,7 +239,7 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
   }
 
   function handleOpenTask(task) {
-    onOpenTask?.(task.business_space_id || businessSpaceId, task.id)
+    onOpenTask?.(task.business_space_id || businessSpaceId)
   }
 
   async function completeTask(id) {

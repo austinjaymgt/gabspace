@@ -32,7 +32,7 @@ function compareTasks(a, b, sortBy) {
   }
 }
 
-export default function Tasks({ businessSpaceId, pendingTaskId, onConsumePendingTaskId }) {
+export default function Tasks({ businessSpaceId }) {
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -98,15 +98,6 @@ export default function Tasks({ businessSpaceId, pendingTaskId, onConsumePending
     setError(null)
     setShowForm(true)
   }
-
-  useEffect(() => {
-    if (!pendingTaskId || loading) return
-    const task = tasks.find(tk => tk.id === pendingTaskId)
-    queueMicrotask(() => {
-      if (task) openEdit(task)
-      onConsumePendingTaskId?.()
-    })
-  }, [pendingTaskId, loading, tasks])
 
   function closeForm() {
     setShowForm(false)

@@ -170,7 +170,7 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
   }
 
   async function handleOpenTask(task) {
-    await onOpenTask?.(task.business_space_id, task.id)
+    await onOpenTask?.(task.business_space_id)
   }
 
   // Same overdue/today/this-week qualification the per-business dashboard

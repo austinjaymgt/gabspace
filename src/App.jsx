@@ -67,7 +67,6 @@ export default function App() {
   const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [businessSpaceId, setBusinessSpaceId] = useState(null)
-  const [pendingTaskId, setPendingTaskId] = useState(null)
   const [businessIdentityVersion, setBusinessIdentityVersion] = useState(0)
   const [portalActivityVersion, setPortalActivityVersion] = useState(0)
   const [userRole, setUserRole] = useState(null)
@@ -424,13 +423,12 @@ const WELCOME_SPLASH_MS = 2600
   }
 
   // Overdue-feed task rows on Home jump straight into the owning business's
-  // Tasks page with that task's edit form already open.
-  async function handleOpenTask(taskBusinessSpaceId, taskId) {
+  // Tasks page.
+  async function handleOpenTask(taskBusinessSpaceId) {
     if (taskBusinessSpaceId && taskBusinessSpaceId !== businessSpaceId) {
       const { error } = await handleBusinessSpaceSwitch(taskBusinessSpaceId)
       if (error) return
     }
-    setPendingTaskId(taskId)
     setCurrentPage('tasks')
   }
 
@@ -480,7 +478,7 @@ function renderPage() {
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
 
       case 'tasks':
-        return <Tasks {...pageProps} pendingTaskId={pendingTaskId} onConsumePendingTaskId={() => setPendingTaskId(null)} />
+        return <Tasks {...pageProps} />
 
       case 'income':
         return isOwnerOrAdmin ? <Invoices {...pageProps} /> : <AccessDenied />
