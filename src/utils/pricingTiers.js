@@ -9,8 +9,8 @@ export const TIERS = [
     monthlyPrice: 34,
     annualPrice: 326.4,
     priceIds: {
-      monthly: 'price_1Tz1wNEv4OEMA57Ns4eKwbcS',
-      annual: 'price_1Tz21jEv4OEMA57Nr7Xul0zs',
+      monthly: 'price_1Tz35OEkYyhptbjVzB1ZGI9g',
+      annual: 'price_1Tz35OEkYyhptbjV5kbWUXCj',
     },
     features: ['1 business profile', 'Clients, projects & deadlines', 'Core gabspace tools'],
   },
@@ -21,8 +21,8 @@ export const TIERS = [
     monthlyPrice: 54,
     annualPrice: 518.4,
     priceIds: {
-      monthly: 'price_1Tz1wqEv4OEMA57N53bR4wWd',
-      annual: 'price_1Tz22iEv4OEMA57NsSRwBVWw',
+      monthly: 'price_1Tz35OEkYyhptbjVGinB1ZVP',
+      annual: 'price_1Tz35NEkYyhptbjViccV4mLv',
     },
     features: ['2 business profiles', 'Orbi cross-business homescreen', 'Everything in Business'],
     popular: true,
@@ -34,8 +34,8 @@ export const TIERS = [
     monthlyPrice: 89,
     annualPrice: 854.4,
     priceIds: {
-      monthly: 'price_1Tz1xIEv4OEMA57NXegRQAym',
-      annual: 'price_1Tz20XEv4OEMA57NlhNldIbH',
+      monthly: 'price_1Tz35OEkYyhptbjVPVjRlKJV',
+      annual: 'price_1Tz35NEkYyhptbjV8YqZASCa',
     },
     features: ['3+ business profiles', 'Orbi scaled across every business', 'Everything in Duo'],
   },

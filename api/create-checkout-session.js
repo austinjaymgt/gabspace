@@ -54,6 +54,9 @@ export default async function handler(req, res) {
       // embedded_page instead" — confirmed via a live 400 from Stripe).
       ui_mode: 'embedded_page',
       return_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      // 14-day trial on every plan (per Pricing page copy) — set here rather
+      // than baked into the Price, since Stripe applies it per-subscription.
+      subscription_data: { trial_period_days: 14 },
     };
 
     // Apply the permanent founders coupon if this user was already flagged as
