@@ -63,6 +63,7 @@ export default function App() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [newPasswordError, setNewPasswordError] = useState(null)
   const [newPasswordLoading, setNewPasswordLoading] = useState(false)
+  const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false)
   const [businessSpaceId, setBusinessSpaceId] = useState(null)
   const [businessIdentityVersion, setBusinessIdentityVersion] = useState(0)
   const [portalActivityVersion, setPortalActivityVersion] = useState(0)
@@ -328,14 +329,29 @@ const WELCOME_SPLASH_MS = 2600
     if (newPassword !== confirmNewPassword) return setNewPasswordError('Passwords don\'t match.')
 
     setNewPasswordLoading(true)
-    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+    const { data: updateData, error: updateError } = await supabase.auth.updateUser({ password: newPassword })
     setNewPasswordLoading(false)
 
     if (updateError) return setNewPasswordError(updateError.message)
 
-    setPasswordRecovery(false)
     setNewPassword('')
     setConfirmNewPassword('')
+    setPasswordUpdateSuccess(true)
+
+    // Fire-and-forget confirmation email — never block letting the user in
+    // over a non-critical email hiccup.
+    const token = updateData?.session?.access_token || session?.access_token
+    if (token) {
+      fetch('/api/send-password-changed-email', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {})
+    }
+
+    setTimeout(() => {
+      setPasswordRecovery(false)
+      setPasswordUpdateSuccess(false)
+    }, 1800)
   }
 
   async function handleLogout() {
@@ -534,44 +550,50 @@ function renderPage() {
             set a new password.
           </p>
 
-          <form onSubmit={handleSetNewPassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {newPasswordError && (
-              <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base }}>
-                {newPasswordError}
+          {passwordUpdateSuccess ? (
+            <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.successLight, color: t.colors.success, fontSize: t.fontSizes.base, textAlign: 'center' }}>
+              ✓ Password updated — taking you in…
+            </div>
+          ) : (
+            <form onSubmit={handleSetNewPassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {newPasswordError && (
+                <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base }}>
+                  {newPasswordError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>New password</label>
+                <input
+                  style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  autoFocus
+                />
               </div>
-            )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>New password</label>
-              <input
-                style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
-                type="password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                autoFocus
-              />
-            </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Confirm new password</label>
+                <input
+                  style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmNewPassword}
+                  onChange={e => setConfirmNewPassword(e.target.value)}
+                />
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Confirm new password</label>
-              <input
-                style={{ padding: '10px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.md, outline: 'none', color: t.colors.textPrimary, fontFamily: t.fonts.sans }}
-                type="password"
-                placeholder="••••••••"
-                value={confirmNewPassword}
-                onChange={e => setConfirmNewPassword(e.target.value)}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={newPasswordLoading}
-              style={{ padding: '12px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
-            >
-              {newPasswordLoading ? 'Updating…' : 'Set new password'}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={newPasswordLoading}
+                style={{ padding: '12px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+              >
+                {newPasswordLoading ? 'Updating…' : 'Set new password'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     )
