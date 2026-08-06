@@ -23,10 +23,6 @@ function dueLabel(dueString) {
   return due.toLocaleDateString('en-US', { weekday: 'short' })
 }
 
-function shortDate(d) {
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-}
-
 const PROJECT_STATUS_FILTERS = [
   { key: 'planning', label: 'Planning', color: '#534AB7', bg: '#EEEDF9' },
   { key: 'active',   label: 'In Progress', color: '#6B8F71', bg: '#EAF2EA' },
@@ -52,13 +48,17 @@ function SectionHeader({ label, onViewAll, viewAllColor }) {
 
 // ── Task row ────────────────────────────────────────────────────────────────
 
-function TaskRow({ task, dueLabelColor, onComplete }) {
+function TaskRow({ task, dueLabelColor, onComplete, onOpenTask }) {
   const color = dueLabelColor || t.colors.textTertiary
   const sc = taskStatusConfig[task.status] || taskStatusConfig['todo']
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderTop: `1px solid ${t.colors.borderLight}` }}>
+    <div
+      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderTop: `1px solid ${t.colors.borderLight}`, cursor: onOpenTask ? 'pointer' : 'default' }}
+      onClick={onOpenTask ? () => onOpenTask(task) : undefined}
+    >
       <input
         type="checkbox"
+        onClick={e => e.stopPropagation()}
         onChange={() => onComplete(task.id)}
         aria-label={`Complete ${task.title}`}
         style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: t.colors.primary, flexShrink: 0 }}
@@ -76,14 +76,14 @@ function TaskRow({ task, dueLabelColor, onComplete }) {
   )
 }
 
-function TaskGroup({ label, color, tasks, onComplete }) {
+function TaskGroup({ label, color, tasks, onComplete, onOpenTask }) {
   if (!tasks.length) return null
   return (
     <div>
       <div style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.07em', textTransform: 'uppercase', color, margin: '14px 0 2px' }}>
         {label}
       </div>
-      {tasks.map(task => <TaskRow key={task.id} task={task} dueLabelColor={color} onComplete={onComplete} />)}
+      {tasks.map(task => <TaskRow key={task.id} task={task} dueLabelColor={color} onComplete={onComplete} onOpenTask={onOpenTask} />)}
     </div>
   )
 }
@@ -103,7 +103,7 @@ function SparkIdeaRow({ idea }) {
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
-export default function Dashboard({ session, businessSpaceId, onNavigate, portalActivityVersion }) {
+export default function Dashboard({ session, businessSpaceId, onNavigate, portalActivityVersion, onOpenTask }) {
   const [settings, setSettings] = useState(null)
   const [projectCounts, setProjectCounts] = useState({ planning: 0, active: 0, 'on-hold': 0 })
 
@@ -127,24 +127,6 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
   // Portal activity
   const [portalUnread, setPortalUnread] = useState(0)
 
-  useEffect(() => {
-    fetchSettings()
-    fetchProjectCounts()
-    fetchAllProjects()
-    fetchTasks()
-    fetchSparkIdeas()
-  }, [businessSpaceId])
-
-  useEffect(() => {
-    if (!businessSpaceId) return
-    fetchPortalUnread()
-  }, [businessSpaceId, portalActivityVersion])
-
-  async function fetchPortalUnread() {
-    const { total } = await fetchPortalActivity(businessSpaceId)
-    setPortalUnread(total)
-  }
-
   function getGreeting() {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good morning'
@@ -154,6 +136,11 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
 
   function getTodayLabel() {
     return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  }
+
+  async function fetchPortalUnread() {
+    const { total } = await fetchPortalActivity(businessSpaceId)
+    setPortalUnread(total)
   }
 
   async function fetchSettings() {
@@ -221,6 +208,21 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
     setSparkIdeas(data || [])
   }
 
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchSettings()
+      fetchProjectCounts()
+      fetchAllProjects()
+      fetchTasks()
+      fetchSparkIdeas()
+    })
+  }, [businessSpaceId])
+
+  useEffect(() => {
+    if (!businessSpaceId) return
+    queueMicrotask(() => fetchPortalUnread())
+  }, [businessSpaceId, portalActivityVersion])
+
   async function saveSparkIdea() {
     if (!sparkIdea.trim() || !businessSpaceId) return
     setSavingIdea(true)
@@ -234,6 +236,10 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
     setSparkIdea('')
     fetchSparkIdeas()
     setSavingIdea(false)
+  }
+
+  function handleOpenTask(task) {
+    onOpenTask?.(task.business_space_id || businessSpaceId, task.id)
   }
 
   async function completeTask(id) {
@@ -388,11 +394,11 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
             <div style={{ padding: '20px 0', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>You're all caught up 🎉</div>
           ) : (
             <div>
-              <TaskGroup label="Overdue" color="var(--color-danger)" tasks={overdueTasks} onComplete={completeTask} />
-              <TaskGroup label="Today" color="#D4874E" tasks={todayTasks} onComplete={completeTask} />
-              <TaskGroup label="This week" color={t.colors.textTertiary} tasks={weekTasks} onComplete={completeTask} />
+              <TaskGroup label="Overdue" color="var(--color-danger)" tasks={overdueTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
+              <TaskGroup label="Today" color="#D4874E" tasks={todayTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
+              <TaskGroup label="This week" color={t.colors.textTertiary} tasks={weekTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
               {tasks.filter(tk => !tk.due_date).slice(0, 5).map(task => (
-                <TaskRow key={task.id} task={task} onComplete={completeTask} />
+                <TaskRow key={task.id} task={task} onComplete={completeTask} onOpenTask={handleOpenTask} />
               ))}
             </div>
           )}

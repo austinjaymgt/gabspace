@@ -36,11 +36,15 @@ function riseAnim(delay, duration = 0.5) {
 
 // ── Task feed ────────────────────────────────────────────────────────────
 
-function FeedTaskRow({ task, dueLabelColor, onComplete }) {
+function FeedTaskRow({ task, dueLabelColor, onComplete, onOpenTask }) {
   return (
-    <div style={s.taskRow}>
+    <div
+      style={{ ...s.taskRow, cursor: 'pointer' }}
+      onClick={e => { e.stopPropagation(); onOpenTask(task) }}
+    >
       <input
         type="checkbox"
+        onClick={e => e.stopPropagation()}
         onChange={() => onComplete(task.id)}
         aria-label={`Complete ${task.title}`}
         style={s.checkbox}
@@ -56,12 +60,12 @@ function FeedTaskRow({ task, dueLabelColor, onComplete }) {
   )
 }
 
-function FeedGroup({ label, color, tasks, onComplete }) {
+function FeedGroup({ label, color, tasks, onComplete, onOpenTask }) {
   if (!tasks.length) return null
   return (
     <div>
       <div style={{ ...s.taskGroupLabel, color }}>{label}</div>
-      {tasks.map(task => <FeedTaskRow key={task.id} task={task} dueLabelColor={color} onComplete={onComplete} />)}
+      {tasks.map(task => <FeedTaskRow key={task.id} task={task} dueLabelColor={color} onComplete={onComplete} onOpenTask={onOpenTask} />)}
     </div>
   )
 }
@@ -71,7 +75,7 @@ function FeedGroup({ label, color, tasks, onComplete }) {
 // not another page in the app shell. Chrome (sidebar/topbar) is skipped
 // entirely by App.jsx while this is the current page.
 
-export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, onNavigate }) {
+export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, onNavigate, onOpenTask }) {
   const [firstName, setFirstName] = useState('')
   const [businesses, setBusinesses] = useState([])
   const [tasks, setTasks] = useState([])
@@ -79,21 +83,6 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
   const [quickTask, setQuickTask] = useState('')
   const [quickTaskBusinessId, setQuickTaskBusinessId] = useState('')
   const [switchingId, setSwitchingId] = useState(null)
-
-  useEffect(() => {
-    if (!session?.user?.id) return
-    supabase.from('user_settings').select('first_name').eq('user_id', session.user.id).maybeSingle()
-      .then(({ data }) => setFirstName(data?.first_name || session.user.email?.split('@')[0] || ''))
-  }, [session])
-
-  useEffect(() => {
-    fetchBusinesses()
-  }, [session])
-
-  useEffect(() => {
-    if (businesses.length === 0) { setTasks([]); setLoadingTasks(false); return }
-    fetchFeed()
-  }, [businesses])
 
   function fetchBusinesses() {
     if (!session?.user?.id) return
@@ -127,6 +116,21 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
       })
   }
 
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('user_settings').select('first_name').eq('user_id', session.user.id).maybeSingle()
+      .then(({ data }) => setFirstName(data?.first_name || session.user.email?.split('@')[0] || ''))
+  }, [session])
+
+  useEffect(() => {
+    fetchBusinesses()
+  }, [session])
+
+  useEffect(() => {
+    if (businesses.length === 0) { queueMicrotask(() => { setTasks([]); setLoadingTasks(false) }); return }
+    queueMicrotask(() => fetchFeed())
+  }, [businesses])
+
   async function completeTask(id) {
     setTasks(prev => prev.filter(tk => tk.id !== id))
     const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', id)
@@ -138,9 +142,10 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
   const clientManagedBusinesses = businesses.filter(b => getModules(b.id).clientManagement)
 
   useEffect(() => {
-    if (clientManagedBusinesses.length === 0) { setQuickTaskBusinessId(''); return }
+    if (clientManagedBusinesses.length === 0) { queueMicrotask(() => setQuickTaskBusinessId('')); return }
     if (!clientManagedBusinesses.some(b => b.id === quickTaskBusinessId)) {
-      setQuickTaskBusinessId(businessSpaceId && clientManagedBusinesses.some(b => b.id === businessSpaceId) ? businessSpaceId : clientManagedBusinesses[0].id)
+      const nextId = businessSpaceId && clientManagedBusinesses.some(b => b.id === businessSpaceId) ? businessSpaceId : clientManagedBusinesses[0].id
+      queueMicrotask(() => setQuickTaskBusinessId(nextId))
     }
   }, [businesses])
 
@@ -162,6 +167,10 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
 
   function handleEnterWorkspace() {
     onNavigate?.('dashboard')
+  }
+
+  async function handleOpenTask(task) {
+    await onOpenTask?.(task.business_space_id, task.id)
   }
 
   // Same overdue/today/this-week qualification the per-business dashboard
@@ -232,9 +241,9 @@ export default function Home({ session, businessSpaceId, onSwitchBusinessSpace, 
 
         {!loadingTasks && totalUpcoming > 0 && (
           <div style={{ ...s.feedPanel, animation: riseAnim(0.8) }} onClick={e => e.stopPropagation()}>
-            <FeedGroup label="Overdue" color="rgba(192,80,110,0.9)" tasks={overdueTasks} onComplete={completeTask} />
-            <FeedGroup label="Today" color="rgba(169,174,187,0.9)" tasks={todayTasks} onComplete={completeTask} />
-            <FeedGroup label="This week" color="rgba(244,238,248,0.5)" tasks={weekTasks} onComplete={completeTask} />
+            <FeedGroup label="Overdue" color="rgba(192,80,110,0.9)" tasks={overdueTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
+            <FeedGroup label="Today" color="rgba(169,174,187,0.9)" tasks={todayTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
+            <FeedGroup label="This week" color="rgba(244,238,248,0.5)" tasks={weekTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
           </div>
         )}
 

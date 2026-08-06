@@ -32,7 +32,7 @@ function compareTasks(a, b, sortBy) {
   }
 }
 
-export default function Tasks({ businessSpaceId }) {
+export default function Tasks({ businessSpaceId, pendingTaskId, onConsumePendingTaskId }) {
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -52,12 +52,6 @@ export default function Tasks({ businessSpaceId }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    if (!businessSpaceId) return
-    fetchTasks()
-    fetchProjects()
-  }, [businessSpaceId])
-
   async function fetchTasks() {
     setLoading(true)
     const { data, error } = await supabase
@@ -75,6 +69,14 @@ export default function Tasks({ businessSpaceId }) {
       .eq('business_space_id', businessSpaceId)
     if (data) setProjects(data)
   }
+
+  useEffect(() => {
+    if (!businessSpaceId) return
+    queueMicrotask(() => {
+      fetchTasks()
+      fetchProjects()
+    })
+  }, [businessSpaceId])
 
   function openCreate() {
     setEditingId(null)
@@ -96,6 +98,15 @@ export default function Tasks({ businessSpaceId }) {
     setError(null)
     setShowForm(true)
   }
+
+  useEffect(() => {
+    if (!pendingTaskId || loading) return
+    const task = tasks.find(tk => tk.id === pendingTaskId)
+    queueMicrotask(() => {
+      if (task) openEdit(task)
+      onConsumePendingTaskId?.()
+    })
+  }, [pendingTaskId, loading, tasks])
 
   function closeForm() {
     setShowForm(false)

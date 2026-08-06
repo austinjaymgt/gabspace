@@ -67,6 +67,7 @@ export default function App() {
   const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [businessSpaceId, setBusinessSpaceId] = useState(null)
+  const [pendingTaskId, setPendingTaskId] = useState(null)
   const [businessIdentityVersion, setBusinessIdentityVersion] = useState(0)
   const [portalActivityVersion, setPortalActivityVersion] = useState(0)
   const [userRole, setUserRole] = useState(null)
@@ -126,7 +127,7 @@ const WELCOME_SPLASH_MS = 2600
     const today = new Date().toDateString()
     if (localStorage.getItem(DAILY_SPLASH_KEY) !== today) {
       splashStartRef.current = Date.now()
-      setShowDailySplash(true)
+      queueMicrotask(() => setShowDailySplash(true))
     }
   }, [authChecked, session])
 
@@ -166,7 +167,7 @@ const WELCOME_SPLASH_MS = 2600
   // Platform-admin flag — is_platform_admin() server-side is the real
   // boundary (RLS); this just mirrors it for UI-layer gating.
   useEffect(() => {
-    if (!session) { setIsPlatformAdmin(false); return }
+    if (!session) { queueMicrotask(() => setIsPlatformAdmin(false)); return }
     supabase
       .from('user_settings')
       .select('is_platform_admin')
@@ -179,8 +180,8 @@ const WELCOME_SPLASH_MS = 2600
   // 20260730130000 migration) — invited teammates and grandfathered
   // pre-Stripe accounts have requires_checkout=false and skip this.
   useEffect(() => {
-    if (!session) { setRequiresCheckout(false); setCheckoutStatusLoading(false); return }
-    setCheckoutStatusLoading(true)
+    if (!session) { queueMicrotask(() => { setRequiresCheckout(false); setCheckoutStatusLoading(false) }); return }
+    queueMicrotask(() => setCheckoutStatusLoading(true))
     supabase
       .from('user_settings')
       .select('requires_checkout')
@@ -260,12 +261,14 @@ const WELCOME_SPLASH_MS = 2600
 
   useEffect(() => {
     if (!session) {
-  setBusinessSpaceId(null)
-  setUserRole(null)
-  setWorkspaceLoading(false)
+  queueMicrotask(() => {
+    setBusinessSpaceId(null)
+    setUserRole(null)
+    setWorkspaceLoading(false)
+  })
   return
 }
-    setWorkspaceLoading(true)
+    queueMicrotask(() => setWorkspaceLoading(true))
 
     supabase
       .from('user_profiles')
@@ -420,6 +423,17 @@ const WELCOME_SPLASH_MS = 2600
     return { ...result, businessSpaceId: newId }
   }
 
+  // Overdue-feed task rows on Home jump straight into the owning business's
+  // Tasks page with that task's edit form already open.
+  async function handleOpenTask(taskBusinessSpaceId, taskId) {
+    if (taskBusinessSpaceId && taskBusinessSpaceId !== businessSpaceId) {
+      const { error } = await handleBusinessSpaceSwitch(taskBusinessSpaceId)
+      if (error) return
+    }
+    setPendingTaskId(taskId)
+    setCurrentPage('tasks')
+  }
+
   function bumpBusinessIdentityVersion() {
     setBusinessIdentityVersion(v => v + 1)
   }
@@ -445,7 +459,7 @@ const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange
 function renderPage() {
   switch (currentPage) {
       case 'dashboard':
-        return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
+        return <Dashboard {...pageProps} onNavigate={setCurrentPage} onOpenTask={handleOpenTask} />
 
       case 'allclients':
       case 'all-allclients':
@@ -466,7 +480,7 @@ function renderPage() {
         return isStaff ? <BusinessEvents {...pageProps} /> : <AccessDenied />
 
       case 'tasks':
-        return <Tasks {...pageProps} />
+        return <Tasks {...pageProps} pendingTaskId={pendingTaskId} onConsumePendingTaskId={() => setPendingTaskId(null)} />
 
       case 'income':
         return isOwnerOrAdmin ? <Invoices {...pageProps} /> : <AccessDenied />
@@ -827,7 +841,7 @@ function renderPage() {
     return (
       <>
         {overlays}
-        <Home session={session} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onNavigate={setCurrentPage} />
+        <Home session={session} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onNavigate={setCurrentPage} onOpenTask={handleOpenTask} />
       </>
     )
   }
