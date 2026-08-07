@@ -430,16 +430,6 @@ const WELCOME_SPLASH_MS = 2600
     return { ...result, businessSpaceId: newId }
   }
 
-  // Overdue-feed task rows on Home jump straight into the owning business's
-  // Tasks page.
-  async function handleOpenTask(taskBusinessSpaceId) {
-    if (taskBusinessSpaceId && taskBusinessSpaceId !== businessSpaceId) {
-      const { error } = await handleBusinessSpaceSwitch(taskBusinessSpaceId)
-      if (error) return
-    }
-    setCurrentPage('tasks')
-  }
-
   function bumpBusinessIdentityVersion() {
     setBusinessIdentityVersion(v => v + 1)
   }
@@ -465,7 +455,7 @@ const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange
 function renderPage() {
   switch (currentPage) {
       case 'dashboard':
-        return <Dashboard {...pageProps} onNavigate={setCurrentPage} onOpenTask={handleOpenTask} />
+        return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
 
       case 'allclients':
       case 'all-allclients':

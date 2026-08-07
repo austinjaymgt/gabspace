@@ -1,26 +1,37 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../supabaseClient'
-import { theme as t, taskStatusConfig } from '../theme'
+import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
-import { fetchPortalActivity } from '../utils/portalActivity'
+import { parseQuickAdd } from '../lib/quickAdd'
 
-function startOfToday() {
+const QUICK_ADD_TYPE_META = {
+  client: { label: 'Client', icon: 'client-add', color: '#534AB7', bg: '#EEEDF9' },
+  task: { label: 'Task', icon: 'task', color: '#6B8F71', bg: '#EAF2EA' },
+  business_event: { label: 'Event', icon: 'events', color: '#D4874E', bg: '#FBF0E6' },
+  spark_idea: { label: 'Idea', icon: 'idea', color: '#D4874E', bg: '#FBF0E6' },
+}
+
+// Month boundaries as plain YYYY-MM-DD, for comparing against `date` columns
+// (invoice_payments.paid_date, revenue.date) which have no time component.
+function monthBoundaryDate(offsetMonths) {
   const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() + offsetMonths)
+  return d.toISOString().slice(0, 10)
+}
+
+// Month boundaries as full ISO timestamps, for comparing against
+// timestamptz `created_at` columns.
+function monthBoundaryISO(offsetMonths) {
+  const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() + offsetMonths)
   d.setHours(0, 0, 0, 0)
-  return d
+  return d.toISOString()
 }
 
-function parseDateOnly(s) {
-  return new Date(s + 'T00:00:00')
-}
-
-function dueLabel(dueString) {
-  const due = parseDateOnly(dueString)
-  const diffDays = Math.round((due - startOfToday()) / 86400000)
-  if (diffDays < 0) return `${Math.abs(diffDays)}d late`
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Tomorrow'
-  return due.toLocaleDateString('en-US', { weekday: 'short' })
+function fmtCurrency(n) {
+  return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
 const PROJECT_STATUS_FILTERS = [
@@ -28,6 +39,8 @@ const PROJECT_STATUS_FILTERS = [
   { key: 'active',   label: 'In Progress', color: '#6B8F71', bg: '#EAF2EA' },
   { key: 'on-hold',  label: 'Paused', color: '#D4874E', bg: '#FBF0E6' },
 ]
+
+const cardStyle = { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }
 
 // ── Section header ─────────────────────────────────────────────────────────
 
@@ -46,86 +59,115 @@ function SectionHeader({ label, onViewAll, viewAllColor }) {
   )
 }
 
-// ── Task row ────────────────────────────────────────────────────────────────
+// ── Stat primitives ──────────────────────────────────────────────────────────
 
-function TaskRow({ task, dueLabelColor, onComplete, onOpenTask }) {
-  const color = dueLabelColor || t.colors.textTertiary
-  const sc = taskStatusConfig[task.status] || taskStatusConfig['todo']
-  return (
-    <div
-      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderTop: `1px solid ${t.colors.borderLight}`, cursor: onOpenTask ? 'pointer' : 'default' }}
-      onClick={onOpenTask ? () => onOpenTask(task) : undefined}
-    >
-      <input
-        type="checkbox"
-        onClick={e => e.stopPropagation()}
-        onChange={() => onComplete(task.id)}
-        aria-label={`Complete ${task.title}`}
-        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: t.colors.primary, flexShrink: 0 }}
-      />
-      <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textPrimary, flex: 1, lineHeight: '1.3' }}>{task.title}</span>
-      <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', padding: '2px 8px', borderRadius: t.radius.full, backgroundColor: sc.bg, color: sc.color, whiteSpace: 'nowrap' }}>
-        {sc.label}
-      </span>
-      {task.due_date && (
-        <span style={{ fontSize: t.fontSizes.xs, color, fontWeight: '500', whiteSpace: 'nowrap' }}>
-          {dueLabel(task.due_date)}
-        </span>
-      )}
-    </div>
-  )
-}
-
-function TaskGroup({ label, color, tasks, onComplete, onOpenTask }) {
-  if (!tasks.length) return null
+function StatNumber({ value, label }) {
   return (
     <div>
-      <div style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.07em', textTransform: 'uppercase', color, margin: '14px 0 2px' }}>
-        {label}
-      </div>
-      {tasks.map(task => <TaskRow key={task.id} task={task} dueLabelColor={color} onComplete={onComplete} onOpenTask={onOpenTask} />)}
+      <div style={{ fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, fontFamily: t.fonts.heading, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>{label}</div>
     </div>
   )
 }
 
-// ── Spark Pad idea row ───────────────────────────────────────────────────────
-
-function SparkIdeaRow({ idea }) {
+function StatPill({ label, count, color, bg }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 0', borderTop: `1px solid ${t.colors.borderLight}` }}>
-      <span style={{ color: '#D4874E', flexShrink: 0, marginTop: '1px', lineHeight: 1 }}>
-        <Icon name="idea" size="sm" />
-      </span>
-      <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textPrimary, lineHeight: '1.4' }}>{idea.title}</span>
+    <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', padding: '3px 10px', borderRadius: t.radius.full, backgroundColor: bg, color, whiteSpace: 'nowrap' }}>
+      {label} ({count})
+    </span>
+  )
+}
+
+// ── Quick add preview card ──────────────────────────────────────────────────
+
+const QUICK_ADD_FIELD_LABELS = {
+  name: 'Name', company: 'Company', email: 'Email', phone: 'Phone', note: 'Note',
+  title: 'Title', due_date: 'Due date', client_name: 'Related client',
+  date: 'Date', location: 'Location', notes: 'Notes',
+}
+
+function fieldInputStyle(multiline) {
+  return {
+    width: '100%', boxSizing: 'border-box',
+    padding: '7px 10px', borderRadius: multiline ? t.radius.md : t.radius.full,
+    border: `1px solid ${t.colors.borderLight}`,
+    backgroundColor: t.colors.bg, color: t.colors.textPrimary,
+    fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, outline: 'none',
+  }
+}
+
+function QuickAddPreviewCard({ item, onChange, onRemove }) {
+  const meta = QUICK_ADD_TYPE_META[item.type] || QUICK_ADD_TYPE_META.spark_idea
+  const fieldKeys = Object.keys(item.fields)
+  return (
+    <div style={{ backgroundColor: t.colors.bg, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.md, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          fontSize: t.fontSizes.xs, fontWeight: '700', padding: '3px 10px',
+          borderRadius: t.radius.full, backgroundColor: meta.bg, color: meta.color,
+        }}>
+          <Icon name={meta.icon} size="sm" />
+          {meta.label}
+        </span>
+        <button
+          onClick={onRemove}
+          aria-label="Remove item"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, display: 'flex', padding: '2px' }}
+        >
+          <Icon name="close" size="sm" />
+        </button>
+      </div>
+      <div style={{ display: 'grid', gap: '8px' }}>
+        {fieldKeys.map(key => (
+          <label key={key} style={{ display: 'block' }}>
+            <span style={{ fontSize: '10px', fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px', display: 'block' }}>
+              {QUICK_ADD_FIELD_LABELS[key] || key}
+            </span>
+            {key === 'note' || key === 'notes' ? (
+              <textarea
+                value={item.fields[key] || ''}
+                onChange={e => onChange(key, e.target.value)}
+                rows={2}
+                style={{ ...fieldInputStyle(true), resize: 'none' }}
+              />
+            ) : (
+              <input
+                type={key === 'due_date' || key === 'date' ? 'date' : 'text'}
+                value={item.fields[key] || ''}
+                onChange={e => onChange(key, e.target.value)}
+                style={fieldInputStyle(false)}
+              />
+            )}
+          </label>
+        ))}
+      </div>
     </div>
   )
 }
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
-export default function Dashboard({ session, businessSpaceId, onNavigate, portalActivityVersion, onOpenTask }) {
+export default function Dashboard({ session, businessSpaceId, userRole, onNavigate }) {
   const [settings, setSettings] = useState(null)
-  const [projectCounts, setProjectCounts] = useState({ planning: 0, active: 0, 'on-hold': 0 })
 
-  // Spark Pad
-  const [sparkIdea, setSparkIdea] = useState('')
-  const [sparkIdeas, setSparkIdeas] = useState([])
-  const [savingIdea, setSavingIdea] = useState(false)
-
-  // Quick-add task
+  // Quick add
   const [quickTask, setQuickTask] = useState('')
   const quickTaskRef = useRef(null)
+  const [quickAddParsing, setQuickAddParsing] = useState(false)
+  const [quickAddError, setQuickAddError] = useState('')
+  const [quickAddItems, setQuickAddItems] = useState(null) // [{ type, fields }] or null when no preview
+  const [quickAddSaving, setQuickAddSaving] = useState(false)
 
-  // Tasks
-  const [tasks, setTasks] = useState([])
-  const [loadingTasks, setLoadingTasks] = useState(true)
+  // Project pulse
+  const [projectPulse, setProjectPulse] = useState({ active: 0, stalled: 0, statusCounts: { planning: 0, active: 0, 'on-hold': 0 } })
 
-  // Projects by status
-  const [allProjects, setAllProjects] = useState([])
-  const [projectFilter, setProjectFilter] = useState('active')
+  // Revenue snapshot (director only)
+  const isDirector = ['owner', 'co-owner'].includes(userRole)
+  const [revenueSnapshot, setRevenueSnapshot] = useState({ outstanding: 0, collectedThisMonth: 0, collectedLastMonth: 0 })
 
-  // Portal activity
-  const [portalUnread, setPortalUnread] = useState(0)
+  // Team goals progress
+  const [goalsProgress, setGoalsProgress] = useState({ avgProgress: 0, onTrack: 0, atRisk: 0, completed: 0, total: 0 })
 
   function getGreeting() {
     const hour = new Date().getHours()
@@ -138,11 +180,6 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
     return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
   }
 
-  async function fetchPortalUnread() {
-    const { total } = await fetchPortalActivity(businessSpaceId)
-    setPortalUnread(total)
-  }
-
   async function fetchSettings() {
     if (!session) return
     const { data } = await supabase.from('user_settings').select('*').eq('user_id', session.user.id).maybeSingle()
@@ -152,125 +189,175 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
     setSettings({ ...data, business_name: business?.name || '', logo_url: business?.logo_url || '' })
   }
 
-  async function fetchProjectCounts() {
+  async function fetchProjectPulse() {
     if (!businessSpaceId) return
-    const { data } = await supabase
-      .from('projects')
-      .select('status')
-      .eq('business_space_id', businessSpaceId)
-      .eq('type', 'project')
-      .in('status', ['planning', 'active', 'on-hold'])
-    if (!data) return
-    const counts = { planning: 0, active: 0, 'on-hold': 0 }
-    for (const p of data) if (counts[p.status] !== undefined) counts[p.status]++
-    setProjectCounts(counts)
-  }
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString()
+    const [projectsRes, tasksRes] = await Promise.all([
+      supabase.from('projects').select('id, created_at, status').eq('business_space_id', businessSpaceId).eq('type', 'project').in('status', ['planning', 'active', 'on-hold']),
+      supabase.from('tasks').select('project_id, created_at').eq('business_space_id', businessSpaceId).not('project_id', 'is', null),
+    ])
+    const projects = projectsRes.data || []
 
-  async function fetchAllProjects() {
-    if (!businessSpaceId) return
-    const { data } = await supabase
-      .from('projects')
-      .select('id, title, status, clients(name)')
-      .eq('business_space_id', businessSpaceId)
-      .eq('type', 'project')
-      .in('status', ['planning', 'active', 'on-hold'])
-      .order('created_at', { ascending: false })
-    setAllProjects(data || [])
-  }
+    const statusCounts = { planning: 0, active: 0, 'on-hold': 0 }
+    for (const p of projects) if (statusCounts[p.status] !== undefined) statusCounts[p.status]++
 
-  async function fetchTasks() {
-    setLoadingTasks(true)
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*, projects(title)')
-      .eq('business_space_id', businessSpaceId)
-      .neq('status', 'done')
-      .order('due_date', { ascending: true, nullsFirst: false })
-    if (error) {
-      const { data: bare } = await supabase.from('tasks').select('*').eq('business_space_id', businessSpaceId).neq('status', 'done').order('due_date', { ascending: true, nullsFirst: false })
-      setTasks(bare || [])
-    } else {
-      setTasks(data || [])
+    const lastActivity = {}
+    for (const p of projects) lastActivity[p.id] = p.created_at
+    for (const tk of tasksRes.data || []) {
+      if (tk.project_id && tk.created_at > (lastActivity[tk.project_id] || '')) lastActivity[tk.project_id] = tk.created_at
     }
-    setLoadingTasks(false)
+    const stalled = projects.filter(p => (lastActivity[p.id] || p.created_at) < fourteenDaysAgo).length
+
+    setProjectPulse({ active: projects.length, stalled, statusCounts })
   }
 
-  async function fetchSparkIdeas() {
+  async function fetchRevenueSnapshot() {
+    if (!businessSpaceId || !isDirector) return
+    const thisMonthStart = monthBoundaryDate(0)
+    const thisMonthEnd = monthBoundaryDate(1)
+    const lastMonthStart = monthBoundaryDate(-1)
+
+    const [invoicesRes, revenueRes] = await Promise.all([
+      supabase.from('invoices').select('total_amount, amount_paid, invoice_payments(amount, paid_date)').eq('business_space_id', businessSpaceId),
+      supabase.from('revenue').select('amount, date, status').eq('business_space_id', businessSpaceId),
+    ])
+
+    const invoices = invoicesRes.data || []
+    const outstanding = invoices.reduce((s, inv) => s + (Number(inv.total_amount || 0) - Number(inv.amount_paid || 0)), 0)
+    const allPayments = invoices.flatMap(inv => inv.invoice_payments || [])
+    const receivedRevenue = (revenueRes.data || []).filter(r => r.status === 'received')
+
+    const inRange = (dateStr, start, end) => dateStr && dateStr >= start && dateStr < end
+    const sumInRange = (start, end) =>
+      allPayments.filter(p => inRange(p.paid_date, start, end)).reduce((s, p) => s + Number(p.amount || 0), 0) +
+      receivedRevenue.filter(r => inRange(r.date, start, end)).reduce((s, r) => s + Number(r.amount || 0), 0)
+
+    setRevenueSnapshot({
+      outstanding,
+      collectedThisMonth: sumInRange(thisMonthStart, thisMonthEnd),
+      collectedLastMonth: sumInRange(lastMonthStart, thisMonthStart),
+    })
+  }
+
+  async function fetchGoalsProgress() {
     if (!businessSpaceId) return
-    const { data } = await supabase
-      .from('projects')
-      .select('id, title')
-      .eq('business_space_id', businessSpaceId)
-      .eq('type', 'event')
-      .eq('event_status', 'concept')
-      .order('created_at', { ascending: false })
-      .limit(5)
-    setSparkIdeas(data || [])
+    const { data } = await supabase.from('team_goals').select('progress, status').eq('business_space_id', businessSpaceId)
+    const goals = data || []
+    const active = goals.filter(g => g.status !== 'completed')
+    const avgProgress = active.length ? Math.round(active.reduce((s, g) => s + Number(g.progress || 0), 0) / active.length) : 0
+    setGoalsProgress({
+      avgProgress,
+      onTrack: goals.filter(g => g.status === 'on-track').length,
+      atRisk: goals.filter(g => g.status === 'at-risk').length,
+      completed: goals.filter(g => g.status === 'completed').length,
+      total: goals.length,
+    })
   }
 
   useEffect(() => {
     queueMicrotask(() => {
       fetchSettings()
-      fetchProjectCounts()
-      fetchAllProjects()
-      fetchTasks()
-      fetchSparkIdeas()
+      fetchProjectPulse()
+      fetchRevenueSnapshot()
+      fetchGoalsProgress()
     })
   }, [businessSpaceId])
 
-  useEffect(() => {
-    if (!businessSpaceId) return
-    queueMicrotask(() => fetchPortalUnread())
-  }, [businessSpaceId, portalActivityVersion])
+  async function handleQuickAddSubmit(e) {
+    if (e.key !== 'Enter' || e.shiftKey || !quickTask.trim() || !businessSpaceId || quickAddParsing) return
+    e.preventDefault()
+    const text = quickTask.trim()
+    setQuickAddParsing(true)
+    setQuickAddError('')
+    try {
+      const items = await parseQuickAdd(text)
+      if (!items.length) {
+        setQuickAddError("Couldn't find anything to add in that — try rephrasing.")
+      } else {
+        setQuickAddItems(items.map(item => ({ ...item, fields: { ...item.fields } })))
+        setQuickTask('')
+      }
+    } catch (err) {
+      setQuickAddError(err.message || 'Something went wrong parsing that.')
+    } finally {
+      setQuickAddParsing(false)
+    }
+  }
 
-  async function saveSparkIdea() {
-    if (!sparkIdea.trim() || !businessSpaceId) return
-    setSavingIdea(true)
-    await supabase.from('projects').insert({
-      business_space_id: businessSpaceId,
-      user_id: session.user.id,
-      title: sparkIdea.trim(),
-      type: 'event',
-      event_status: 'concept',
+  function updateQuickAddField(index, field, value) {
+    setQuickAddItems(prev => prev.map((item, i) => i === index ? { ...item, fields: { ...item.fields, [field]: value } } : item))
+  }
+
+  function removeQuickAddItem(index) {
+    setQuickAddItems(prev => {
+      const next = prev.filter((_, i) => i !== index)
+      return next.length ? next : null
     })
-    setSparkIdea('')
-    fetchSparkIdeas()
-    setSavingIdea(false)
   }
 
-  function handleOpenTask(task) {
-    onOpenTask?.(task.business_space_id || businessSpaceId)
+  function cancelQuickAdd() {
+    setQuickAddItems(null)
+    setQuickAddError('')
   }
 
-  async function completeTask(id) {
-    setTasks(prev => prev.filter(tk => tk.id !== id))
-    const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', id)
-    if (error) fetchTasks()
+  async function confirmQuickAdd() {
+    if (!quickAddItems?.length || !businessSpaceId) return
+    setQuickAddSaving(true)
+    setQuickAddError('')
+    try {
+      const clientItems = quickAddItems.filter(i => i.type === 'client')
+      const others = quickAddItems.filter(i => i.type !== 'client')
+
+      // Clients first so their ids are available for task linking below.
+      const nameToClientId = {}
+      for (const { fields } of clientItems) {
+        const { note, ...clientFields } = fields
+        const { data: client, error } = await supabase
+          .from('clients')
+          .insert({ ...clientFields, business_space_id: businessSpaceId, user_id: session.user.id })
+          .select('id, name')
+          .single()
+        if (error) throw error
+        nameToClientId[client.name.toLowerCase()] = client.id
+        if (note?.trim()) {
+          await supabase.from('notes').insert({
+            content: note.trim(), client_id: client.id,
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          })
+        }
+      }
+
+      for (const { type, fields } of others) {
+        if (type === 'task') {
+          const { client_name, ...taskFields } = fields
+          const client_id = client_name ? nameToClientId[client_name.toLowerCase()] || null : null
+          await supabase.from('tasks').insert({
+            ...taskFields, client_id, business_space_id: businessSpaceId, status: 'todo',
+          })
+        } else if (type === 'business_event') {
+          await supabase.from('business_events').insert({
+            ...fields, type: 'networking', event_type: 'attending', status: 'upcoming',
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          })
+        } else if (type === 'spark_idea') {
+          await supabase.from('projects').insert({
+            title: fields.title, business_space_id: businessSpaceId, user_id: session.user.id,
+            type: 'event', event_status: 'concept',
+          })
+        }
+      }
+
+      setQuickAddItems(null)
+      fetchProjectPulse()
+      fetchRevenueSnapshot()
+    } catch (err) {
+      setQuickAddError(err.message || 'Something went wrong saving those.')
+    } finally {
+      setQuickAddSaving(false)
+    }
   }
 
-  async function handleQuickTask(e) {
-    if (e.key !== 'Enter' || !quickTask.trim() || !businessSpaceId) return
-    const title = quickTask.trim()
-    setQuickTask('')
-    await supabase.from('tasks').insert({ title, business_space_id: businessSpaceId, status: 'todo' })
-    fetchTasks()
-  }
-
-  // Task grouping
-  const today0 = startOfToday()
-  const weekEnd = new Date(today0)
-  weekEnd.setDate(weekEnd.getDate() + 7)
-  const overdueTasks = [], todayTasks = [], weekTasks = []
-  for (const task of tasks) {
-    if (!task.due_date) continue
-    const due = parseDateOnly(task.due_date)
-    if (due < today0) overdueTasks.push(task)
-    else if (due.getTime() === today0.getTime()) todayTasks.push(task)
-    else if (due <= weekEnd) weekTasks.push(task)
-  }
-  const totalUpcoming = overdueTasks.length + todayTasks.length + weekTasks.length
-
-  const filteredProjects = allProjects.filter(p => p.status === projectFilter)
+  const revenueDelta = revenueSnapshot.collectedThisMonth - revenueSnapshot.collectedLastMonth
 
   const firstName = settings?.first_name || session?.user?.email?.split('@')[0] || ''
   const workspaceName = settings?.business_name || ''
@@ -309,159 +396,139 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
         </div>
       </div>
 
-      {/* ── Spark Pad ── */}
-      <div style={{ backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.lg, padding: '20px 24px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#D4874E' }}>Spark Pad</span>
-          <button onClick={() => onNavigate('spark')} style={{ fontSize: t.fontSizes.xs, color: '#D4874E', background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, fontWeight: '600' }}>
-            View all →
-          </button>
+      {/* ── Quick add (hero) ── */}
+      <div style={{ backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.card, padding: '28px 32px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+          <Icon name="magic" size="md" />
+          <span style={{ fontSize: t.fontSizes.sm, fontWeight: '700', letterSpacing: '0.04em', textTransform: 'uppercase', color: t.colors.textTertiary }}>
+            Quick Add
+          </span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '20px' }}>
-          <div>
-            <textarea
-              value={sparkIdea}
-              onChange={e => setSparkIdea(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveSparkIdea() } }}
-              placeholder="Drop an idea before it disappears…"
-              rows={3}
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '10px 12px', borderRadius: t.radius.full,
-                border: `1px solid ${t.colors.border}`,
-                backgroundColor: t.colors.bg, color: t.colors.textPrimary,
-                fontSize: t.fontSizes.base, fontFamily: t.fonts.sans,
-                resize: 'none', outline: 'none', lineHeight: '1.5',
-              }}
-            />
-            <button
-              onClick={saveSparkIdea}
-              disabled={savingIdea || !sparkIdea.trim()}
-              style={{
-                marginTop: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px',
-                padding: '8px 16px', borderRadius: t.radius.full,
-                border: `1px solid ${t.colors.borderLight}`,
-                backgroundColor: t.colors.bg, color: t.colors.textPrimary,
-                fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer',
-                fontFamily: t.fonts.sans, opacity: savingIdea || !sparkIdea.trim() ? 0.5 : 1,
-              }}
-            >
-              <Icon name="sparkles" size="sm" />
-              Save idea
-            </button>
+        <div style={{ position: 'relative' }}>
+          <input
+            ref={quickTaskRef}
+            value={quickTask}
+            onChange={e => setQuickTask(e.target.value)}
+            onKeyDown={handleQuickAddSubmit}
+            disabled={quickAddParsing}
+            placeholder="Tell me what happened — I'll turn it into tasks, clients, or events…"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '18px 24px', borderRadius: t.radius.full,
+              border: `1px solid ${t.colors.border}`,
+              backgroundColor: t.colors.bg, color: t.colors.textPrimary,
+              fontSize: t.fontSizes.lg || t.fontSizes.md, fontFamily: t.fonts.sans,
+              outline: 'none', opacity: quickAddParsing ? 0.6 : 1,
+            }}
+          />
+          {quickAddParsing && (
+            <span style={{ position: 'absolute', right: '24px', top: '50%', transform: 'translateY(-50%)', fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
+              Thinking…
+            </span>
+          )}
+        </div>
+
+        {quickAddError && (
+          <div style={{ marginTop: '10px', fontSize: t.fontSizes.sm, color: '#B3453D' }}>
+            {quickAddError}
           </div>
-          <div>
-            {sparkIdeas.length === 0 ? (
-              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, paddingTop: '8px' }}>No ideas saved yet — jot one down before it slips away.</div>
-            ) : (
-              sparkIdeas.map(idea => <SparkIdeaRow key={idea.id} idea={idea} />)
-            )}
-          </div>
-        </div>
-      </div>
+        )}
 
-      {/* ── Quick-add task bar ── */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '8px' }}>
-          Quick Add Task +
-        </div>
-        <input
-          ref={quickTaskRef}
-          value={quickTask}
-          onChange={e => setQuickTask(e.target.value)}
-          onKeyDown={handleQuickTask}
-          placeholder="Name a task and hit Enter — it'll show up below…"
-          style={{
-            width: '100%', boxSizing: 'border-box',
-            padding: '14px 20px', borderRadius: t.radius.full,
-            border: `1px solid ${t.colors.border}`,
-            backgroundColor: t.colors.bgCard, color: t.colors.textPrimary,
-            fontSize: t.fontSizes.md, fontFamily: t.fonts.sans,
-            outline: 'none',
-          }}
-        />
-      </div>
-
-      {/* ── Tasks | Projects by Status ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-
-        {/* Tasks */}
-        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
-          <SectionHeader label="Tasks" onViewAll={() => onNavigate('tasks')} viewAllColor={t.colors.primary} />
-          {loadingTasks ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', color: t.colors.textTertiary, fontSize: t.fontSizes.base }}>Loading tasks…</div>
-          ) : totalUpcoming === 0 && tasks.length === 0 ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>You're all caught up 🎉</div>
-          ) : (
-            <div>
-              <TaskGroup label="Overdue" color="var(--color-danger)" tasks={overdueTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
-              <TaskGroup label="Today" color="#D4874E" tasks={todayTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
-              <TaskGroup label="This week" color={t.colors.textTertiary} tasks={weekTasks} onComplete={completeTask} onOpenTask={handleOpenTask} />
-              {tasks.filter(tk => !tk.due_date).slice(0, 5).map(task => (
-                <TaskRow key={task.id} task={task} onComplete={completeTask} onOpenTask={handleOpenTask} />
+        {quickAddItems && (
+          <div style={{ backgroundColor: t.colors.bg, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.lg, padding: '16px', marginTop: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+              {quickAddItems.map((item, i) => (
+                <QuickAddPreviewCard
+                  key={i}
+                  item={item}
+                  onChange={(field, value) => updateQuickAddField(i, field, value)}
+                  onRemove={() => removeQuickAddItem(i)}
+                />
               ))}
             </div>
-          )}
-        </div>
-
-        {/* Projects by Status */}
-        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
-          <SectionHeader label="Projects by Status" onViewAll={() => onNavigate('projects')} viewAllColor={t.colors.primary} />
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
-            {PROJECT_STATUS_FILTERS.map(f => {
-              const isActive = projectFilter === f.key
-              return (
-                <button
-                  key={f.key}
-                  onClick={() => setProjectFilter(f.key)}
-                  style={{
-                    padding: '5px 12px', borderRadius: t.radius.full, border: 'none', cursor: 'pointer',
-                    fontFamily: t.fonts.sans, fontSize: t.fontSizes.xs, fontWeight: '600',
-                    backgroundColor: isActive ? f.color : t.colors.bg,
-                    color: isActive ? '#fff' : t.colors.textSecondary,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {f.label} ({projectCounts[f.key]})
-                </button>
-              )
-            })}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+              <button
+                onClick={confirmQuickAdd}
+                disabled={quickAddSaving}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '9px 18px', borderRadius: t.radius.full, border: 'none',
+                  backgroundColor: t.colors.primary, color: t.colors.textInverse,
+                  fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer',
+                  fontFamily: t.fonts.sans, opacity: quickAddSaving ? 0.6 : 1,
+                }}
+              >
+                {quickAddSaving ? 'Adding…' : `Add all (${quickAddItems.length})`}
+              </button>
+              <button
+                onClick={cancelQuickAdd}
+                disabled={quickAddSaving}
+                style={{
+                  padding: '9px 18px', borderRadius: t.radius.full,
+                  border: `1px solid ${t.colors.borderLight}`,
+                  backgroundColor: 'transparent', color: t.colors.textSecondary,
+                  fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans,
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-          {filteredProjects.length === 0 ? (
-            <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>No projects in this status.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {filteredProjects.map(project => {
-                const fc = PROJECT_STATUS_FILTERS.find(f => f.key === project.status) || PROJECT_STATUS_FILTERS[0]
-                return (
-                  <div key={project.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textPrimary }}>{project.title}</div>
-                      <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{project.clients?.name || 'No client'}</div>
-                    </div>
-                    <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', padding: '3px 10px', borderRadius: t.radius.full, backgroundColor: fc.bg, color: fc.color, whiteSpace: 'nowrap' }}>
-                      {fc.label}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+        )}
+      </div>
+
+      {/* ── Stat cards ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+
+        {/* Project Pulse */}
+        <div style={cardStyle}>
+          <SectionHeader label="Project Pulse" onViewAll={() => onNavigate('projects')} viewAllColor={t.colors.primary} />
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
+            <StatNumber value={projectPulse.active} label="Active projects" />
+            <StatNumber value={projectPulse.stalled} label="Stalled 14+ days" />
+          </div>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            {PROJECT_STATUS_FILTERS.map(f => (
+              <StatPill key={f.key} label={f.label} count={projectPulse.statusCounts[f.key]} color={f.color} bg={f.bg} />
+            ))}
+          </div>
+          <div style={{ fontSize: t.fontSizes.sm, color: projectPulse.stalled > 0 ? t.colors.textSecondary : t.colors.textTertiary }}>
+            {projectPulse.stalled > 0
+              ? `${projectPulse.stalled} project${projectPulse.stalled === 1 ? '' : 's'} with no task activity in 2+ weeks`
+              : "Everything's moving"}
+          </div>
         </div>
 
-        {/* Portal Activity */}
-        <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }}>
-          <SectionHeader label="Portal Activity" onViewAll={() => onNavigate('client-portal-manager')} viewAllColor={t.colors.primary} />
-          {portalUnread === 0 ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', fontSize: t.fontSizes.base, color: t.colors.textTertiary }}>No new activity</div>
-          ) : (
-            <div style={{ padding: '20px 0', textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: t.colors.primary, fontFamily: t.fonts.heading }}>{portalUnread}</div>
-              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginTop: '4px' }}>
-                unread update{portalUnread === 1 ? '' : 's'} from clients
-              </div>
+        {/* Revenue Snapshot — director only */}
+        {isDirector && (
+          <div style={cardStyle}>
+            <SectionHeader label="Revenue Snapshot" onViewAll={() => onNavigate('snapshot')} viewAllColor={t.colors.primary} />
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
+              <StatNumber value={fmtCurrency(revenueSnapshot.collectedThisMonth)} label="Collected this month" />
+              <StatNumber value={fmtCurrency(revenueSnapshot.outstanding)} label="Outstanding" />
             </div>
-          )}
+            <div style={{ fontSize: t.fontSizes.sm, color: revenueDelta >= 0 ? '#6B8F71' : '#B3453D' }}>
+              {revenueDelta >= 0 ? '↑' : '↓'} {fmtCurrency(Math.abs(revenueDelta))} vs last month
+            </div>
+          </div>
+        )}
+
+        {/* Team Goals Progress */}
+        <div style={cardStyle}>
+          <SectionHeader label="Team Goals" onViewAll={() => onNavigate('team-goals')} viewAllColor={t.colors.primary} />
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, fontFamily: t.fonts.heading, lineHeight: 1.1 }}>
+              {goalsProgress.avgProgress}%
+            </div>
+            <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px', marginBottom: '8px' }}>average progress</div>
+            <div style={{ width: '100%', height: '6px', borderRadius: t.radius.full, backgroundColor: t.colors.bg, overflow: 'hidden' }}>
+              <div style={{ width: `${goalsProgress.avgProgress}%`, height: '100%', backgroundColor: t.colors.primary, borderRadius: t.radius.full }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <StatPill label="On track" count={goalsProgress.onTrack} color="#6B8F71" bg="#EAF2EA" />
+            <StatPill label="At risk" count={goalsProgress.atRisk} color="#D4874E" bg="#FBF0E6" />
+          </div>
         </div>
 
       </div>

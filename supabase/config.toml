@@ -25,3 +25,9 @@ entrypoint = "./functions/generate-event-concept/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/orbi-brief/index.ts"
+
+[functions.quick-add-parse]
+enabled = true
+verify_jwt = true
+import_map = "./functions/quick-add-parse/deno.json"
+entrypoint = "./functions/quick-add-parse/index.ts"
