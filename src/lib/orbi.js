@@ -9,7 +9,7 @@ something and is gently letting them know.
 
 You will be given a JSON array of prioritized items pulled from the
 user's business data (overdue invoices, upcoming projects, networking
-events, and content due dates). Rewrite each
+events, content due dates, and goals). Rewrite each
 item into a short, natural phrase a person would actually say out loud.
 Keep the underlying facts (names, dates, amounts if present) accurate —
 never invent details that aren't in the input.

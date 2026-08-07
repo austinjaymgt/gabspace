@@ -5,11 +5,6 @@ const DAY_MS = 86400000
 const DEFAULT_WINDOW_DAYS = 3
 const ITEM_CAP = 8
 
-// Outward-facing business_events types — excludes internal/production
-// entries ('Pop-up', 'Workshop', 'Styled shoot', 'Other') that aren't
-// really "networking" in the sense Orbi is surfacing them for.
-const NETWORKING_EVENT_TYPES = ['Networking mixer', 'Trade show', 'Speaking gig', 'Conference', 'Vendor fair']
-
 function startOfToday() {
   const d = new Date()
   d.setHours(0, 0, 0, 0)
@@ -28,8 +23,8 @@ function rankForDiff(daysDiff) {
 }
 
 // Pulls the prioritized items (overdue invoices, upcoming projects,
-// networking events, content due dates) across every business space the
-// user belongs to and shapes them into the flat item format Orbi's
+// networking events, content due dates, goals) across every business space
+// the user belongs to and shapes them into the flat item format Orbi's
 // prompt expects. Cross-business, like Home.jsx's feed, rather than
 // scoped to whichever space happens to be active — the active space's
 // items are already visible on its own Dashboard, so repeating just that
@@ -45,12 +40,13 @@ export async function fetchOrbiItems(businesses, windowDays = DEFAULT_WINDOW_DAY
   const today0 = startOfToday()
   const windowEnd = new Date(today0.getTime() + windowDays * DAY_MS)
 
-  const [invoicesRes, eventsRes, businessEventsRes, projectsRes, contentRes] = await Promise.all([
+  const [invoicesRes, eventsRes, businessEventsRes, projectsRes, contentRes, goalsRes] = await Promise.all([
     supabase.from('invoices').select('id, invoice_number, total_amount, amount_paid, due_date, status, business_space_id, clients(name)').in('business_space_id', businessIds),
     supabase.from('events').select('id, name, event_date, business_space_id').in('business_space_id', businessIds),
-    supabase.from('business_events').select('id, name, date, business_space_id').in('business_space_id', businessIds).in('type', NETWORKING_EVENT_TYPES).neq('status', 'completed'),
+    supabase.from('business_events').select('id, name, date, business_space_id').in('business_space_id', businessIds).neq('status', 'completed'),
     supabase.from('projects').select('id, title, end_date, business_space_id').in('business_space_id', businessIds).eq('type', 'project').in('status', ['planning', 'active', 'on-hold']),
     supabase.from('content_calendar').select('id, title, scheduled_date, platform, business_space_id').in('business_space_id', businessIds).neq('status', 'published'),
+    supabase.from('team_goals').select('id, title, due_date, business_space_id').in('business_space_id', businessIds).neq('status', 'completed'),
   ])
 
   const items = []
@@ -119,6 +115,20 @@ export async function fetchOrbiItems(businesses, windowDays = DEFAULT_WINDOW_DAY
       rank: rankForDiff(daysDiff),
       facts: { name: content.title, platform: content.platform, scheduled_date: content.scheduled_date, days_diff: daysDiff, business_name: nameById[content.business_space_id] },
       action: { label: 'View content', handler: 'campaign-tracking', target_id: content.id, business_space_id: content.business_space_id },
+    })
+  }
+
+  for (const goal of goalsRes.data || []) {
+    if (!goal.due_date) continue
+    const due = parseDateOnly(goal.due_date)
+    if (due > windowEnd) continue
+    const daysDiff = Math.round((due - today0) / DAY_MS)
+    items.push({
+      source_id: `goal:${goal.id}`,
+      type: 'goal',
+      rank: rankForDiff(daysDiff),
+      facts: { name: goal.title, due_date: goal.due_date, days_diff: daysDiff, business_name: nameById[goal.business_space_id] },
+      action: { label: 'View goal', handler: 'team-goals', target_id: goal.id, business_space_id: goal.business_space_id },
     })
   }
 
