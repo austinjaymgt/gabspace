@@ -847,7 +847,7 @@ function renderPage() {
     return (
       <>
         {overlays}
-        <Home session={session} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onNavigate={setCurrentPage} onOpenTask={handleOpenTask} />
+        <Home session={session} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onNavigate={setCurrentPage} />
       </>
     )
   }
