@@ -61,10 +61,11 @@ export async function getOrbiBrief(items) {
   return parsed
     .filter(entry => bySourceId[entry.source_id])
     .map(entry => {
-      const daysDiff = bySourceId[entry.source_id].facts.days_diff
+      const source = bySourceId[entry.source_id]
+      const daysDiff = source.facts.days_diff
       return {
         phrase: entry.phrase,
-        action: bySourceId[entry.source_id].action,
+        action: source.action,
         // Due today, tomorrow, or already overdue — worth calling out
         // visually since everything else in the window is routine.
         urgent: daysDiff != null && daysDiff <= 1,

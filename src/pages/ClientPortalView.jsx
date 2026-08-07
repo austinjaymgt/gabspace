@@ -167,6 +167,12 @@ export default function ClientPortalView() {
     setCommentInput(prev => ({ ...prev, [delivId]: '' }))
   }
 
+  async function approveDeliverable(delivId) {
+    const { error } = await supabase.rpc('approve_portal_deliverable', { p_token: token, p_deliverable_id: delivId })
+    if (error) return
+    setDeliverables(prev => prev.map(d => d.id === delivId ? { ...d, status: 'approved', approved_by_client: true } : d))
+  }
+
   function saveName(name) {
     setCommentName(name)
     localStorage.setItem('portal_commenter_name', name)
@@ -363,6 +369,23 @@ export default function ClientPortalView() {
                       {timeAgo(d.created_at)} · <span style={{ color: status.color, fontWeight: 600 }}>{status.label}</span>
                     </div>
                   </div>
+                  {(d.status === 'pending_review' || d.status === 'approved') && (
+                    <label style={{
+                      display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                      fontSize: 12, fontWeight: 600, color: d.status === 'approved' ? '#0e8a4a' : GRAPHITE,
+                      fontFamily: '"Source Sans 3", sans-serif',
+                      cursor: d.status === 'pending_review' ? 'pointer' : 'default',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={d.status === 'approved'}
+                        disabled={d.status === 'approved'}
+                        onChange={() => approveDeliverable(d.id)}
+                        style={{ width: 15, height: 15, accentColor: '#0e8a4a', cursor: d.status === 'pending_review' ? 'pointer' : 'default' }}
+                      />
+                      Approved
+                    </label>
+                  )}
                 </div>
 
                 {/* Description */}

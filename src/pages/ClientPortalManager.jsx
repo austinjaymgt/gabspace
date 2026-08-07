@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
-import { fetchPortalActivity } from '../utils/portalActivity'
+import { fetchPortalActivity, markProjectViewed as markProjectViewedRemote } from '../utils/portalActivity'
 
 const STATUS_COLORS = {
   draft:          { bg: t.colors.bgHover,      color: t.colors.textSecondary, label: 'Draft' },
@@ -17,11 +17,11 @@ const PORTAL_STATUS = {
 
 const REACTIONS = ['👍', '❤️', '🔥', '🎉']
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, approvedByClient }) {
   const cfg = STATUS_COLORS[status] || STATUS_COLORS.draft
   return (
     <span style={{ fontSize: t.fontSizes.xs, fontWeight: 600, padding: '2px 8px', borderRadius: t.radius.full, background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
-      {cfg.label}
+      {cfg.label}{status === 'approved' && approvedByClient ? ' · Client' : ''}
     </span>
   )
 }
@@ -162,8 +162,7 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
   }
 
   async function markProjectViewed(portalProjectId) {
-    const now = new Date().toISOString()
-    await supabase.from('portal_projects').update({ staff_last_viewed: now }).eq('id', portalProjectId)
+    const now = await markProjectViewedRemote(portalProjectId)
     setUnreadCounts(prev => { const next = { ...prev }; delete next[portalProjectId]; return next })
     // update local portal state
     setPortals(prev => prev.map(p => ({
@@ -223,10 +222,13 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
   }
 
   async function updateDeliverableStatus(delivId, projectId, status) {
-    await supabase.from('deliverables').update({ status }).eq('id', delivId)
+    // Any manual staff change overrides the status, even back to
+    // 'approved' — that's a staff action, not a client approval, so
+    // clear the client-approval flag rather than leaving it stale.
+    await supabase.from('deliverables').update({ status, approved_by_client: false, approved_at: null }).eq('id', delivId)
     setDeliverables(prev => ({
       ...prev,
-      [projectId]: prev[projectId].map(d => d.id === delivId ? { ...d, status } : d)
+      [projectId]: prev[projectId].map(d => d.id === delivId ? { ...d, status, approved_by_client: false, approved_at: null } : d)
     }))
   }
 
@@ -444,7 +446,7 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
                                       <option value="pending_review">Pending Review</option>
                                       <option value="approved">Approved</option>
                                     </select>
-                                    <StatusBadge status={d.status} />
+                                    <StatusBadge status={d.status} approvedByClient={d.approved_by_client} />
                                     <button onClick={() => deleteDeliverable(d.id, proj.id)} style={{ ...ghostBtnStyle, color: t.colors.danger, fontSize: t.fontSizes.xs }}>✕</button>
                                   </div>
 

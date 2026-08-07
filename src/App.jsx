@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useIsMobile } from './hooks/useMediaQuery'
 import Gabi from './components/Gabi'
-import OrbiWidget from './components/OrbiWidget'
 import gabspaceLockup from './assets/gabspace-lockup-dark-bg.svg'
 import SplashScreen from './components/SplashScreen'
 import { supabase } from './supabaseClient'
@@ -34,6 +33,7 @@ import Intranet from './pages/Intranet'
 import TeamGoals from './pages/TeamGoals'
 import ClientPortalManager from './pages/ClientPortalManager'
 import ClientPortalView from './pages/ClientPortalView'
+import { subscribeToPortalActivityChanges } from './utils/portalActivity'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
@@ -302,6 +302,14 @@ const WELCOME_SPLASH_MS = 2600
 }
       })
   }, [session])
+
+  // Live-updates the portal-activity badges (Sidebar, TopBar bell, Dashboard,
+  // Client Portal Manager) by reusing the same "version bump" they already
+  // refetch on when a staff member marks a project viewed.
+  useEffect(() => {
+    if (!businessSpaceId) return
+    return subscribeToPortalActivityChanges(businessSpaceId, () => setPortalActivityVersion(v => v + 1))
+  }, [businessSpaceId])
 
 
   async function handleLogin(e) {
@@ -848,16 +856,13 @@ function renderPage() {
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans, display: 'flex' }}>
       {overlays}
 {!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} isPlatformAdmin={isPlatformAdmin} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? 'calc(60px + env(safe-area-inset-bottom))' : 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} />
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={bumpPortalActivity} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
           {renderPage()}
         </div>
       </div>
       {isMobile && <MobileTabBar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} businessSpaceId={businessSpaceId} isPlatformAdmin={isPlatformAdmin} />}
-      <div style={{ position: 'fixed', bottom: isMobile ? 'calc(72px + env(safe-area-inset-bottom))' : 24, right: isMobile ? 12 : 24, zIndex: 999 }}>
-        <OrbiWidget session={session} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} isMobile={isMobile} onNavigate={setCurrentPage} />
-      </div>
     </div>
   )
 }

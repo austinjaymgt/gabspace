@@ -458,7 +458,7 @@ export default function Dashboard({ session, businessSpaceId, onNavigate, portal
             <div style={{ padding: '20px 0', textAlign: 'center' }}>
               <div style={{ fontSize: '28px', fontWeight: '700', color: t.colors.primary, fontFamily: t.fonts.heading }}>{portalUnread}</div>
               <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginTop: '4px' }}>
-                unread comment{portalUnread === 1 ? '' : 's'} & reactions from clients
+                unread update{portalUnread === 1 ? '' : 's'} from clients
               </div>
             </div>
           )}
