@@ -113,7 +113,7 @@ const SOURCES = [
   },
 ]
 
-export default function GlobalSearch({ businessSpaceId, onNavigate, isMobile = false }) {
+export default function GlobalSearch({ businessSpaceId, onNavigate, isMobile = false, variant = 'topbar' }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -315,28 +315,31 @@ export default function GlobalSearch({ businessSpaceId, onNavigate, isMobile = f
     )
   }
 
+  const isSidebar = variant === 'sidebar'
+
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef} style={{ position: 'relative', width: isSidebar ? '100%' : undefined }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        backgroundColor: t.colors.bg,
+        backgroundColor: isSidebar ? 'rgba(255,255,255,0.06)' : t.colors.bg,
         borderRadius: t.radius.full,
         padding: '8px 14px',
-        border: `1px solid ${t.colors.borderLight}`,
+        border: `1px solid ${isSidebar ? 'rgba(255,255,255,0.12)' : t.colors.borderLight}`,
       }}>
-        <span style={{ display: 'flex', alignItems: 'center', color: t.colors.textTertiary }}>
+        <span style={{ display: 'flex', alignItems: 'center', color: isSidebar ? 'rgba(255,255,255,0.4)' : t.colors.textTertiary }}>
           <Icon name="search" size="sm" />
         </span>
         <input
+          className={isSidebar ? 'gs-sidebar-input' : undefined}
           style={{
             border: 'none',
             background: 'none',
             outline: 'none',
             fontSize: t.fontSizes.base,
-            color: t.colors.textSecondary,
-            width: '200px',
+            color: isSidebar ? 'rgba(255,255,255,0.85)' : t.colors.textSecondary,
+            width: isSidebar ? '100%' : '200px',
             fontFamily: t.fonts.sans,
           }}
           placeholder="Search..."
@@ -349,8 +352,9 @@ export default function GlobalSearch({ businessSpaceId, onNavigate, isMobile = f
       {open && query.trim().length >= 2 && (
         <div style={{
           position: 'absolute',
-          top: 'calc(100% + 8px)',
-          right: 0,
+          ...(isSidebar
+            ? { bottom: 'calc(100% + 8px)', left: 0 }
+            : { top: 'calc(100% + 8px)', right: 0 }),
           width: '320px',
           maxHeight: '420px',
           overflowY: 'auto',

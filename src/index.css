@@ -172,6 +172,15 @@ select.status-select {
   color: var(--status-color) !important;
 }
 
+.gs-sidebar-input {
+  background-color: transparent !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+
+.gs-sidebar-input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
 #root {
   background-color: var(--color-bg);
   background-image: var(--gradient-bg);

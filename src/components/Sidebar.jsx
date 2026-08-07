@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 import { Icon } from './Icon'
+import GlobalSearch from './GlobalSearch'
 import { getModules, MODULE_NAV_PATHS } from '../utils/businessModules'
 import { fetchPortalActivity } from '../utils/portalActivity'
 import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
@@ -302,6 +303,29 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
         gap: '8px',
         alignItems: collapsed ? 'center' : 'stretch',
       }}>
+        {collapsed && isDesktop ? (
+          <button
+            onClick={onToggleCollapse}
+            title="Search"
+            style={{
+              width: 'auto',
+              padding: '9px',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: t.radius.full,
+              color: 'rgba(255,255,255,0.35)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            aria-label="Search"
+          >
+            <Icon name="search" size="sm" />
+          </button>
+        ) : (
+          <GlobalSearch businessSpaceId={businessSpaceId} onNavigate={handleNav} isMobile={false} variant="sidebar" />
+        )}
         <button
           onClick={() => handleNav('settings')}
           title={collapsed ? 'Settings' : undefined}

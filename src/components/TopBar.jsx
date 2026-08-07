@@ -4,10 +4,10 @@ import { supabase } from '../supabaseClient'
 import { Icon } from './Icon'
 import { useThemeMode } from '../ThemeContext'
 import { useIsNotDesktop } from '../hooks/useMediaQuery'
-import GlobalSearch from './GlobalSearch'
 import BusinessSpaceSwitcher from './BusinessSpaceSwitcher'
+import NotificationsPanel from './NotificationsPanel'
 
-export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, businessSpaceId, onSwitchBusinessSpace, onOpenCreateBusinessFlow, onRestoreBusinessSpace, businessIdentityVersion, hideMenuButton }) {
+export default function TopBar({ session, onLogout, currentPage, onMenuClick, onNavigate, businessSpaceId, onSwitchBusinessSpace, onOpenCreateBusinessFlow, onRestoreBusinessSpace, businessIdentityVersion, hideMenuButton, portalActivityVersion, onPortalActivityChange }) {
   const isMobile = useIsNotDesktop()
   const isDesktop = !isMobile
   const [firstName, setFirstName] = useState('')
@@ -108,7 +108,7 @@ export default function TopBar({ session, onLogout, currentPage, onMenuClick, on
           <Icon name={isDark ? 'sun' : 'moon'} size="sm" />
         </button>
 
-        <GlobalSearch businessSpaceId={businessSpaceId} onNavigate={onNavigate} isMobile={isMobile} />
+        <NotificationsPanel businessSpaceId={businessSpaceId} onNavigate={onNavigate} isMobile={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={onPortalActivityChange} session={session} onSwitchBusinessSpace={onSwitchBusinessSpace} />
 
         <div
           onClick={() => onNavigate('settings')}
