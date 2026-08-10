@@ -252,7 +252,7 @@ export default function Assets({ businessSpaceId }) {
                 <div style={{ ...styles.field, gridColumn: 'span 2' }}>
                   <label style={styles.label}>Description</label>
                   <textarea
-                    style={{ ...styles.input, resize: 'vertical', fontFamily: 'sans-serif' }}
+                    style={{ ...styles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: 'sans-serif' }}
                     rows={3}
                     value={editForm.description || ''}
                     onChange={e => setEditForm({ ...editForm, description: e.target.value })}

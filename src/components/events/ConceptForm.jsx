@@ -146,9 +146,9 @@ export default function ConceptForm({ event, onSave }) {
       {/* Core Concept & Goals */}
       <div style={card}>
         <div style={sectionLabel}>Core Concept *</div>
-        <textarea value={form.coreConcept} onChange={e => setForm(f => ({ ...f, coreConcept: e.target.value }))} placeholder="The big idea — what is this event about at its core?" rows={3} style={{ ...inp, resize: 'vertical', marginBottom: '16px' }} />
+        <textarea value={form.coreConcept} onChange={e => setForm(f => ({ ...f, coreConcept: e.target.value }))} placeholder="The big idea — what is this event about at its core?" rows={3} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical', marginBottom: '16px' }} />
         <div style={sectionLabel}>Goals</div>
-        <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} placeholder="What does the client want to achieve? What does success look like?" rows={3} style={{ ...inp, resize: 'vertical' }} />
+        <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} placeholder="What does the client want to achieve? What does success look like?" rows={3} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical' }} />
       </div>
 
       {/* Key Moments */}
@@ -171,9 +171,9 @@ export default function ConceptForm({ event, onSave }) {
         <div style={sectionLabel}>Aesthetic Keywords</div>
         <input value={form.aestheticKeywords} onChange={e => setForm(f => ({ ...f, aestheticKeywords: e.target.value }))} placeholder="e.g. elevated, intimate, high-energy, modern, warm (comma separated)" style={{ ...inp, marginBottom: '16px' }} />
         <div style={sectionLabel}>Venue Considerations</div>
-        <textarea value={form.venueConsiderations} onChange={e => setForm(f => ({ ...f, venueConsiderations: e.target.value }))} placeholder="Space requirements, indoor/outdoor, capacity, location preferences..." rows={2} style={{ ...inp, resize: 'vertical', marginBottom: '16px' }} />
+        <textarea value={form.venueConsiderations} onChange={e => setForm(f => ({ ...f, venueConsiderations: e.target.value }))} placeholder="Space requirements, indoor/outdoor, capacity, location preferences..." rows={2} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical', marginBottom: '16px' }} />
         <div style={sectionLabel}>Production Notes</div>
-        <textarea value={form.productionNotes} onChange={e => setForm(f => ({ ...f, productionNotes: e.target.value }))} placeholder="A/V needs, staging, lighting, special production requirements..." rows={2} style={{ ...inp, resize: 'vertical', marginBottom: '16px' }} />
+        <textarea value={form.productionNotes} onChange={e => setForm(f => ({ ...f, productionNotes: e.target.value }))} placeholder="A/V needs, staging, lighting, special production requirements..." rows={2} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical', marginBottom: '16px' }} />
         <div style={sectionLabel}>Vendor Categories Needed</div>
         <input value={form.vendorCategories} onChange={e => setForm(f => ({ ...f, vendorCategories: e.target.value }))} placeholder="e.g. Catering, A/V, Photography, Venue (comma separated)" style={inp} />
       </div>

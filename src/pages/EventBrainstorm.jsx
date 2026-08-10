@@ -195,7 +195,7 @@ export default function EventBrainstorm({ businessSpaceId, session }) {
           onChange={e => setCaptureTitle(e.target.value)}
         />
         <textarea
-          style={{ ...s.input, minHeight: '80px', resize: 'vertical', lineHeight: '1.55' }}
+          style={{ ...s.input, borderRadius: t.radius.lg, minHeight: '80px', resize: 'vertical', lineHeight: '1.55' }}
           placeholder="e.g. 'rooftop art show meets street food market — think Soho House but free and chaotic' or paste a link..."
           value={captureText}
           onChange={e => setCaptureText(e.target.value)}
@@ -333,7 +333,7 @@ export default function EventBrainstorm({ businessSpaceId, session }) {
                         </div>
                         <div style={{ ...s.field, gridColumn: 'span 2' }}>
                           <label style={s.label}>Notes / original idea</label>
-                          <textarea style={{ ...s.input, minHeight: '72px', resize: 'vertical', lineHeight: '1.55' }}
+                          <textarea style={{ ...s.input, borderRadius: t.radius.lg, minHeight: '72px', resize: 'vertical', lineHeight: '1.55' }}
                             placeholder="Your original thought, links, references…"
                             value={editForm.context} onChange={e => setEditForm({ ...editForm, context: e.target.value })} />
                         </div>

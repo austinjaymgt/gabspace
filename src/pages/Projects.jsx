@@ -364,7 +364,7 @@ export default function Projects({ businessSpaceId }) {
             </div>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Description</label>
-              <textarea style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={2} placeholder="Brief project description..." value={projectForm.description} onChange={e => setProjectForm({ ...projectForm, description: e.target.value })} />
+              <textarea style={{ ...styles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans }} rows={2} placeholder="Brief project description..." value={projectForm.description} onChange={e => setProjectForm({ ...projectForm, description: e.target.value })} />
             </div>
           </div>
           <div style={styles.formActions}>
@@ -806,7 +806,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
 
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Description</label>
-              <textarea style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={2} value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
+              <textarea style={{ ...styles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans }} rows={2} value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
             </div>
           </div>
           <div style={styles.formActions}>
@@ -1080,7 +1080,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
                         </button>
                       </div>
                       <textarea
-                        style={{ width: '100%', padding: '12px', borderRadius: t.radius.full, border: `1px solid ${notesDirty ? t.colors.border : t.colors.borderLight}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: t.colors.bg }}
+                        style={{ width: '100%', padding: '12px', borderRadius: t.radius.lg, border: `1px solid ${notesDirty ? t.colors.border : t.colors.borderLight}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: t.colors.bg }}
                         rows={5}
                         placeholder="Internal notes about this project..."
                         value={notes}

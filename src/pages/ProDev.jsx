@@ -256,7 +256,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Key takeaways, relevance to role, application to work..."
                 rows={2}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }}
               />
             </div>
           </div>

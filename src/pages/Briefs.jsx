@@ -436,15 +436,15 @@ export default function Briefs({ businessSpaceId, userRole, session }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Vendor Notes</label>
-                <textarea value={form.vendor_notes} onChange={e => setForm(f => ({ ...f, vendor_notes: e.target.value }))} placeholder="Vendor categories, specific requirements, preferred partners..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.vendor_notes} onChange={e => setForm(f => ({ ...f, vendor_notes: e.target.value }))} placeholder="Vendor categories, specific requirements, preferred partners..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Merch & Swag Notes</label>
-                <textarea value={form.merch_notes} onChange={e => setForm(f => ({ ...f, merch_notes: e.target.value }))} placeholder="Merch items, quantities, drop timing..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.merch_notes} onChange={e => setForm(f => ({ ...f, merch_notes: e.target.value }))} placeholder="Merch items, quantities, drop timing..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
               <div>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Creative Notes</label>
-                <textarea value={form.creative_notes} onChange={e => setForm(f => ({ ...f, creative_notes: e.target.value }))} placeholder="Creative direction, campaign linkage, brand goals..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
+                <textarea value={form.creative_notes} onChange={e => setForm(f => ({ ...f, creative_notes: e.target.value }))} placeholder="Creative direction, campaign linkage, brand goals..." rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
             </div>
           </div>

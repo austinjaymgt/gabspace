@@ -164,7 +164,7 @@ function EventForm({ clients, onSave, onCancel, saving, error, initial }) {
         </div>
         <div style={{ ...fStyles.field, gridColumn: 'span 2' }}>
           <label style={fStyles.label}>Description / notes</label>
-          <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={3} placeholder="Event brief, special requirements..." value={form.description} onChange={e => f('description', e.target.value)} />
+          <textarea style={{ ...fStyles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans }} rows={3} placeholder="Event brief, special requirements..." value={form.description} onChange={e => f('description', e.target.value)} />
         </div>
       </div>
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
@@ -626,9 +626,9 @@ function ConceptForm({ event, onSave }) {
       {/* Core Concept & Goals */}
       <div style={card}>
         <div style={sectionLabel}>Core Concept *</div>
-        <textarea value={form.coreConcept} onChange={e => setForm(f => ({ ...f, coreConcept: e.target.value }))} placeholder="The big idea — what is this event about at its core?" rows={3} style={{ ...inp, resize: 'vertical', marginBottom: '16px' }} />
+        <textarea value={form.coreConcept} onChange={e => setForm(f => ({ ...f, coreConcept: e.target.value }))} placeholder="The big idea — what is this event about at its core?" rows={3} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical', marginBottom: '16px' }} />
         <div style={sectionLabel}>Goals</div>
-        <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} placeholder="What does the client want to achieve? What does success look like?" rows={3} style={{ ...inp, resize: 'vertical' }} />
+        <textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} placeholder="What does the client want to achieve? What does success look like?" rows={3} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical' }} />
       </div>
 
       {/* Key Moments */}
@@ -651,9 +651,9 @@ function ConceptForm({ event, onSave }) {
         <div style={sectionLabel}>Aesthetic Keywords</div>
         <input value={form.aestheticKeywords} onChange={e => setForm(f => ({ ...f, aestheticKeywords: e.target.value }))} placeholder="e.g. elevated, intimate, high-energy, modern, warm (comma separated)" style={{ ...inp, marginBottom: '16px' }} />
         <div style={sectionLabel}>Venue Considerations</div>
-        <textarea value={form.venueConsiderations} onChange={e => setForm(f => ({ ...f, venueConsiderations: e.target.value }))} placeholder="Space requirements, indoor/outdoor, capacity, location preferences..." rows={2} style={{ ...inp, resize: 'vertical', marginBottom: '16px' }} />
+        <textarea value={form.venueConsiderations} onChange={e => setForm(f => ({ ...f, venueConsiderations: e.target.value }))} placeholder="Space requirements, indoor/outdoor, capacity, location preferences..." rows={2} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical', marginBottom: '16px' }} />
         <div style={sectionLabel}>Production Notes</div>
-        <textarea value={form.productionNotes} onChange={e => setForm(f => ({ ...f, productionNotes: e.target.value }))} placeholder="A/V needs, staging, lighting, special production requirements..." rows={2} style={{ ...inp, resize: 'vertical', marginBottom: '16px' }} />
+        <textarea value={form.productionNotes} onChange={e => setForm(f => ({ ...f, productionNotes: e.target.value }))} placeholder="A/V needs, staging, lighting, special production requirements..." rows={2} style={{ ...inp, borderRadius: t.radius.lg, resize: 'vertical', marginBottom: '16px' }} />
         <div style={sectionLabel}>Vendor Categories Needed</div>
         <input value={form.vendorCategories} onChange={e => setForm(f => ({ ...f, vendorCategories: e.target.value }))} placeholder="e.g. Catering, A/V, Photography, Venue (comma separated)" style={inp} />
       </div>
@@ -904,11 +904,11 @@ function ProposalGenerator({ event, onClose }) {
           </div>
           <div style={fStyles.field}>
             <label style={fStyles.label}>Cover message / personal note</label>
-            <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={4} placeholder="Thank you for the opportunity..." value={coverMessage} onChange={e => setCoverMessage(e.target.value)} />
+            <textarea style={{ ...fStyles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans }} rows={4} placeholder="Thank you for the opportunity..." value={coverMessage} onChange={e => setCoverMessage(e.target.value)} />
           </div>
           <div style={fStyles.field}>
             <label style={fStyles.label}>Scope of services</label>
-            <textarea style={{ ...fStyles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={4} placeholder="Full event coordination and management..." value={scopeOfServices} onChange={e => setScopeOfServices(e.target.value)} />
+            <textarea style={{ ...fStyles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans }} rows={4} placeholder="Full event coordination and management..." value={scopeOfServices} onChange={e => setScopeOfServices(e.target.value)} />
           </div>
           <div>
             <label style={{ ...fStyles.label, display: 'block', marginBottom: '8px' }}>Key milestones</label>
@@ -1264,7 +1264,7 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
               {notesSaved ? '✓ Saved' : savingNotes ? 'Saving...' : 'Save notes'}
             </button>
           </div>
-          <textarea style={{ width: '100%', padding: '12px', borderRadius: t.radius.full, border: '1px solid #f0f0eb', fontSize: '13px', color: '#1A1A2E', outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: '#fafaf8' }} rows={5} placeholder="Internal notes, client preferences, special requirements..." value={notes} onChange={e => setNotes(e.target.value)} />
+          <textarea style={{ width: '100%', padding: '12px', borderRadius: t.radius.lg, border: '1px solid #f0f0eb', fontSize: '13px', color: '#1A1A2E', outline: 'none', resize: 'vertical', fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box', backgroundColor: '#fafaf8' }} rows={5} placeholder="Internal notes, client preferences, special requirements..." value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
         <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #f0f0eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

@@ -443,7 +443,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Description</label>
-              <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, resize: 'vertical' }} />
+              <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, borderRadius: t.radius.lg, resize: 'vertical' }} />
             </div>
             <div>
               <label style={labelStyle}>Owner</label>
@@ -608,7 +608,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
                           </div>
                           <div style={{ gridColumn: '1 / -1' }}>
                             <label style={labelStyle}>Description</label>
-                            <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, resize: 'vertical' }} />
+                            <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, borderRadius: t.radius.lg, resize: 'vertical' }} />
                           </div>
                           <div>
                             <label style={labelStyle}>Owner</label>

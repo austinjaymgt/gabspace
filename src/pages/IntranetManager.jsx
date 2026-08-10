@@ -224,7 +224,7 @@ export default function IntranetManager({ businessSpaceId, userRole }) {
     row: { display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 20px', borderBottom: `0.5px solid ${t.colors.borderLight}` },
     label: { fontSize: '10px', fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '5px', display: 'block' },
     input: { width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `0.5px solid ${t.colors.border}`, fontSize: '13px', fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bg, boxSizing: 'border-box', outline: 'none' },
-    textarea: { width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `0.5px solid ${t.colors.border}`, fontSize: '13px', fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bg, boxSizing: 'border-box', outline: 'none', resize: 'vertical', minHeight: '80px' },
+    textarea: { width: '100%', padding: '9px 12px', borderRadius: t.radius.lg, border: `0.5px solid ${t.colors.border}`, fontSize: '13px', fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bg, boxSizing: 'border-box', outline: 'none', resize: 'vertical', minHeight: '80px' },
     formRow: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px' },
     formActions: { display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' },
     rowActions: { display: 'flex', gap: '6px', flexShrink: 0 },

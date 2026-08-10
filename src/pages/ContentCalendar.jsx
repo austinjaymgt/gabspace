@@ -305,7 +305,7 @@ export default function ContentCalendar({ businessSpaceId }) {
                 </div>
                 <div style={{ ...styles.field, gridColumn: 'span 2' }}>
                   <label style={styles.label}>Notes</label>
-<textarea style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }} rows={3} value={editForm.notes || ''} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
+<textarea style={{ ...styles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans }} rows={3} value={editForm.notes || ''} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
                   </div>
                 <div style={{ ...styles.formActions, gridColumn: 'span 2' }}>
                   <button onClick={() => setEditMode(false)} style={styles.cancelBtn}>Cancel</button>
@@ -367,7 +367,7 @@ border: `1px solid ${selectedItem.status === s.value ? s.color : t.colors.border
                 <div style={styles.detailNotes}>
                   <div style={styles.detailRowLabel}>Notes</div>
                   <textarea
-style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans, marginTop: '6px', width: '100%', boxSizing: 'border-box' }}
+style={{ ...styles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans, marginTop: '6px', width: '100%', boxSizing: 'border-box' }}
                     rows={3}
                     value={selectedItem.notes || ''}
                     onChange={e => setSelectedItem({ ...selectedItem, notes: e.target.value })}

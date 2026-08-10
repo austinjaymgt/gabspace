@@ -248,7 +248,7 @@ export default function BusinessEvents({ businessSpaceId }) {
               📝 Notes & prep
             </div>
             <textarea
-              style={{ ...styles.input, width: '100%', resize: 'vertical', fontFamily: t.fonts.sans, boxSizing: 'border-box' }}
+              style={{ ...styles.input, borderRadius: t.radius.lg, width: '100%', resize: 'vertical', fontFamily: t.fonts.sans, boxSizing: 'border-box' }}
               rows={3}
               placeholder="What to bring, dress code, people to look for..."
               value={form.notes}
@@ -604,7 +604,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                 <div style={styles.field}>
                   <label style={styles.label}>Outcome notes</label>
                   <textarea
-                    style={{ ...styles.input, resize: 'vertical', fontFamily: t.fonts.sans }}
+                    style={{ ...styles.input, borderRadius: t.radius.lg, resize: 'vertical', fontFamily: t.fonts.sans }}
                     rows={2}
                     placeholder="How did it go?"
                     value={outcomes.outcome_notes}
@@ -712,7 +712,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
             </div>
             <textarea
               style={{
-                width: '100%', padding: '12px', borderRadius: t.radius.full,
+                width: '100%', padding: '12px', borderRadius: t.radius.lg,
                 border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.base,
                 color: t.colors.textPrimary, outline: 'none', resize: 'vertical',
                 fontFamily: t.fonts.sans, lineHeight: '1.6', boxSizing: 'border-box',
