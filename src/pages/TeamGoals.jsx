@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 
 const STATUS_OPTIONS = ['on-track', 'at-risk', 'completed', 'not-started']
-const PERIOD_OPTIONS = ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026', 'Q2 2026', 'Q3 2026', 'Q4 2026']
+const PERIOD_OPTIONS = ['all', 'Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026', 'Q2 2026', 'Q3 2026', 'Q4 2026']
 const CATEGORY_OPTIONS = ['team', 'business', 'personal', 'financial', 'marketing', 'other']
 const SORT_OPTIONS = [
   { value: 'created', label: 'Date created' },
@@ -124,7 +124,7 @@ function ViewRow({ label, children }) {
 export default function TeamGoals({ businessSpaceId, userRole }) {
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activePeriod, setActivePeriod] = useState('Q2 2026')
+  const [activePeriod, setActivePeriod] = useState('all')
   const [activeCategory, setActiveCategory] = useState('all')
   const [sortBy, setSortBy] = useState('created')
   const [statusMenuId, setStatusMenuId] = useState(null) // which card's status menu is open
@@ -154,12 +154,13 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
 
   async function fetchGoals() {
     setLoading(true)
-    const { data } = await supabase
+    let query = supabase
       .from('team_goals')
       .select('*, goal_subtasks(*)')
       .eq('business_space_id', businessSpaceId)
-      .eq('period', activePeriod)
       .order('created_at', { ascending: true })
+    if (activePeriod !== 'all') query = query.eq('period', activePeriod)
+    const { data } = await query
     const normalized = (data || []).map(g => ({
       ...g,
       subtasks: (g.goal_subtasks || []).slice().sort((a, b) => a.sort_order - b.sort_order),
@@ -222,7 +223,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
       title: draft.title.trim(),
       description: draft.description,
       owner: draft.owner,
-      period: periodFromDate(draft.dueDate) || activePeriod,
+      period: periodFromDate(draft.dueDate) || (activePeriod !== 'all' ? activePeriod : periodFromDate(new Date().toISOString().slice(0, 10))),
       status: draft.status,
       category: draft.category,
       category_label: draft.category === 'other' ? draft.categoryLabel.trim() : null,
@@ -383,7 +384,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>Sort: {o.label}</option>)}
           </select>
           <select value={activePeriod} onChange={e => setActivePeriod(e.target.value)} style={selectStyle}>
-            {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p === 'all' ? 'All Quarters' : p}</option>)}
           </select>
           {isOwnerOrAdmin && (
             <button onClick={openNew} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
@@ -494,7 +495,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
         <div style={{ textAlign: 'center', padding: '60px 20px', background: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` }}>
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎯</div>
           <div style={{ fontSize: t.fontSizes.lg, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' }}>
-            No goals yet for {activePeriod}{activeCategory !== 'all' ? ` · ${categoryStyles[activeCategory].label}` : ''}
+            No goals yet{activePeriod !== 'all' ? ` for ${activePeriod}` : ''}{activeCategory !== 'all' ? ` · ${categoryStyles[activeCategory].label}` : ''}
           </div>
           <div style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>
             {isOwnerOrAdmin ? 'Add your first goal to start rallying the team.' : 'No goals set for this period yet — check back soon.'}
