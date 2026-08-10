@@ -192,9 +192,14 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   async function fetchProjectPulse() {
     if (!businessSpaceId) return
     const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString()
-    const [projectsRes, tasksRes] = await Promise.all([
+    const [projectsRes, tasksRes, milestonesRes, budgetRes, documentsRes, runOfShowRes, staffingRes] = await Promise.all([
       supabase.from('projects').select('id, created_at, updated_at, status').eq('business_space_id', businessSpaceId).eq('type', 'project').in('status', ['planning', 'active', 'on-hold']),
       supabase.from('tasks').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId).not('project_id', 'is', null),
+      supabase.from('project_milestones').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
+      supabase.from('project_budget_items').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
+      supabase.from('project_documents').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
+      supabase.from('run_of_show').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
+      supabase.from('event_staffing').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
     ])
     const projects = projectsRes.data || []
 
@@ -203,9 +208,11 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
 
     const lastActivity = {}
     for (const p of projects) lastActivity[p.id] = p.updated_at || p.created_at
-    for (const tk of tasksRes.data || []) {
-      const touched = tk.updated_at || tk.created_at
-      if (tk.project_id && touched > (lastActivity[tk.project_id] || '')) lastActivity[tk.project_id] = touched
+    for (const rows of [tasksRes.data, milestonesRes.data, budgetRes.data, documentsRes.data, runOfShowRes.data, staffingRes.data]) {
+      for (const row of rows || []) {
+        const touched = row.updated_at || row.created_at
+        if (row.project_id && touched > (lastActivity[row.project_id] || '')) lastActivity[row.project_id] = touched
+      }
     }
     const stalled = projects.filter(p => (lastActivity[p.id] || p.updated_at || p.created_at) < fourteenDaysAgo).length
 
