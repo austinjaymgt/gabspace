@@ -8,6 +8,7 @@ import Staffing from '../components/events/Staffing'
 import ConceptForm from '../components/events/ConceptForm'
 import Milestones from '../components/Milestones'
 import { useIsMobile } from '../hooks/useMediaQuery'
+import { ProjectIconBadge, ProjectIconPicker } from '../components/ProjectIcon'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -69,7 +70,8 @@ function ProjectRow({ record, onClick }) {
     return (
       <div style={styles.projectCard} onClick={onClick}>
         <div style={styles.projectCardTop}>
-          <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
+          <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, display: 'inline-flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <ProjectIconBadge icon={record.icon} />
             {record.title}
             {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontWeight: '600' }}>EVENT</span>}
           </span>
@@ -87,7 +89,8 @@ function ProjectRow({ record, onClick }) {
 
   return (
     <div style={{ ...styles.tableRow, gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.3fr)' }} onClick={onClick}>
-      <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
+      <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, display: 'inline-flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+        <ProjectIconBadge icon={record.icon} />
         {record.title}
         {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontWeight: '600' }}>EVENT</span>}
       </span>
@@ -134,7 +137,7 @@ export default function Projects({ businessSpaceId }) {
   const [projectForm, setProjectForm] = useState({
     title: '', client_id: '', status: 'planning',
     project_type: '', start_date: '', end_date: '',
-    budget: '', description: '',
+    budget: '', description: '', icon: '',
   })
 
   useEffect(() => {
@@ -176,6 +179,7 @@ export default function Projects({ businessSpaceId }) {
       end_date: projectForm.end_date || null,
       budget: projectForm.budget ? parseFloat(projectForm.budget) : null,
       description: projectForm.description || null,
+      icon: projectForm.icon || null,
       has_event_features: false,
       user_id: user.id,
     }
@@ -185,7 +189,7 @@ export default function Projects({ businessSpaceId }) {
       setError(saveError.message)
     } else {
       setShowForm(false)
-      setProjectForm({ title: '', client_id: '', status: 'planning', project_type: '', start_date: '', end_date: '', budget: '', description: '' })
+      setProjectForm({ title: '', client_id: '', status: 'planning', project_type: '', start_date: '', end_date: '', budget: '', description: '', icon: '' })
       fetchRecords()
     }
     setSaving(false)
@@ -320,7 +324,10 @@ export default function Projects({ businessSpaceId }) {
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Project title *</label>
-              <input style={styles.input} placeholder="e.g. Spring Portrait Series 2026" value={projectForm.title} onChange={e => setProjectForm({ ...projectForm, title: e.target.value })} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <ProjectIconPicker value={projectForm.icon} onChange={icon => setProjectForm({ ...projectForm, icon })} />
+                <input style={{ ...styles.input, flex: 1 }} placeholder="e.g. Spring Portrait Series 2026" value={projectForm.title} onChange={e => setProjectForm({ ...projectForm, title: e.target.value })} />
+              </div>
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Client</label>
@@ -567,6 +574,7 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
       end_date: editForm.end_date || null,
       budget: editForm.budget ? parseFloat(editForm.budget) : null,
       description: editForm.description || null,
+      icon: editForm.icon || null,
       ...(hasEventFeatures && {
         event_date: editForm.event_date || null,
         venue: editForm.venue || null,
@@ -732,7 +740,10 @@ function ProjectDetail({ record, onBack, onDelete, clients, businessSpaceId }) {
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Project Name *</label>
-              <input style={styles.input} value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <ProjectIconPicker value={editForm.icon} onChange={icon => setEditForm({ ...editForm, icon })} />
+                <input style={{ ...styles.input, flex: 1 }} value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} />
+              </div>
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Client</label>
