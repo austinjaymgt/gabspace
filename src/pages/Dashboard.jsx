@@ -193,8 +193,8 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     if (!businessSpaceId) return
     const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString()
     const [projectsRes, tasksRes] = await Promise.all([
-      supabase.from('projects').select('id, created_at, status').eq('business_space_id', businessSpaceId).eq('type', 'project').in('status', ['planning', 'active', 'on-hold']),
-      supabase.from('tasks').select('project_id, created_at').eq('business_space_id', businessSpaceId).not('project_id', 'is', null),
+      supabase.from('projects').select('id, created_at, updated_at, status').eq('business_space_id', businessSpaceId).eq('type', 'project').in('status', ['planning', 'active', 'on-hold']),
+      supabase.from('tasks').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId).not('project_id', 'is', null),
     ])
     const projects = projectsRes.data || []
 
@@ -202,11 +202,12 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     for (const p of projects) if (statusCounts[p.status] !== undefined) statusCounts[p.status]++
 
     const lastActivity = {}
-    for (const p of projects) lastActivity[p.id] = p.created_at
+    for (const p of projects) lastActivity[p.id] = p.updated_at || p.created_at
     for (const tk of tasksRes.data || []) {
-      if (tk.project_id && tk.created_at > (lastActivity[tk.project_id] || '')) lastActivity[tk.project_id] = tk.created_at
+      const touched = tk.updated_at || tk.created_at
+      if (tk.project_id && touched > (lastActivity[tk.project_id] || '')) lastActivity[tk.project_id] = touched
     }
-    const stalled = projects.filter(p => (lastActivity[p.id] || p.created_at) < fourteenDaysAgo).length
+    const stalled = projects.filter(p => (lastActivity[p.id] || p.updated_at || p.created_at) < fourteenDaysAgo).length
 
     setProjectPulse({ active: projects.length, stalled, statusCounts })
   }
