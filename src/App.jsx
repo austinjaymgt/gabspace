@@ -44,6 +44,7 @@ import AddBusinessFlow from './components/AddBusinessFlow'
 import Pricing from './pages/Pricing'
 import GetStarted from './pages/GetStarted'
 import PasswordRequirements from './components/PasswordRequirements'
+import SupportFooter from './components/SupportFooter'
 
 export default function App() {
   const isMobile = useIsMobile()
@@ -730,6 +731,7 @@ function renderPage() {
             </div>
           </form>
         </div>
+        <SupportFooter />
       </div>
     )
   }

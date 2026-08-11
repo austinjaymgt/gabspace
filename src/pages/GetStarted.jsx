@@ -4,6 +4,7 @@ import { theme as t } from '../theme'
 import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
 import { TIERS } from '../utils/pricingTiers'
 import PasswordRequirements from '../components/PasswordRequirements'
+import SupportFooter from '../components/SupportFooter'
 
 // Reads ?tier=business|duo|studio from a marketing-site pricing card link
 // (see gabspace-marketing/index.html) so the plan step arrives pre-selected.
@@ -310,6 +311,7 @@ export default function GetStarted({ onBackToLogin }) {
           </>
         )}
       </div>
+      <SupportFooter />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon'
 import { theme as t, brand } from '../theme'
 import { useIsMobile } from '../hooks/useMediaQuery'
 import { subscribeToPortalProjectChanges } from '../utils/portalRealtime'
+import SupportFooter from '../components/SupportFooter'
 
 // Reactions keep their emoji as the stored/db value (unchanged data model),
 // but render as brand icons with the reaction name on hover instead of
@@ -772,6 +773,10 @@ export default function ClientPortalView() {
             )
           })()}
         </div>
+      </div>
+
+      <div style={{ padding: '0 16px 24px' }}>
+        <SupportFooter />
       </div>
 
       {namePrompt && (

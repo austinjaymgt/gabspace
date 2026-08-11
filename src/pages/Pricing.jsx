@@ -5,6 +5,7 @@ import { Icon } from '../components/Icon'
 import { TIERS } from '../utils/pricingTiers'
 import EmbeddedCheckoutForm from '../components/EmbeddedCheckout'
 import { changeSubscription } from '../utils/checkout'
+import SupportFooter from '../components/SupportFooter'
 
 // Same plain light radial GetStarted.jsx uses — see the comment there for
 // why this isn't var(--gradient-bg) (that resolves to the dark brand
@@ -322,6 +323,7 @@ export default function Pricing({ session, onNavigate, mandatory = false, onLogo
     }}>
       <div style={{ width: '100%', maxWidth: '1040px' }}>
         {content}
+        <SupportFooter />
       </div>
     </div>
   )
