@@ -41,6 +41,8 @@ import {
   Hash, MessageSquareText, Heart, Trophy, Camera, Palette,
   // AI & Delight
   Wand2,
+  // Reactions & misc
+  ThumbsUp, Flame, PartyPopper, Lock,
 } from 'lucide-react';
 
 // Semantic name → Lucide component
@@ -162,6 +164,12 @@ const ICON_MAP = {
   // Theme
   'moon': Moon,
   'sun': Sun,
+
+  // Reactions & misc
+  'thumbs-up': ThumbsUp,
+  'fire': Flame,
+  'celebrate': PartyPopper,
+  'lock': Lock,
 };
 
 // Size scale — mirrors the brand kit Iconography section.

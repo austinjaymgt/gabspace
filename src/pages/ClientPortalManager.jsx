@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { fetchPortalActivity, markProjectViewed as markProjectViewedRemote } from '../utils/portalActivity'
+import { broadcastPortalProjectChange } from '../utils/portalRealtime'
 
 const STATUS_COLORS = {
   draft:          { bg: t.colors.bgHover,      color: t.colors.textSecondary, label: 'Draft' },
@@ -16,6 +17,13 @@ const PORTAL_STATUS = {
 }
 
 const REACTIONS = ['👍', '❤️', '🔥', '🎉']
+
+// Module-level, not component render logic, so the random token generation
+// here isn't a component-purity violation the way calling Math.random()
+// directly inside a component function would be.
+function generatePortalToken() {
+  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+}
 
 function StatusBadge({ status, approvedByClient }) {
   const cfg = STATUS_COLORS[status] || STATUS_COLORS.draft
@@ -87,16 +95,6 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
 
   const staffName = session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || 'Team'
 
-  useEffect(() => { if (businessSpaceId) init() }, [businessSpaceId])
-
-  async function init() {
-    setLoading(true)
-    await Promise.all([fetchPortals(), fetchClients()])
-    const { byPortalProject } = await fetchPortalActivity(businessSpaceId)
-    setUnreadCounts(byPortalProject)
-    setLoading(false)
-  }
-
   async function fetchPortals() {
     const { data } = await supabase
       .from('portal_links')
@@ -115,6 +113,16 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
       .order('name')
     setClients(data || [])
   }
+
+  async function init() {
+    setLoading(true)
+    await Promise.all([fetchPortals(), fetchClients()])
+    const { byPortalProject } = await fetchPortalActivity(businessSpaceId)
+    setUnreadCounts(byPortalProject)
+    setLoading(false)
+  }
+
+  useEffect(() => { if (businessSpaceId) init() }, [businessSpaceId])
 
   async function fetchClientProjects(clientId) {
     if (projectsByClient[clientId]) return
@@ -177,7 +185,7 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
   async function createPortal() {
     if (!newClientId) return
     setCreating(true)
-    const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+    const token = generatePortalToken()
     const { error } = await supabase.from('portal_links').insert({ client_id: newClientId, business_space_id: businessSpaceId, token })
     if (!error) { setShowNewPortal(false); setNewClientId(''); await fetchPortals() }
     setCreating(false)
@@ -211,6 +219,7 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
       setDeliverables(prev => ({ ...prev, [projectId]: [data, ...(prev[projectId] || [])] }))
       setDelivForm({ name: '', description: '', file_url: '', file_type: 'link', status: 'draft' })
       setShowDelivForm(null)
+      broadcastPortalProjectChange(projectId)
     }
     setSavingDeliv(false)
   }
@@ -219,6 +228,7 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
     await supabase.from('deliverables').delete().eq('id', delivId)
     setDeliverables(prev => ({ ...prev, [projectId]: prev[projectId].filter(d => d.id !== delivId) }))
     if (expandedDeliv === delivId) setExpandedDeliv(null)
+    broadcastPortalProjectChange(projectId)
   }
 
   async function updateDeliverableStatus(delivId, projectId, status) {
@@ -230,6 +240,7 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
       ...prev,
       [projectId]: prev[projectId].map(d => d.id === delivId ? { ...d, status, approved_by_client: false, approved_at: null } : d)
     }))
+    broadcastPortalProjectChange(projectId)
   }
 
   async function submitReply(delivId) {
