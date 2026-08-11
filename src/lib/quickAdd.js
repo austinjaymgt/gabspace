@@ -24,6 +24,23 @@ Each item has a "type" and a "fields" object:
 - type "spark_idea": fields = { title (required) }
   Use this as a fallback for a stray idea or thought that isn't clearly a
   task, client, or event.
+- type "project": fields = { title (required), project_type, budget, start_date }
+  Use this when the user describes a new project or job they've landed or
+  started (not a stray idea — something concrete, e.g. "booked the Miller
+  wedding for June"). "project_type" is a short free-text category (e.g.
+  "Wedding", "Portrait", "Branding"). "budget" is a plain number, no currency
+  symbol. "start_date" is ISO format if known.
+- type "content_idea": fields = { title (required), platform, scheduled_date, notes }
+  Use this for a content/social media post idea. "platform" is a single
+  platform name if mentioned (e.g. Instagram, TikTok, Blog).
+- type "vendor": fields = { name (required), category, email, phone }
+  Use this when the user mentions a new vendor, supplier, or contractor
+  relationship (distinct from "client" — vendors are who the business pays,
+  clients are who pay the business). "category" is a short free-text type
+  (e.g. "Florist", "Caterer", "Printer").
+- type "goal": fields = { title (required), owner, due_date }
+  Use this for a team or business goal/objective being set, not a one-off
+  task. "owner" is the plain name of whoever is responsible, if stated.
 
 Rules:
 - Only extract what is explicitly stated or clearly implied by the input.

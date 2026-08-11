@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
+import Orb from '../components/Orb'
 import { parseQuickAdd } from '../lib/quickAdd'
 
 const QUICK_ADD_TYPE_META = {
@@ -9,6 +10,10 @@ const QUICK_ADD_TYPE_META = {
   task: { label: 'Task', icon: 'task', color: '#6B8F71', bg: '#EAF2EA' },
   business_event: { label: 'Event', icon: 'events', color: '#D4874E', bg: '#FBF0E6' },
   spark_idea: { label: 'Idea', icon: 'idea', color: '#D4874E', bg: '#FBF0E6' },
+  project: { label: 'Project', icon: 'projects', color: '#3E6FB1', bg: '#E8EFF8' },
+  content_idea: { label: 'Content idea', icon: 'campaigns', color: '#A34FA0', bg: '#F6EAF5' },
+  vendor: { label: 'Vendor', icon: 'vendors', color: '#3E8F8A', bg: '#E7F3F2' },
+  goal: { label: 'Goal', icon: 'team-goals', color: '#B18A3E', bg: '#F8F1E4' },
 }
 
 // Month boundaries as plain YYYY-MM-DD, for comparing against `date` columns
@@ -30,8 +35,17 @@ function monthBoundaryISO(offsetMonths) {
   return d.toISOString()
 }
 
+const QUICK_ADD_MAX_LEN = 600
+
 function fmtCurrency(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+}
+
+// Matches TeamGoals.jsx's periodFromDate — goals created here need the same "Q# YYYY" format.
+function periodFromDate(dateStr) {
+  const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date()
+  const q = Math.ceil((d.getMonth() + 1) / 3)
+  return `Q${q} ${d.getFullYear()}`
 }
 
 const PROJECT_STATUS_FILTERS = [
@@ -84,6 +98,9 @@ const QUICK_ADD_FIELD_LABELS = {
   name: 'Name', company: 'Company', email: 'Email', phone: 'Phone', note: 'Note',
   title: 'Title', due_date: 'Due date', client_name: 'Related client',
   date: 'Date', location: 'Location', notes: 'Notes',
+  project_type: 'Project type', budget: 'Budget', start_date: 'Start date',
+  platform: 'Platform', scheduled_date: 'Scheduled date',
+  category: 'Category', owner: 'Owner',
 }
 
 function fieldInputStyle(multiline) {
@@ -158,6 +175,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   const [quickAddError, setQuickAddError] = useState('')
   const [quickAddItems, setQuickAddItems] = useState(null) // [{ type, fields }] or null when no preview
   const [quickAddSaving, setQuickAddSaving] = useState(false)
+  const [showPulseInfo, setShowPulseInfo] = useState(false)
 
   // Project pulse
   const [projectPulse, setProjectPulse] = useState({ active: 0, stalled: 0, statusCounts: { planning: 0, active: 0, 'on-hold': 0 } })
@@ -271,6 +289,14 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     })
   }, [businessSpaceId])
 
+  useEffect(() => {
+    const el = quickTaskRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 220)}px`
+    el.style.overflowY = el.scrollHeight > 220 ? 'auto' : 'hidden'
+  }, [quickTask])
+
   async function handleQuickAddSubmit(e) {
     if (e.key !== 'Enter' || e.shiftKey || !quickTask.trim() || !businessSpaceId || quickAddParsing) return
     e.preventDefault()
@@ -352,12 +378,37 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
             title: fields.title, business_space_id: businessSpaceId, user_id: session.user.id,
             type: 'event', event_status: 'concept',
           })
+        } else if (type === 'project') {
+          const { title, budget, ...rest } = fields
+          await supabase.from('projects').insert({
+            ...rest, title, budget: budget ? parseFloat(budget) : null,
+            type: 'project', status: 'planning', has_event_features: false,
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          })
+        } else if (type === 'content_idea') {
+          await supabase.from('content_calendar').insert({
+            ...fields, status: 'idea',
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          })
+        } else if (type === 'vendor') {
+          await supabase.from('vendors').insert({
+            ...fields, tags: [],
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          })
+        } else if (type === 'goal') {
+          const { due_date, ...rest } = fields
+          await supabase.from('team_goals').insert({
+            ...rest, due_date: due_date || null, period: periodFromDate(due_date),
+            status: 'not-started', category: 'team',
+            business_space_id: businessSpaceId,
+          })
         }
       }
 
       setQuickAddItems(null)
       fetchProjectPulse()
       fetchRevenueSnapshot()
+      fetchGoalsProgress()
     } catch (err) {
       setQuickAddError(err.message || 'Something went wrong saving those.')
     } finally {
@@ -404,37 +455,61 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
         </div>
       </div>
 
-      {/* ── Quick add (hero) ── */}
+      {/* ── Orbi (hero quick-add) ── */}
       <div style={{ backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.card, padding: '28px 32px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-          <Icon name="magic" size="md" />
-          <span style={{ fontSize: t.fontSizes.sm, fontWeight: '700', letterSpacing: '0.04em', textTransform: 'uppercase', color: t.colors.textTertiary }}>
-            Quick Add
-          </span>
-        </div>
-        <div style={{ position: 'relative' }}>
-          <input
-            ref={quickTaskRef}
-            value={quickTask}
-            onChange={e => setQuickTask(e.target.value)}
-            onKeyDown={handleQuickAddSubmit}
-            disabled={quickAddParsing}
-            placeholder="Tell me what happened — I'll turn it into tasks, clients, or events…"
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              padding: '18px 24px', borderRadius: t.radius.full,
-              border: `1px solid ${t.colors.border}`,
-              backgroundColor: t.colors.bg, color: t.colors.textPrimary,
-              fontSize: t.fontSizes.lg || t.fontSizes.md, fontFamily: t.fonts.sans,
-              outline: 'none', opacity: quickAddParsing ? 0.6 : 1,
-            }}
-          />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Orb size={18} />
+            <span style={{ fontSize: t.fontSizes.sm, fontWeight: '700', letterSpacing: '0.04em', textTransform: 'uppercase', color: t.colors.textTertiary }}>
+              Orbi
+            </span>
+            <button
+              onClick={() => setShowPulseInfo(v => !v)}
+              aria-label="How Orbi works"
+              style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: t.colors.textTertiary }}
+            >
+              <Icon name="info" size="sm" />
+            </button>
+          </div>
           {quickAddParsing && (
-            <span style={{ position: 'absolute', right: '24px', top: '50%', transform: 'translateY(-50%)', fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
+            <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
               Thinking…
             </span>
           )}
         </div>
+        {showPulseInfo && (
+          <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '14px', marginTop: '-6px' }}>
+            What's happening in the business? Add anything from clients to new concepts, Orbi will create it for you
+          </div>
+        )}
+        <textarea
+          ref={quickTaskRef}
+          value={quickTask}
+          onChange={e => setQuickTask(e.target.value)}
+          onKeyDown={handleQuickAddSubmit}
+          disabled={quickAddParsing}
+          placeholder="What's going on with the business?"
+          maxLength={QUICK_ADD_MAX_LEN}
+          rows={1}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            padding: '18px 24px', borderRadius: t.radius.xl,
+            border: `1px solid ${t.colors.border}`,
+            backgroundColor: t.colors.bg, color: t.colors.textPrimary,
+            fontSize: t.fontSizes.md, fontFamily: t.fonts.sans,
+            outline: 'none', opacity: quickAddParsing ? 0.6 : 1,
+            resize: 'none', overflow: 'hidden', maxHeight: '220px',
+            lineHeight: 1.5,
+          }}
+        />
+        {quickTask.length > QUICK_ADD_MAX_LEN * 0.8 && (
+          <div style={{
+            textAlign: 'right', marginTop: '4px', fontSize: t.fontSizes.xs,
+            color: quickTask.length >= QUICK_ADD_MAX_LEN ? '#B3453D' : t.colors.textTertiary,
+          }}>
+            {quickTask.length} / {QUICK_ADD_MAX_LEN}
+          </div>
+        )}
 
         {quickAddError && (
           <div style={{ marginTop: '10px', fontSize: t.fontSizes.sm, color: '#B3453D' }}>
