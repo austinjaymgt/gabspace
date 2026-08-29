@@ -35,6 +35,7 @@ export default function AdminPanel() {
   const [posts, setPosts] = useState([])
   const [editingPost, setEditingPost] = useState(null)
   const [savingPost, setSavingPost] = useState(false)
+  const [uploadingCover, setUploadingCover] = useState(false)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -100,6 +101,22 @@ export default function AdminPanel() {
       setEditingPost(null)
     }
     setSavingPost(false)
+  }
+
+  async function handleCoverUpload(file) {
+    if (!file) return
+    setUploadingCover(true)
+    setError(null)
+    const ext = file.name.split('.').pop()
+    const path = `${crypto.randomUUID()}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('blog-images').upload(path, file)
+    if (uploadError) {
+      setError(uploadError.message)
+    } else {
+      const { data } = supabase.storage.from('blog-images').getPublicUrl(path)
+      setEditingPost(prev => ({ ...prev, cover_image_url: data.publicUrl }))
+    }
+    setUploadingCover(false)
   }
 
   async function handleDeletePost(postId) {
@@ -399,13 +416,40 @@ export default function AdminPanel() {
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
               </Field>
-              <Field label="Cover image URL">
-                <input
-                  type="text"
-                  value={editingPost.cover_image_url}
-                  onChange={e => setEditingPost(prev => ({ ...prev, cover_image_url: e.target.value }))}
-                  style={inputStyle}
-                />
+              <Field label="Cover image">
+                {editingPost.cover_image_url && (
+                  <img
+                    src={editingPost.cover_image_url}
+                    alt=""
+                    style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}` }}
+                  />
+                )}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="Paste a URL, or upload a file"
+                    value={editingPost.cover_image_url}
+                    onChange={e => setEditingPost(prev => ({ ...prev, cover_image_url: e.target.value }))}
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                  <label
+                    style={{
+                      padding: '8px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`,
+                      backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm,
+                      fontWeight: '600', cursor: uploadingCover ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans,
+                      whiteSpace: 'nowrap', display: 'flex', alignItems: 'center',
+                    }}
+                  >
+                    {uploadingCover ? 'Uploading…' : 'Upload'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={uploadingCover}
+                      onChange={e => { handleCoverUpload(e.target.files[0]); e.target.value = '' }}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
               </Field>
               <Field label="Content (Markdown)">
                 <textarea
