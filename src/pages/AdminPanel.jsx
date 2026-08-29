@@ -16,6 +16,12 @@ function downloadCsv(filename, rows) {
   URL.revokeObjectURL(url)
 }
 
+function slugify(title) {
+  return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
+const BLANK_POST = { id: null, slug: '', title: '', excerpt: '', content: '', cover_image_url: '', seo_title: '', seo_description: '', status: 'draft' }
+
 export default function AdminPanel() {
   const [settings, setSettings] = useState(null)
   const [waitlist, setWaitlist] = useState([])
@@ -26,15 +32,19 @@ export default function AdminPanel() {
   const [savingCap, setSavingCap] = useState(false)
   const [savingPlanFor, setSavingPlanFor] = useState(null)
   const [error, setError] = useState(null)
+  const [posts, setPosts] = useState([])
+  const [editingPost, setEditingPost] = useState(null)
+  const [savingPost, setSavingPost] = useState(false)
 
   useEffect(() => { fetchAll() }, [])
 
   async function fetchAll() {
     setLoading(true)
-    const [settingsRes, waitlistRes, usersRes] = await Promise.all([
+    const [settingsRes, waitlistRes, usersRes, postsRes] = await Promise.all([
       supabase.from('platform_settings').select('*').single(),
       supabase.from('waitlist').select('id, email, created_at, name, creative_type, social_link, how_heard').order('created_at', { ascending: false }),
       supabase.rpc('admin_list_users'),
+      supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
     ])
     if (settingsRes.data) {
       setSettings(settingsRes.data)
@@ -42,7 +52,62 @@ export default function AdminPanel() {
     }
     setWaitlist(waitlistRes.data || [])
     setUsers(usersRes.data || [])
+    setPosts(postsRes.data || [])
     setLoading(false)
+  }
+
+  function openNewPost() {
+    setError(null)
+    setEditingPost({ ...BLANK_POST })
+  }
+
+  function openEditPost(post) {
+    setError(null)
+    setEditingPost({ ...post })
+  }
+
+  async function handleSavePost(nextStatus) {
+    if (!editingPost) return
+    setSavingPost(true)
+    setError(null)
+    const slug = editingPost.slug.trim() || slugify(editingPost.title)
+    const payload = {
+      slug,
+      title: editingPost.title.trim(),
+      excerpt: editingPost.excerpt?.trim() || null,
+      content: editingPost.content,
+      cover_image_url: editingPost.cover_image_url?.trim() || null,
+      seo_title: editingPost.seo_title?.trim() || null,
+      seo_description: editingPost.seo_description?.trim() || null,
+      status: nextStatus,
+      published_at: nextStatus === 'published' ? (editingPost.published_at || new Date().toISOString()) : editingPost.published_at,
+    }
+
+    let result
+    if (editingPost.id) {
+      result = await supabase.from('blog_posts').update(payload).eq('id', editingPost.id).select().single()
+    } else {
+      result = await supabase.from('blog_posts').insert(payload).select().single()
+    }
+
+    if (result.error) {
+      setError(result.error.message)
+    } else {
+      setPosts(prev => {
+        const exists = prev.some(p => p.id === result.data.id)
+        return exists ? prev.map(p => (p.id === result.data.id ? result.data : p)) : [result.data, ...prev]
+      })
+      setEditingPost(null)
+    }
+    setSavingPost(false)
+  }
+
+  async function handleDeletePost(postId) {
+    if (!confirm('Delete this post? This cannot be undone.')) return
+    setError(null)
+    const { error: deleteError } = await supabase.from('blog_posts').delete().eq('id', postId)
+    if (deleteError) setError(deleteError.message)
+    else setPosts(prev => prev.filter(p => p.id !== postId))
   }
 
   async function handleToggleSignups() {
@@ -252,6 +317,168 @@ export default function AdminPanel() {
           ))}
         </div>
       </div>
+
+      {/* ── Blog ── */}
+      <div style={cardStyle}>
+        <div style={{ ...headerStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={titleStyle}>Blog ({posts.length})</h3>
+            <p style={descStyle}>Posts published here go live on gabspace.io within a few minutes.</p>
+          </div>
+          <button
+            onClick={openNewPost}
+            style={{ padding: '8px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+          >
+            New post
+          </button>
+        </div>
+        {posts.length > 0 && (
+          <div style={{ padding: '8px 24px 20px' }}>
+            {posts.map(p => (
+              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, gap: '12px' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: t.colors.textPrimary, fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title || '(untitled)'}</div>
+                  <div style={{ color: t.colors.textTertiary, fontSize: t.fontSizes.xs, marginTop: '2px' }}>
+                    /{p.slug} · {p.status === 'published' ? `Published ${new Date(p.published_at).toLocaleDateString()}` : 'Draft'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  <button
+                    onClick={() => openEditPost(p)}
+                    style={{ padding: '6px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.xs, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeletePost(p.id)}
+                    style={{ padding: '6px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.danger, fontSize: t.fontSizes.xs, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {editingPost && (
+        <div
+          onClick={() => !savingPost && setEditingPost(null)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '5vh 16px', zIndex: 1000, overflowY: 'auto' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, width: '100%', maxWidth: '640px', padding: '24px' }}
+          >
+            <h3 style={{ ...titleStyle, marginBottom: '16px' }}>{editingPost.id ? 'Edit post' : 'New post'}</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <Field label="Title">
+                <input
+                  type="text"
+                  value={editingPost.title}
+                  onChange={e => setEditingPost(prev => ({ ...prev, title: e.target.value }))}
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="Slug (blank = generated from title)">
+                <input
+                  type="text"
+                  value={editingPost.slug}
+                  placeholder={slugify(editingPost.title) || 'my-post-title'}
+                  onChange={e => setEditingPost(prev => ({ ...prev, slug: e.target.value }))}
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="Excerpt">
+                <textarea
+                  rows={2}
+                  value={editingPost.excerpt}
+                  onChange={e => setEditingPost(prev => ({ ...prev, excerpt: e.target.value }))}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </Field>
+              <Field label="Cover image URL">
+                <input
+                  type="text"
+                  value={editingPost.cover_image_url}
+                  onChange={e => setEditingPost(prev => ({ ...prev, cover_image_url: e.target.value }))}
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="Content (Markdown)">
+                <textarea
+                  rows={12}
+                  value={editingPost.content}
+                  onChange={e => setEditingPost(prev => ({ ...prev, content: e.target.value }))}
+                  style={{ ...inputStyle, resize: 'vertical', fontFamily: 'ui-monospace, monospace' }}
+                />
+              </Field>
+              <Field label="SEO title (blank = post title)">
+                <input
+                  type="text"
+                  value={editingPost.seo_title}
+                  onChange={e => setEditingPost(prev => ({ ...prev, seo_title: e.target.value }))}
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="SEO description (blank = excerpt)">
+                <textarea
+                  rows={2}
+                  value={editingPost.seo_description}
+                  onChange={e => setEditingPost(prev => ({ ...prev, seo_description: e.target.value }))}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <button
+                onClick={() => setEditingPost(null)}
+                disabled={savingPost}
+                style={{ padding: '8px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: savingPost ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSavePost('draft')}
+                disabled={savingPost || !editingPost.title.trim()}
+                style={{ padding: '8px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: savingPost || !editingPost.title.trim() ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans }}
+              >
+                Save draft
+              </button>
+              <button
+                onClick={() => handleSavePost('published')}
+                disabled={savingPost || !editingPost.title.trim() || !editingPost.content.trim()}
+                style={{ padding: '8px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: savingPost || !editingPost.title.trim() || !editingPost.content.trim() ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans }}
+              >
+                {editingPost.status === 'published' ? 'Save & keep published' : 'Publish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
+}
+
+function Field({ label, children }) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <span style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>{label}</span>
+      {children}
+    </label>
+  )
+}
+
+const inputStyle = {
+  padding: '8px 12px',
+  borderRadius: t.radius.md,
+  border: `1px solid ${t.colors.border}`,
+  fontSize: t.fontSizes.md,
+  outline: 'none',
+  color: t.colors.textPrimary,
+  fontFamily: t.fonts.sans,
+  width: '100%',
 }
