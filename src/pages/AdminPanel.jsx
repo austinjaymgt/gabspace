@@ -37,6 +37,13 @@ export default function AdminPanel() {
   const [savingPost, setSavingPost] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
   const [activeTab, setActiveTab] = useState('general')
+  const [toast, setToast] = useState(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 2500)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   useEffect(() => { fetchAll() }, [])
 
@@ -100,6 +107,7 @@ export default function AdminPanel() {
         return exists ? prev.map(p => (p.id === result.data.id ? result.data : p)) : [result.data, ...prev]
       })
       setEditingPost(null)
+      setToast(nextStatus === 'published' ? 'Post published' : 'Draft saved')
     }
     setSavingPost(false)
   }
@@ -522,6 +530,12 @@ export default function AdminPanel() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', padding: '10px 20px', borderRadius: t.radius.full, backgroundColor: t.colors.success, color: t.colors.textInverse, fontSize: t.fontSizes.sm, fontWeight: '600', boxShadow: t.shadows.md, zIndex: 1100 }}>
+          {toast}
         </div>
       )}
     </div>
