@@ -18,6 +18,13 @@ const GOAL_OPTIONS = [
   'Culture',
 ]
 
+const CALENDAR_STATUSES = [
+  { value: 'idea', label: 'Idea', color: '#6B7280', bg: '#F7F5F0' },
+  { value: 'in-production', label: 'In production', color: '#D4874E', bg: '#FBF0E6' },
+  { value: 'scheduled', label: 'Scheduled', color: '#7C5CBF', bg: '#F0EBF9' },
+  { value: 'published', label: 'Published', color: '#6B8F71', bg: '#EAF2EA' },
+]
+
 const statusStyles = {
   draft: { bg: '#F3F3F3', color: '#6B7280', label: 'Draft' },
 active: { bg: t.colors.primaryLight, color: t.colors.primary, label: 'Active' },
@@ -29,12 +36,21 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
+function goalProgressPct(campaign) {
+  const target = Number(campaign.goal_target || 0)
+  if (!target) return null
+  const current = Number(campaign.goal_current || 0)
+  return Math.max(0, Math.min(100, Math.round((current / target) * 100)))
+}
+
 export default function CreativeStrategy({ businessSpaceId, userRole }) {
   const [campaigns, setCampaigns] = useState([])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('strategy') // strategy | form | detail
   const [selectedCampaign, setSelectedCampaign] = useState(null)
+  const [calendarItems, setCalendarItems] = useState([])
+  const [calendarLoading, setCalendarLoading] = useState(false)
   const [editingCampaign, setEditingCampaign] = useState(null)
   const [filterQuarter, setFilterQuarter] = useState('all')
   const [filterYear, setFilterYear] = useState(CURRENT_YEAR)
@@ -53,6 +69,9 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     description: '',
     goal: '',
     project_id: '',
+    goal_target: '',
+    goal_current: '',
+    goal_unit: '',
   })
 
   const isCreativeOrDirector = ['owner', 'co-owner', 'employee'].includes(userRole)
@@ -93,6 +112,9 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
       description: form.description,
       goal: form.goal,
       project_id: form.project_id || null,
+      goal_target: form.goal_target === '' ? null : Number(form.goal_target),
+      goal_current: form.goal_current === '' ? 0 : Number(form.goal_current),
+      goal_unit: form.goal_unit || null,
     }
 
     if (editingCampaign) {
@@ -100,8 +122,11 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     } else {
       await supabase.from('campaigns').insert(payload)
     }
-    resetForm()
-    fetchAll()
+    const returnToDetail = selectedCampaign && editingCampaign && selectedCampaign.id === editingCampaign.id
+    setEditingCampaign(null)
+    setView(returnToDetail ? 'detail' : 'strategy')
+    if (returnToDetail) setSelectedCampaign(prev => ({ ...prev, ...payload }))
+    await fetchAll()
   }
 
   async function deleteCampaign(id) {
@@ -116,11 +141,35 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
   async function updateStatus(id, status) {
     await supabase.from('campaigns').update({ status }).eq('id', id)
     setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status } : c))
+    setSelectedCampaign(prev => prev && prev.id === id ? { ...prev, status } : prev)
   }
 
   async function linkEvent(campaignId, projectId) {
     await supabase.from('campaigns').update({ project_id: projectId || null }).eq('id', campaignId)
     fetchAll()
+  }
+
+  async function updateGoalCurrent(id, goal_current) {
+    await supabase.from('campaigns').update({ goal_current }).eq('id', id)
+    setCampaigns(prev => prev.map(c => c.id === id ? { ...c, goal_current } : c))
+    setSelectedCampaign(prev => prev && prev.id === id ? { ...prev, goal_current } : prev)
+  }
+
+  function viewCampaign(campaign) {
+    setSelectedCampaign(campaign)
+    setView('detail')
+    fetchCalendarItems(campaign.id)
+  }
+
+  async function fetchCalendarItems(campaignId) {
+    setCalendarLoading(true)
+    const { data } = await supabase
+      .from('content_calendar')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('scheduled_date', { ascending: true })
+    setCalendarItems(data || [])
+    setCalendarLoading(false)
   }
 
   function startEdit(campaign) {
@@ -138,6 +187,9 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
       description: campaign.description || '',
       goal: campaign.goal || '',
       project_id: campaign.project_id || '',
+      goal_target: campaign.goal_target ?? '',
+      goal_current: campaign.goal_current ?? '',
+      goal_unit: campaign.goal_unit || '',
     })
     setView('form')
   }
@@ -148,12 +200,14 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
       name: '', overall_goal: '', strategy_notes: '',
       status: 'draft', start_date: '', end_date: '',
       budget: '', channel: '', platform: '', description: '', goal: '', project_id: '',
+      goal_target: '', goal_current: '', goal_unit: '',
     })
     setView('form')
   }
 
   function resetForm() {
-    setView('strategy')
+    const returnToDetail = selectedCampaign && editingCampaign && selectedCampaign.id === editingCampaign.id
+    setView(returnToDetail ? 'detail' : 'strategy')
     setEditingCampaign(null)
   }
 
@@ -258,6 +312,30 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
             </div>
           </div>
 
+          {/* Goal tracking */}
+          <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
+            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Goal Tracking</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Target</label>
+                <input type="number" value={form.goal_target} onChange={e => setForm(f => ({ ...f, goal_target: e.target.value }))} placeholder="e.g. 100" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+              </div>
+              <div>
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Current Progress</label>
+                <input type="number" value={form.goal_current} onChange={e => setForm(f => ({ ...f, goal_current: e.target.value }))} placeholder="e.g. 40" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+              </div>
+              <div>
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Unit</label>
+                <input value={form.goal_unit} onChange={e => setForm(f => ({ ...f, goal_unit: e.target.value }))} placeholder="e.g. new followers" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+              </div>
+            </div>
+            {form.goal_target && (
+              <div style={{ marginTop: '12px', fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
+                Track progress toward {form.goal_target} {form.goal_unit || 'units'} — once it's hit, you'll know it's time to switch to the next campaign.
+              </div>
+            )}
+          </div>
+
           {/* Event linkage */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
             <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Linked Event</div>
@@ -280,6 +358,125 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
             <button onClick={resetForm} style={{ padding: '11px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.md, fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               Cancel
             </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── DETAIL VIEW ──
+  if (view === 'detail' && selectedCampaign) {
+    const campaign = selectedCampaign
+    const s = statusStyles[campaign.status] || statusStyles.draft
+    const pct = goalProgressPct(campaign)
+    const goalReached = pct !== null && pct >= 100
+    const linkedProject = projects.find(p => p.id === campaign.project_id)
+
+    return (
+      <div style={{ padding: '32px 40px', fontFamily: t.fonts.sans, maxWidth: '900px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+          <button onClick={() => { setView('strategy'); setSelectedCampaign(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans }}>← Back</button>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <h1 style={{ fontFamily: t.fonts.heading, fontSize: '26px', fontWeight: '800', color: t.colors.textPrimary, letterSpacing: '-0.02em', margin: 0 }}>{campaign.name}</h1>
+              <span style={{ fontSize: '11px', fontWeight: '500', background: s.bg, color: s.color, padding: '3px 10px', borderRadius: '100px' }}>{s.label}</span>
+            </div>
+            {campaign.quarter && campaign.year && (
+              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{campaign.quarter} {campaign.year}</div>
+            )}
+          </div>
+          {isCreativeOrDirector && (
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button onClick={() => startEdit(campaign)} style={{ padding: '8px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Edit</button>
+              <button onClick={() => deleteCampaign(campaign.id)} style={{ padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Goal tracker */}
+          {pct !== null && (
+            <div style={{ background: t.colors.bgCard, border: `1px solid ${goalReached ? t.colors.success : t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary }}>Goal Progress</div>
+                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>
+                  {Number(campaign.goal_current || 0).toLocaleString()} / {Number(campaign.goal_target).toLocaleString()} {campaign.goal_unit || ''}
+                </div>
+              </div>
+              <div style={{ height: '10px', background: t.colors.bg, borderRadius: t.radius.full, overflow: 'hidden', marginBottom: '10px' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: goalReached ? t.colors.success : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: goalReached ? t.colors.success : t.colors.textPrimary }}>
+                  {pct}%{goalReached ? ' — goal reached! Time to switch to the next campaign 🎉' : ''}
+                </span>
+                {isCreativeOrDirector && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <label style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Update progress:</label>
+                    <input
+                      type="number"
+                      defaultValue={campaign.goal_current || 0}
+                      onBlur={e => {
+                        const val = Number(e.target.value) || 0
+                        if (val !== Number(campaign.goal_current || 0)) updateGoalCurrent(campaign.id, val)
+                      }}
+                      style={{ width: '90px', padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Overview */}
+          <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
+            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '12px' }}>Overview</div>
+            {campaign.description && <p style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, margin: '0 0 12px', lineHeight: 1.5 }}>{campaign.description}</p>}
+            {campaign.strategy_notes && (
+              <div style={{ padding: '12px 14px', background: t.colors.bg, borderRadius: t.radius.md, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, lineHeight: 1.5, marginBottom: '12px' }}>{campaign.strategy_notes}</div>
+            )}
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+              {campaign.overall_goal && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>🎯 {campaign.overall_goal}</div>}
+              {(campaign.start_date || campaign.end_date) && (
+                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
+                  📅 {campaign.start_date && campaign.end_date ? `${formatDate(campaign.start_date)} → ${formatDate(campaign.end_date)}` : formatDate(campaign.start_date || campaign.end_date)}
+                </div>
+              )}
+              {campaign.budget > 0 && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>💰 {fmt(campaign.budget)}</div>}
+              {campaign.channel && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>📡 {campaign.channel}</div>}
+              {campaign.platform && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>📱 {campaign.platform}</div>}
+              {linkedProject && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.primary }}>🔗 {linkedProject.title}</div>}
+            </div>
+          </div>
+
+          {/* Content calendar items */}
+          <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
+            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>
+              Content Calendar ({calendarItems.length})
+            </div>
+            {calendarLoading ? (
+              <div style={{ color: t.colors.textTertiary, fontSize: t.fontSizes.sm, padding: '12px 0' }}>Loading...</div>
+            ) : calendarItems.length === 0 ? (
+              <div style={{ color: t.colors.textTertiary, fontSize: t.fontSizes.sm, padding: '12px 0' }}>No content calendar items linked to this campaign yet. Add one from the Content Calendar and select this campaign.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {calendarItems.map(item => {
+                  const st = CALENDAR_STATUSES.find(x => x.value === item.status) || CALENDAR_STATUSES[0]
+                  return (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: t.colors.bg, borderRadius: t.radius.md, flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: '160px', fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary }}>{item.title}</div>
+                      {item.platform && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{item.platform}</span>}
+                      {item.scheduled_date && <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>📅 {formatDate(item.scheduled_date)}</span>}
+                      <span style={{ fontSize: '10px', fontWeight: '500', background: st.bg, color: st.color, padding: '3px 8px', borderRadius: t.radius.full }}>{st.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -364,7 +561,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
                     <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{qCampaigns.length} campaign{qCampaigns.length !== 1 ? 's' : ''}</div>
                     <div style={{ flex: 1, height: '1px', background: t.colors.border }} />
                   </div>
-                  <CampaignGrid campaigns={qCampaigns} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} isCreativeOrDirector={isCreativeOrDirector} />
+                  <CampaignGrid campaigns={qCampaigns} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
                 </div>
               ))}
               {unquartered.length > 0 && (
@@ -373,12 +570,12 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
                     <div style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes.xl, fontWeight: '800', color: t.colors.textSecondary }}>Unscheduled</div>
                     <div style={{ flex: 1, height: '1px', background: t.colors.border }} />
                   </div>
-                  <CampaignGrid campaigns={unquartered} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} isCreativeOrDirector={isCreativeOrDirector} />
+                  <CampaignGrid campaigns={unquartered} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
                 </div>
               )}
             </>
           ) : (
-            <CampaignGrid campaigns={filtered} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} isCreativeOrDirector={isCreativeOrDirector} />
+            <CampaignGrid campaigns={filtered} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
           )}
         </div>
       )}
@@ -386,20 +583,35 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
   )
 }
 
-function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, onLinkEvent, isCreativeOrDirector }) {
+function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, onLinkEvent, onView, isCreativeOrDirector }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
       {campaigns.map(campaign => {
         const s = statusStyles[campaign.status] || statusStyles.draft
         const linkedProject = projects.find(p => p.id === campaign.project_id)
+        const pct = goalProgressPct(campaign)
+        const goalReached = pct !== null && pct >= 100
         return (
-<div key={campaign.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+<div key={campaign.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer' }} onClick={() => onView(campaign)}>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
 <div style={{ fontFamily: t.fonts.heading, fontSize: '16px', fontWeight: '800', color: t.colors.textPrimary, lineHeight: 1.2, letterSpacing: '-0.01em' }}>{campaign.name}</div>
               <span style={{ fontSize: '10px', fontWeight: '500', background: s.bg, color: s.color, padding: '3px 8px', borderRadius: '100px', flexShrink: 0 }}>{s.label}</span>
             </div>
+
+            {/* Goal progress */}
+            {pct !== null && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: t.colors.textTertiary, marginBottom: '4px' }}>
+                  <span>{Number(campaign.goal_current || 0).toLocaleString()} / {Number(campaign.goal_target).toLocaleString()} {campaign.goal_unit || ''}</span>
+                  <span style={{ fontWeight: '600', color: goalReached ? t.colors.success : t.colors.textSecondary }}>{pct}%{goalReached ? ' ✓' : ''}</span>
+                </div>
+                <div style={{ height: '6px', background: t.colors.bg, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: goalReached ? t.colors.success : t.colors.primary, borderRadius: t.radius.full }} />
+                </div>
+              </div>
+            )}
 
             {/* Goal + Quarter */}
             {(campaign.overall_goal || (campaign.quarter && campaign.year)) && (
@@ -439,7 +651,7 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
             </div>
 
             {/* Linked event */}
-            <div>
+            <div onClick={e => e.stopPropagation()}>
               {linkedProject ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: t.colors.primaryLight, borderRadius: t.radius.md }}>
                   <span style={{ fontSize: t.fontSizes.sm, color: t.colors.primary, fontWeight: '500', flex: 1 }}>🔗 {linkedProject.title}</span>
@@ -463,7 +675,7 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
 
             {/* Actions */}
             {isCreativeOrDirector && (
-              <div style={{ display: 'flex', gap: '6px', paddingTop: '4px' }}>
+              <div style={{ display: 'flex', gap: '6px', paddingTop: '4px' }} onClick={e => e.stopPropagation()}>
                 <select value={campaign.status} onChange={e => onStatusChange(campaign.id, e.target.value)} style={{ flex: 1, padding: '6px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary, background: t.colors.bgCard }}>
                   {Object.entries(statusStyles).map(([val, st]) => <option key={val} value={val}>{st.label}</option>)}
                 </select>
