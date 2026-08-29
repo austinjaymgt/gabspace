@@ -36,6 +36,7 @@ export default function AdminPanel() {
   const [editingPost, setEditingPost] = useState(null)
   const [savingPost, setSavingPost] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
+  const [activeTab, setActiveTab] = useState('general')
 
   useEffect(() => { fetchAll() }, [])
 
@@ -212,6 +213,20 @@ export default function AdminPanel() {
         </div>
       )}
 
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', background: t.colors.bgCard, borderRadius: t.radius.full, padding: '4px', border: `0.5px solid ${t.colors.border}`, width: 'fit-content' }}>
+        {[['general', 'General'], ['blog', 'Blog']].map(([value, label]) => (
+          <button
+            key={value}
+            onClick={() => setActiveTab(value)}
+            style={{ fontSize: t.fontSizes.sm, fontWeight: '500', padding: '7px 16px', borderRadius: t.radius.full, cursor: 'pointer', border: 'none', background: activeTab === value ? t.colors.nav : 'transparent', color: activeTab === value ? '#fff' : t.colors.textTertiary, fontFamily: t.fonts.sans }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'general' && (
+      <>
       {/* ── Signups ── */}
       <div style={cardStyle}>
         <div style={headerStyle}>
@@ -334,7 +349,11 @@ export default function AdminPanel() {
           ))}
         </div>
       </div>
+      </>
+      )}
 
+      {activeTab === 'blog' && (
+      <>
       {/* ── Blog ── */}
       <div style={cardStyle}>
         <div style={{ ...headerStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -378,6 +397,8 @@ export default function AdminPanel() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {editingPost && (
         <div
