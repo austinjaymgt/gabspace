@@ -36,16 +36,49 @@ function fmt(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
-function goalProgressPct(campaign) {
-  const target = Number(campaign.goal_target || 0)
-  if (!target) return null
-  const current = Number(campaign.goal_current || 0)
-  return Math.max(0, Math.min(100, Math.round((current / target) * 100)))
+function pctFor(goal) {
+  const target = Number(goal.target || 0)
+  if (!target) return 0
+  return Math.max(0, Math.min(100, Math.round((Number(goal.current || 0) / target) * 100)))
+}
+
+function ChipList({ values, onChange, placeholder }) {
+  const [input, setInput] = useState('')
+  function add() {
+    const v = input.trim()
+    if (!v || values.includes(v)) { setInput(''); return }
+    onChange([...values, v])
+    setInput('')
+  }
+  return (
+    <div>
+      {values.length > 0 && (
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+          {values.map(v => (
+            <span key={v} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '600', color: t.colors.primary, background: t.colors.primaryLight, padding: '4px 10px', borderRadius: t.radius.full }}>
+              {v}
+              <button type="button" onClick={() => onChange(values.filter(x => x !== v))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.primary, fontSize: '12px', lineHeight: 1, padding: 0 }}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
+          placeholder={placeholder}
+          style={{ flex: 1, padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }}
+        />
+        <button type="button" onClick={add} style={{ padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Add</button>
+      </div>
+    </div>
+  )
 }
 
 export default function CreativeStrategy({ businessSpaceId, userRole }) {
   const [campaigns, setCampaigns] = useState([])
-  const [projects, setProjects] = useState([])
+  const [goalsByCampaign, setGoalsByCampaign] = useState({})
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('strategy') // strategy | form | detail
   const [selectedCampaign, setSelectedCampaign] = useState(null)
@@ -55,6 +88,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
   const [filterQuarter, setFilterQuarter] = useState('all')
   const [filterYear, setFilterYear] = useState(CURRENT_YEAR)
   const [filterStatus, setFilterStatus] = useState('all')
+  const [newGoal, setNewGoal] = useState({ label: '', target: '', unit: '' })
 
   const [form, setForm] = useState({
     name: '',
@@ -64,14 +98,11 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     start_date: '',
     end_date: '',
     budget: '',
-    channel: '',
-    platform: '',
+    channels: [],
+    platforms: [],
     description: '',
     goal: '',
-    project_id: '',
-    goal_target: '',
-    goal_current: '',
-    goal_unit: '',
+    audience: '',
   })
 
   const isCreativeOrDirector = ['owner', 'co-owner', 'employee'].includes(userRole)
@@ -82,12 +113,14 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
 
   async function fetchAll() {
     setLoading(true)
-    const [campRes, projRes] = await Promise.all([
+    const [campRes, goalsRes] = await Promise.all([
       supabase.from('campaigns').select('*').eq('business_space_id', businessSpaceId).order('created_at', { ascending: false }),
-      supabase.from('projects').select('id, title, event_date, event_status').eq('business_space_id', businessSpaceId).order('title'),
+      supabase.from('campaign_goals').select('*').eq('business_space_id', businessSpaceId).order('created_at', { ascending: true }),
     ])
     setCampaigns(campRes.data || [])
-    setProjects(projRes.data || [])
+    const map = {}
+    ;(goalsRes.data || []).forEach(g => { (map[g.campaign_id] ||= []).push(g) })
+    setGoalsByCampaign(map)
     setLoading(false)
   }
 
@@ -107,14 +140,11 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
       start_date: form.start_date || null,
       end_date: form.end_date || null,
       budget: Number(form.budget) || 0,
-      channel: form.channel,
-      platform: form.platform,
+      channels: form.channels,
+      platforms: form.platforms,
       description: form.description,
       goal: form.goal,
-      project_id: form.project_id || null,
-      goal_target: form.goal_target === '' ? null : Number(form.goal_target),
-      goal_current: form.goal_current === '' ? 0 : Number(form.goal_current),
-      goal_unit: form.goal_unit || null,
+      audience: form.audience,
     }
 
     if (editingCampaign) {
@@ -144,20 +174,10 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     setSelectedCampaign(prev => prev && prev.id === id ? { ...prev, status } : prev)
   }
 
-  async function linkEvent(campaignId, projectId) {
-    await supabase.from('campaigns').update({ project_id: projectId || null }).eq('id', campaignId)
-    fetchAll()
-  }
-
-  async function updateGoalCurrent(id, goal_current) {
-    await supabase.from('campaigns').update({ goal_current }).eq('id', id)
-    setCampaigns(prev => prev.map(c => c.id === id ? { ...c, goal_current } : c))
-    setSelectedCampaign(prev => prev && prev.id === id ? { ...prev, goal_current } : prev)
-  }
-
   function viewCampaign(campaign) {
     setSelectedCampaign(campaign)
     setView('detail')
+    setNewGoal({ label: '', target: '', unit: '' })
     fetchCalendarItems(campaign.id)
   }
 
@@ -172,6 +192,38 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     setCalendarLoading(false)
   }
 
+  async function addGoal(campaignId, { label, target, unit }) {
+    const targetNum = Number(target)
+    if (!targetNum) return
+    const { data } = await supabase.from('campaign_goals').insert({
+      campaign_id: campaignId,
+      business_space_id: businessSpaceId,
+      label: label || null,
+      target: targetNum,
+      current: 0,
+      unit: unit || null,
+    }).select().single()
+    if (data) {
+      setGoalsByCampaign(prev => ({ ...prev, [campaignId]: [...(prev[campaignId] || []), data] }))
+    }
+  }
+
+  async function updateGoalCurrent(goalId, campaignId, current) {
+    await supabase.from('campaign_goals').update({ current }).eq('id', goalId)
+    setGoalsByCampaign(prev => ({
+      ...prev,
+      [campaignId]: (prev[campaignId] || []).map(g => g.id === goalId ? { ...g, current } : g),
+    }))
+  }
+
+  async function deleteGoal(goalId, campaignId) {
+    await supabase.from('campaign_goals').delete().eq('id', goalId)
+    setGoalsByCampaign(prev => ({
+      ...prev,
+      [campaignId]: (prev[campaignId] || []).filter(g => g.id !== goalId),
+    }))
+  }
+
   function startEdit(campaign) {
     setEditingCampaign(campaign)
     setForm({
@@ -182,14 +234,11 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
       start_date: campaign.start_date || '',
       end_date: campaign.end_date || '',
       budget: campaign.budget || '',
-      channel: campaign.channel || '',
-      platform: campaign.platform || '',
+      channels: campaign.channels || [],
+      platforms: campaign.platforms || [],
       description: campaign.description || '',
       goal: campaign.goal || '',
-      project_id: campaign.project_id || '',
-      goal_target: campaign.goal_target ?? '',
-      goal_current: campaign.goal_current ?? '',
-      goal_unit: campaign.goal_unit || '',
+      audience: campaign.audience || '',
     })
     setView('form')
   }
@@ -199,8 +248,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
     setForm({
       name: '', overall_goal: '', strategy_notes: '',
       status: 'draft', start_date: '', end_date: '',
-      budget: '', channel: '', platform: '', description: '', goal: '', project_id: '',
-      goal_target: '', goal_current: '', goal_unit: '',
+      budget: '', channels: [], platforms: [], description: '', goal: '', audience: '',
     })
     setView('form')
   }
@@ -260,6 +308,10 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
                 </select>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Audience</label>
+                <input value={form.audience} onChange={e => setForm(f => ({ ...f, audience: e.target.value }))} placeholder="Who is this campaign targeting?" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Description</label>
                 <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What is this campaign about?" rows={2} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', resize: 'vertical', color: t.colors.textPrimary }} />
               </div>
@@ -299,55 +351,17 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
 
           {/* Channels */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
-            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Channels & Platform</div>
+            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Channels & Platforms</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Channel</label>
-                <input value={form.channel} onChange={e => setForm(f => ({ ...f, channel: e.target.value }))} placeholder="e.g. Social, Email, OOH, IRL" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Channels</label>
+                <ChipList values={form.channels} onChange={vals => setForm(f => ({ ...f, channels: vals }))} placeholder="e.g. Social, Email, OOH, IRL" />
               </div>
               <div>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Platform</label>
-                <input value={form.platform} onChange={e => setForm(f => ({ ...f, platform: e.target.value }))} placeholder="e.g. Instagram, TikTok, YouTube" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
+                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Platforms</label>
+                <ChipList values={form.platforms} onChange={vals => setForm(f => ({ ...f, platforms: vals }))} placeholder="e.g. Instagram, TikTok, YouTube" />
               </div>
             </div>
-          </div>
-
-          {/* Goal tracking */}
-          <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
-            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Goal Tracking</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Target</label>
-                <input type="number" value={form.goal_target} onChange={e => setForm(f => ({ ...f, goal_target: e.target.value }))} placeholder="e.g. 100" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
-              </div>
-              <div>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Current Progress</label>
-                <input type="number" value={form.goal_current} onChange={e => setForm(f => ({ ...f, goal_current: e.target.value }))} placeholder="e.g. 40" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
-              </div>
-              <div>
-                <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Unit</label>
-                <input value={form.goal_unit} onChange={e => setForm(f => ({ ...f, goal_unit: e.target.value }))} placeholder="e.g. new followers" style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, boxSizing: 'border-box', color: t.colors.textPrimary }} />
-              </div>
-            </div>
-            {form.goal_target && (
-              <div style={{ marginTop: '12px', fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
-                Track progress toward {form.goal_target} {form.goal_unit || 'units'} — once it's hit, you'll know it's time to switch to the next campaign.
-              </div>
-            )}
-          </div>
-
-          {/* Event linkage */}
-          <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
-            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Linked Event</div>
-            <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}>
-              <option value="">No event linked</option>
-              {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-            </select>
-            {form.project_id && (
-              <div style={{ marginTop: '10px', fontSize: t.fontSizes.sm, color: t.colors.primary }}>
-                ✓ This campaign will be visible on the linked event's detail page
-              </div>
-            )}
           </div>
 
           {/* Actions */}
@@ -368,9 +382,8 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
   if (view === 'detail' && selectedCampaign) {
     const campaign = selectedCampaign
     const s = statusStyles[campaign.status] || statusStyles.draft
-    const pct = goalProgressPct(campaign)
-    const goalReached = pct !== null && pct >= 100
-    const linkedProject = projects.find(p => p.id === campaign.project_id)
+    const campaignGoals = goalsByCampaign[campaign.id] || []
+    const allGoalsReached = campaignGoals.length > 0 && campaignGoals.every(g => pctFor(g) >= 100)
 
     return (
       <div style={{ padding: '32px 40px', fontFamily: t.fonts.sans, maxWidth: '900px' }}>
@@ -399,38 +412,70 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           {/* Goal tracker */}
-          {pct !== null && (
-            <div style={{ background: t.colors.bgCard, border: `1px solid ${goalReached ? t.colors.success : t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary }}>Goal Progress</div>
-                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>
-                  {Number(campaign.goal_current || 0).toLocaleString()} / {Number(campaign.goal_target).toLocaleString()} {campaign.goal_unit || ''}
-                </div>
+          <div style={{ background: t.colors.bgCard, border: `1px solid ${allGoalsReached ? t.colors.success : t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
+            <div style={{ fontSize: t.fontSizes.xs, fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.textTertiary, marginBottom: '16px' }}>Goal Tracking</div>
+
+            {campaignGoals.length === 0 ? (
+              <div style={{ color: t.colors.textTertiary, fontSize: t.fontSizes.sm, marginBottom: '14px' }}>No goals yet. Add one below to start tracking progress.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '14px' }}>
+                {campaignGoals.map(g => {
+                  const pct = pctFor(g)
+                  const reached = pct >= 100
+                  return (
+                    <div key={g.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary }}>{g.label || g.unit || 'Goal'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary }}>
+                            {Number(g.current || 0).toLocaleString()} / {Number(g.target).toLocaleString()} {g.unit || ''}
+                          </span>
+                          <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: reached ? t.colors.success : t.colors.textSecondary }}>{pct}%{reached ? ' ✓' : ''}</span>
+                          {isCreativeOrDirector && (
+                            <>
+                              <input
+                                type="number"
+                                defaultValue={g.current || 0}
+                                onBlur={e => {
+                                  const val = Number(e.target.value) || 0
+                                  if (val !== Number(g.current || 0)) updateGoalCurrent(g.id, campaign.id, val)
+                                }}
+                                style={{ width: '70px', padding: '4px 8px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}
+                              />
+                              <button onClick={() => deleteGoal(g.id, campaign.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans }}>Remove</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ height: '8px', background: t.colors.bg, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: reached ? t.colors.success : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-              <div style={{ height: '10px', background: t.colors.bg, borderRadius: t.radius.full, overflow: 'hidden', marginBottom: '10px' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: goalReached ? t.colors.success : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+            )}
+
+            {allGoalsReached && (
+              <div style={{ padding: '10px 14px', background: t.colors.successLight, color: t.colors.success, borderRadius: t.radius.md, fontSize: t.fontSizes.sm, fontWeight: '600', marginBottom: '14px' }}>
+                🎉 All goals reached — time to switch to the next campaign!
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <span style={{ fontSize: t.fontSizes.sm, fontWeight: '600', color: goalReached ? t.colors.success : t.colors.textPrimary }}>
-                  {pct}%{goalReached ? ' — goal reached! Time to switch to the next campaign 🎉' : ''}
-                </span>
-                {isCreativeOrDirector && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <label style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Update progress:</label>
-                    <input
-                      type="number"
-                      defaultValue={campaign.goal_current || 0}
-                      onBlur={e => {
-                        const val = Number(e.target.value) || 0
-                        if (val !== Number(campaign.goal_current || 0)) updateGoalCurrent(campaign.id, val)
-                      }}
-                      style={{ width: '90px', padding: '5px 10px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary }}
-                    />
-                  </div>
-                )}
+            )}
+
+            {isCreativeOrDirector && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingTop: campaignGoals.length > 0 ? '4px' : 0, borderTop: campaignGoals.length > 0 ? `1px solid ${t.colors.border}` : 'none' }}>
+                <input placeholder="Goal label (optional)" value={newGoal.label} onChange={e => setNewGoal(g => ({ ...g, label: e.target.value }))} style={{ flex: '1 1 140px', padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary, marginTop: campaignGoals.length > 0 ? '10px' : 0 }} />
+                <input type="number" placeholder="Target" value={newGoal.target} onChange={e => setNewGoal(g => ({ ...g, target: e.target.value }))} style={{ width: '100px', padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary, marginTop: campaignGoals.length > 0 ? '10px' : 0 }} />
+                <input placeholder="Unit (e.g. new followers)" value={newGoal.unit} onChange={e => setNewGoal(g => ({ ...g, unit: e.target.value }))} style={{ flex: '1 1 160px', padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textPrimary, marginTop: campaignGoals.length > 0 ? '10px' : 0 }} />
+                <button
+                  onClick={async () => { if (!newGoal.target) return; await addGoal(campaign.id, newGoal); setNewGoal({ label: '', target: '', unit: '' }) }}
+                  style={{ padding: '8px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer', marginTop: campaignGoals.length > 0 ? '10px' : 0 }}
+                >
+                  + Add Goal
+                </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Overview */}
           <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px' }}>
@@ -438,6 +483,11 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
             {campaign.description && <p style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, margin: '0 0 12px', lineHeight: 1.5 }}>{campaign.description}</p>}
             {campaign.strategy_notes && (
               <div style={{ padding: '12px 14px', background: t.colors.bg, borderRadius: t.radius.md, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, lineHeight: 1.5, marginBottom: '12px' }}>{campaign.strategy_notes}</div>
+            )}
+            {campaign.audience && (
+              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginBottom: '12px' }}>
+                <strong style={{ color: t.colors.textPrimary }}>Audience: </strong>{campaign.audience}
+              </div>
             )}
             <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
               {campaign.overall_goal && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>🎯 {campaign.overall_goal}</div>}
@@ -447,9 +497,8 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
                 </div>
               )}
               {campaign.budget > 0 && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>💰 {fmt(campaign.budget)}</div>}
-              {campaign.channel && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>📡 {campaign.channel}</div>}
-              {campaign.platform && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>📱 {campaign.platform}</div>}
-              {linkedProject && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.primary }}>🔗 {linkedProject.title}</div>}
+              {campaign.channels?.length > 0 && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>📡 {campaign.channels.join(', ')}</div>}
+              {campaign.platforms?.length > 0 && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>📱 {campaign.platforms.join(', ')}</div>}
             </div>
           </div>
 
@@ -484,6 +533,9 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
   }
 
   // ── STRATEGY VIEW ──
+  const totalGoals = filtered.reduce((sum, c) => sum + (goalsByCampaign[c.id] || []).length, 0)
+  const reachedGoals = filtered.reduce((sum, c) => sum + (goalsByCampaign[c.id] || []).filter(g => pctFor(g) >= 100).length, 0)
+
   return (
     <div style={{ padding: '32px 40px', fontFamily: t.fonts.sans }}>
 
@@ -526,7 +578,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
         {[
           { label: 'Total Campaigns', value: filtered.length },
           { label: 'Active', value: filtered.filter(c => c.status === 'active').length },
-          { label: 'Linked to Events', value: filtered.filter(c => c.project_id).length },
+          { label: 'Goals Reached', value: `${reachedGoals} / ${totalGoals}` },
           { label: 'Total Budget', value: fmt(filtered.reduce((s, c) => s + Number(c.budget || 0), 0)) },
         ].map(stat => (
           <div key={stat.label} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '16px 20px' }}>
@@ -561,7 +613,7 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
                     <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>{qCampaigns.length} campaign{qCampaigns.length !== 1 ? 's' : ''}</div>
                     <div style={{ flex: 1, height: '1px', background: t.colors.border }} />
                   </div>
-                  <CampaignGrid campaigns={qCampaigns} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
+                  <CampaignGrid campaigns={qCampaigns} goalsByCampaign={goalsByCampaign} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
                 </div>
               ))}
               {unquartered.length > 0 && (
@@ -570,12 +622,12 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
                     <div style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes.xl, fontWeight: '800', color: t.colors.textSecondary }}>Unscheduled</div>
                     <div style={{ flex: 1, height: '1px', background: t.colors.border }} />
                   </div>
-                  <CampaignGrid campaigns={unquartered} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
+                  <CampaignGrid campaigns={unquartered} goalsByCampaign={goalsByCampaign} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
                 </div>
               )}
             </>
           ) : (
-            <CampaignGrid campaigns={filtered} projects={projects} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onLinkEvent={linkEvent} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
+            <CampaignGrid campaigns={filtered} goalsByCampaign={goalsByCampaign} onEdit={startEdit} onDelete={deleteCampaign} onStatusChange={updateStatus} onView={viewCampaign} isCreativeOrDirector={isCreativeOrDirector} />
           )}
         </div>
       )}
@@ -583,14 +635,12 @@ export default function CreativeStrategy({ businessSpaceId, userRole }) {
   )
 }
 
-function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, onLinkEvent, onView, isCreativeOrDirector }) {
+function CampaignGrid({ campaigns, goalsByCampaign, onEdit, onDelete, onStatusChange, onView, isCreativeOrDirector }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
       {campaigns.map(campaign => {
         const s = statusStyles[campaign.status] || statusStyles.draft
-        const linkedProject = projects.find(p => p.id === campaign.project_id)
-        const pct = goalProgressPct(campaign)
-        const goalReached = pct !== null && pct >= 100
+        const campaignGoals = goalsByCampaign[campaign.id] || []
         return (
 <div key={campaign.id} style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', cursor: 'pointer' }} onClick={() => onView(campaign)}>
 
@@ -601,15 +651,26 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
             </div>
 
             {/* Goal progress */}
-            {pct !== null && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: t.colors.textTertiary, marginBottom: '4px' }}>
-                  <span>{Number(campaign.goal_current || 0).toLocaleString()} / {Number(campaign.goal_target).toLocaleString()} {campaign.goal_unit || ''}</span>
-                  <span style={{ fontWeight: '600', color: goalReached ? t.colors.success : t.colors.textSecondary }}>{pct}%{goalReached ? ' ✓' : ''}</span>
-                </div>
-                <div style={{ height: '6px', background: t.colors.bg, borderRadius: t.radius.full, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${pct}%`, background: goalReached ? t.colors.success : t.colors.primary, borderRadius: t.radius.full }} />
-                </div>
+            {campaignGoals.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {campaignGoals.slice(0, 2).map(g => {
+                  const pct = pctFor(g)
+                  const reached = pct >= 100
+                  return (
+                    <div key={g.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: t.colors.textTertiary, marginBottom: '4px' }}>
+                        <span>{g.label || g.unit || 'Goal'}</span>
+                        <span style={{ fontWeight: '600', color: reached ? t.colors.success : t.colors.textSecondary }}>{pct}%{reached ? ' ✓' : ''}</span>
+                      </div>
+                      <div style={{ height: '6px', background: t.colors.bg, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: reached ? t.colors.success : t.colors.primary, borderRadius: t.radius.full }} />
+                      </div>
+                    </div>
+                  )
+                })}
+                {campaignGoals.length > 2 && (
+                  <div style={{ fontSize: '10px', color: t.colors.textTertiary }}>+{campaignGoals.length - 2} more goal{campaignGoals.length - 2 !== 1 ? 's' : ''}</div>
+                )}
               </div>
             )}
 
@@ -647,30 +708,7 @@ function CampaignGrid({ campaigns, projects, onEdit, onDelete, onStatusChange, o
                 </div>
               )}
               {campaign.budget > 0 && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>💰 {Number(campaign.budget).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</div>}
-              {campaign.channel && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>📡 {campaign.channel}</div>}
-            </div>
-
-            {/* Linked event */}
-            <div onClick={e => e.stopPropagation()}>
-              {linkedProject ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: t.colors.primaryLight, borderRadius: t.radius.md }}>
-                  <span style={{ fontSize: t.fontSizes.sm, color: t.colors.primary, fontWeight: '500', flex: 1 }}>🔗 {linkedProject.title}</span>
-                  {isCreativeOrDirector && (
-                    <button onClick={() => onLinkEvent(campaign.id, null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, fontSize: t.fontSizes.xs, fontFamily: t.fonts.sans }}>Unlink</button>
-                  )}
-                </div>
-              ) : isCreativeOrDirector ? (
-                <select
-                    onChange={e => { if (e.target.value) onLinkEvent(campaign.id, e.target.value) }}
-                    value=""
-                    style={{ width: '100%', padding: '7px 10px', borderRadius: t.radius.full, border: `1px dashed ${t.colors.border}`, fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, color: t.colors.textTertiary, background: 'transparent', cursor: 'pointer' }}
-          >
-                    <option value="" disabled>+ Link to an event</option>
-                    {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-                </select>
-              ) : (
-                <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>No event linked</div>
-              )}
+              {campaign.channels?.length > 0 && <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>📡 {campaign.channels.join(', ')}</div>}
             </div>
 
             {/* Actions */}
