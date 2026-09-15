@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { theme as t } from '../theme'
 import { Icon } from './Icon'
-import Pixel from './Pixel'
+import Orb from './Orb'
 import Toggle from './Toggle'
 import { useIsMobile } from '../hooks/useMediaQuery'
 import { MODULE_DEFS, toggleModuleState, setModules as persistModules } from '../utils/businessModules'
@@ -90,7 +90,7 @@ export default function AddBusinessFlow({ onCreate, onDone, onClose, forced = fa
     setStep('done')
   }
 
-  const gabiSize = isMobile ? 96 : 120
+  const orbSize = isMobile ? 96 : 120
   const mood = step === 'creating' ? 'working' : step === 'done' ? 'celebrating' : 'idle'
   const canSkip = step !== 'creating' && step !== 'done'
 
@@ -119,8 +119,8 @@ export default function AddBusinessFlow({ onCreate, onDone, onClose, forced = fa
           </button>
         )}
 
-        <div key={mood} style={s.pixelWrap}>
-          <Pixel mood={mood} size={gabiSize} theme="light" />
+        <div key={mood} style={s.orbWrap}>
+          <Orb size={orbSize} halo={mood === 'celebrating'} />
         </div>
 
         <p key={`${step}-voice`} style={s.voiceLine}>{voiceLine}</p>
@@ -279,7 +279,7 @@ const s = {
     padding: 0,
     marginTop: '16px',
   },
-  pixelWrap: {
+  orbWrap: {
     display: 'flex',
     justifyContent: 'center',
     marginBottom: '12px',
