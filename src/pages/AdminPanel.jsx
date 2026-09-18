@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import Toggle from '../components/Toggle'
+import TagInput from '../components/TagInput'
 
 const PLAN_LABELS = { business: 'Business', duo: 'Duo', studio: 'Studio', enterprise: 'Enterprise' }
 
@@ -21,6 +22,7 @@ function slugify(title) {
 }
 
 const BLANK_POST = { id: null, slug: '', title: '', excerpt: '', content: '', cover_image_url: '', seo_title: '', seo_description: '', status: 'draft' }
+const BLANK_TUTORIAL = { id: null, slug: '', title: '', description: '', video_url: '', thumbnail_url: '', duration_seconds: null, category: '', tags: [], status: 'draft', sort_order: 0 }
 
 export default function AdminPanel() {
   const [settings, setSettings] = useState(null)
@@ -38,6 +40,11 @@ export default function AdminPanel() {
   const [uploadingCover, setUploadingCover] = useState(false)
   const [activeTab, setActiveTab] = useState('general')
   const [toast, setToast] = useState(null)
+  const [tutorials, setTutorials] = useState([])
+  const [editingTutorial, setEditingTutorial] = useState(null)
+  const [savingTutorial, setSavingTutorial] = useState(false)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
 
   useEffect(() => {
     if (!toast) return
@@ -49,11 +56,12 @@ export default function AdminPanel() {
 
   async function fetchAll() {
     setLoading(true)
-    const [settingsRes, waitlistRes, usersRes, postsRes] = await Promise.all([
+    const [settingsRes, waitlistRes, usersRes, postsRes, tutorialsRes] = await Promise.all([
       supabase.from('platform_settings').select('*').single(),
       supabase.from('waitlist').select('id, email, created_at, name, creative_type, social_link, how_heard').order('created_at', { ascending: false }),
       supabase.rpc('admin_list_users'),
       supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
+      supabase.from('tutorials').select('*').order('category', { ascending: true }).order('sort_order', { ascending: true }),
     ])
     if (settingsRes.data) {
       setSettings(settingsRes.data)
@@ -62,6 +70,7 @@ export default function AdminPanel() {
     setWaitlist(waitlistRes.data || [])
     setUsers(usersRes.data || [])
     setPosts(postsRes.data || [])
+    setTutorials(tutorialsRes.data || [])
     setLoading(false)
   }
 
@@ -134,6 +143,111 @@ export default function AdminPanel() {
     const { error: deleteError } = await supabase.from('blog_posts').delete().eq('id', postId)
     if (deleteError) setError(deleteError.message)
     else setPosts(prev => prev.filter(p => p.id !== postId))
+  }
+
+  function openNewTutorial() {
+    setError(null)
+    setEditingTutorial({ ...BLANK_TUTORIAL })
+  }
+
+  function openEditTutorial(tutorial) {
+    setError(null)
+    setEditingTutorial({ ...tutorial })
+  }
+
+  async function handleSaveTutorial(nextStatus) {
+    if (!editingTutorial) return
+    if (!editingTutorial.video_url) {
+      setError('Upload a video before saving.')
+      return
+    }
+    setSavingTutorial(true)
+    setError(null)
+    const slug = editingTutorial.slug.trim() || slugify(editingTutorial.title)
+    const payload = {
+      slug,
+      title: editingTutorial.title.trim(),
+      description: editingTutorial.description?.trim() || null,
+      video_url: editingTutorial.video_url,
+      thumbnail_url: editingTutorial.thumbnail_url?.trim() || null,
+      duration_seconds: editingTutorial.duration_seconds ?? null,
+      category: editingTutorial.category?.trim() || null,
+      tags: editingTutorial.tags,
+      sort_order: editingTutorial.sort_order || 0,
+      status: nextStatus,
+    }
+
+    let result
+    if (editingTutorial.id) {
+      result = await supabase.from('tutorials').update(payload).eq('id', editingTutorial.id).select().single()
+    } else {
+      result = await supabase.from('tutorials').insert(payload).select().single()
+    }
+
+    if (result.error) {
+      setError(result.error.message)
+    } else {
+      setTutorials(prev => {
+        const exists = prev.some(p => p.id === result.data.id)
+        return exists ? prev.map(p => (p.id === result.data.id ? result.data : p)) : [...prev, result.data]
+      })
+      setEditingTutorial(null)
+      setToast(nextStatus === 'published' ? 'Tutorial published' : 'Draft saved')
+    }
+    setSavingTutorial(false)
+  }
+
+  function readVideoDuration(file) {
+    return new Promise(resolve => {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src)
+        resolve(Number.isFinite(video.duration) ? Math.round(video.duration) : null)
+      }
+      video.onerror = () => resolve(null)
+      video.src = URL.createObjectURL(file)
+    })
+  }
+
+  async function handleVideoUpload(file) {
+    if (!file) return
+    setUploadingVideo(true)
+    setError(null)
+    const [durationSeconds, ext] = await Promise.all([readVideoDuration(file), Promise.resolve(file.name.split('.').pop())])
+    const path = `${crypto.randomUUID()}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('tutorial-videos').upload(path, file)
+    if (uploadError) {
+      setError(uploadError.message)
+    } else {
+      const { data } = supabase.storage.from('tutorial-videos').getPublicUrl(path)
+      setEditingTutorial(prev => ({ ...prev, video_url: data.publicUrl, duration_seconds: durationSeconds }))
+    }
+    setUploadingVideo(false)
+  }
+
+  async function handleThumbnailUpload(file) {
+    if (!file) return
+    setUploadingThumbnail(true)
+    setError(null)
+    const ext = file.name.split('.').pop()
+    const path = `${crypto.randomUUID()}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('tutorial-thumbnails').upload(path, file)
+    if (uploadError) {
+      setError(uploadError.message)
+    } else {
+      const { data } = supabase.storage.from('tutorial-thumbnails').getPublicUrl(path)
+      setEditingTutorial(prev => ({ ...prev, thumbnail_url: data.publicUrl }))
+    }
+    setUploadingThumbnail(false)
+  }
+
+  async function handleDeleteTutorial(tutorialId) {
+    if (!confirm('Delete this tutorial? This cannot be undone.')) return
+    setError(null)
+    const { error: deleteError } = await supabase.from('tutorials').delete().eq('id', tutorialId)
+    if (deleteError) setError(deleteError.message)
+    else setTutorials(prev => prev.filter(p => p.id !== tutorialId))
   }
 
   async function handleToggleSignups() {
@@ -222,7 +336,7 @@ export default function AdminPanel() {
       )}
 
       <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', background: t.colors.bgCard, borderRadius: t.radius.full, padding: '4px', border: `0.5px solid ${t.colors.border}`, width: 'fit-content' }}>
-        {[['general', 'General'], ['blog', 'Blog']].map(([value, label]) => (
+        {[['general', 'General'], ['blog', 'Blog'], ['tutorials', 'Tutorials']].map(([value, label]) => (
           <button
             key={value}
             onClick={() => setActiveTab(value)}
@@ -408,6 +522,54 @@ export default function AdminPanel() {
       </>
       )}
 
+      {activeTab === 'tutorials' && (
+      <>
+      {/* ── Tutorials ── */}
+      <div style={cardStyle}>
+        <div style={{ ...headerStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={titleStyle}>Tutorials ({tutorials.length})</h3>
+            <p style={descStyle}>Self-hosted walkthrough videos, grouped by category, shown in the app's Tutorials library.</p>
+          </div>
+          <button
+            onClick={openNewTutorial}
+            style={{ padding: '8px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+          >
+            New tutorial
+          </button>
+        </div>
+        {tutorials.length > 0 && (
+          <div style={{ padding: '8px 24px 20px' }}>
+            {tutorials.map(v => (
+              <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, gap: '12px' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: t.colors.textPrimary, fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title || '(untitled)'}</div>
+                  <div style={{ color: t.colors.textTertiary, fontSize: t.fontSizes.xs, marginTop: '2px' }}>
+                    {v.category || 'Uncategorized'} · {v.status === 'published' ? 'Published' : 'Draft'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  <button
+                    onClick={() => openEditTutorial(v)}
+                    style={{ padding: '6px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.xs, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTutorial(v.id)}
+                    style={{ padding: '6px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.danger, fontSize: t.fontSizes.xs, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      </>
+      )}
+
       {editingPost && (
         <div
           onClick={() => !savingPost && setEditingPost(null)}
@@ -527,6 +689,140 @@ export default function AdminPanel() {
                 style={{ padding: '8px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: savingPost || !editingPost.title.trim() || !editingPost.content.trim() ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans }}
               >
                 {editingPost.status === 'published' ? 'Save & keep published' : 'Publish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingTutorial && (
+        <div
+          onClick={() => !savingTutorial && setEditingTutorial(null)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '5vh 16px', zIndex: 1000, overflowY: 'auto' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.borderLight}`, width: '100%', maxWidth: '640px', padding: '24px' }}
+          >
+            <h3 style={{ ...titleStyle, marginBottom: '16px' }}>{editingTutorial.id ? 'Edit tutorial' : 'New tutorial'}</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <Field label="Title">
+                <input
+                  type="text"
+                  value={editingTutorial.title}
+                  onChange={e => setEditingTutorial(prev => ({ ...prev, title: e.target.value }))}
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="Slug (blank = generated from title)">
+                <input
+                  type="text"
+                  value={editingTutorial.slug}
+                  placeholder={slugify(editingTutorial.title) || 'my-tutorial-title'}
+                  onChange={e => setEditingTutorial(prev => ({ ...prev, slug: e.target.value }))}
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="Description">
+                <textarea
+                  rows={3}
+                  value={editingTutorial.description}
+                  onChange={e => setEditingTutorial(prev => ({ ...prev, description: e.target.value }))}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </Field>
+              <Field label="Video (exported from Guidde as MP4)">
+                {editingTutorial.video_url && (
+                  <video src={editingTutorial.video_url} controls style={{ width: '100%', maxHeight: '220px', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}` }} />
+                )}
+                <label
+                  style={{
+                    padding: '8px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`,
+                    backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm,
+                    fontWeight: '600', cursor: uploadingVideo ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans,
+                    whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 'fit-content',
+                  }}
+                >
+                  {uploadingVideo ? 'Uploading…' : editingTutorial.video_url ? 'Replace video' : 'Upload video'}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    disabled={uploadingVideo}
+                    onChange={e => { handleVideoUpload(e.target.files[0]); e.target.value = '' }}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </Field>
+              <Field label="Thumbnail (optional)">
+                {editingTutorial.thumbnail_url && (
+                  <img
+                    src={editingTutorial.thumbnail_url}
+                    alt=""
+                    style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: t.radius.md, border: `1px solid ${t.colors.borderLight}` }}
+                  />
+                )}
+                <label
+                  style={{
+                    padding: '8px 16px', borderRadius: t.radius.md, border: `1px solid ${t.colors.border}`,
+                    backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm,
+                    fontWeight: '600', cursor: uploadingThumbnail ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans,
+                    whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 'fit-content',
+                  }}
+                >
+                  {uploadingThumbnail ? 'Uploading…' : editingTutorial.thumbnail_url ? 'Replace thumbnail' : 'Upload thumbnail'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingThumbnail}
+                    onChange={e => { handleThumbnailUpload(e.target.files[0]); e.target.value = '' }}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </Field>
+              <Field label="Category">
+                <input
+                  type="text"
+                  placeholder="e.g. Getting Started"
+                  value={editingTutorial.category}
+                  onChange={e => setEditingTutorial(prev => ({ ...prev, category: e.target.value }))}
+                  style={inputStyle}
+                />
+              </Field>
+              <Field label="Tags">
+                <TagInput value={editingTutorial.tags} onChange={tags => setEditingTutorial(prev => ({ ...prev, tags }))} />
+              </Field>
+              <Field label="Sort order (lower shows first within category)">
+                <input
+                  type="number"
+                  value={editingTutorial.sort_order}
+                  onChange={e => setEditingTutorial(prev => ({ ...prev, sort_order: parseInt(e.target.value, 10) || 0 }))}
+                  style={inputStyle}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <button
+                onClick={() => setEditingTutorial(null)}
+                disabled={savingTutorial}
+                style={{ padding: '8px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: savingTutorial ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSaveTutorial('draft')}
+                disabled={savingTutorial || !editingTutorial.title.trim()}
+                style={{ padding: '8px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: savingTutorial || !editingTutorial.title.trim() ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans }}
+              >
+                Save draft
+              </button>
+              <button
+                onClick={() => handleSaveTutorial('published')}
+                disabled={savingTutorial || !editingTutorial.title.trim() || !editingTutorial.video_url}
+                style={{ padding: '8px 16px', borderRadius: t.radius.full, border: 'none', backgroundColor: t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: savingTutorial || !editingTutorial.title.trim() || !editingTutorial.video_url ? 'not-allowed' : 'pointer', fontFamily: t.fonts.sans }}
+              >
+                {editingTutorial.status === 'published' ? 'Save & keep published' : 'Publish'}
               </button>
             </div>
           </div>
