@@ -19,16 +19,16 @@ const MORE_ITEMS = [
   { label: 'Money', icon: 'finance', path: 'income', moduleKey: 'money' },
   { label: 'Operations', icon: 'operations', path: 'vendors', moduleKey: 'operations' },
   { label: 'Team', icon: 'team', path: 'team-goals', moduleKey: 'team' },
+  { label: 'Tutorials', icon: 'tutorials', path: 'tutorials' },
   { label: 'Settings', icon: 'settings', path: 'settings' },
 ]
 
-export default function MobileTabBar({ currentPage, onNavigate, onLogout, businessSpaceId, isPlatformAdmin }) {
+export default function MobileTabBar({ currentPage, onNavigate, onLogout, businessSpaceId }) {
   const [moreOpen, setMoreOpen] = useState(false)
   const modules = getModules(businessSpaceId)
 
   const tabs = PRIMARY_TABS.filter(tab => !tab.moduleKey || modules[tab.moduleKey])
   const moreItems = MORE_ITEMS.filter(item => !item.moduleKey || modules[item.moduleKey])
-  if (isPlatformAdmin) moreItems.push({ label: 'Admin', icon: 'star', path: 'admin' })
   const moreActive = moreItems.some(item => item.path === currentPage)
 
   function go(path) {

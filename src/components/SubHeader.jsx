@@ -274,25 +274,6 @@ const displayPages = activeCategory ? activeCategory.children : favoritePages
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button
-  onClick={() => onNavigate('settings')}
-  style={{
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: t.colors.textTertiary,
-    padding: '4px',
-    display: 'flex',
-    alignItems: 'center',
-  }}
-  title="Settings"
-  aria-label="Settings"
->
-  <Icon name="settings" size="sm" />
-</button>
-      </div>
-
       {showFavPicker && (
         <div style={{
           position: 'absolute',

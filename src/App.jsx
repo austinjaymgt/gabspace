@@ -40,6 +40,7 @@ import Settings from './pages/Settings'
 import TeamMembers from './pages/TeamMembers'
 import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
+import Tutorials from './pages/Tutorials'
 import AddBusinessFlow from './components/AddBusinessFlow'
 import Pricing from './pages/Pricing'
 import GetStarted from './pages/GetStarted'
@@ -504,6 +505,9 @@ function renderPage() {
       case 'intranet':
         return <Intranet />
 
+      case 'tutorials':
+        return <Tutorials />
+
       case 'pro-dev':
         return isStaff ? <ProDev {...pageProps} /> : <AccessDenied />
 
@@ -848,7 +852,7 @@ function renderPage() {
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans, display: 'flex' }}>
       {overlays}
 {!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} isPlatformAdmin={isPlatformAdmin} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? 'calc(60px + env(safe-area-inset-bottom))' : 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={bumpPortalActivity} />
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={bumpPortalActivity} isPlatformAdmin={isPlatformAdmin} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
           {renderPage()}

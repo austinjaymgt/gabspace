@@ -58,7 +58,6 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
       { label: 'Networking', path: 'business-events' },
     ]
   },
-  { label: 'Settings', icon: 'settings', path: 'settings' },
 ]
 
 function filterNavItems(modules, isOwnerOrAdmin) {
@@ -87,13 +86,12 @@ function useIsDesktop() {
   return isDesktop
 }
 
-export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId, portalActivityVersion, isPlatformAdmin, userRole }) {
+export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLogout, collapsed, onToggleCollapse, businessSpaceId, portalActivityVersion, userRole }) {
   const [expanded, setExpanded] = useState([])
   const [portalUnread, setPortalUnread] = useState(0)
   const isDesktop = useIsDesktop()
   const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const items = filterNavItems(getModules(businessSpaceId), isOwnerOrAdmin)
-  if (isPlatformAdmin) items.push({ label: 'Admin', icon: 'star', path: 'admin' })
 
   useEffect(() => {
     if (!businessSpaceId) return
@@ -326,29 +324,6 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
         ) : (
           <GlobalSearch businessSpaceId={businessSpaceId} onNavigate={handleNav} isMobile={false} variant="sidebar" />
         )}
-        <button
-          onClick={() => handleNav('settings')}
-          title={collapsed ? 'Settings' : undefined}
-          style={{
-            width: collapsed ? 'auto' : '100%',
-            padding: '9px',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: t.radius.full,
-            color: 'rgba(255,255,255,0.35)',
-            fontSize: t.fontSizes.sm,
-            fontFamily: t.fonts.sans,
-            cursor: 'pointer',
-            textAlign: 'left',
-            display: 'flex',
-            alignItems: 'center',
-            gap: collapsed ? '0' : '10px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-          }}
-        >
-          <Icon name="settings" size="sm" />
-          {!collapsed && 'Settings'}
-        </button>
         <button
           onClick={onLogout}
           title={collapsed ? 'Sign out' : undefined}
