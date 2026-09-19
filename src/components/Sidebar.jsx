@@ -50,7 +50,6 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
       { label: 'Creative Assets', path: 'assets' },
     ]
   },
-  { label: 'Team Members', icon: 'guests', path: 'team-members', ownerOrAdminOnly: true },
   {
     label: 'Team', icon: 'team', path: 'team', children: [
       { label: ' Goals', path: 'team-goals' },

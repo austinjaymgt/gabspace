@@ -500,7 +500,7 @@ function renderPage() {
         return isStaff ? <TeamGoals {...pageProps} /> : <AccessDenied />
 
       case 'team-members':
-        return isOwnerOrAdmin ? <TeamMembers {...pageProps} /> : <AccessDenied />
+        return isOwnerOrAdmin ? <TeamMembers {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
 
       case 'intranet':
         return <Intranet />

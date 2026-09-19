@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { Icon } from '../components/Icon'
 import RoleBadge from '../components/RoleBadge'
 
-export default function TeamMembers({ businessSpaceId }) {
+export default function TeamMembers({ businessSpaceId, onNavigate }) {
   const [members, setMembers] = useState([])
   const [invites, setInvites] = useState([])
   const [inviteEmail, setInviteEmail] = useState('')
@@ -124,6 +125,19 @@ export default function TeamMembers({ businessSpaceId }) {
 
   return (
     <div style={{ padding: '32px', maxWidth: '640px', fontFamily: t.fonts.sans }}>
+      {onNavigate && (
+        <button
+          onClick={() => onNavigate('settings')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontSize: t.fontSizes.sm, color: t.colors.textTertiary, fontFamily: t.fonts.sans,
+            marginBottom: '20px',
+          }}
+        >
+          <Icon name="back" size="sm" /> Back to settings
+        </button>
+      )}
       <div style={{ marginBottom: '32px' }}>
         <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>
           Team members

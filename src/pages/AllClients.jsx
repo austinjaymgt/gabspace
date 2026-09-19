@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { useIsMobile } from '../hooks/useMediaQuery'
+import PhoneInput from '../components/PhoneInput'
 
 const statusConfig = {
   lead:      { bg: t.colors.primaryLight,  color: t.colors.primary,        label: 'Lead' },
@@ -180,7 +181,7 @@ export default function Clients({ businessSpaceId }) {
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Phone</label>
-                  <input style={styles.input} value={editForm.phone || ''} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
+                  <PhoneInput style={styles.input} value={editForm.phone} onChange={phone => setEditForm({ ...editForm, phone })} />
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>Status</label>
@@ -326,7 +327,7 @@ export default function Clients({ businessSpaceId }) {
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Phone</label>
-              <input style={styles.input} placeholder="(555) 000-0000" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <PhoneInput style={styles.input} value={form.phone} onChange={phone => setForm({ ...form, phone })} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Status</label>

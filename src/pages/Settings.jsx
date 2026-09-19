@@ -401,7 +401,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       </div>
 
       {/* ── Business Identity ── */}
-      <SectionCard title="Business identity" subtitle="Shows in the sub-header across all pages">
+      <SectionCard title="Account Information" subtitle="Shows in the sub-header across all pages">
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={fieldStyle}>
             <label style={labelStyle}>Your first name</label>
@@ -475,9 +475,29 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
         </div>
       </SectionCard>
 
+      {/* ── Team ── */}
+      {isOwnerOrAdmin && onNavigate && (
+        <SectionCard title="Team" subtitle="Manage who's on this business and their roles">
+          <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, marginBottom: '4px' }}>Team members</div>
+              <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, maxWidth: '380px' }}>
+                Invite people, change roles, or remove members from this business.
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('team-members')}
+              style={{ padding: '10px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textPrimary, fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, whiteSpace: 'nowrap' }}
+            >
+              Manage team members
+            </button>
+          </div>
+        </SectionCard>
+      )}
+
       {/* ── Modules ── */}
       {isOwnerOrAdmin && (
-        <SectionCard title="Modules" subtitle="Turn features on or off for this business — the sidebar updates to match">
+        <SectionCard title="Modules" subtitle="Toggle feature on or off for this business">
           <div style={{ padding: '8px 24px 24px' }}>
             {MODULE_DEFS.map(m => (
               <div key={m.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 0', borderBottom: `1px solid ${t.colors.borderLight}` }}>
@@ -507,7 +527,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       )}
 
       {/* ── Orbi ── */}
-      <SectionCard title="Orbi" subtitle="Your assistant for upcoming projects, events, and content — across every business you're in">
+      <SectionCard title="Orbi" subtitle="Your assistant for upcoming deadlines, projects and events across all business profiles">
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={fieldStyle}>
             <label style={labelStyle}>Look-ahead window</label>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import TagInput from '../components/TagInput'
+import PhoneInput from '../components/PhoneInput'
 
 export default function Vendors({ businessSpaceId }) {
     const [vendors, setVendors] = useState([])
@@ -161,7 +162,7 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
               </div>
               <div style={styles.field}>
                 <label style={styles.label}>Phone</label>
-                <input style={styles.input} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                <PhoneInput style={styles.input} value={form.phone} onChange={phone => setForm({ ...form, phone })} />
               </div>
               <div style={{ ...styles.field, gridColumn: 'span 2' }}>
                 <label style={styles.label}>Address</label>
@@ -318,7 +319,7 @@ const visibleVendors = activeTagFilter
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Phone</label>
-              <input style={styles.input} placeholder="(555) 000-0000" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <PhoneInput style={styles.input} value={form.phone} onChange={phone => setForm({ ...form, phone })} />
             </div>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Address</label>
