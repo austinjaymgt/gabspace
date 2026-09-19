@@ -50,9 +50,9 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
       { label: 'Creative Assets', path: 'assets' },
     ]
   },
+  { label: 'Team Members', icon: 'guests', path: 'team-members', ownerOrAdminOnly: true },
   {
     label: 'Team', icon: 'team', path: 'team', children: [
-      { label: 'Members', path: 'team-members', ownerOrAdminOnly: true },
       { label: ' Goals', path: 'team-goals' },
       { label: 'Professional Development', path: 'pro-dev' },
       { label: 'Networking', path: 'business-events' },
@@ -70,7 +70,9 @@ function filterNavItems(modules, isOwnerOrAdmin) {
     .map(item => item.children
       ? { ...item, children: item.children.filter(c => !hiddenPaths.has(c.path) && (!c.ownerOrAdminOnly || isOwnerOrAdmin)) }
       : item)
-    .filter(item => item.children ? item.children.length > 0 : !hiddenPaths.has(item.path))
+    .filter(item => item.children
+      ? item.children.length > 0
+      : !hiddenPaths.has(item.path) && (!item.ownerOrAdminOnly || isOwnerOrAdmin))
 }
 
 const SIDEBAR_WIDTH = 240
