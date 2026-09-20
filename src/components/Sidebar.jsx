@@ -11,14 +11,14 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
   { label: 'Calendar', icon: 'calendar', path: 'calendar' },
 
     {
-    label: 'Client Management', icon: 'clients', path: 'allclients', sectionHeader: 'Business Modules', children: [
+    label: 'Client Management', icon: 'clients', path: 'allclients', section: 'business', children: [
       { label: 'Clients', path: 'allclients' },
       { label: 'Projects', icon: 'projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
   ]
   },
 
-  { label: 'Portals', icon: 'portal', path: 'client-portal-manager', accent: true },
+  { label: 'Portals', icon: 'portal', path: 'client-portal-manager', accent: true, section: 'business' },
 
   /* Hidden for now — keeping for backup. Spark moved to Creative Collective.
   {
@@ -31,20 +31,20 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
   */
 
   {
-    label: 'Money', icon: 'finance', path: 'money', children: [
+    label: 'Money', icon: 'finance', path: 'money', section: 'business', children: [
       { label: 'Snapshot', path: 'snapshot' },
       { label: 'Income', path: 'income' },
       { label: 'Expenses', path: 'expenses' },
     ]
   },
   {
-    label: 'Operations', icon: 'operations', path: 'business', children: [
+    label: 'Operations', icon: 'operations', path: 'business', section: 'business', children: [
       { label: 'Vendors', path: 'vendors' },
       { label: 'Resources', path: 'resources' },
     ]
   },
   {
-    label: 'Creative Collective', icon: 'creative', path: 'marketing', children: [
+    label: 'Creative Collective', icon: 'creative', path: 'marketing', section: 'business', children: [
       { label: 'Spark', path: 'spark' },
       { label: 'Creative Strategy', path: 'creative-strategy' },
       { label: 'Content Calendar', path: 'campaign-tracking' },
@@ -52,7 +52,7 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
     ]
   },
   {
-    label: 'Team', icon: 'team', path: 'team', children: [
+    label: 'Team', icon: 'team', path: 'team', section: 'business', children: [
       { label: ' Goals', path: 'team-goals' },
       { label: 'Professional Development', path: 'pro-dev' },
       { label: 'Networking', path: 'business-events' },
@@ -94,6 +94,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
   const isDesktop = useIsDesktop()
   const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const items = filterNavItems(getModules(businessSpaceId), isOwnerOrAdmin)
+  const firstBusinessItem = items.find(item => item.section === 'business')
 
   useEffect(() => {
     if (!businessSpaceId) return
@@ -198,7 +199,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
 
           return (
             <div key={item.label}>
-              {item.sectionHeader && (
+              {item === firstBusinessItem && (
                 <div style={{
                   padding: collapsed ? '14px 0 6px' : '14px 20px 6px',
                   fontSize: '10px',
@@ -211,7 +212,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}>
-                  {collapsed ? '···' : item.sectionHeader}
+                  {collapsed ? '···' : 'Business Modules'}
                 </div>
               )}
               <div
