@@ -212,7 +212,7 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}>
-                  {collapsed ? '···' : 'Business Modules'}
+                  {collapsed ? '···' : 'Modules'}
                 </div>
               )}
               <div
