@@ -4,6 +4,7 @@ import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
 import Orb from '../components/Orb'
 import { parseQuickAdd } from '../lib/quickAdd'
+import { getModules } from '../utils/businessModules'
 
 const QUICK_ADD_TYPE_META = {
   client: { label: 'Client', icon: 'client-add', color: '#534AB7', bg: '#EEEDF9' },
@@ -181,6 +182,7 @@ function QuickAddPreviewCard({ item, onChange, onRemove }) {
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function Dashboard({ session, businessSpaceId, userRole, onNavigate }) {
+  const modules = getModules(businessSpaceId)
   const [settings, setSettings] = useState(null)
 
   // Quick add
@@ -223,7 +225,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   }
 
   async function fetchProjectPulse() {
-    if (!businessSpaceId) return
+    if (!businessSpaceId || !modules.clientManagement) return
     const todayStr = new Date().toISOString().slice(0, 10)
     const weekOutStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
 
@@ -248,7 +250,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   }
 
   async function fetchRevenueSnapshot() {
-    if (!businessSpaceId || !isDirector) return
+    if (!businessSpaceId || !isDirector || !modules.money) return
     const thisMonthStart = monthBoundaryDate(0)
     const thisMonthEnd = monthBoundaryDate(1)
     const lastMonthStart = monthBoundaryDate(-1)
@@ -278,7 +280,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   }
 
   async function fetchGoalsProgress() {
-    if (!businessSpaceId) return
+    if (!businessSpaceId || !modules.team) return
     const { data } = await supabase.from('team_goals').select('status').eq('business_space_id', businessSpaceId)
     const goals = data || []
     setGoalsProgress({
@@ -597,7 +599,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
       </div>
 
       {/* ── Revenue Snapshot — director only, styled like the Snapshot page's top stat cards ── */}
-      {isDirector && (
+      {isDirector && modules.money && (
         <div style={{ marginBottom: '16px' }}>
           <SectionHeader label="Revenue Snapshot" onViewAll={() => onNavigate('snapshot')} viewAllColor={t.colors.primary} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
@@ -625,44 +627,50 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
       )}
 
       {/* ── Stat cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+      {(modules.clientManagement || modules.team) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
 
-        {/* Project Pulse */}
-        <div style={cardStyle}>
-          <SectionHeader label="Project Pulse" onViewAll={() => onNavigate('projects')} viewAllColor={t.colors.primary} />
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
-            <StatNumber value={projectPulse.overdue} label="Overdue" />
-            <StatNumber value={projectPulse.dueThisWeek} label="Due this week" />
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
-            {PROJECT_STATUS_FILTERS.map(f => (
-              <StatPill key={f.key} label={f.label} count={projectPulse.statusCounts[f.key]} color={f.color} bg={f.bg} />
-            ))}
-          </div>
-          <div style={{ fontSize: t.fontSizes.sm, color: projectPulse.overdue > 0 ? '#B3453D' : t.colors.textTertiary }}>
-            {projectPulse.overdue > 0
-              ? `${projectPulse.overdue} task${projectPulse.overdue === 1 ? '' : 's'}/milestone${projectPulse.overdue === 1 ? '' : 's'} past due`
-              : "Nothing overdue"}
-          </div>
-        </div>
-
-        {/* Team Goals — status breakdown */}
-        <div style={cardStyle}>
-          <SectionHeader label="Team Goals" onViewAll={() => onNavigate('team-goals')} viewAllColor={t.colors.primary} />
-          <div style={{ marginBottom: '12px' }}>
-            <div style={{ fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, fontFamily: t.fonts.heading, lineHeight: 1.1 }}>
-              {goalsProgress.total}
+          {/* Project Pulse */}
+          {modules.clientManagement && (
+            <div style={cardStyle}>
+              <SectionHeader label="Project Pulse" onViewAll={() => onNavigate('projects')} viewAllColor={t.colors.primary} />
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
+                <StatNumber value={projectPulse.overdue} label="Overdue" />
+                <StatNumber value={projectPulse.dueThisWeek} label="Due this week" />
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                {PROJECT_STATUS_FILTERS.map(f => (
+                  <StatPill key={f.key} label={f.label} count={projectPulse.statusCounts[f.key]} color={f.color} bg={f.bg} />
+                ))}
+              </div>
+              <div style={{ fontSize: t.fontSizes.sm, color: projectPulse.overdue > 0 ? '#B3453D' : t.colors.textTertiary }}>
+                {projectPulse.overdue > 0
+                  ? `${projectPulse.overdue} task${projectPulse.overdue === 1 ? '' : 's'}/milestone${projectPulse.overdue === 1 ? '' : 's'} past due`
+                  : "Nothing overdue"}
+              </div>
             </div>
-            <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>total goals</div>
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {GOAL_STATUS_FILTERS.map(f => (
-              <StatPill key={f.statKey} label={f.label} count={goalsProgress[f.statKey]} color={f.color} bg={f.bg} />
-            ))}
-          </div>
-        </div>
+          )}
 
-      </div>
+          {/* Team Goals — status breakdown */}
+          {modules.team && (
+            <div style={cardStyle}>
+              <SectionHeader label="Team Goals" onViewAll={() => onNavigate('team-goals')} viewAllColor={t.colors.primary} />
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, fontFamily: t.fonts.heading, lineHeight: 1.1 }}>
+                  {goalsProgress.total}
+                </div>
+                <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>total goals</div>
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {GOAL_STATUS_FILTERS.map(f => (
+                  <StatPill key={f.statKey} label={f.label} count={goalsProgress[f.statKey]} color={f.color} bg={f.bg} />
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
 
     </div>
   )
