@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import TagInput from '../components/TagInput'
 import { Icon } from '../components/Icon'
+import Modal from '../components/Modal'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
@@ -221,134 +222,9 @@ function normalizeUrl(url) {
     return resource.kind === 'link' ? 'link' : 'file'
   }
 
-  // ── DETAIL VIEW ────────────────────────────────────────────────────────────
-  if (selectedResource) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.detailHeader}>
-          <button
-            onClick={() => { setSelectedResource(null); setShowForm(false) }}
-            style={styles.backBtn}
-          >
-            ← Back to resources
-          </button>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => openEditForm(selectedResource)} style={styles.editBtn}>
-              <Icon name="edit" size="sm" />
-              Edit
-            </button>
-            <button onClick={() => handleDelete(selectedResource)} style={styles.deleteBtn}>
-              <Icon name="delete" size="sm" />
-              Delete
-            </button>
-          </div>
-        </div>
-
-        {/* Inline edit form */}
-        {showForm && editingResource && (
-          <div style={styles.formCard}>
-            <h3 style={styles.formTitle}>Edit Resource</h3>
-            {error && <div style={styles.error}>{error}</div>}
-            <ResourceFormFields
-              form={form}
-              setForm={setForm}
-              isEditing={true}
-              editingResource={editingResource}
-            />
-            <div style={styles.formActions}>
-              <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                style={styles.saveBtn}
-                disabled={saving || !form.title.trim()}
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div style={styles.detailCard}>
-          <div style={styles.detailTop}>
-            <div style={styles.detailAvatar}>
-              <Icon name={iconForResource(selectedResource)} size="lg" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h2 style={styles.detailName}>{selectedResource.title}</h2>
-              <div style={styles.detailKindBadge}>
-                {selectedResource.kind === 'link' ? 'Link' : 'File'}
-              </div>
-            </div>
-            <button onClick={() => handleOpenResource(selectedResource)} style={styles.openBtn}>
-              <Icon name={selectedResource.kind === 'link' ? 'external' : 'download'} size="sm" />
-              {selectedResource.kind === 'link' ? 'Open link' : 'Open file'}
-            </button>
-          </div>
-
-          <div style={styles.detailGrid}>
-            {selectedResource.description && (
-              <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
-                <div style={styles.detailFieldLabel}>Description</div>
-                <div style={styles.detailFieldValue}>{selectedResource.description}</div>
-              </div>
-            )}
-
-            {selectedResource.kind === 'link' && selectedResource.url && (
-              <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
-                <div style={styles.detailFieldLabel}>URL</div>
-                <div style={styles.detailFieldValue}>
-                  <a
-                    href={normalizeUrl(selectedResource.url)}
-  target="_blank"
-  rel="noreferrer"
-  style={styles.link}
->
-  {selectedResource.url}
-</a>
-                </div>
-              </div>
-            )}
-
-            {selectedResource.kind === 'file' && (
-              <>
-                <div style={styles.detailField}>
-                  <div style={styles.detailFieldLabel}>File name</div>
-                  <div style={styles.detailFieldValue}>{selectedResource.file_name}</div>
-                </div>
-                <div style={styles.detailField}>
-                  <div style={styles.detailFieldLabel}>Size</div>
-                  <div style={styles.detailFieldValue}>
-                    {formatBytes(selectedResource.file_size)}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {selectedResource.tags && selectedResource.tags.length > 0 && (
-              <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
-                <div style={styles.detailFieldLabel}>Tags</div>
-                <div style={styles.detailTagRow}>
-                  {selectedResource.tags.map(tag => (
-                    <span key={tag} style={styles.tagChip}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div style={styles.detailField}>
-              <div style={styles.detailFieldLabel}>Added</div>
-              <div style={styles.detailFieldValue}>
-                {new Date(selectedResource.created_at).toLocaleDateString(undefined, {
-                  year: 'numeric', month: 'short', day: 'numeric'
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+  function closeDetail() {
+    setSelectedResource(null)
+    setShowForm(false)
   }
 
   // ── LIST VIEW ──────────────────────────────────────────────────────────────
@@ -382,10 +258,9 @@ function normalizeUrl(url) {
         </button>
       </div>
 
-      {/* Add form (top of page, list view) */}
-      {showForm && !editingResource && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Resource</h3>
+      {/* Add form */}
+      <Modal isOpen={showForm && !editingResource && !selectedResource} onClose={() => { setShowForm(false); setError(null) }} title="New Resource" size="lg">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <ResourceFormFields
             form={form}
@@ -406,7 +281,7 @@ function normalizeUrl(url) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Filter row — small search + type pills */}
       {!loading && resources.length > 0 && (
@@ -495,6 +370,126 @@ function normalizeUrl(url) {
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={!!selectedResource}
+        onClose={closeDetail}
+        title={showForm && editingResource ? 'Edit Resource' : selectedResource?.title}
+        size="lg"
+        headerActions={!(showForm && editingResource) && selectedResource && (
+          <>
+            <button onClick={() => openEditForm(selectedResource)} style={styles.editBtn}>
+              <Icon name="edit" size="sm" />
+              Edit
+            </button>
+            <button onClick={() => handleDelete(selectedResource)} style={styles.deleteBtn}>
+              <Icon name="delete" size="sm" />
+              Delete
+            </button>
+          </>
+        )}
+      >
+        {selectedResource && (showForm && editingResource ? (
+          <div>
+            {error && <div style={styles.error}>{error}</div>}
+            <ResourceFormFields
+              form={form}
+              setForm={setForm}
+              isEditing={true}
+              editingResource={editingResource}
+            />
+            <div style={styles.formActions}>
+              <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                style={styles.saveBtn}
+                disabled={saving || !form.title.trim()}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div style={styles.detailTop}>
+              <div style={styles.detailAvatar}>
+                <Icon name={iconForResource(selectedResource)} size="lg" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={styles.detailKindBadge}>
+                  {selectedResource.kind === 'link' ? 'Link' : 'File'}
+                </div>
+              </div>
+              <button onClick={() => handleOpenResource(selectedResource)} style={styles.openBtn}>
+                <Icon name={selectedResource.kind === 'link' ? 'external' : 'download'} size="sm" />
+                {selectedResource.kind === 'link' ? 'Open link' : 'Open file'}
+              </button>
+            </div>
+
+            <div style={styles.detailGrid}>
+              {selectedResource.description && (
+                <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
+                  <div style={styles.detailFieldLabel}>Description</div>
+                  <div style={styles.detailFieldValue}>{selectedResource.description}</div>
+                </div>
+              )}
+
+              {selectedResource.kind === 'link' && selectedResource.url && (
+                <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
+                  <div style={styles.detailFieldLabel}>URL</div>
+                  <div style={styles.detailFieldValue}>
+                    <a
+                      href={normalizeUrl(selectedResource.url)}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={styles.link}
+                    >
+                      {selectedResource.url}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {selectedResource.kind === 'file' && (
+                <>
+                  <div style={styles.detailField}>
+                    <div style={styles.detailFieldLabel}>File name</div>
+                    <div style={styles.detailFieldValue}>{selectedResource.file_name}</div>
+                  </div>
+                  <div style={styles.detailField}>
+                    <div style={styles.detailFieldLabel}>Size</div>
+                    <div style={styles.detailFieldValue}>
+                      {formatBytes(selectedResource.file_size)}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selectedResource.tags && selectedResource.tags.length > 0 && (
+                <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
+                  <div style={styles.detailFieldLabel}>Tags</div>
+                  <div style={styles.detailTagRow}>
+                    {selectedResource.tags.map(tag => (
+                      <span key={tag} style={styles.tagChip}>{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={styles.detailField}>
+                <div style={styles.detailFieldLabel}>Added</div>
+                <div style={styles.detailFieldValue}>
+                  {new Date(selectedResource.created_at).toLocaleDateString(undefined, {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </Modal>
     </div>
   )
 }

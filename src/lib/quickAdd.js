@@ -41,8 +41,25 @@ Each item has a "type" and a "fields" object:
 - type "goal": fields = { title (required), owner, due_date }
   Use this for a team or business goal/objective being set, not a one-off
   task. "owner" is the plain name of whoever is responsible, if stated.
+- type "income": fields = { income_stream (required), amount (required), date, notes }
+  Use this when the user mentions money already received or a payment that's
+  been confirmed (not invoiced yet, just received) — e.g. "got paid $400 for
+  the Miller shoot". "income_stream" is a short label for what the money is
+  for. "amount" is a plain number, no currency symbol.
+- type "expense": fields = { title (required), amount (required), category, date, notes }
+  Use this when the user mentions a business cost, purchase, or bill — e.g.
+  "bought a new lens for $800" or "paid $50 for Canva subscription".
+  "category" is a short free-text type (e.g. "Equipment", "Software",
+  "Travel"). "amount" is a plain number, no currency symbol.
+- type "invoice": fields = { client_name (required), amount (required), description, due_date }
+  Use this when the user wants to bill or invoice a client for something —
+  e.g. "need to invoice Sarah $600 for the branding package". "description"
+  is what the invoice line item is for. "amount" is a plain number, no
+  currency symbol.
 
 Rules:
+- Only extract "amount" when a dollar figure is explicitly stated — never
+  estimate or guess one.
 - Only extract what is explicitly stated or clearly implied by the input.
   Never invent names, dates, companies, or other details that aren't there.
 - A single input can produce multiple items (e.g. one client + one task +

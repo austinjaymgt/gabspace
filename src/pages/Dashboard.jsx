@@ -14,6 +14,9 @@ const QUICK_ADD_TYPE_META = {
   content_idea: { label: 'Content idea', icon: 'campaigns', color: '#A34FA0', bg: '#F6EAF5' },
   vendor: { label: 'Vendor', icon: 'vendors', color: '#3E8F8A', bg: '#E7F3F2' },
   goal: { label: 'Goal', icon: 'team-goals', color: '#B18A3E', bg: '#F8F1E4' },
+  income: { label: 'Income', icon: 'revenue', color: '#6B8F71', bg: '#EAF2EA' },
+  expense: { label: 'Expense', icon: 'expense', color: '#B3453D', bg: '#F8EAE9' },
+  invoice: { label: 'Invoice', icon: 'invoice', color: '#534AB7', bg: '#EEEDF9' },
 }
 
 // Month boundaries as plain YYYY-MM-DD, for comparing against `date` columns
@@ -54,7 +57,18 @@ const PROJECT_STATUS_FILTERS = [
   { key: 'on-hold',  label: 'Paused', color: '#D4874E', bg: '#FBF0E6' },
 ]
 
+const GOAL_STATUS_FILTERS = [
+  { statKey: 'onTrack',   label: 'On track',    color: '#6B8F71', bg: '#EAF2EA' },
+  { statKey: 'atRisk',    label: 'At risk',     color: '#D4874E', bg: '#FBF0E6' },
+  { statKey: 'completed', label: 'Completed',   color: '#3E6FB1', bg: '#E8EFF8' },
+  { statKey: 'notStarted', label: 'Not started', color: t.colors.textTertiary, bg: t.colors.bg },
+]
+
 const cardStyle = { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }
+
+// Matches the top stat cards on the Snapshot page (Income/Expenses/Net).
+const snapshotLabelStyle = { fontSize: t.fontSizes.xs, color: t.colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }
+const snapshotValueStyle = { fontSize: '22px', fontWeight: '700', color: t.colors.textPrimary, fontFamily: t.fonts.heading, marginBottom: '2px' }
 
 // ── Section header ─────────────────────────────────────────────────────────
 
@@ -101,6 +115,7 @@ const QUICK_ADD_FIELD_LABELS = {
   project_type: 'Project type', budget: 'Budget', start_date: 'Start date',
   platform: 'Platform', scheduled_date: 'Scheduled date',
   category: 'Category', owner: 'Owner',
+  income_stream: 'Source', amount: 'Amount', description: 'Description',
 }
 
 function fieldInputStyle(multiline) {
@@ -150,7 +165,7 @@ function QuickAddPreviewCard({ item, onChange, onRemove }) {
               />
             ) : (
               <input
-                type={key === 'due_date' || key === 'date' ? 'date' : 'text'}
+                type={key === 'due_date' || key === 'date' ? 'date' : key === 'amount' ? 'number' : 'text'}
                 value={item.fields[key] || ''}
                 onChange={e => onChange(key, e.target.value)}
                 style={fieldInputStyle(false)}
@@ -178,14 +193,14 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   const [showPulseInfo, setShowPulseInfo] = useState(false)
 
   // Project pulse
-  const [projectPulse, setProjectPulse] = useState({ active: 0, stalled: 0, statusCounts: { planning: 0, active: 0, 'on-hold': 0 } })
+  const [projectPulse, setProjectPulse] = useState({ active: 0, overdue: 0, dueThisWeek: 0, statusCounts: { planning: 0, active: 0, 'on-hold': 0 } })
 
   // Revenue snapshot (director only)
   const isDirector = ['owner', 'co-owner'].includes(userRole)
-  const [revenueSnapshot, setRevenueSnapshot] = useState({ outstanding: 0, collectedThisMonth: 0, collectedLastMonth: 0 })
+  const [revenueSnapshot, setRevenueSnapshot] = useState({ income: 0, incomeLastMonth: 0, expenses: 0 })
 
   // Team goals progress
-  const [goalsProgress, setGoalsProgress] = useState({ avgProgress: 0, onTrack: 0, atRisk: 0, completed: 0, total: 0 })
+  const [goalsProgress, setGoalsProgress] = useState({ onTrack: 0, atRisk: 0, completed: 0, notStarted: 0, total: 0 })
 
   function getGreeting() {
     const hour = new Date().getHours()
@@ -209,32 +224,27 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
 
   async function fetchProjectPulse() {
     if (!businessSpaceId) return
-    const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString()
-    const [projectsRes, tasksRes, milestonesRes, budgetRes, documentsRes, runOfShowRes, staffingRes] = await Promise.all([
-      supabase.from('projects').select('id, created_at, updated_at, status').eq('business_space_id', businessSpaceId).eq('type', 'project').in('status', ['planning', 'active', 'on-hold']),
-      supabase.from('tasks').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId).not('project_id', 'is', null),
-      supabase.from('project_milestones').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
-      supabase.from('project_budget_items').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
-      supabase.from('project_documents').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
-      supabase.from('run_of_show').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
-      supabase.from('event_staffing').select('project_id, created_at, updated_at').eq('business_space_id', businessSpaceId),
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const weekOutStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
+
+    const [projectsRes, tasksRes, milestonesRes] = await Promise.all([
+      supabase.from('projects').select('id, status').eq('business_space_id', businessSpaceId).eq('type', 'project').in('status', ['planning', 'active', 'on-hold']),
+      supabase.from('tasks').select('due_date, status').eq('business_space_id', businessSpaceId).not('project_id', 'is', null).not('due_date', 'is', null).neq('status', 'done'),
+      supabase.from('project_milestones').select('target_date, status').eq('business_space_id', businessSpaceId).not('target_date', 'is', null).neq('status', 'done'),
     ])
     const projects = projectsRes.data || []
 
     const statusCounts = { planning: 0, active: 0, 'on-hold': 0 }
     for (const p of projects) if (statusCounts[p.status] !== undefined) statusCounts[p.status]++
 
-    const lastActivity = {}
-    for (const p of projects) lastActivity[p.id] = p.updated_at || p.created_at
-    for (const rows of [tasksRes.data, milestonesRes.data, budgetRes.data, documentsRes.data, runOfShowRes.data, staffingRes.data]) {
-      for (const row of rows || []) {
-        const touched = row.updated_at || row.created_at
-        if (row.project_id && touched > (lastActivity[row.project_id] || '')) lastActivity[row.project_id] = touched
-      }
-    }
-    const stalled = projects.filter(p => (lastActivity[p.id] || p.updated_at || p.created_at) < fourteenDaysAgo).length
+    const deadlineDates = [
+      ...(tasksRes.data || []).map(row => row.due_date),
+      ...(milestonesRes.data || []).map(row => row.target_date),
+    ]
+    const overdue = deadlineDates.filter(d => d < todayStr).length
+    const dueThisWeek = deadlineDates.filter(d => d >= todayStr && d <= weekOutStr).length
 
-    setProjectPulse({ active: projects.length, stalled, statusCounts })
+    setProjectPulse({ active: projects.length, overdue, dueThisWeek, statusCounts })
   }
 
   async function fetchRevenueSnapshot() {
@@ -243,39 +253,39 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     const thisMonthEnd = monthBoundaryDate(1)
     const lastMonthStart = monthBoundaryDate(-1)
 
-    const [invoicesRes, revenueRes] = await Promise.all([
-      supabase.from('invoices').select('total_amount, amount_paid, invoice_payments(amount, paid_date)').eq('business_space_id', businessSpaceId),
+    const [invoicesRes, revenueRes, expensesRes] = await Promise.all([
+      supabase.from('invoices').select('invoice_payments(amount, paid_date)').eq('business_space_id', businessSpaceId),
       supabase.from('revenue').select('amount, date, status').eq('business_space_id', businessSpaceId),
+      supabase.from('expenses').select('amount, date').eq('business_space_id', businessSpaceId),
     ])
 
-    const invoices = invoicesRes.data || []
-    const outstanding = invoices.reduce((s, inv) => s + (Number(inv.total_amount || 0) - Number(inv.amount_paid || 0)), 0)
-    const allPayments = invoices.flatMap(inv => inv.invoice_payments || [])
+    const allPayments = (invoicesRes.data || []).flatMap(inv => inv.invoice_payments || [])
     const receivedRevenue = (revenueRes.data || []).filter(r => r.status === 'received')
+    const expenses = expensesRes.data || []
 
     const inRange = (dateStr, start, end) => dateStr && dateStr >= start && dateStr < end
-    const sumInRange = (start, end) =>
+    const sumIncomeInRange = (start, end) =>
       allPayments.filter(p => inRange(p.paid_date, start, end)).reduce((s, p) => s + Number(p.amount || 0), 0) +
       receivedRevenue.filter(r => inRange(r.date, start, end)).reduce((s, r) => s + Number(r.amount || 0), 0)
+    const sumExpensesInRange = (start, end) =>
+      expenses.filter(e => inRange(e.date, start, end)).reduce((s, e) => s + Number(e.amount || 0), 0)
 
     setRevenueSnapshot({
-      outstanding,
-      collectedThisMonth: sumInRange(thisMonthStart, thisMonthEnd),
-      collectedLastMonth: sumInRange(lastMonthStart, thisMonthStart),
+      income: sumIncomeInRange(thisMonthStart, thisMonthEnd),
+      incomeLastMonth: sumIncomeInRange(lastMonthStart, thisMonthStart),
+      expenses: sumExpensesInRange(thisMonthStart, thisMonthEnd),
     })
   }
 
   async function fetchGoalsProgress() {
     if (!businessSpaceId) return
-    const { data } = await supabase.from('team_goals').select('progress, status').eq('business_space_id', businessSpaceId)
+    const { data } = await supabase.from('team_goals').select('status').eq('business_space_id', businessSpaceId)
     const goals = data || []
-    const active = goals.filter(g => g.status !== 'completed')
-    const avgProgress = active.length ? Math.round(active.reduce((s, g) => s + Number(g.progress || 0), 0) / active.length) : 0
     setGoalsProgress({
-      avgProgress,
       onTrack: goals.filter(g => g.status === 'on-track').length,
       atRisk: goals.filter(g => g.status === 'at-risk').length,
       completed: goals.filter(g => g.status === 'completed').length,
+      notStarted: goals.filter(g => g.status === 'not-started').length,
       total: goals.length,
     })
   }
@@ -402,6 +412,31 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
             status: 'not-started', category: 'team',
             business_space_id: businessSpaceId,
           })
+        } else if (type === 'income') {
+          const { amount, ...rest } = fields
+          await supabase.from('revenue').insert({
+            ...rest, amount: parseFloat(amount) || 0, status: 'received',
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          })
+        } else if (type === 'expense') {
+          const { amount, ...rest } = fields
+          await supabase.from('expenses').insert({
+            ...rest, amount: parseFloat(amount) || 0,
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          })
+        } else if (type === 'invoice') {
+          const { client_name, amount, description } = fields
+          const client_id = client_name ? nameToClientId[client_name.toLowerCase()] || null : null
+          const { data: invoice, error } = await supabase.from('invoices').insert({
+            client_id, due_date: fields.due_date || null, status: 'draft',
+            business_space_id: businessSpaceId, user_id: session.user.id,
+          }).select('id').single()
+          if (error) throw error
+          await supabase.from('line_items').insert({
+            invoice_id: invoice.id,
+            description: description || (client_name ? `Services for ${client_name}` : 'Services'),
+            quantity: 1, unit_price: parseFloat(amount) || 0,
+          })
         }
       }
 
@@ -416,7 +451,8 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     }
   }
 
-  const revenueDelta = revenueSnapshot.collectedThisMonth - revenueSnapshot.collectedLastMonth
+  const revenueDelta = revenueSnapshot.income - revenueSnapshot.incomeLastMonth
+  const netThisMonth = revenueSnapshot.income - revenueSnapshot.expenses
 
   const firstName = settings?.first_name || session?.user?.email?.split('@')[0] || ''
   const workspaceName = settings?.business_name || ''
@@ -479,7 +515,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
         </div>
         {showPulseInfo && (
           <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '14px', marginTop: '-6px' }}>
-            What's happening in the business? Add anything from clients to new concepts, Orbi will create it for you
+            Jot it down naturally. Orbi will draft the right item - client, task, project, event, goal, income, expense or invoice - and you confirm before anything is created.
           </div>
         )}
         <textarea
@@ -488,7 +524,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
           onChange={e => setQuickTask(e.target.value)}
           onKeyDown={handleQuickAddSubmit}
           disabled={quickAddParsing}
-          placeholder="What's going on with the business?"
+          placeholder="Met Sarah from Bloom Events, need to send her a proposal by Friday…"
           maxLength={QUICK_ADD_MAX_LEN}
           rows={1}
           style={{
@@ -560,6 +596,34 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
         )}
       </div>
 
+      {/* ── Revenue Snapshot — director only, styled like the Snapshot page's top stat cards ── */}
+      {isDirector && (
+        <div style={{ marginBottom: '16px' }}>
+          <SectionHeader label="Revenue Snapshot" onViewAll={() => onNavigate('snapshot')} viewAllColor={t.colors.primary} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
+            <div style={cardStyle}>
+              <div style={snapshotLabelStyle}>Income</div>
+              <div style={snapshotValueStyle}>{fmtCurrency(revenueSnapshot.income)}</div>
+              <div style={{ fontSize: t.fontSizes.xs, color: revenueDelta >= 0 ? '#6B8F71' : '#B3453D' }}>
+                {revenueDelta >= 0 ? '↑' : '↓'} {fmtCurrency(Math.abs(revenueDelta))} vs last month
+              </div>
+            </div>
+            <div style={cardStyle}>
+              <div style={snapshotLabelStyle}>Expenses</div>
+              <div style={snapshotValueStyle}>{fmtCurrency(revenueSnapshot.expenses)}</div>
+              <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>This month</div>
+            </div>
+            <div style={{ ...cardStyle, border: `1px solid ${netThisMonth < 0 ? '#B3453D' : t.colors.borderLight}` }}>
+              <div style={snapshotLabelStyle}>Net</div>
+              <div style={{ ...snapshotValueStyle, color: netThisMonth < 0 ? '#B3453D' : t.colors.textPrimary }}>{fmtCurrency(netThisMonth)}</div>
+              <div style={{ fontSize: t.fontSizes.xs, color: netThisMonth < 0 ? '#B3453D' : t.colors.textTertiary }}>
+                {netThisMonth < 0 ? 'Spending more than earning' : 'Income exceeds spend'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Stat cards ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
 
@@ -567,50 +631,34 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
         <div style={cardStyle}>
           <SectionHeader label="Project Pulse" onViewAll={() => onNavigate('projects')} viewAllColor={t.colors.primary} />
           <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
-            <StatNumber value={projectPulse.active} label="Active projects" />
-            <StatNumber value={projectPulse.stalled} label="Stalled 14+ days" />
+            <StatNumber value={projectPulse.overdue} label="Overdue" />
+            <StatNumber value={projectPulse.dueThisWeek} label="Due this week" />
           </div>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
             {PROJECT_STATUS_FILTERS.map(f => (
               <StatPill key={f.key} label={f.label} count={projectPulse.statusCounts[f.key]} color={f.color} bg={f.bg} />
             ))}
           </div>
-          <div style={{ fontSize: t.fontSizes.sm, color: projectPulse.stalled > 0 ? t.colors.textSecondary : t.colors.textTertiary }}>
-            {projectPulse.stalled > 0
-              ? `${projectPulse.stalled} project${projectPulse.stalled === 1 ? '' : 's'} with no task activity in 2+ weeks`
-              : "Everything's moving"}
+          <div style={{ fontSize: t.fontSizes.sm, color: projectPulse.overdue > 0 ? '#B3453D' : t.colors.textTertiary }}>
+            {projectPulse.overdue > 0
+              ? `${projectPulse.overdue} task${projectPulse.overdue === 1 ? '' : 's'}/milestone${projectPulse.overdue === 1 ? '' : 's'} past due`
+              : "Nothing overdue"}
           </div>
         </div>
 
-        {/* Revenue Snapshot — director only */}
-        {isDirector && (
-          <div style={cardStyle}>
-            <SectionHeader label="Revenue Snapshot" onViewAll={() => onNavigate('snapshot')} viewAllColor={t.colors.primary} />
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
-              <StatNumber value={fmtCurrency(revenueSnapshot.collectedThisMonth)} label="Collected this month" />
-              <StatNumber value={fmtCurrency(revenueSnapshot.outstanding)} label="Outstanding" />
-            </div>
-            <div style={{ fontSize: t.fontSizes.sm, color: revenueDelta >= 0 ? '#6B8F71' : '#B3453D' }}>
-              {revenueDelta >= 0 ? '↑' : '↓'} {fmtCurrency(Math.abs(revenueDelta))} vs last month
-            </div>
-          </div>
-        )}
-
-        {/* Team Goals Progress */}
+        {/* Team Goals — status breakdown */}
         <div style={cardStyle}>
           <SectionHeader label="Team Goals" onViewAll={() => onNavigate('team-goals')} viewAllColor={t.colors.primary} />
-          <div style={{ marginBottom: '10px' }}>
+          <div style={{ marginBottom: '12px' }}>
             <div style={{ fontSize: '26px', fontWeight: '700', color: t.colors.textPrimary, fontFamily: t.fonts.heading, lineHeight: 1.1 }}>
-              {goalsProgress.avgProgress}%
+              {goalsProgress.total}
             </div>
-            <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px', marginBottom: '8px' }}>average progress</div>
-            <div style={{ width: '100%', height: '6px', borderRadius: t.radius.full, backgroundColor: t.colors.bg, overflow: 'hidden' }}>
-              <div style={{ width: `${goalsProgress.avgProgress}%`, height: '100%', backgroundColor: t.colors.primary, borderRadius: t.radius.full }} />
-            </div>
+            <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>total goals</div>
           </div>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            <StatPill label="On track" count={goalsProgress.onTrack} color="#6B8F71" bg="#EAF2EA" />
-            <StatPill label="At risk" count={goalsProgress.atRisk} color="#D4874E" bg="#FBF0E6" />
+            {GOAL_STATUS_FILTERS.map(f => (
+              <StatPill key={f.statKey} label={f.label} count={goalsProgress[f.statKey]} color={f.color} bg={f.bg} />
+            ))}
           </div>
         </div>
 

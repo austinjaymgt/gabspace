@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { formatDate } from '../utils/dates'
+import Modal from '../components/Modal'
 
 const eventTypes = [
   'Networking mixer', 'Trade show', 'Pop-up', 'Workshop',
@@ -183,10 +184,8 @@ export default function BusinessEvents({ businessSpaceId }) {
         </div>
       </div>
 
-      {showForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Networking Event</h3>
-
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setError(null) }} title="New Networking Event" size="xl">
+        <div>
           <div style={{ ...styles.formGrid, marginBottom: '16px' }}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
               <label style={styles.label}>Event name *</label>
@@ -264,7 +263,7 @@ export default function BusinessEvents({ businessSpaceId }) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {loading ? (
         <div style={styles.empty}>Loading events...</div>
@@ -498,9 +497,7 @@ function EventDetail({ event, onBack, onDelete, onUpdate }) {
                 <h1 style={{ fontSize: '24px', fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px', letterSpacing: '-0.3px' }}>
                   {data.name}
                 </h1>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  {data.type && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{data.type}</span>}
-                </div>
+                {data.type && <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{data.type}</span>}
               </div>
               <div style={{ display: 'inline-block', padding: '5px 14px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '600', backgroundColor: sc.bg, color: sc.color }}>
                 {statusLabels[data.status] || data.status}

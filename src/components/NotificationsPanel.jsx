@@ -69,12 +69,21 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
 
   useEffect(refresh, [businessSpaceId, portalActivityVersion])
 
-  async function loadOrbiBrief() {
+  async function loadOrbiBrief(force = false) {
     if (!session?.user?.id || !businessSpaceId) return
     const requestId = ++orbiRequestIdRef.current
-    setOrbiLoading(true)
-    setOrbiError('')
     try {
+      // Cheap check first: if the look-ahead window hasn't changed since
+      // the last fetch, the cached brief is still valid — skip the
+      // heavier business/items/brief fetch below.
+      const { data: settings } = await supabase.from('user_settings').select('orbi_window_days').eq('user_id', session.user.id).maybeSingle()
+      if (requestId !== orbiRequestIdRef.current) return
+      const days = settings?.orbi_window_days || 3
+      if (!force && orbiItems !== null && days === orbiWindowDays) return
+      setOrbiWindowDays(days)
+      setOrbiLoading(true)
+      setOrbiError('')
+
       // Scoped to the active business only — RLS on the tables Orbi reads
       // (invoices, events, projects, team_goals, etc.) checks against
       // user_profiles.business_space_id, the single "currently active"
@@ -82,14 +91,9 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
       // cross-business query here would silently get filtered down to
       // just this one space anyway; passing just the active id makes
       // that explicit instead of pretending otherwise.
-      const [{ data: biz }, { data: settings }] = await Promise.all([
-        supabase.from('business_spaces').select('id, name').eq('id', businessSpaceId).maybeSingle(),
-        supabase.from('user_settings').select('orbi_window_days').eq('user_id', session.user.id).maybeSingle(),
-      ])
-      const businesses = biz ? [{ id: biz.id, name: biz.name }] : []
-      const days = settings?.orbi_window_days || 3
+      const { data: biz } = await supabase.from('business_spaces').select('id, name').eq('id', businessSpaceId).maybeSingle()
       if (requestId !== orbiRequestIdRef.current) return
-      setOrbiWindowDays(days)
+      const businesses = biz ? [{ id: biz.id, name: biz.name }] : []
 
       const rawItems = await fetchOrbiItems(businesses, days)
       if (requestId !== orbiRequestIdRef.current) return
@@ -115,7 +119,7 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
   useEffect(() => {
     setOrbiItems(null)
     setOrbiError('')
-    if (open) loadOrbiBrief()
+    if (open) loadOrbiBrief(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessSpaceId])
 
@@ -124,7 +128,9 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
       setLoading(true)
       refresh()
       setLoading(false)
-      if (orbiItems === null && !orbiLoading) loadOrbiBrief()
+      // Always re-checks orbi_window_days, even when a brief is already
+      // cached, so a change saved in Settings takes effect on next open.
+      if (!orbiLoading) loadOrbiBrief()
     }
     setOpen(o => !o)
   }

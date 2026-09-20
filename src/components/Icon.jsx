@@ -51,6 +51,7 @@ const ICON_MAP = {
   // Navigation & Layout
   'home': Home,
   'dashboard': LayoutDashboard,
+  'calendar': CalendarDays,
   'search': Search,
   'menu': Menu,
   'close': X,

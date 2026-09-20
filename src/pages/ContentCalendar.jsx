@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { formatDate } from '../utils/dates'
+import Modal from '../components/Modal'
 
 
 export default function ContentCalendar({ businessSpaceId }) {
@@ -194,9 +195,8 @@ export default function ContentCalendar({ businessSpaceId }) {
         ))}
       </div>
 
-      {showForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Content</h3>
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setError(null) }} title="New Content" size="lg">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -248,7 +248,7 @@ export default function ContentCalendar({ businessSpaceId }) {
             <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.title}>{saving ? 'Saving...' : 'Save Content'}</button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {selectedItem && (
         <div style={styles.detailOverlay} onClick={() => { setSelectedItem(null); setEditMode(false) }}>

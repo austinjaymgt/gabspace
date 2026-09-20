@@ -5,6 +5,7 @@ import { theme as t } from '../theme'
 import TagInput from '../components/TagInput'
 import PhoneInput from '../components/PhoneInput'
 import { Icon } from '../components/Icon'
+import Modal from '../components/Modal'
 
 export default function Vendors({ businessSpaceId }) {
     const [vendors, setVendors] = useState([])
@@ -122,163 +123,6 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
     'Hair & Makeup', 'Venue', 'Rentals', 'Transportation', 'Other'
   ]
 
-  // ── DETAIL / PROFILE VIEW ──────────────────────────────────────────────────
-  if (selectedVendor) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.detailHeader}>
-          <button onClick={() => { setSelectedVendor(null); setShowForm(false) }} style={styles.backBtn}>
-            ← Back to vendors
-          </button>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => openEditForm(selectedVendor)} style={styles.editBtn}>
-              Edit vendor
-            </button>
-            <button onClick={() => handleDelete(selectedVendor.id)} style={styles.deleteBtn}>
-              Delete vendor
-            </button>
-          </div>
-        </div>
-
-        {/* Edit form appears inline when editing from profile */}
-        {showForm && editingVendor && (
-          <div style={styles.formCard}>
-            <h3 style={styles.formTitle}>Edit Vendor</h3>
-            {error && <div style={styles.error}>{error}</div>}
-            <div style={styles.formGrid}>
-              <div style={{ ...styles.field, gridColumn: 'span 2' }}>
-                <label style={styles.label}>Vendor name *</label>
-                <input style={styles.input} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Category</label>
-                <select style={styles.input} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                  <option value="">Select category</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Rate ($)</label>
-                <input style={styles.input} type="number" value={form.rate} onChange={e => setForm({ ...form, rate: e.target.value })} />
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Email</label>
-                <input style={styles.input} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Phone</label>
-                <PhoneInput style={styles.input} value={form.phone} onChange={phone => setForm({ ...form, phone })} />
-              </div>
-              <div style={{ ...styles.field, gridColumn: 'span 2' }}>
-                <label style={styles.label}>Address</label>
-                <input style={styles.input} placeholder="123 Main St, City, State" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Website</label>
-                <input style={styles.input} placeholder="https://example.com" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
-              </div>
-              <div style={styles.field}>
-  <label style={styles.label}>Instagram</label>
-  <input style={styles.input} placeholder="@handle" value={form.instagram} onChange={e => setForm({ ...form, instagram: e.target.value })} />
-</div>
-<div style={styles.field}>
-  <label style={styles.label}>Payment terms</label>
-  <input style={styles.input} placeholder="e.g. Net-30, due on pickup" value={form.paymentTerms} onChange={e => setForm({ ...form, paymentTerms: e.target.value })} />
-</div>
-<div style={{ ...styles.field, gridColumn: 'span 2' }}>
-  <label style={styles.label}>Tags</label>
-  <TagInput
-    value={form.tags}
-    onChange={tags => setForm({ ...form, tags })}
-    placeholder="e.g. internal, preferred, backup..."
-  />
-</div>
-</div>
-<div style={styles.formActions}>
-              <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
-              <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.name}>
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div style={styles.detailCard}>
-          <div style={styles.detailTop}>
-            <div style={styles.detailAvatar}>
-              {selectedVendor.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h2 style={styles.detailName}>{selectedVendor.name}</h2>
-              {selectedVendor.category && (
-                <div style={styles.categoryBadge}>{selectedVendor.category}</div>
-              )}
-            </div>
-          </div>
-          <div style={styles.detailGrid}>
-            {selectedVendor.email && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Email</div>
-                <div style={styles.detailFieldValue}>{selectedVendor.email}</div>
-              </div>
-            )}
-            {selectedVendor.phone && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Phone</div>
-                <div style={styles.detailFieldValue}>{selectedVendor.phone}</div>
-              </div>
-            )}
-            {selectedVendor.rate && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Rate</div>
-                <div style={styles.detailFieldValue}>
-                  ${parseFloat(selectedVendor.rate).toLocaleString()}
-                </div>
-              </div>
-            )}
-            {selectedVendor.payment_terms && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Payment terms</div>
-                <div style={styles.detailFieldValue}>{selectedVendor.payment_terms}</div>
-              </div>
-            )}
-            {selectedVendor.address && (
-              <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
-                <div style={styles.detailFieldLabel}>Address</div>
-                <div style={styles.detailFieldValue}>{selectedVendor.address}</div>
-              </div>
-            )}
-            {selectedVendor.website && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Website</div>
-                <div style={styles.detailFieldValue}>
-                  <a href={selectedVendor.website} target="_blank" rel="noreferrer" style={styles.link}>
-                    {selectedVendor.website}
-                  </a>
-                </div>
-              </div>
-            )}
-            {selectedVendor.instagram && (
-              <div style={styles.detailField}>
-                <div style={styles.detailFieldLabel}>Instagram</div>
-                <div style={styles.detailFieldValue}>{selectedVendor.instagram}</div>
-              </div>
-            )}
-            {selectedVendor.tags && selectedVendor.tags.length > 0 && (
-  <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
-    <div style={styles.detailFieldLabel}>Tags</div>
-    <div style={styles.detailTagRow}>
-      {selectedVendor.tags.map(tag => (
-        <span key={tag} style={styles.tagChip}>{tag}</span>
-      ))}
-    </div>
-  </div>
-)}
-          </div>
-        </div>
-      </div>
-    )
-  }
 // Category pills reflect whatever categories are actually in use, not the
 // fixed add/edit-form option list — an "Other" or ad hoc category a vendor
 // was saved with should still get its own filter.
@@ -308,9 +152,8 @@ const visibleVendors = vendors
         </button>
       </div>
 
-      {showForm && !editingVendor && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Vendor</h3>
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setError(null) }} title={editingVendor ? 'Edit Vendor' : 'New Vendor'} size="lg">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -369,11 +212,11 @@ const visibleVendors = vendors
 <div style={styles.formActions}>
             <button onClick={() => { setShowForm(false); setError(null) }} style={styles.cancelBtn}>Cancel</button>
             <button onClick={handleSave} style={styles.saveBtn} disabled={saving || !form.name}>
-              {saving ? 'Saving...' : 'Save Vendor'}
+              {saving ? 'Saving...' : editingVendor ? 'Save Changes' : 'Save Vendor'}
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {!loading && vendors.length > 0 && (
   <div style={styles.filterRow}>
@@ -437,6 +280,87 @@ const visibleVendors = vendors
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={!!selectedVendor && !showForm}
+        onClose={() => setSelectedVendor(null)}
+        title={selectedVendor?.name}
+        size="lg"
+        headerActions={selectedVendor && (
+          <>
+            <button onClick={() => openEditForm(selectedVendor)} style={styles.editBtn}>Edit vendor</button>
+            <button onClick={() => handleDelete(selectedVendor.id)} style={styles.deleteBtn}>Delete vendor</button>
+          </>
+        )}
+      >
+        {selectedVendor && (
+          <div>
+            {selectedVendor.category && (
+              <div style={{ ...styles.categoryBadge, marginBottom: '16px', display: 'inline-block' }}>{selectedVendor.category}</div>
+            )}
+            <div style={styles.detailGrid}>
+              {selectedVendor.email && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Email</div>
+                  <div style={styles.detailFieldValue}>{selectedVendor.email}</div>
+                </div>
+              )}
+              {selectedVendor.phone && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Phone</div>
+                  <div style={styles.detailFieldValue}>{selectedVendor.phone}</div>
+                </div>
+              )}
+              {selectedVendor.rate && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Rate</div>
+                  <div style={styles.detailFieldValue}>
+                    ${parseFloat(selectedVendor.rate).toLocaleString()}
+                  </div>
+                </div>
+              )}
+              {selectedVendor.payment_terms && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Payment terms</div>
+                  <div style={styles.detailFieldValue}>{selectedVendor.payment_terms}</div>
+                </div>
+              )}
+              {selectedVendor.address && (
+                <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
+                  <div style={styles.detailFieldLabel}>Address</div>
+                  <div style={styles.detailFieldValue}>{selectedVendor.address}</div>
+                </div>
+              )}
+              {selectedVendor.website && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Website</div>
+                  <div style={styles.detailFieldValue}>
+                    <a href={selectedVendor.website} target="_blank" rel="noreferrer" style={styles.link}>
+                      {selectedVendor.website}
+                    </a>
+                  </div>
+                </div>
+              )}
+              {selectedVendor.instagram && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Instagram</div>
+                  <div style={styles.detailFieldValue}>{selectedVendor.instagram}</div>
+                </div>
+              )}
+              {selectedVendor.tags && selectedVendor.tags.length > 0 && (
+                <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
+                  <div style={styles.detailFieldLabel}>Tags</div>
+                  <div style={styles.detailTagRow}>
+                    {selectedVendor.tags.map(tag => (
+                      <span key={tag} style={styles.tagChip}>{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

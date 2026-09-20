@@ -17,6 +17,7 @@ import Sidebar from './components/Sidebar'
 import MobileTabBar from './components/MobileTabBar'
 import TopBar from './components/TopBar'
 import Dashboard from './pages/Dashboard'
+import CalendarPage from './pages/Calendar'
 import Home from './pages/Home'
 import AllClients from './pages/AllClients'
 import Projects from './pages/Projects'
@@ -458,6 +459,9 @@ function renderPage() {
   switch (currentPage) {
       case 'dashboard':
         return <Dashboard {...pageProps} onNavigate={setCurrentPage} />
+
+      case 'calendar':
+        return isStaff ? <CalendarPage {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
 
       case 'allclients':
       case 'all-allclients':

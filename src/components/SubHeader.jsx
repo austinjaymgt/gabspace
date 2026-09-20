@@ -7,6 +7,7 @@ import { useIsNotDesktop, useIsMobile } from '../hooks/useMediaQuery'
 const allPages = [
   // Core
   { path: 'dashboard',         label: 'Dashboard',         icon: 'dashboard' },
+  { path: 'calendar',          label: 'Calendar',          icon: 'calendar' },
   { path: 'allclients',        label: 'Clients',           icon: 'clients' },
   { path: 'projects',          label: 'Projects',          icon: 'projects' },
   { path: 'tasks',             label: 'Tasks',             icon: 'task-done' },

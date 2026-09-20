@@ -9,18 +9,17 @@ import { getModules } from '../utils/businessModules'
 // competing for space in a 5-icon bar.
 const PRIMARY_TABS = [
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
-  { label: 'Clients', icon: 'clients', path: 'allclients', activePaths: ['allclients', 'projects'], moduleKey: 'clientManagement' },
-  { label: 'Tasks', icon: 'checklist', path: 'tasks', moduleKey: 'clientManagement' },
-  { label: 'Creative', icon: 'creative', path: 'spark', activePaths: ['spark', 'creative-strategy', 'campaign-tracking', 'assets'], moduleKey: 'creativeCollective' },
+  { label: 'Calendar', icon: 'calendar', path: 'calendar' },
 ]
 
 const MORE_ITEMS = [
+  { label: 'Clients', icon: 'clients', path: 'allclients', activePaths: ['allclients', 'projects'], moduleKey: 'clientManagement' },
+  { label: 'Tasks', icon: 'checklist', path: 'tasks', moduleKey: 'clientManagement' },
+  { label: 'Creative', icon: 'creative', path: 'spark', activePaths: ['spark', 'creative-strategy', 'campaign-tracking', 'assets'], moduleKey: 'creativeCollective' },
   { label: 'Portals', icon: 'portal', path: 'client-portal-manager', moduleKey: 'portals' },
   { label: 'Money', icon: 'finance', path: 'income', moduleKey: 'money' },
   { label: 'Operations', icon: 'operations', path: 'vendors', moduleKey: 'operations' },
   { label: 'Team', icon: 'team', path: 'team-goals', moduleKey: 'team' },
-  { label: 'Tutorials', icon: 'tutorials', path: 'tutorials' },
-  { label: 'Settings', icon: 'settings', path: 'settings' },
 ]
 
 export default function MobileTabBar({ currentPage, onNavigate, onLogout, businessSpaceId }) {
@@ -29,7 +28,7 @@ export default function MobileTabBar({ currentPage, onNavigate, onLogout, busine
 
   const tabs = PRIMARY_TABS.filter(tab => !tab.moduleKey || modules[tab.moduleKey])
   const moreItems = MORE_ITEMS.filter(item => !item.moduleKey || modules[item.moduleKey])
-  const moreActive = moreItems.some(item => item.path === currentPage)
+  const moreActive = moreItems.some(item => (item.activePaths || [item.path]).includes(currentPage))
 
   function go(path) {
     setMoreOpen(false)
@@ -53,22 +52,25 @@ export default function MobileTabBar({ currentPage, onNavigate, onLogout, busine
           boxShadow: t.shadows.lg, padding: '8px 8px 24px', fontFamily: t.fonts.sans,
         }}>
           <div style={{ width: '36px', height: '4px', backgroundColor: t.colors.borderLight, borderRadius: t.radius.full, margin: '6px auto 14px' }} />
-          {moreItems.map(item => (
-            <div
-              key={item.label}
-              onClick={() => go(item.path)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '12px 16px', borderRadius: t.radius.md,
-                color: currentPage === item.path ? t.colors.primary : t.colors.textPrimary,
-                fontWeight: currentPage === item.path ? '600' : '500',
-                fontSize: t.fontSizes.md, cursor: 'pointer',
-              }}
-            >
-              <Icon name={item.icon} size="md" />
-              {item.label}
-            </div>
-          ))}
+          {moreItems.map(item => {
+            const isActive = (item.activePaths || [item.path]).includes(currentPage)
+            return (
+              <div
+                key={item.label}
+                onClick={() => go(item.path)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '12px 16px', borderRadius: t.radius.md,
+                  color: isActive ? t.colors.primary : t.colors.textPrimary,
+                  fontWeight: isActive ? '600' : '500',
+                  fontSize: t.fontSizes.md, cursor: 'pointer',
+                }}
+              >
+                <Icon name={item.icon} size="md" />
+                {item.label}
+              </div>
+            )
+          })}
           <div
             onClick={() => { setMoreOpen(false); onLogout() }}
             style={{

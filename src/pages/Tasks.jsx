@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t, taskStatusConfig as statusConfig } from '../theme'
 import { formatDate } from '../utils/dates'
+import Modal from '../components/Modal'
 
 const sortOptions = [
   { value: 'default',      label: 'Sort: manual' },
@@ -291,9 +292,8 @@ export default function Tasks({ businessSpaceId }) {
         </select>
       </div>
 
-      {showForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>{editingId ? 'Edit task' : 'New task'}</h3>
+      <Modal isOpen={showForm} onClose={closeForm} title={editingId ? 'Edit task' : 'New task'} size="lg">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -374,7 +374,7 @@ export default function Tasks({ businessSpaceId }) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {loading ? (
         <div style={styles.empty}>Loading tasks...</div>

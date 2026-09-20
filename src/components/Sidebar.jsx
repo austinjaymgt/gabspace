@@ -8,9 +8,10 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
 
   const navItems = [
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
+  { label: 'Calendar', icon: 'calendar', path: 'calendar' },
 
     {
-    label: 'Client Management', icon: 'clients', path: 'allclients', children: [
+    label: 'Client Management', icon: 'clients', path: 'allclients', sectionHeader: 'Business Modules', children: [
       { label: 'Clients', path: 'allclients' },
       { label: 'Projects', icon: 'projects', path: 'projects' },
       { label: 'Tasks', path: 'tasks' },
@@ -197,6 +198,22 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
 
           return (
             <div key={item.label}>
+              {item.sectionHeader && (
+                <div style={{
+                  padding: collapsed ? '14px 0 6px' : '14px 20px 6px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.35)',
+                  fontFamily: t.fonts.sans,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {collapsed ? '···' : item.sectionHeader}
+                </div>
+              )}
               <div
                 title={collapsed ? item.label : undefined}
                 style={{

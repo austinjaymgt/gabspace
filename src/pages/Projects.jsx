@@ -9,6 +9,7 @@ import ConceptForm from '../components/events/ConceptForm'
 import Milestones from '../components/Milestones'
 import { useIsMobile } from '../hooks/useMediaQuery'
 import { ProjectIconBadge, ProjectIconPicker } from '../components/ProjectIcon'
+import Modal from '../components/Modal'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -317,9 +318,8 @@ export default function Projects({ businessSpaceId }) {
       </div>
 
       {/* New project form */}
-      {showForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Project</h3>
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setError(null) }} title="New Project" size="lg">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -374,7 +374,7 @@ export default function Projects({ businessSpaceId }) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Table */}
       {loading ? (

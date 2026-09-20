@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { useIsMobile } from '../hooks/useMediaQuery'
 import PhoneInput from '../components/PhoneInput'
+import Modal from '../components/Modal'
 
 const statusConfig = {
   lead:      { bg: t.colors.primaryLight,  color: t.colors.primary,        label: 'Lead' },
@@ -145,96 +146,7 @@ export default function Clients({ businessSpaceId }) {
       return new Date(b.created_at) - new Date(a.created_at)
     })
 
-  // ── DETAIL VIEW ────────────────────────────────────────────────────────────
-  if (selectedClient) {
-    const sc = statusConfig[selectedClient.status] || statusConfig.inactive
-    return (
-      <div style={styles.page}>
-        <div style={styles.detailHeader}>
-          <button onClick={handleBack} style={styles.backBtn}>← Back to clients</button>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {!editMode && (
-              <button onClick={() => { setEditMode(true); setEditForm({ ...selectedClient }) }} style={styles.editBtn}>
-                Edit
-              </button>
-            )}
-            <button onClick={() => handleDelete(selectedClient.id)} style={styles.deleteBtn}>Delete client</button>
-          </div>
-        </div>
-
-        <div style={styles.detailCard}>
-          {editMode ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-              <h3 style={{ fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: 0, fontFamily: t.fonts.heading, letterSpacing: '-0.01em' }}>Edit client</h3>
-              <div style={styles.formGrid}>
-                <div style={styles.field}>
-                  <label style={styles.label}>Name *</label>
-                  <input style={styles.input} value={editForm.name || ''} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
-                </div>
-                <div style={styles.field}>
-                  <label style={styles.label}>Company</label>
-                  <input style={styles.input} value={editForm.company || ''} onChange={e => setEditForm({ ...editForm, company: e.target.value })} />
-                </div>
-                <div style={styles.field}>
-                  <label style={styles.label}>Email</label>
-                  <input style={styles.input} value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
-                </div>
-                <div style={styles.field}>
-                  <label style={styles.label}>Phone</label>
-                  <PhoneInput style={styles.input} value={editForm.phone} onChange={phone => setEditForm({ ...editForm, phone })} />
-                </div>
-                <div style={styles.field}>
-                  <label style={styles.label}>Status</label>
-                  <select style={styles.input} value={editForm.status || 'active'} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
-                    <option value="lead">Lead</option>
-                    <option value="prospect">Prospect</option>
-                    <option value="active">Active</option>
-                    <option value="completed">Completed</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button onClick={() => setEditMode(false)} style={styles.cancelBtn}>Cancel</button>
-                <button onClick={handleEditSave} style={styles.saveBtn}>Save changes</button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div style={styles.detailAvatar}>{selectedClient.name.charAt(0).toUpperCase()}</div>
-              <h2 style={styles.detailName}>{selectedClient.name}</h2>
-              {selectedClient.company && <p style={styles.detailCompany}>{selectedClient.company}</p>}
-              <div style={styles.detailGrid}>
-                {selectedClient.email && (
-                  <div style={styles.detailField}>
-                    <div style={styles.detailFieldLabel}>Email</div>
-                    <div style={styles.detailFieldValue}>{selectedClient.email}</div>
-                  </div>
-                )}
-                {selectedClient.phone && (
-                  <div style={styles.detailField}>
-                    <div style={styles.detailFieldLabel}>Phone</div>
-                    <div style={styles.detailFieldValue}>{selectedClient.phone}</div>
-                  </div>
-                )}
-                <div style={styles.detailField}>
-                  <div style={styles.detailFieldLabel}>Status</div>
-                  <div style={{ ...styles.statusBadge, backgroundColor: sc.bg, color: sc.color }}>
-                    {sc.label}
-                  </div>
-                </div>
-                <div style={styles.detailField}>
-                  <div style={styles.detailFieldLabel}>Added</div>
-                  <div style={styles.detailFieldValue}>{new Date(selectedClient.created_at).toLocaleDateString()}</div>
-                </div>
-              </div>
-
-            </>
-          )}
-        </div>
-      </div>
-    )
-  }
+  const selectedStatus = selectedClient ? (statusConfig[selectedClient.status] || statusConfig.inactive) : null
 
   // ── MAIN LIST VIEW ─────────────────────────────────────────────────────────
   return (
@@ -308,9 +220,8 @@ export default function Clients({ businessSpaceId }) {
         </div>
       </div>
 
-      {showForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New client</h3>
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setError(null) }} title="New client" size="lg">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={styles.field}>
@@ -347,7 +258,7 @@ export default function Clients({ businessSpaceId }) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {loading ? (
         <div style={styles.empty}>Loading clients...</div>
@@ -420,6 +331,85 @@ export default function Clients({ businessSpaceId }) {
           })}
         </div>
       )}
+
+      <Modal
+        isOpen={!!selectedClient}
+        onClose={handleBack}
+        title={editMode ? 'Edit client' : selectedClient?.name}
+        size="lg"
+        headerActions={!editMode && (
+          <>
+            <button onClick={() => { setEditMode(true); setEditForm({ ...selectedClient }) }} style={styles.editBtn}>Edit</button>
+            <button onClick={() => handleDelete(selectedClient.id)} style={styles.deleteBtn}>Delete</button>
+          </>
+        )}
+      >
+        {selectedClient && (editMode ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+            <div style={styles.formGrid}>
+              <div style={styles.field}>
+                <label style={styles.label}>Name *</label>
+                <input style={styles.input} value={editForm.name || ''} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Company</label>
+                <input style={styles.input} value={editForm.company || ''} onChange={e => setEditForm({ ...editForm, company: e.target.value })} />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Email</label>
+                <input style={styles.input} value={editForm.email || ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Phone</label>
+                <PhoneInput style={styles.input} value={editForm.phone} onChange={phone => setEditForm({ ...editForm, phone })} />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Status</label>
+                <select style={styles.input} value={editForm.status || 'active'} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                  <option value="lead">Lead</option>
+                  <option value="prospect">Prospect</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setEditMode(false)} style={styles.cancelBtn}>Cancel</button>
+              <button onClick={handleEditSave} style={styles.saveBtn}>Save changes</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            <div style={styles.detailAvatar}>{selectedClient.name.charAt(0).toUpperCase()}</div>
+            {selectedClient.company && <p style={styles.detailCompany}>{selectedClient.company}</p>}
+            <div style={styles.detailGrid}>
+              {selectedClient.email && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Email</div>
+                  <div style={styles.detailFieldValue}>{selectedClient.email}</div>
+                </div>
+              )}
+              {selectedClient.phone && (
+                <div style={styles.detailField}>
+                  <div style={styles.detailFieldLabel}>Phone</div>
+                  <div style={styles.detailFieldValue}>{selectedClient.phone}</div>
+                </div>
+              )}
+              <div style={styles.detailField}>
+                <div style={styles.detailFieldLabel}>Status</div>
+                <div style={{ ...styles.statusBadge, backgroundColor: selectedStatus?.bg, color: selectedStatus?.color }}>
+                  {selectedStatus?.label}
+                </div>
+              </div>
+              <div style={styles.detailField}>
+                <div style={styles.detailFieldLabel}>Added</div>
+                <div style={styles.detailFieldValue}>{new Date(selectedClient.created_at).toLocaleDateString()}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </Modal>
     </div>
   )
 }

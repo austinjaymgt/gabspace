@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import CurrencyInput from '../components/CurrencyInput'
 import { formatDate } from '../utils/dates'
+import Modal from '../components/Modal'
 
 const TYPES = ['Conference', 'Certification', 'Workshop', 'Course', 'Training', 'Webinar', 'Other']
 const STATUS_OPTIONS = ['registered', 'in-progress', 'completed', 'cancelled']
@@ -182,11 +183,8 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
       </div>
 
       {/* Add / Edit form */}
-      {showForm && (
-        <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px', marginBottom: '24px' }}>
-          <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px' }}>
-            {editingItem ? 'Edit Item' : 'New Pro Dev Item'}
-          </h3>
+      <Modal isOpen={showForm} onClose={resetForm} title={editingItem ? 'Edit Item' : 'New Pro Dev Item'} size="lg">
+        <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
             <div>
               <label style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, display: 'block', marginBottom: '5px' }}>Team Member *</label>
@@ -267,7 +265,7 @@ export default function ProDev({ businessSpaceId, userRole, session }) {
             <button onClick={resetForm} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>

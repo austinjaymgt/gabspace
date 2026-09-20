@@ -5,6 +5,7 @@ import { statusConfig, computeDisplayStatus } from '../utils/invoiceStatus'
 import { quarterFromDate, quarterInfoFromDate, formatDate, resolveDateRange, isDateInRange } from '../utils/dates'
 import DateRangeFilter from '../components/DateRangeFilter'
 import { Icon } from '../components/Icon'
+import Modal from '../components/Modal'
 
 const TYPE_TAG = {
   invoice: { label: 'Invoice', bg: t.colors.primaryLight, color: t.colors.primary },
@@ -544,26 +545,16 @@ export default function Invoices({ businessSpaceId }) {
 
   const visibleItems = allItems.filter(i => !query || [i._title, i._subtitle, i._kind].filter(Boolean).some(s => s.toLowerCase().includes(query)))
 
+  let invoiceDetailContent = null
   if (selectedInvoice) {
     const displayStatus = computeDisplayStatus(selectedInvoice)
     const sc = statusConfig[displayStatus]
     const outstanding = (parseFloat(selectedInvoice.total_amount) || 0) - (parseFloat(selectedInvoice.amount_paid) || 0)
-    return (
-      <div style={styles.page}>
-        <div style={styles.detailHeader}>
-          <button onClick={() => setSelectedInvoice(null)} style={styles.backBtn}>
-            ← Back to invoices
-          </button>
-          <button onClick={() => handleDeleteInvoice(selectedInvoice.id)} style={styles.deleteBtn}>
-            Delete invoice
-          </button>
-        </div>
+    invoiceDetailContent = (
+      <div>
         <div style={styles.detailCard}>
           <div style={styles.detailTop}>
             <div>
-              <h2 style={styles.detailName}>
-                {selectedInvoice.invoice_number || 'Invoice'}
-              </h2>
               {selectedInvoice.clients && (
                 <p style={styles.detailSub}>
                   {selectedInvoice.clients.name}
@@ -702,6 +693,19 @@ export default function Invoices({ businessSpaceId }) {
 
   return (
     <div style={styles.page}>
+      <Modal
+        isOpen={!!selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+        title={selectedInvoice?.invoice_number || 'Invoice'}
+        size="xl"
+        headerActions={selectedInvoice && (
+          <button onClick={() => handleDeleteInvoice(selectedInvoice.id)} style={styles.deleteBtn}>
+            Delete invoice
+          </button>
+        )}
+      >
+        {invoiceDetailContent}
+      </Modal>
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Invoices &amp; Income</h2>
@@ -747,9 +751,8 @@ export default function Invoices({ businessSpaceId }) {
         </div>
       </div>
 
-      {showForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New invoice</h3>
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setError(null) }} title="New invoice" size="xl">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={styles.field}>
@@ -864,11 +867,10 @@ export default function Invoices({ businessSpaceId }) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {showRuleForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New recurring rule</h3>
+      <Modal isOpen={showRuleForm} onClose={() => { setShowRuleForm(false); setRuleError(null) }} title="New recurring rule" size="xl">
+        <div>
           {ruleError && <div style={styles.error}>{ruleError}</div>}
           <div style={styles.formGrid}>
             <div style={styles.field}>
@@ -997,11 +999,10 @@ export default function Invoices({ businessSpaceId }) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {showIncomeForm && (
-        <div style={{ ...incomeCardStyle, padding: '24px', marginBottom: '24px' }}>
-          <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px' }}>{editingIncome ? 'Edit Income' : 'Log Income'}</h3>
+      <Modal isOpen={showIncomeForm} onClose={resetIncomeForm} title={editingIncome ? 'Edit Income' : 'Log Income'} size="lg">
+        <div>
           {incomeFormError && <div style={{ padding: '10px 14px', borderRadius: t.radius.md, background: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm, marginBottom: '16px' }}>{incomeFormError}</div>}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
@@ -1049,9 +1050,9 @@ export default function Invoices({ businessSpaceId }) {
             <button onClick={resetIncomeForm} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {showIncomeCategoryManager && (
+      <Modal isOpen={showIncomeCategoryManager} onClose={() => setShowIncomeCategoryManager(false)} title="Manage Categories" size="sm">
         <IncomeCategoryManagerPanel
           categories={incomeCategories}
           newCategoryName={newIncomeCategoryName}
@@ -1063,9 +1064,8 @@ export default function Invoices({ businessSpaceId }) {
           onAdd={addIncomeCategory}
           onRename={renameIncomeCategory}
           onDelete={deleteIncomeCategory}
-          onClose={() => setShowIncomeCategoryManager(false)}
         />
-      )}
+      </Modal>
 
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
         <select
@@ -1688,13 +1688,9 @@ const styles = {
   },
 }
 
-function IncomeCategoryManagerPanel({ categories, newCategoryName, setNewCategoryName, editingCategoryId, setEditingCategoryId, editingCategoryName, setEditingCategoryName, onAdd, onRename, onDelete, onClose }) {
+function IncomeCategoryManagerPanel({ categories, newCategoryName, setNewCategoryName, editingCategoryId, setEditingCategoryId, editingCategoryName, setEditingCategoryName, onAdd, onRename, onDelete }) {
   return (
-    <div style={{ ...incomeCardStyle, padding: '16px 20px', marginBottom: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <h4 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes.md, fontWeight: '700', color: t.colors.textPrimary, margin: 0 }}>Manage Categories</h4>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.sm, cursor: 'pointer', fontFamily: t.fonts.sans }}>Close</button>
-      </div>
+    <div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
         {categories.map(cat => (
           <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: t.radius.md, background: t.colors.bg }}>
@@ -1735,9 +1731,8 @@ function IncomeCategoryManagerPanel({ categories, newCategoryName, setNewCategor
 function IncomeConfirmAmountModal({ itemLabel, initialAmount, onCancel, onConfirm }) {
   const [amount, setAmount] = useState(initialAmount ?? '')
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={onCancel}>
-      <div style={{ ...incomeCardStyle, padding: '24px', width: '100%', maxWidth: '380px' }} onClick={e => e.stopPropagation()}>
-        <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes.lg, fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 4px' }}>Confirm received amount</h3>
+    <Modal isOpen onClose={onCancel} title="Confirm received amount" size="sm">
+      <div>
         <p style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, margin: '0 0 16px' }}>{itemLabel} — confirm or adjust the amount before it's finalized.</p>
         <label style={incomeLabelStyle}>Amount</label>
         <input
@@ -1753,6 +1748,6 @@ function IncomeConfirmAmountModal({ itemLabel, initialAmount, onCancel, onConfir
           <button onClick={onCancel} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

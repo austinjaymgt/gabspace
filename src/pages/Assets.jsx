@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import Modal from '../components/Modal'
 
 export default function Assets({ businessSpaceId }) {
   const [assets, setAssets] = useState([])
@@ -140,9 +141,8 @@ export default function Assets({ businessSpaceId }) {
         ))}
       </div>
 
-      {showForm && (
-        <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>New Asset</h3>
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setError(null) }} title="New Asset" size="lg">
+        <div>
           {error && <div style={styles.error}>{error}</div>}
           <div style={styles.formGrid}>
             <div style={{ ...styles.field, gridColumn: 'span 2' }}>
@@ -204,7 +204,7 @@ export default function Assets({ businessSpaceId }) {
             </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {selectedAsset && (
         <div style={styles.detailOverlay} onClick={() => { setSelectedAsset(null); setEditMode(false) }}>

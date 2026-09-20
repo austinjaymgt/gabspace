@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import Modal from '../components/Modal'
 
 const STATUS_OPTIONS = ['on-track', 'at-risk', 'completed', 'not-started']
 const PERIOD_OPTIONS = ['all', 'Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026', 'Q2 2026', 'Q3 2026', 'Q4 2026']
@@ -432,10 +433,9 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
         })}
       </div>
 
-      {/* Inline new-goal form */}
-      {showNewForm && (
-        <div style={{ background: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.lg, padding: '24px', marginBottom: '20px' }}>
-          <h3 style={{ fontFamily: t.fonts.heading, fontSize: t.fontSizes['2xl'], fontWeight: '700', color: t.colors.textPrimary, margin: '0 0 20px' }}>New Goal</h3>
+      {/* New-goal form */}
+      <Modal isOpen={showNewForm} onClose={() => setShowNewForm(false)} title="New Goal" size="lg">
+        <div>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Goal Title *</label>
@@ -486,7 +486,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
             <button onClick={() => setShowNewForm(false)} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Goals list */}
       {loading ? (
@@ -570,107 +570,110 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
                     <span style={{ fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textPrimary, minWidth: '34px', textAlign: 'right' }}>{progress}%</span>
                   </div>
                 </div>
-
-                {/* Inline detail panel */}
-                {isDetailOpen && (
-                  <div style={{ borderTop: `1px solid ${t.colors.border}`, padding: '24px', background: t.colors.bg }}>
-                    {!editing ? (
-                      /* VIEW MODE */
-                      <>
-                        {activeGoal?.description && (
-                          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: '0 0 20px' }}>{activeGoal.description}</p>
-                        )}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '4px' }}>
-                          <ViewRow label="Owner">{activeGoal?.owner || '—'}</ViewRow>
-                          <ViewRow label="Start date">{fmtDate(activeGoal?.start_date) || '—'}</ViewRow>
-                          <ViewRow label="Due date">{fmtDate(activeGoal?.due_date) || '—'}</ViewRow>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Progress — {drawerProgress}%</div>
-                            <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
-                            </div>
-                          </div>
-                        </div>
-                        {renderSubtasks()}
-                        {!ro && (
-                          <button onClick={startEditMode} style={{ marginTop: '20px', padding: '8px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
-                            Edit
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      /* EDIT MODE */
-                      <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={labelStyle}>Goal Title *</label>
-                            <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Book 12 new clients this quarter" style={fieldStyle} />
-                          </div>
-                          <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={labelStyle}>Description</label>
-                            <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, borderRadius: t.radius.lg, resize: 'vertical' }} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Owner</label>
-                            <input value={draft.owner} onChange={e => setDraft(d => ({ ...d, owner: e.target.value }))} placeholder="Who owns this?" style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Type</label>
-                            <select value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value }))} style={fieldStyle}>
-                              {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{categoryStyles[c].label}</option>)}
-                            </select>
-                          </div>
-                          {draft.category === 'other' && (
-                            <div style={{ gridColumn: '1 / -1' }}>
-                              <label style={labelStyle}>Type label *</label>
-                              <input value={draft.categoryLabel} onChange={e => setDraft(d => ({ ...d, categoryLabel: e.target.value }))} placeholder="Name this type (e.g. Community, Health)" style={fieldStyle} />
-                            </div>
-                          )}
-                          <div>
-                            <label style={labelStyle}>Status</label>
-                            <select value={draft.status} onChange={e => setDraft(d => ({ ...d, status: e.target.value }))} style={fieldStyle}>
-                              {STATUS_OPTIONS.map(st => <option key={st} value={st}>{statusStyles[st].label}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Start date</label>
-                            <input type="date" value={draft.startDate} onChange={e => setDraft(d => ({ ...d, startDate: e.target.value }))} style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Due date</label>
-                            <input type="date" value={draft.dueDate} onChange={e => setDraft(d => ({ ...d, dueDate: e.target.value }))} style={fieldStyle} />
-                          </div>
-                          {manualMode ? (
-                            <div style={{ gridColumn: '1 / -1' }}>
-                              <label style={labelStyle}>Progress — {draft.progress}%</label>
-                              <input type="range" min="0" max="100" step="5" value={draft.progress} onChange={e => setDraft(d => ({ ...d, progress: Number(e.target.value) }))} style={{ width: '100%' }} />
-                            </div>
-                          ) : (
-                            <div style={{ gridColumn: '1 / -1' }}>
-                              <label style={labelStyle}>Progress — {drawerProgress}%</label>
-                              <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
-                              </div>
-                              <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '5px' }}>Calculated from subtasks below.</div>
-                            </div>
-                          )}
-                        </div>
-                        {renderSubtasks()}
-                        {formError && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, marginTop: '10px' }}>{formError}</div>}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '18px' }}>
-                          <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Save changes</button>
-                          <button onClick={cancelEdit} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
-                          <button onClick={handleDelete} style={{ marginLeft: 'auto', padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             )
           })}
         </div>
       )}
+
+      {/* Goal detail / edit modal */}
+      <Modal
+        isOpen={!!openGoalId}
+        onClose={() => { setOpenGoalId(null); setEditing(false) }}
+        title={editing ? 'Edit Goal' : activeGoal?.title}
+        size="lg"
+        headerActions={!editing && !ro && (
+          <button onClick={startEditMode} style={{ padding: '6px 14px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.sm, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            Edit
+          </button>
+        )}
+      >
+        {activeGoal && (!editing ? (
+          /* VIEW MODE */
+          <div>
+            {activeGoal?.description && (
+              <p style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary, lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: '0 0 20px' }}>{activeGoal.description}</p>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '4px' }}>
+              <ViewRow label="Owner">{activeGoal?.owner || '—'}</ViewRow>
+              <ViewRow label="Start date">{fmtDate(activeGoal?.start_date) || '—'}</ViewRow>
+              <ViewRow label="Due date">{fmtDate(activeGoal?.due_date) || '—'}</ViewRow>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Progress — {drawerProgress}%</div>
+                <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+                </div>
+              </div>
+            </div>
+            {renderSubtasks()}
+          </div>
+        ) : (
+          /* EDIT MODE */
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Goal Title *</label>
+                <input value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} placeholder="e.g. Book 12 new clients this quarter" style={fieldStyle} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Description</label>
+                <textarea value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} placeholder="What does success look like?" rows={3} style={{ ...fieldStyle, borderRadius: t.radius.lg, resize: 'vertical' }} />
+              </div>
+              <div>
+                <label style={labelStyle}>Owner</label>
+                <input value={draft.owner} onChange={e => setDraft(d => ({ ...d, owner: e.target.value }))} placeholder="Who owns this?" style={fieldStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Type</label>
+                <select value={draft.category} onChange={e => setDraft(d => ({ ...d, category: e.target.value }))} style={fieldStyle}>
+                  {CATEGORY_OPTIONS.map(c => <option key={c} value={c}>{categoryStyles[c].label}</option>)}
+                </select>
+              </div>
+              {draft.category === 'other' && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Type label *</label>
+                  <input value={draft.categoryLabel} onChange={e => setDraft(d => ({ ...d, categoryLabel: e.target.value }))} placeholder="Name this type (e.g. Community, Health)" style={fieldStyle} />
+                </div>
+              )}
+              <div>
+                <label style={labelStyle}>Status</label>
+                <select value={draft.status} onChange={e => setDraft(d => ({ ...d, status: e.target.value }))} style={fieldStyle}>
+                  {STATUS_OPTIONS.map(st => <option key={st} value={st}>{statusStyles[st].label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Start date</label>
+                <input type="date" value={draft.startDate} onChange={e => setDraft(d => ({ ...d, startDate: e.target.value }))} style={fieldStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Due date</label>
+                <input type="date" value={draft.dueDate} onChange={e => setDraft(d => ({ ...d, dueDate: e.target.value }))} style={fieldStyle} />
+              </div>
+              {manualMode ? (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Progress — {draft.progress}%</label>
+                  <input type="range" min="0" max="100" step="5" value={draft.progress} onChange={e => setDraft(d => ({ ...d, progress: Number(e.target.value) }))} style={{ width: '100%' }} />
+                </div>
+              ) : (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Progress — {drawerProgress}%</label>
+                  <div style={{ height: '6px', background: t.colors.border, borderRadius: t.radius.full, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${drawerProgress}%`, background: drawerProgress === 100 ? t.colors.accent : t.colors.primary, borderRadius: t.radius.full, transition: 'width 0.3s ease' }} />
+                  </div>
+                  <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '5px' }}>Calculated from subtasks below.</div>
+                </div>
+              )}
+            </div>
+            {renderSubtasks()}
+            {formError && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger, marginTop: '10px' }}>{formError}</div>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '18px' }}>
+              <button onClick={handleSave} style={{ padding: '9px 20px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>Save changes</button>
+              <button onClick={cancelEdit} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.textSecondary, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleDelete} style={{ marginLeft: 'auto', padding: '9px 16px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, background: 'transparent', color: t.colors.danger, fontSize: t.fontSizes.base, fontFamily: t.fonts.sans, cursor: 'pointer' }}>Delete</button>
+            </div>
+          </div>
+        ))}
+      </Modal>
     </div>
   )
 }
