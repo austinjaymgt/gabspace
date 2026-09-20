@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import TagInput from '../components/TagInput'
 import PhoneInput from '../components/PhoneInput'
+import { Icon } from '../components/Icon'
 
 export default function Vendors({ businessSpaceId }) {
     const [vendors, setVendors] = useState([])
@@ -20,11 +21,13 @@ export default function Vendors({ businessSpaceId }) {
     address: '',
     website: '',
     instagram: '',
+    paymentTerms: '',
     tags: [],
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
-  const [activeTagFilter, setActiveTagFilter] = useState(null)
+  const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
 
   useEffect(() => { if (businessSpaceId) fetchVendors() }, [businessSpaceId])
 
@@ -41,7 +44,7 @@ export default function Vendors({ businessSpaceId }) {
 
   function openAddForm() {
     setEditingVendor(null)
-setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '', tags: [] })
+setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '', paymentTerms: '', tags: [] })
     setShowForm(true)
   }
 
@@ -56,6 +59,7 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
       address: vendor.address || '',
       website: vendor.website || '',
       instagram: vendor.instagram || '',
+    paymentTerms: vendor.payment_terms || '',
     tags: vendor.tags || [],
     })
     setShowForm(true)
@@ -75,6 +79,7 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
       address: form.address || null,
       website: form.website || null,
       instagram: form.instagram || null,
+      payment_terms: form.paymentTerms || null,
         tags: form.tags || [],
     }
 
@@ -99,7 +104,7 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
     } else {
       setShowForm(false)
       setEditingVendor(null)
-setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '', tags: [] })
+setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', website: '', instagram: '', paymentTerms: '', tags: [] })
       fetchVendors()
     }
     setSaving(false)
@@ -176,6 +181,10 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
   <label style={styles.label}>Instagram</label>
   <input style={styles.input} placeholder="@handle" value={form.instagram} onChange={e => setForm({ ...form, instagram: e.target.value })} />
 </div>
+<div style={styles.field}>
+  <label style={styles.label}>Payment terms</label>
+  <input style={styles.input} placeholder="e.g. Net-30, due on pickup" value={form.paymentTerms} onChange={e => setForm({ ...form, paymentTerms: e.target.value })} />
+</div>
 <div style={{ ...styles.field, gridColumn: 'span 2' }}>
   <label style={styles.label}>Tags</label>
   <TagInput
@@ -227,6 +236,12 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
                 </div>
               </div>
             )}
+            {selectedVendor.payment_terms && (
+              <div style={styles.detailField}>
+                <div style={styles.detailFieldLabel}>Payment terms</div>
+                <div style={styles.detailFieldValue}>{selectedVendor.payment_terms}</div>
+              </div>
+            )}
             {selectedVendor.address && (
               <div style={{ ...styles.detailField, gridColumn: 'span 2' }}>
                 <div style={styles.detailFieldLabel}>Address</div>
@@ -264,15 +279,20 @@ setForm({ name: '', category: '', email: '', phone: '', rate: '', address: '', w
       </div>
     )
   }
-// All unique tags across vendors, sorted
-const allTags = Array.from(
-  new Set(vendors.flatMap(v => v.tags || []))
+// Category pills reflect whatever categories are actually in use, not the
+// fixed add/edit-form option list — an "Other" or ad hoc category a vendor
+// was saved with should still get its own filter.
+const vendorCategories = Array.from(
+  new Set(vendors.map(v => v.category).filter(Boolean))
 ).sort((a, b) => a.localeCompare(b))
 
-// Filtered list based on active tag
-const visibleVendors = activeTagFilter
-  ? vendors.filter(v => (v.tags || []).includes(activeTagFilter))
-  : vendors
+const query = search.trim().toLowerCase()
+
+// Filtered list: active category pill AND the search box, matching name,
+// category, or tags.
+const visibleVendors = vendors
+  .filter(v => activeCategory === 'all' || v.category === activeCategory)
+  .filter(v => !query || [v.name, v.category, ...(v.tags || [])].filter(Boolean).some(s => s.toLowerCase().includes(query)))
 
   // ── MAIN LIST VIEW ─────────────────────────────────────────────────────────
   return (
@@ -333,6 +353,10 @@ const visibleVendors = activeTagFilter
   <label style={styles.label}>Instagram</label>
   <input style={styles.input} placeholder="@handle" value={form.instagram} onChange={e => setForm({ ...form, instagram: e.target.value })} />
 </div>
+<div style={styles.field}>
+  <label style={styles.label}>Payment terms</label>
+  <input style={styles.input} placeholder="e.g. Net-30, due on pickup" value={form.paymentTerms} onChange={e => setForm({ ...form, paymentTerms: e.target.value })} />
+</div>
 <div style={{ ...styles.field, gridColumn: 'span 2' }}>
   <label style={styles.label}>Tags</label>
   <TagInput
@@ -351,26 +375,36 @@ const visibleVendors = activeTagFilter
         </div>
       )}
 
-      {!loading && allTags.length > 0 && (
-  <div style={styles.filterBar}>
-    <span style={styles.filterLabel}>Filter:</span>
-    {allTags.map(tag => (
-      <button
-        key={tag}
-        onClick={() => setActiveTagFilter(activeTagFilter === tag ? null : tag)}
-        style={{
-          ...styles.filterChip,
-          ...(activeTagFilter === tag ? styles.filterChipActive : {}),
-        }}
-      >
-        {tag}
-      </button>
-    ))}
-    {activeTagFilter && (
-      <button onClick={() => setActiveTagFilter(null)} style={styles.clearFilter}>
-        Clear
-      </button>
-    )}
+      {!loading && vendors.length > 0 && (
+  <div style={styles.filterRow}>
+    <div style={styles.searchWrapSmall}>
+      <Icon name="search" size="sm" />
+      <input
+        style={styles.searchInput}
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search vendors..."
+      />
+      {search && (
+        <button onClick={() => setSearch('')} style={styles.clearSearch} aria-label="Clear search">
+          <Icon name="close" size="sm" />
+        </button>
+      )}
+    </div>
+    <div style={styles.pillRow}>
+      {['all', ...vendorCategories].map(c => {
+        const active = activeCategory === c
+        return (
+          <button
+            key={c}
+            onClick={() => setActiveCategory(c)}
+            style={{ ...styles.pillBtn, ...(active ? styles.pillBtnActive : {}) }}
+          >
+            {c === 'all' ? 'All Types' : c}
+          </button>
+        )
+      })}
+    </div>
   </div>
 )}
 
@@ -384,7 +418,7 @@ const visibleVendors = activeTagFilter
     <button onClick={openAddForm} style={styles.addBtn}>+ Add Vendor</button>
   </div>
 ) : visibleVendors.length === 0 ? (
-  <div style={styles.empty}>No vendors match the "{activeTagFilter}" filter.</div>
+  <div style={styles.empty}>No vendors match {search ? `"${search}"` : 'this filter'}.</div>
 ) : (
   <div style={styles.grid}>
     {visibleVendors.map(vendor => (
@@ -399,13 +433,6 @@ const visibleVendors = activeTagFilter
               {vendor.rate && (
                 <div style={styles.vendorRate}>${parseFloat(vendor.rate).toLocaleString()}</div>
               )}
-              {vendor.tags && vendor.tags.length > 0 && (
-  <div style={styles.tagRow}>
-    {vendor.tags.map(tag => (
-      <span key={tag} style={styles.tagChip}>{tag}</span>
-    ))}
-  </div>
-)}
             </div>
           ))}
         </div>
@@ -439,58 +466,70 @@ const styles = {
   vendorName: { fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary, marginBottom: '6px' },
   vendorDetail: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '2px' },
   vendorRate: { fontSize: t.fontSizes.md, fontWeight: '700', color: t.colors.primary, marginTop: '8px', fontFamily: t.fonts.heading },
-  tagRow: {
+filterRow: {
   display: 'flex',
-  flexWrap: 'wrap',
-  gap: '4px',
-  marginTop: '10px',
-},
-filterBar: {
-  display: 'flex',
-  flexWrap: 'wrap',
   alignItems: 'center',
-  gap: '8px',
-  padding: '12px 16px',
-  marginBottom: '16px',
+  gap: '12px',
+  flexWrap: 'wrap',
+  marginBottom: '20px',
+},
+searchWrapSmall: {
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '7px 14px',
+  width: '220px',
   backgroundColor: t.colors.bgCard,
   border: `1px solid ${t.colors.border}`,
-  borderRadius: t.radius.md,
-},
-filterLabel: {
-  fontSize: t.fontSizes.xs,
-  color: t.colors.textTertiary,
-  fontWeight: 500,
-  letterSpacing: '0.05em',
-  textTransform: 'uppercase',
-  marginRight: '4px',
-},
-filterChip: {
-  padding: '4px 12px',
   borderRadius: t.radius.full,
-  border: `1px solid ${t.colors.border}`,
-  backgroundColor: t.colors.bg,
-  color: t.colors.textSecondary,
-  fontSize: t.fontSizes.xs,
-  fontWeight: 500,
-  cursor: 'pointer',
+  color: t.colors.textTertiary,
+  flexShrink: 0,
+},
+searchInput: {
+  flex: 1,
+  minWidth: 0,
+  border: 'none',
+  outline: 'none',
+  fontSize: t.fontSizes.sm,
+  color: t.colors.textPrimary,
+  backgroundColor: 'transparent',
   fontFamily: t.fonts.sans,
-  transition: 'all 0.15s',
 },
-filterChipActive: {
-  backgroundColor: t.colors.primary,
-  color: '#fff',
-  borderColor: t.colors.primary,
-},
-clearFilter: {
+clearSearch: {
   background: 'none',
   border: 'none',
-  color: t.colors.textTertiary,
-  fontSize: t.fontSizes.xs,
   cursor: 'pointer',
-  textDecoration: 'underline',
+  color: t.colors.textTertiary,
+  display: 'flex',
+  alignItems: 'center',
+  padding: 0,
+},
+pillRow: {
+  display: 'flex',
+  gap: '4px',
+  background: t.colors.bg,
+  borderRadius: t.radius.full,
+  padding: '4px',
+  flexWrap: 'wrap',
+},
+pillBtn: {
+  padding: '5px 14px',
+  borderRadius: t.radius.full,
+  border: 'none',
   fontFamily: t.fonts.sans,
-  padding: '4px 8px',
-  marginLeft: 'auto',
+  fontSize: t.fontSizes.xs,
+  fontWeight: 400,
+  cursor: 'pointer',
+  background: 'transparent',
+  color: t.colors.textSecondary,
+  whiteSpace: 'nowrap',
+},
+pillBtnActive: {
+  background: t.colors.bgCard,
+  color: t.colors.textPrimary,
+  fontWeight: 600,
+  boxShadow: t.shadows.sm,
 },
 tagChip: {
   padding: '2px 8px',

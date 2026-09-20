@@ -22,7 +22,6 @@ export default function Resources({ businessSpaceId, session }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
-  const [activeTagFilter, setActiveTagFilter] = useState(null)
   const [kindFilter, setKindFilter] = useState('all') // 'all' | 'file' | 'link'
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -354,15 +353,9 @@ function normalizeUrl(url) {
 
   // ── LIST VIEW ──────────────────────────────────────────────────────────────
 
-  // All unique tags across resources
-  const allTags = Array.from(
-    new Set(resources.flatMap(r => r.tags || []))
-  ).sort((a, b) => a.localeCompare(b))
-
   // Apply filters
   const visibleResources = resources.filter(r => {
     if (kindFilter !== 'all' && r.kind !== kindFilter) return false
-    if (activeTagFilter && !(r.tags || []).includes(activeTagFilter)) return false
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
       const hay = [
@@ -415,57 +408,39 @@ function normalizeUrl(url) {
         </div>
       )}
 
-      {/* Filter bar — search + kind + tags */}
+      {/* Filter row — small search + type pills */}
       {!loading && resources.length > 0 && (
-        <div style={styles.filterBar}>
-          <input
-            type="text"
-            placeholder="Search resources..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={styles.searchInput}
-          />
-          <div style={styles.segmented}>
+        <div style={styles.filterRow}>
+          <div style={styles.searchWrapSmall}>
+            <Icon name="search" size="sm" />
+            <input
+              type="text"
+              placeholder="Search resources..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={styles.searchInput}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} style={styles.clearSearch} aria-label="Clear search">
+                <Icon name="close" size="sm" />
+              </button>
+            )}
+          </div>
+          <div style={styles.pillRow}>
             {[
-              { key: 'all', label: 'All' },
-              { key: 'file', label: 'Files' },
+              { key: 'all', label: 'All Types' },
               { key: 'link', label: 'Links' },
+              { key: 'file', label: 'Files' },
             ].map(opt => (
               <button
                 key={opt.key}
                 onClick={() => setKindFilter(opt.key)}
-                style={{
-                  ...styles.segmentedBtn,
-                  ...(kindFilter === opt.key ? styles.segmentedBtnActive : {}),
-                }}
+                style={{ ...styles.pillBtn, ...(kindFilter === opt.key ? styles.pillBtnActive : {}) }}
               >
                 {opt.label}
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {!loading && allTags.length > 0 && (
-        <div style={styles.tagFilterBar}>
-          <span style={styles.filterLabel}>Tags:</span>
-          {allTags.map(tag => (
-            <button
-              key={tag}
-              onClick={() => setActiveTagFilter(activeTagFilter === tag ? null : tag)}
-              style={{
-                ...styles.filterChip,
-                ...(activeTagFilter === tag ? styles.filterChipActive : {}),
-              }}
-            >
-              {tag}
-            </button>
-          ))}
-          {activeTagFilter && (
-            <button onClick={() => setActiveTagFilter(null)} style={styles.clearFilter}>
-              Clear
-            </button>
-          )}
         </div>
       )}
 
@@ -485,7 +460,7 @@ function normalizeUrl(url) {
           </button>
         </div>
       ) : visibleResources.length === 0 ? (
-        <div style={styles.empty}>No resources match the current filters.</div>
+        <div style={styles.empty}>No resources match {searchQuery ? `"${searchQuery}"` : 'this filter'}.</div>
       ) : (
         <div style={styles.grid}>
           {visibleResources.map(resource => (
@@ -515,17 +490,6 @@ function normalizeUrl(url) {
 
               {resource.kind === 'file' && resource.file_size && (
                 <div style={styles.cardMeta}>{formatBytes(resource.file_size)}</div>
-              )}
-
-              {resource.tags && resource.tags.length > 0 && (
-                <div style={styles.tagRow}>
-                  {resource.tags.slice(0, 4).map(tag => (
-                    <span key={tag} style={styles.tagChip}>{tag}</span>
-                  ))}
-                  {resource.tags.length > 4 && (
-                    <span style={styles.tagChip}>+{resource.tags.length - 4}</span>
-                  )}
-                </div>
               )}
             </div>
           ))}
@@ -667,19 +631,14 @@ const styles = {
   kindToggleBtnActive: { borderColor: t.colors.primary, backgroundColor: t.colors.primaryLight, color: t.colors.primary },
   kindToggleBtnDisabled: { opacity: 0.6, cursor: 'not-allowed' },
 
-  // Filter bar
-  filterBar: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', padding: '12px 16px', marginBottom: '12px', backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.md },
-  searchInput: { flex: 1, minWidth: '200px', padding: '8px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.base, color: t.colors.textPrimary, outline: 'none', backgroundColor: t.colors.bg, fontFamily: t.fonts.sans },
-  segmented: { display: 'inline-flex', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
-  segmentedBtn: { padding: '8px 14px', border: 'none', backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: 500, cursor: 'pointer', fontFamily: t.fonts.sans },
-  segmentedBtnActive: { backgroundColor: t.colors.primary, color: '#fff' },
-
-  // Tag filter bar
-  tagFilterBar: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', padding: '12px 16px', marginBottom: '16px', backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.md },
-  filterLabel: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', marginRight: '4px' },
-  filterChip: { padding: '4px 12px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bg, color: t.colors.textSecondary, fontSize: t.fontSizes.xs, fontWeight: 500, cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'all 0.15s' },
-  filterChipActive: { backgroundColor: t.colors.primary, color: '#fff', borderColor: t.colors.primary },
-  clearFilter: { background: 'none', border: 'none', color: t.colors.textTertiary, fontSize: t.fontSizes.xs, cursor: 'pointer', textDecoration: 'underline', fontFamily: t.fonts.sans, padding: '4px 8px', marginLeft: 'auto' },
+  // Filter row — small search + type pills
+  filterRow: { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' },
+  searchWrapSmall: { position: 'relative', display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', width: '220px', backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.border}`, borderRadius: t.radius.full, color: t.colors.textTertiary, flexShrink: 0 },
+  searchInput: { flex: 1, minWidth: 0, border: 'none', outline: 'none', fontSize: t.fontSizes.sm, color: t.colors.textPrimary, backgroundColor: 'transparent', fontFamily: t.fonts.sans },
+  clearSearch: { background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, display: 'flex', alignItems: 'center', padding: 0 },
+  pillRow: { display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px', flexWrap: 'wrap' },
+  pillBtn: { padding: '5px 14px', borderRadius: t.radius.full, border: 'none', fontFamily: t.fonts.sans, fontSize: t.fontSizes.xs, fontWeight: 400, cursor: 'pointer', background: 'transparent', color: t.colors.textSecondary, whiteSpace: 'nowrap' },
+  pillBtnActive: { background: t.colors.bgCard, color: t.colors.textPrimary, fontWeight: 600, boxShadow: t.shadows.sm },
 
   // Card grid
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
@@ -690,7 +649,6 @@ const styles = {
   cardTitle: { fontSize: t.fontSizes.md, fontWeight: '600', color: t.colors.textPrimary },
   cardDesc: { fontSize: t.fontSizes.sm, color: t.colors.textTertiary, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' },
   cardMeta: { fontSize: t.fontSizes.xs, color: t.colors.textTertiary },
-  tagRow: { display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' },
   tagChip: { padding: '2px 8px', borderRadius: t.radius.full, backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontSize: '11px', fontWeight: 500, fontFamily: t.fonts.sans },
 
   // Empty states

@@ -295,7 +295,7 @@ export default function BusinessEvents({ businessSpaceId }) {
             const sc = statusColors[event.status] || statusColors.upcoming
             return (
               <div key={event.id} style={styles.tableRow} onClick={() => setSelectedEvent(event)}>
-                <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary }}>
+                <span style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textPrimary }}>
                   <div>{event.name}</div>
                 </span>
                 <span style={styles.tableCell}>{event.type || '—'}</span>
@@ -744,8 +744,8 @@ const styles = {
   error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
   table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
   tableHeader: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
-  tableRow: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
-  tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
+  tableRow: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '11px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
+  tableCell: { fontSize: t.fontSizes.sm, color: t.colors.textSecondary },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}` },
   empty: { fontSize: t.fontSizes.base, color: t.colors.textTertiary, padding: '40px', textAlign: 'center' },
   backBtn: { padding: '8px 14px', borderRadius: t.radius.full, border: `1px solid ${t.colors.border}`, backgroundColor: t.colors.bgCard, color: t.colors.textSecondary, fontSize: t.fontSizes.base, cursor: 'pointer', fontFamily: t.fonts.sans },

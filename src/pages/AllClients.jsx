@@ -445,11 +445,11 @@ const styles = {
 
   table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
   tableHeader: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
-  tableRow: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
-  clientName: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary },
+  tableRow: { display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.3fr)', padding: '11px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
+  clientName: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textPrimary },
   avatar: { width: '32px', height: '32px', borderRadius: '50%', backgroundColor: t.colors.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: t.fontSizes.base, fontWeight: '600', flexShrink: 0, fontFamily: t.fonts.heading },
-  tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
-  statusBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.sm, fontWeight: '500', textTransform: 'capitalize', flexShrink: 0 },
+  tableCell: { fontSize: t.fontSizes.sm, color: t.colors.textSecondary },
+  statusBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: t.radius.full, fontSize: t.fontSizes.xs, fontWeight: '500', textTransform: 'capitalize', flexShrink: 0 },
 
   cardList: { display: 'flex', flexDirection: 'column', gap: '10px' },
   clientCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, padding: '14px 16px', cursor: 'pointer' },

@@ -89,7 +89,7 @@ function ProjectRow({ record, onClick }) {
 
   return (
     <div style={{ ...styles.tableRow, gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.3fr)' }} onClick={onClick}>
-      <span style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, display: 'inline-flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+      <span style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textPrimary, display: 'inline-flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
         <ProjectIconBadge icon={record.icon} />
         {record.title}
         {record.has_event_features && <span style={{ marginLeft: '6px', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.colors.primaryLight, color: t.colors.primary, fontWeight: '600' }}>EVENT</span>}
@@ -1207,8 +1207,8 @@ const styles = {
   error: { padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.base, marginBottom: '16px' },
   table: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, overflow: 'hidden' },
   tableHeader: { display: 'grid', padding: '12px 20px', backgroundColor: t.colors.bg, borderBottom: `1px solid ${t.colors.border}`, fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.08em' },
-  tableRow: { display: 'grid', padding: '14px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
-  tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
+  tableRow: { display: 'grid', padding: '11px 20px', borderBottom: `1px solid ${t.colors.borderLight}`, alignItems: 'center', cursor: 'pointer', transition: 'background 0.15s' },
+  tableCell: { fontSize: t.fontSizes.sm, color: t.colors.textSecondary },
   projectCard: { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, border: `1px solid ${t.colors.border}`, padding: '14px 16px', cursor: 'pointer', marginBottom: '10px' },
   projectCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '8px' },
   projectCardRow: { fontSize: t.fontSizes.base, color: t.colors.textSecondary, marginTop: '4px', wordBreak: 'break-word' },

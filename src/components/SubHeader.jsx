@@ -18,9 +18,9 @@ const allPages = [
   { path: 'resources',         label: 'Resources',         icon: 'resources' },  
  
   // Money
+  { path: 'snapshot',          label: 'Snapshot',          icon: 'finance' },
   { path: 'income',            label: 'Income',            icon: 'finance' },
   { path: 'expenses',          label: 'Expenses',          icon: 'finance' },
-  { path: 'snapshot',          label: 'Snapshot',          icon: 'finance' },
 
   // Operations
   { path: 'vendors',           label: 'Vendors',           icon: 'vendors' },
@@ -56,9 +56,9 @@ const CATEGORY_CHILDREN = [
   {
     label: 'Money',
     children: [
+      { path: 'snapshot', label: 'Snapshot', icon: 'finance' },
       { path: 'income', label: 'Income', icon: 'finance' },
       { path: 'expenses', label: 'Expenses', icon: 'finance' },
-      { path: 'snapshot', label: 'Snapshot', icon: 'finance' },
     ],
   },
   {

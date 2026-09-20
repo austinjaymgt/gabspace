@@ -22,7 +22,7 @@ export const MODULE_DEFS = [
 export const MODULE_NAV_PATHS = {
   clientManagement: ['allclients', 'projects', 'tasks'],
   portals: ['client-portal-manager'],
-  money: ['income', 'expenses', 'snapshot'],
+  money: ['snapshot', 'income', 'expenses'],
   operations: ['vendors', 'resources'],
   creativeCollective: ['spark', 'creative-strategy', 'campaign-tracking', 'assets'],
   team: ['team-goals', 'pro-dev', 'business-events'],

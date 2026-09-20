@@ -1,7 +1,9 @@
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
-import { quarterFromDate, quarterInfoFromDate } from '../utils/dates'
+import { quarterFromDate, quarterInfoFromDate, formatDate, resolveDateRange, isDateInRange } from '../utils/dates'
+import { Icon } from '../components/Icon'
+import DateRangeFilter from '../components/DateRangeFilter'
 
 const DEFAULT_EXPENSE_CATEGORIES = [
   'Tentpole Events',
@@ -15,7 +17,6 @@ const DEFAULT_EXPENSE_CATEGORIES = [
   'Miscellaneous',
 ]
 
-const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4']
 const CURRENT_YEAR = new Date().getFullYear()
 
 function fmt(n) {
@@ -34,8 +35,11 @@ export default function Expenses({ businessSpaceId, userRole }) {
   const [vendors, setVendors] = useState([])
   const [loading, setLoading] = useState(true)
   const [year, setYear] = useState(CURRENT_YEAR)
-  const [activeView, setActiveView] = useState('overview') // overview | by-project | by-vendor
-  const [vendorQuarterFilter, setVendorQuarterFilter] = useState('all') // all | Q1 | Q2 | Q3 | Q4
+  const [search, setSearch] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [dateFilterPreset, setDateFilterPreset] = useState('all')
+  const [dateFilterStart, setDateFilterStart] = useState('')
+  const [dateFilterEnd, setDateFilterEnd] = useState('')
 
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
@@ -50,6 +54,7 @@ export default function Expenses({ businessSpaceId, userRole }) {
   const [editingCategoryName, setEditingCategoryName] = useState('')
 
   const [confirmModal, setConfirmModal] = useState(null) // { item, amount }
+  const [viewingItem, setViewingItem] = useState(null) // { item, status }
 
   const isDirector = ['owner', 'co-owner'].includes(userRole)
 
@@ -242,47 +247,38 @@ export default function Expenses({ businessSpaceId, userRole }) {
     return [...planned.map(i => ({ ...i, _status: 'planned' })), ...actual.map(i => ({ ...i, _status: 'actual' }))]
   }
 
-  const byCategory = expenseCategories.map(({ name: cat }) => {
-    const catLineItems = yearLineItems.filter(i => i.category === cat)
-    const catExpenses = yearExpenses.filter(e => e.category === cat)
-    return {
-      category: cat,
-      projected: catLineItems.reduce((s, i) => s + Number(i.projected_amount || 0), 0),
-      actual: catExpenses.reduce((s, e) => s + Number(e.amount || 0), 0),
-      items: mergeExpenseItems(catLineItems, catExpenses),
-    }
-  }).filter(c => c.items.length > 0)
+  // Flat, chronological ledger (most recent first) — every planned + actual
+  // item for the year, each annotated with its resolved date/title/amount
+  // and linked project/vendor names so the search box can match on them.
+  const allItems = mergeExpenseItems(yearLineItems, yearExpenses)
+    .map(item => {
+      const isPlanned = item._status === 'planned'
+      return {
+        ...item,
+        _date: isPlanned ? item.item_date : item.date,
+        _title: isPlanned ? item.label : item.title,
+        _amount: isPlanned ? item.projected_amount : item.amount,
+        _projectTitle: item.project_id ? (projects.find(p => p.id === item.project_id)?.title || null) : null,
+        _vendorName: item.vendor_id ? (vendors.find(v => v.id === item.vendor_id)?.name || null) : null,
+      }
+    })
+    .sort((a, b) => new Date(b._date || 0) - new Date(a._date || 0))
 
-  const byProject = projects.map(proj => {
-    const projLineItems = yearLineItems.filter(i => i.project_id === proj.id)
-    const projExpenses = yearExpenses.filter(e => e.project_id === proj.id)
-    return {
-      ...proj,
-      projected: projLineItems.reduce((s, i) => s + Number(i.projected_amount || 0), 0),
-      actual: projExpenses.reduce((s, e) => s + Number(e.amount || 0), 0),
-      items: mergeExpenseItems(projLineItems, projExpenses),
-    }
-  }).filter(p => p.items.length > 0)
+  const searchIndex = Array.from(
+    new Set(allItems.flatMap(i => [i._title, i.category, i._projectTitle, i._vendorName].filter(Boolean)))
+  ).sort((a, b) => a.localeCompare(b))
 
-  const unassignedExpenseItems = mergeExpenseItems(
-    yearLineItems.filter(i => !i.project_id),
-    yearExpenses.filter(e => !e.project_id),
-  )
+  const query = search.trim().toLowerCase()
+  const suggestions = query
+    ? searchIndex.filter(s => s.toLowerCase().includes(query) && s.toLowerCase() !== query).slice(0, 8)
+    : []
 
-  // Vendor grouping only covers actual (paid) expenses — vendor_id lives on
-  // expenses, not budget_line_items, since planned costs aren't vendorized yet.
-  const quarterFilteredExpenses = vendorQuarterFilter === 'all'
-    ? yearExpenses
-    : yearExpenses.filter(e => quarterFromDate(e.date) === vendorQuarterFilter)
+  const dateRange = resolveDateRange(dateFilterPreset, { start: dateFilterStart, end: dateFilterEnd })
 
-  const byVendor = vendors.map(v => {
-    const items = quarterFilteredExpenses.filter(e => e.vendor_id === v.id).map(e => ({ ...e, _status: 'actual' }))
-    return { ...v, actual: items.reduce((s, e) => s + Number(e.amount || 0), 0), items }
-  }).filter(v => v.items.length > 0).sort((a, b) => b.actual - a.actual)
-
-  const uncategorizedVendorItems = quarterFilteredExpenses
-    .filter(e => !e.vendor_id)
-    .map(e => ({ ...e, _status: 'actual' }))
+  const visibleItems = allItems
+    .filter(i => isDateInRange(i._date, dateRange))
+    .filter(i => !query || [i._title, i.category, i._projectTitle, i._vendorName, i._status]
+      .filter(Boolean).some(s => s.toLowerCase().includes(query)))
 
   return (
     <div style={styles.page}>
@@ -291,7 +287,7 @@ export default function Expenses({ businessSpaceId, userRole }) {
           <h2 style={styles.title}>Expenses</h2>
           <p style={styles.subtitle}>{yearExpenses.length + yearLineItems.length} logged for {year}</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <select
             value={year}
             onChange={e => setYear(Number(e.target.value))}
@@ -299,6 +295,14 @@ export default function Expenses({ businessSpaceId, userRole }) {
           >
             {[CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
+          <DateRangeFilter
+            preset={dateFilterPreset}
+            start={dateFilterStart}
+            end={dateFilterEnd}
+            onPresetChange={setDateFilterPreset}
+            onStartChange={setDateFilterStart}
+            onEndChange={setDateFilterEnd}
+          />
           <button onClick={() => setShowCategoryManager(v => !v)} style={styles.cancelBtn}>Manage Categories</button>
           <button onClick={() => { setFormError(''); setShowExpenseForm(true) }} style={styles.addBtn}>+ Log expense</button>
         </div>
@@ -398,129 +402,54 @@ export default function Expenses({ businessSpaceId, userRole }) {
         </div>
       )}
 
-      {/* View toggle */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '4px', background: t.colors.bg, borderRadius: t.radius.full, padding: '4px', width: 'fit-content' }}>
-          {['overview', 'by-project', 'by-vendor'].map(v => (
-            <button key={v} onClick={() => setActiveView(v)} style={{ padding: '7px 16px', borderRadius: t.radius.full, border: 'none', background: activeView === v ? t.colors.bgCard : 'transparent', color: activeView === v ? t.colors.textPrimary : t.colors.textSecondary, fontSize: t.fontSizes.sm, fontWeight: activeView === v ? '600' : '400', fontFamily: t.fonts.sans, cursor: 'pointer', boxShadow: activeView === v ? t.shadows.sm : 'none' }}>
-              {v === 'overview' ? 'By Category' : v === 'by-project' ? 'By Event/Project' : 'By Vendor'}
-            </button>
-          ))}
-        </div>
-        {activeView === 'by-vendor' && (
-          <select value={vendorQuarterFilter} onChange={e => setVendorQuarterFilter(e.target.value)} style={{ ...styles.input, width: 'auto' }}>
-            <option value="all">All quarters</option>
-            {QUARTERS.map(q => <option key={q} value={q}>{q}</option>)}
-          </select>
+      {/* Search / filter */}
+      <div style={styles.searchWrap}>
+        <Icon name="search" size="sm" />
+        <input
+          style={styles.searchInput}
+          value={search}
+          onChange={e => { setSearch(e.target.value); setShowSuggestions(true) }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+          placeholder="Search by item, category, vendor, or event/project..."
+        />
+        {search && (
+          <button onClick={() => setSearch('')} style={styles.clearSearch} aria-label="Clear search">
+            <Icon name="close" size="sm" />
+          </button>
+        )}
+        {showSuggestions && suggestions.length > 0 && (
+          <div style={styles.suggestionsDropdown}>
+            {suggestions.map(s => (
+              <div key={s} style={styles.suggestionItem} onMouseDown={() => { setSearch(s); setShowSuggestions(false) }}>
+                {s}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {loading ? (
         <div style={styles.empty}>Loading expenses...</div>
+      ) : allItems.length === 0 ? (
+        <EmptyState icon="💸" title="No expenses yet" text={`Nothing planned or logged yet for ${year}`} onAdd={() => setShowExpenseForm(true)} />
+      ) : visibleItems.length === 0 ? (
+        <div style={styles.empty}>{search ? `No expenses match "${search}".` : 'No expenses in this date range.'}</div>
       ) : (
-        <>
-          {activeView === 'overview' && (
-            byCategory.length === 0 ? (
-              <EmptyState icon="💸" title="No expenses yet" text={`Nothing planned or logged yet for ${year}`} onAdd={() => setShowExpenseForm(true)} />
-            ) : (
-              <div style={styles.table}>
-                <div style={styles.tableHeader}>
-                  <span>Item</span>
-                  <span>Category</span>
-                  <span>Event/Project</span>
-                  <span>Quarter</span>
-                  <span>Status</span>
-                  <span>Amount</span>
-                  <span></span>
-                </div>
-                {byCategory.map(cat => (
-                  <Fragment key={cat.category}>
-                    <GroupHeaderRow label={cat.category} leftValue={fmt(cat.projected)} rightValue={fmt(cat.actual)} rightDanger={cat.actual > cat.projected} />
-                    {cat.items.map(item => (
-                      <ExpenseItemRow key={`${item._status}-${item.id}`} item={item} status={item._status} projects={projects} onEdit={startEditExpense} onDelete={deleteExpense} onToggleStatus={handleExpenseStatusClick} />
-                    ))}
-                  </Fragment>
-                ))}
-              </div>
-            )
-          )}
-
-          {activeView === 'by-project' && (
-            byProject.length === 0 && unassignedExpenseItems.length === 0 ? (
-              <EmptyState icon="💸" title="No expenses yet" text={`Nothing planned or logged yet for ${year}`} onAdd={() => setShowExpenseForm(true)} />
-            ) : (
-              <div style={styles.table}>
-                <div style={styles.tableHeader}>
-                  <span>Item</span>
-                  <span>Category</span>
-                  <span>Event/Project</span>
-                  <span>Quarter</span>
-                  <span>Status</span>
-                  <span>Amount</span>
-                  <span></span>
-                </div>
-                {byProject.map(proj => (
-                  <Fragment key={proj.id}>
-                    <GroupHeaderRow label={proj.title} leftValue={fmt(proj.projected)} rightValue={fmt(proj.actual)} rightDanger={proj.actual > proj.projected} />
-                    {proj.items.map(item => (
-                      <ExpenseItemRow key={`${item._status}-${item.id}`} item={item} status={item._status} projects={projects} onEdit={startEditExpense} onDelete={deleteExpense} onToggleStatus={handleExpenseStatusClick} />
-                    ))}
-                  </Fragment>
-                ))}
-                {unassignedExpenseItems.length > 0 && (
-                  <Fragment>
-                    <GroupHeaderRow
-                      label="Unassigned"
-                      leftValue={fmt(unassignedExpenseItems.filter(i => i._status === 'planned').reduce((s, i) => s + Number(i.projected_amount || 0), 0))}
-                      rightValue={fmt(unassignedExpenseItems.filter(i => i._status === 'actual').reduce((s, i) => s + Number(i.amount || 0), 0))}
-                    />
-                    {unassignedExpenseItems.map(item => (
-                      <ExpenseItemRow key={`${item._status}-${item.id}`} item={item} status={item._status} projects={projects} onEdit={startEditExpense} onDelete={deleteExpense} onToggleStatus={handleExpenseStatusClick} />
-                    ))}
-                  </Fragment>
-                )}
-              </div>
-            )
-          )}
-
-          {activeView === 'by-vendor' && (
-            byVendor.length === 0 && uncategorizedVendorItems.length === 0 ? (
-              <EmptyState icon="💸" title="No actual expenses yet" text={`No actual expenses logged yet for ${year}${vendorQuarterFilter !== 'all' ? ` in ${vendorQuarterFilter}` : ''}`} onAdd={() => setShowExpenseForm(true)} />
-            ) : (
-              <div style={styles.table}>
-                <div style={styles.tableHeader}>
-                  <span>Item</span>
-                  <span>Category</span>
-                  <span>Event/Project</span>
-                  <span>Quarter</span>
-                  <span>Status</span>
-                  <span>Amount</span>
-                  <span></span>
-                </div>
-                {byVendor.map(vendor => (
-                  <Fragment key={vendor.id}>
-                    <GroupHeaderRow label={vendor.name} leftValue="" rightValue={fmt(vendor.actual)} />
-                    {vendor.items.map(item => (
-                      <ExpenseItemRow key={`${item._status}-${item.id}`} item={item} status={item._status} projects={projects} onEdit={startEditExpense} onDelete={deleteExpense} onToggleStatus={handleExpenseStatusClick} />
-                    ))}
-                  </Fragment>
-                ))}
-                {uncategorizedVendorItems.length > 0 && (
-                  <Fragment>
-                    <GroupHeaderRow
-                      label="Uncategorized"
-                      leftValue=""
-                      rightValue={fmt(uncategorizedVendorItems.reduce((s, i) => s + Number(i.amount || 0), 0))}
-                    />
-                    {uncategorizedVendorItems.map(item => (
-                      <ExpenseItemRow key={`${item._status}-${item.id}`} item={item} status={item._status} projects={projects} onEdit={startEditExpense} onDelete={deleteExpense} onToggleStatus={handleExpenseStatusClick} />
-                    ))}
-                  </Fragment>
-                )}
-              </div>
-            )
-          )}
-        </>
+        <div style={styles.table}>
+          <div style={styles.tableHeader}>
+            <span>Date</span>
+            <span>Item</span>
+            <span>Category</span>
+            <span>Vendor</span>
+            <span>Amount</span>
+            <span>Status</span>
+            <span></span>
+          </div>
+          {visibleItems.map(item => (
+            <ExpenseItemRow key={`${item._status}-${item.id}`} item={item} status={item._status} onView={(item, status) => setViewingItem({ item, status })} onEdit={startEditExpense} onDelete={deleteExpense} onToggleStatus={handleExpenseStatusClick} />
+          ))}
+        </div>
       )}
 
       {confirmModal && (
@@ -533,6 +462,16 @@ export default function Expenses({ businessSpaceId, userRole }) {
             confirmExpenseActual(confirmModal.item, amount)
             setConfirmModal(null)
           }}
+        />
+      )}
+
+      {viewingItem && (
+        <ExpenseDetailsModal
+          item={viewingItem.item}
+          status={viewingItem.status}
+          onClose={() => setViewingItem(null)}
+          onEdit={() => startEditExpense(viewingItem.item, viewingItem.status)}
+          onDelete={() => deleteExpense(viewingItem.item.id, viewingItem.status)}
         />
       )}
     </div>
@@ -594,27 +533,15 @@ function CategoryManagerPanel({ categories, newCategoryName, setNewCategoryName,
   )
 }
 
-function GroupHeaderRow({ label, leftValue, rightValue, rightDanger }) {
-  return (
-    <div style={{ ...styles.tableRow, cursor: 'default', background: t.colors.bg, fontWeight: '700' }}>
-      <span style={{ gridColumn: '1 / 4', fontSize: t.fontSizes.base, color: t.colors.textPrimary }}>{label}</span>
-      <span style={{ fontSize: t.fontSizes.base, color: t.colors.textSecondary }}>{leftValue}</span>
-      <span style={{ fontSize: t.fontSizes.base, color: rightDanger ? t.colors.danger : t.colors.textPrimary }}>{rightValue}</span>
-      <span></span>
-    </div>
-  )
-}
-
-function ExpenseItemRow({ item, status, projects, onEdit, onDelete, onToggleStatus }) {
+function ExpenseItemRow({ item, status, onView, onEdit, onDelete, onToggleStatus }) {
   const isPlanned = status === 'planned'
-  const quarter = quarterFromDate(isPlanned ? item.item_date : item.date)
-  const amount = isPlanned ? item.projected_amount : item.amount
   return (
     <div style={styles.tableRow}>
-      <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary }}>{isPlanned ? item.label : item.title}</span>
+      <span style={styles.tableCell}>{item._date ? formatDate(item._date) : '—'}</span>
+      <span style={styles.tableCellStrong}>{item._title}</span>
       <span style={styles.tableCell}>{item.category || '—'}</span>
-      <span style={styles.tableCell}>{item.project_id ? (projects.find(p => p.id === item.project_id)?.title || '—') : '—'}</span>
-      <span style={styles.tableCell}>{quarter || '—'}</span>
+      <span style={styles.tableCell}>{item._vendorName || '—'}</span>
+      <span style={styles.tableCellStrong}>{fmt(item._amount)}</span>
       <span>
         <button
           onClick={() => onToggleStatus(item, status)}
@@ -627,11 +554,67 @@ function ExpenseItemRow({ item, status, projects, onEdit, onDelete, onToggleStat
           {status}
         </button>
       </span>
-      <span style={{ fontSize: t.fontSizes.base, fontWeight: '600', color: t.colors.textPrimary }}>{fmt(amount)}</span>
-      <span style={{ display: 'flex', gap: '4px' }}>
-        <button onClick={() => onEdit(item, status)} style={styles.cancelBtn}>Edit</button>
-        <button onClick={() => onDelete(item.id, status)} style={{ ...styles.cancelBtn, color: t.colors.danger }}>Delete</button>
-      </span>
+      <RowActionsMenu
+        onView={() => onView(item, status)}
+        onEdit={() => onEdit(item, status)}
+        onDelete={() => onDelete(item.id, status)}
+      />
+    </div>
+  )
+}
+
+function RowActionsMenu({ onView, onEdit, onDelete }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        style={styles.menuBtn}
+        aria-label="Row actions"
+      >
+        <Icon name="more" size="sm" />
+      </button>
+      {open && (
+        <div style={styles.rowMenu}>
+          <button style={styles.rowMenuItem} onMouseDown={onView}>View details</button>
+          <button style={styles.rowMenuItem} onMouseDown={onEdit}>Edit</button>
+          <button style={{ ...styles.rowMenuItem, color: t.colors.danger }} onMouseDown={onDelete}>Delete</button>
+        </div>
+      )}
+    </span>
+  )
+}
+
+function ExpenseDetailsModal({ item, status, onClose, onEdit, onDelete }) {
+  const rows = [
+    ['Date', item._date ? formatDate(item._date, { month: 'long', day: 'numeric', year: 'numeric' }) : '—'],
+    ['Item', item._title],
+    ['Category', item.category || '—'],
+    ['Vendor', item._vendorName || '—'],
+    ['Event/Project', item._projectTitle || '—'],
+    ['Amount', fmt(item._amount)],
+    ['Status', status],
+    ['Notes', item.notes || '—'],
+  ]
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={onClose}>
+      <div style={{ ...styles.formCard, marginBottom: 0, width: '100%', maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
+        <h3 style={styles.formTitle}>Expense details</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+          {rows.map(([label, value]) => (
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+              <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{label}</span>
+              <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textPrimary, fontWeight: '500', textAlign: 'right' }}>{value}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => { onEdit(); onClose() }} style={styles.saveBtn}>Edit</button>
+          <button onClick={() => { onDelete(); onClose() }} style={{ ...styles.cancelBtn, color: t.colors.danger }}>Delete</button>
+          <button onClick={onClose} style={{ ...styles.cancelBtn, marginLeft: 'auto' }}>Close</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -760,6 +743,55 @@ const styles = {
     fontSize: t.fontSizes.base,
     marginBottom: '16px',
   },
+  searchWrap: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    marginBottom: '16px',
+    backgroundColor: t.colors.bgCard,
+    border: `1px solid ${t.colors.border}`,
+    borderRadius: t.radius.full,
+    color: t.colors.textTertiary,
+  },
+  searchInput: {
+    flex: 1,
+    border: 'none',
+    outline: 'none',
+    fontSize: t.fontSizes.base,
+    color: t.colors.textPrimary,
+    backgroundColor: 'transparent',
+    fontFamily: t.fonts.sans,
+  },
+  clearSearch: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: t.colors.textTertiary,
+    display: 'flex',
+    alignItems: 'center',
+    padding: 0,
+  },
+  suggestionsDropdown: {
+    position: 'absolute',
+    top: 'calc(100% + 4px)',
+    left: 0,
+    right: 0,
+    backgroundColor: t.colors.bgCard,
+    border: `1px solid ${t.colors.border}`,
+    borderRadius: t.radius.md,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+    overflow: 'hidden',
+    zIndex: 10,
+  },
+  suggestionItem: {
+    padding: '9px 16px',
+    fontSize: t.fontSizes.base,
+    color: t.colors.textPrimary,
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
+  },
   table: {
     backgroundColor: t.colors.bgCard,
     borderRadius: t.radius.lg,
@@ -768,8 +800,8 @@ const styles = {
   },
   tableHeader: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 0.6fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.1fr)',
-    padding: '12px 20px',
+    gridTemplateColumns: 'minmax(0, 0.8fr) minmax(0, 1.6fr) minmax(0, 1.0fr) minmax(0, 1.1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.1fr)',
+    padding: '10px 20px',
     backgroundColor: t.colors.bg,
     borderBottom: `1px solid ${t.colors.border}`,
     fontSize: t.fontSizes.xs,
@@ -780,18 +812,53 @@ const styles = {
   },
   tableRow: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 0.6fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.1fr)',
-    padding: '14px 20px',
+    gridTemplateColumns: 'minmax(0, 0.8fr) minmax(0, 1.6fr) minmax(0, 1.0fr) minmax(0, 1.1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.1fr)',
+    padding: '11px 20px',
     borderBottom: `1px solid ${t.colors.borderLight}`,
     alignItems: 'center',
   },
-  tableCell: { fontSize: t.fontSizes.base, color: t.colors.textSecondary },
+  tableCell: { fontSize: t.fontSizes.sm, color: t.colors.textSecondary },
+  tableCellStrong: { fontSize: t.fontSizes.sm, fontWeight: '600', color: t.colors.textPrimary },
   statusBadge: {
     display: 'inline-block',
     padding: '3px 10px',
     borderRadius: t.radius.full,
-    fontSize: t.fontSizes.sm,
+    fontSize: t.fontSizes.xs,
     fontWeight: '500',
+  },
+  menuBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: t.colors.textTertiary,
+    display: 'flex',
+    alignItems: 'center',
+    padding: '6px',
+    borderRadius: t.radius.md,
+  },
+  rowMenu: {
+    position: 'absolute',
+    top: 'calc(100% + 4px)',
+    right: 0,
+    minWidth: '150px',
+    backgroundColor: t.colors.bgCard,
+    border: `1px solid ${t.colors.border}`,
+    borderRadius: t.radius.md,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+    overflow: 'hidden',
+    zIndex: 10,
+  },
+  rowMenuItem: {
+    display: 'block',
+    width: '100%',
+    textAlign: 'left',
+    padding: '9px 14px',
+    fontSize: t.fontSizes.sm,
+    color: t.colors.textPrimary,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: t.fonts.sans,
   },
   emptyState: {
     display: 'flex',

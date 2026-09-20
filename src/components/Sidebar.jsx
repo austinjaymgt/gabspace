@@ -31,9 +31,9 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
 
   {
     label: 'Money', icon: 'finance', path: 'money', children: [
+      { label: 'Snapshot', path: 'snapshot' },
       { label: 'Income', path: 'income' },
       { label: 'Expenses', path: 'expenses' },
-      { label: 'Snapshot', path: 'snapshot' },
     ]
   },
   {
