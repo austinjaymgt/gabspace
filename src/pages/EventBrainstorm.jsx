@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
+import { Icon } from '../components/Icon'
 
 const EVENT_TYPES = [
   'Brand activation', 'Product launch', 'Immersive pop-up',
@@ -176,17 +177,32 @@ export default function EventBrainstorm({ businessSpaceId, session }) {
     <div style={{ padding: '32px', maxWidth: '860px' }}>
 
       {/* Page header */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Creative Collective</div>
-        <h2 style={{ fontSize: '20px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '0.01em' }}>Spark</h2>
-        <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0 }}>Capture event ideas and move them into projects or content</p>
-              </div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
+        <div style={{
+          width: '44px', height: '44px', borderRadius: '14px', flexShrink: 0,
+          background: 'linear-gradient(135deg, #D4874E 0%, #7C5CBF 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 14px rgba(212, 135, 78, 0.35)',
+        }}>
+          <Icon name="idea" size="md" style={{ color: '#fff' }} />
+        </div>
+        <div>
+          <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '4px' }}>Creative Collective</div>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '0.01em' }}>Spark ✨</h2>
+          <p style={{ fontSize: '13px', color: t.colors.textTertiary, margin: 0, maxWidth: '480px', lineHeight: '1.5' }}>
+            Your idea dump for events. Jot down anything — a napkin sketch of a concept, a link, a vibe — then come back and shape the good ones into real projects or content.
+          </p>
+        </div>
+      </div>
 
       {/* Quick capture */}
-      <div style={s.card}>
-        <div style={s.sectionLabel}>Quick Capture</div>
+      <div style={{ ...s.card, borderLeft: '3px solid #D4874E' }}>
+        <div style={{ ...s.sectionLabel, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Icon name="idea" size="sm" style={{ color: '#D4874E' }} />
+          Quick Capture
+        </div>
         <p style={{ fontSize: '13px', color: t.colors.textTertiary, marginBottom: '12px', marginTop: '-4px' }}>
-          Jot down a random thought, link, reference, or half-baked idea before it disappears
+          Don't overthink it — jot down a random thought, link, reference, or half-baked idea before it disappears
         </p>
         <input
           style={{ ...s.input, marginBottom: '10px' }}
@@ -220,8 +236,20 @@ export default function EventBrainstorm({ businessSpaceId, session }) {
         {loadingConcepts ? (
           <div style={{ fontSize: '13px', color: t.colors.textTertiary, padding: '24px 0' }}>Loading…</div>
         ) : concepts.length === 0 ? (
-          <div style={{ ...s.card, textAlign: 'center', padding: '40px', color: t.colors.textTertiary, fontSize: '13px' }}>
-            No saved ideas yet. Capture a thought above to get started.
+          <div style={{ ...s.card, textAlign: 'center', padding: '48px 32px' }}>
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '50%', margin: '0 auto 14px',
+              background: 'linear-gradient(135deg, rgba(212,135,78,0.15) 0%, rgba(124,92,191,0.15) 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name="idea" size="md" style={{ color: '#D4874E' }} />
+            </div>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: t.colors.textPrimary, marginBottom: '4px' }}>
+              No sparks yet
+            </div>
+            <div style={{ fontSize: '13px', color: t.colors.textTertiary, maxWidth: '320px', margin: '0 auto' }}>
+              Capture a thought above — even a messy one. You can shape it into something real later.
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
