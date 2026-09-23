@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import Toggle from '../components/Toggle'
 import TagInput from '../components/TagInput'
+import RichTextEditor from '../components/RichTextEditor'
 
 const PLAN_LABELS = { business: 'Business', duo: 'Duo', studio: 'Studio', enterprise: 'Enterprise' }
 
@@ -481,7 +482,7 @@ export default function AdminPanel() {
         <div style={{ ...headerStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h3 style={titleStyle}>Blog ({posts.length})</h3>
-            <p style={descStyle}>Posts published here go live on gabspace.io within a few minutes.</p>
+            <p style={descStyle}>Posts published here go live on gabspace.io within about a minute.</p>
           </div>
           <button
             onClick={openNewPost}
@@ -642,14 +643,16 @@ export default function AdminPanel() {
                   </label>
                 </div>
               </Field>
-              <Field label="Content (Markdown)">
-                <textarea
-                  rows={12}
+              {/* Not <Field>: its wrapping <label> would forward clicks in the
+                  editor to the first toolbar button. */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary }}>Content</span>
+                <RichTextEditor
+                  key={editingPost.id || 'new'}
                   value={editingPost.content}
-                  onChange={e => setEditingPost(prev => ({ ...prev, content: e.target.value }))}
-                  style={{ ...inputStyle, resize: 'vertical', fontFamily: 'ui-monospace, monospace' }}
+                  onChange={html => setEditingPost(prev => ({ ...prev, content: html }))}
                 />
-              </Field>
+              </div>
               <Field label="SEO title (blank = post title)">
                 <input
                   type="text"
