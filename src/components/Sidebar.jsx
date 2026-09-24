@@ -9,6 +9,13 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
   const navItems = [
   { label: 'Dashboard', icon: 'dashboard', path: 'dashboard' },
   { label: 'Calendar', icon: 'calendar', path: 'calendar' },
+  {
+    label: 'Community', icon: 'guests', path: 'community', activePaths: ['community-listing', 'community-request', 'community-messages'], children: [
+      { label: 'Directory', path: 'community-directory' },
+      { label: 'The Board', path: 'community-board' },
+      { label: 'My Collabs', path: 'community-my-requests' },
+    ]
+  },
 
     {
     label: 'Client Management', icon: 'clients', path: 'allclients', section: 'business', children: [
@@ -195,7 +202,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
       <nav style={{ padding: '8px 0', flex: 1 }}>
         {items.map(item => {
           const isActive = currentPage === item.path ||
-            (item.children && item.children.some(c => c.path === currentPage))
+            (item.children && item.children.some(c => c.path === currentPage)) ||
+            (item.activePaths && item.activePaths.includes(currentPage))
 
           return (
             <div key={item.label}>

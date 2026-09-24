@@ -1,0 +1,160 @@
+/*
+ * Community look — warm, social, "people first", deliberately distinct from
+ * the plum/grey business UI. Everything is scoped to .gs-community, which
+ * wraps each Community page (see CommunityPage in CommunityUI.jsx).
+ *
+ * Most of the restyle comes from re-pointing the app's own theme variables
+ * (--color-primary, --color-bg-card, …) inside the scope, so every existing
+ * inline style that uses theme.colors picks up the Community palette
+ * automatically. --cm-* variables are Community-only extras.
+ */
+
+.gs-community {
+  /* Sunset palette, built from the brand's magenta + warning gradient. */
+  --color-primary:        #c23f73;
+  --color-primary-light:  #fde7ef;
+  --color-primary-dark:   #8f2c5a;
+  --color-nav:            #c23f73;           /* active tab pills */
+  --color-bg:             #fdf4f2;           /* nested rows (responses, etc.) */
+  --color-bg-card:        #ffffff;
+  --color-bg-hover:       #fcebef;
+  --color-border:         #f0d9df;
+  --color-border-light:   #f6e6ea;
+  --color-text-primary:   #2b1a2a;
+  --color-text-secondary: #6b5563;
+  --color-text-tertiary:  #a08793;
+
+  --cm-page-bg:     linear-gradient(180deg, #fff4ee 0%, #fdf1f6 38%, #f7f3fa 100%);
+  --cm-hero-bg:     linear-gradient(120deg, #ffe2d1 0%, #fcd6e4 48%, #e3dcfb 100%);
+  --cm-hero-ink:    #2b1a2a;
+  --cm-hero-sub:    #6b4a5c;
+  --cm-button:      linear-gradient(135deg, #cf4478 0%, #9e3169 100%);
+  --cm-button-shadow: 0 6px 16px rgba(194, 63, 115, 0.28);
+  --cm-bubble-mine: linear-gradient(135deg, #cf4478 0%, #9e3169 100%);
+  --cm-card-shadow: 0 1px 2px rgba(120, 40, 70, 0.04), 0 4px 14px rgba(120, 40, 70, 0.06);
+  --cm-card-shadow-hover: 0 2px 4px rgba(120, 40, 70, 0.06), 0 12px 28px rgba(194, 63, 115, 0.14);
+  --cm-orb-a:       rgba(255, 170, 120, 0.55);
+  --cm-orb-b:       rgba(79, 168, 232, 0.35);
+  --cm-orb-c:       rgba(63, 214, 200, 0.35);
+
+  /* Tag colors — each specialty gets one of these, picked by name. */
+  --cm-tag0-bg: #fde7ef; --cm-tag0-fg: #a3325f;
+  --cm-tag1-bg: #e3f1fd; --cm-tag1-fg: #23679a;
+  --cm-tag2-bg: #dcf7f3; --cm-tag2-fg: #17756b;
+  --cm-tag3-bg: #efe7fd; --cm-tag3-fg: #6440a8;
+  --cm-tag4-bg: #fff0da; --cm-tag4-fg: #93540f;
+  --cm-tag5-bg: #e5f7e7; --cm-tag5-fg: #2f7a3f;
+}
+
+[data-theme="dark"] .gs-community {
+  --color-primary:        #ff8fb1;
+  --color-primary-light:  rgba(255, 143, 177, 0.14);
+  --color-primary-dark:   #ffc2d4;
+  --color-nav:            #cf4478;
+  --color-bg:             rgba(255, 200, 215, 0.05);
+  --color-bg-card:        #2a1127;
+  --color-bg-hover:       #3a1834;
+  --color-border:         rgba(255, 190, 210, 0.16);
+  --color-border-light:   rgba(255, 190, 210, 0.09);
+  --color-text-primary:   #f7ecf2;
+  --color-text-secondary: #d9bfcd;
+  --color-text-tertiary:  #a48597;
+
+  --cm-page-bg:     radial-gradient(circle at 15% 0%, #43163a 0%, #1d0a1a 45%, #160814 100%);
+  --cm-hero-bg:     linear-gradient(120deg, #4d1d3c 0%, #3d1742 50%, #1f2749 100%);
+  --cm-hero-ink:    #fff3f7;
+  --cm-hero-sub:    #e3c3d4;
+  --cm-button-shadow: 0 6px 18px rgba(207, 68, 120, 0.35);
+  --cm-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --cm-card-shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 143, 177, 0.25);
+  --cm-orb-a:       rgba(255, 120, 150, 0.35);
+  --cm-orb-b:       rgba(79, 168, 232, 0.28);
+  --cm-orb-c:       rgba(63, 214, 200, 0.22);
+
+  --cm-tag0-bg: rgba(255, 143, 177, 0.16); --cm-tag0-fg: #ffb3ca;
+  --cm-tag1-bg: rgba(79, 168, 232, 0.16);  --cm-tag1-fg: #9fd0f7;
+  --cm-tag2-bg: rgba(63, 214, 200, 0.14);  --cm-tag2-fg: #8ce8dd;
+  --cm-tag3-bg: rgba(170, 140, 240, 0.16); --cm-tag3-fg: #cbb9fb;
+  --cm-tag4-bg: rgba(240, 170, 90, 0.16);  --cm-tag4-fg: #f6c58f;
+  --cm-tag5-bg: rgba(110, 200, 130, 0.14); --cm-tag5-fg: #a6e3b4;
+}
+
+/* ── Page + hero ──────────────────────────────────────────────────────── */
+
+.gs-cm-page {
+  background: var(--cm-page-bg);
+  min-height: calc(100dvh - 120px);
+}
+
+.gs-cm-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 32px 36px;
+  margin-bottom: 24px;
+  background: var(--cm-hero-bg);
+  color: var(--cm-hero-ink);
+}
+
+/* Soft brand "orbs" drifting behind the hero text. */
+.gs-cm-hero::before,
+.gs-cm-hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+}
+.gs-cm-hero::before {
+  width: 260px; height: 260px; right: -60px; top: -110px;
+  background: radial-gradient(circle, var(--cm-orb-a), transparent 70%);
+}
+.gs-cm-hero::after {
+  width: 220px; height: 220px; right: 180px; bottom: -140px;
+  background: radial-gradient(circle, var(--cm-orb-b), transparent 70%);
+}
+.gs-cm-hero > * { position: relative; }
+
+@media (max-width: 640px) {
+  .gs-cm-hero { padding: 24px 20px; border-radius: 22px; }
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+
+.gs-cm-card {
+  border-radius: 20px !important;
+  box-shadow: var(--cm-card-shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.gs-cm-card--link { cursor: pointer; }
+.gs-cm-card--link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cm-card-shadow-hover);
+  border-color: var(--color-border) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-cm-card, .gs-cm-card--link:hover { transition: none; transform: none; }
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+
+.gs-cm-button {
+  background-image: var(--cm-button) !important;
+  box-shadow: var(--cm-button-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.gs-cm-button:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.05); }
+.gs-cm-button:disabled { box-shadow: none; }
+
+/* ── Tags ─────────────────────────────────────────────────────────────── */
+
+.gs-cm-tag-0 { background: var(--cm-tag0-bg) !important; color: var(--cm-tag0-fg) !important; }
+.gs-cm-tag-1 { background: var(--cm-tag1-bg) !important; color: var(--cm-tag1-fg) !important; }
+.gs-cm-tag-2 { background: var(--cm-tag2-bg) !important; color: var(--cm-tag2-fg) !important; }
+.gs-cm-tag-3 { background: var(--cm-tag3-bg) !important; color: var(--cm-tag3-fg) !important; }
+.gs-cm-tag-4 { background: var(--cm-tag4-bg) !important; color: var(--cm-tag4-fg) !important; }
+.gs-cm-tag-5 { background: var(--cm-tag5-bg) !important; color: var(--cm-tag5-fg) !important; }
+
+/* ── Messages ─────────────────────────────────────────────────────────── */
+
+.gs-cm-bubble-mine { background-image: var(--cm-bubble-mine); }

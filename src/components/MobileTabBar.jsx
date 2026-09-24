@@ -20,6 +20,7 @@ const MORE_ITEMS = [
   { label: 'Money', icon: 'finance', path: 'income', moduleKey: 'money' },
   { label: 'Operations', icon: 'operations', path: 'vendors', moduleKey: 'operations' },
   { label: 'Team', icon: 'team', path: 'team-goals', moduleKey: 'team' },
+  { label: 'Community', icon: 'guests', path: 'community-board', activePaths: ['community-directory', 'community-listing', 'community-board', 'community-request', 'community-my-requests', 'community-messages'] },
 ]
 
 export default function MobileTabBar({ currentPage, onNavigate, onLogout, businessSpaceId }) {

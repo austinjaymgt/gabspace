@@ -7,6 +7,7 @@ import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModul
 import RoleBadge from '../components/RoleBadge'
 import { cancelSubscription, resumeSubscription } from '../utils/checkout'
 import PasswordRequirements from '../components/PasswordRequirements'
+import { DirectoryListingSettings, TagAlertsSettings } from '../components/community/CommunitySettings'
 
 const PLAN_LABELS = {
   business: 'Business (1 business)',
@@ -525,6 +526,17 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
           </div>
         </SectionCard>
       )}
+
+      {/* ── Community ── */}
+      {isOwnerOrAdmin && (
+        <SectionCard title="Directory listing" subtitle="Show this business in the Community directory">
+          <DirectoryListingSettings businessSpaceId={businessSpaceId} />
+        </SectionCard>
+      )}
+
+      <SectionCard title="Board alerts" subtitle="Get notified when a request is posted to The Board in categories or skills you follow">
+        <TagAlertsSettings />
+      </SectionCard>
 
       {/* ── Orbi ── */}
       <SectionCard title="Orbi" subtitle="Your assistant for upcoming deadlines, projects and events across all business profiles">

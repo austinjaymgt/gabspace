@@ -42,6 +42,11 @@ import TeamMembers from './pages/TeamMembers'
 import OnboardingModal from './components/OnboardingModal'
 import Resources from './pages/Resources'
 import Tutorials from './pages/Tutorials'
+import Directory from './pages/Directory'
+import ListingDetail from './pages/ListingDetail'
+import CollabBoard from './pages/CollabBoard'
+import CollabRequestDetail from './pages/CollabRequestDetail'
+import MyCollabRequests from './pages/MyCollabRequests'
 import AddBusinessFlow from './components/AddBusinessFlow'
 import Pricing from './pages/Pricing'
 import GetStarted from './pages/GetStarted'
@@ -76,6 +81,9 @@ export default function App() {
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
 const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
 const [showAddBusinessFlow, setShowAddBusinessFlow] = useState(false)
+// Record a Community detail page should open (listing/request id) — pages
+// are switched by currentPage alone, so the id rides alongside it.
+const [communityTarget, setCommunityTarget] = useState({ page: null, id: null })
 const [addBusinessForced, setAddBusinessForced] = useState(false)
 const [authChecked, setAuthChecked] = useState(false)
 const [authSplashDone, setAuthSplashDone] = useState(false)
@@ -441,6 +449,17 @@ const WELCOME_SPLASH_MS = 2600
     setPortalActivityVersion(v => v + 1)
   }
 
+  function openCommunity(page, id = null) {
+    setCommunityTarget({ page, id })
+    setCurrentPage(page)
+  }
+  // Only applies to the page it was opened for, so reaching that page some
+  // other way (sidebar, back button) doesn't reuse a stale id.
+  const communityTargetId = communityTarget.page === currentPage ? communityTarget.id : null
+  // Community pages get their own warm look (community.css), scoped here so
+  // the rest of the app keeps the business styling.
+  const inCommunity = page => <div className="gs-community gs-cm-page">{page}</div>
+
 const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange: bumpBusinessIdentityVersion, onArchiveBusiness: handleArchiveBusinessSpace, portalActivityVersion, onPortalActivityChange: bumpPortalActivity }
   const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const isStaff = ['owner', 'co-owner', 'employee'].includes(userRole)
@@ -511,6 +530,22 @@ function renderPage() {
 
       case 'tutorials':
         return <Tutorials />
+
+      // Community is account-wide (not tied to the active business), open to
+      // every staff role; posting/responding is gated per business by RLS.
+      case 'community-directory':
+        return isStaff ? inCommunity(<Directory {...pageProps} onOpen={openCommunity} onNavigate={setCurrentPage} />) : <AccessDenied />
+      case 'community-listing':
+        return isStaff ? inCommunity(<ListingDetail key={communityTargetId} {...pageProps} targetId={communityTargetId} onOpen={openCommunity} onNavigate={setCurrentPage} />) : <AccessDenied />
+      case 'community-board':
+        return isStaff ? inCommunity(<CollabBoard {...pageProps} onOpen={openCommunity} onNavigate={setCurrentPage} />) : <AccessDenied />
+      case 'community-request':
+        return isStaff ? inCommunity(<CollabRequestDetail key={communityTargetId} {...pageProps} targetId={communityTargetId} onOpen={openCommunity} onNavigate={setCurrentPage} />) : <AccessDenied />
+      case 'community-my-requests':
+        return isStaff ? inCommunity(<MyCollabRequests key={communityTargetId} {...pageProps} targetId={communityTargetId} onOpen={openCommunity} onNavigate={setCurrentPage} />) : <AccessDenied />
+      // Same page, opened on the Messages tab (target = response id).
+      case 'community-messages':
+        return isStaff ? inCommunity(<MyCollabRequests key={`messages-${communityTargetId}`} {...pageProps} initialTab="messages" targetId={communityTargetId} onOpen={openCommunity} onNavigate={setCurrentPage} />) : <AccessDenied />
 
       case 'pro-dev':
         return isStaff ? <ProDev {...pageProps} /> : <AccessDenied />
@@ -856,7 +891,7 @@ function renderPage() {
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans, display: 'flex' }}>
       {overlays}
 {!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} isPlatformAdmin={isPlatformAdmin} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? 'calc(60px + env(safe-area-inset-bottom))' : 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={bumpPortalActivity} isPlatformAdmin={isPlatformAdmin} />
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={bumpPortalActivity} isPlatformAdmin={isPlatformAdmin} onOpenCommunity={openCommunity} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
           {renderPage()}

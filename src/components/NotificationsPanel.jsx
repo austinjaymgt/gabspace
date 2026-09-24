@@ -5,6 +5,7 @@ import Orb from './Orb'
 import { fetchPortalActivity, markProjectViewed } from '../utils/portalActivity'
 import { fetchOrbiItems } from '../utils/orbiItems'
 import { getOrbiBrief } from '../lib/orbi'
+import { fetchNotifications, countUnreadNotifications, markNotificationRead, markAllNotificationsRead } from '../utils/community'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -29,9 +30,14 @@ function itemIcon(item) {
   return '💬'
 }
 
-export default function NotificationsPanel({ businessSpaceId, isMobile = false, onNavigate, portalActivityVersion, onPortalActivityChange, session, onSwitchBusinessSpace }) {
+export default function NotificationsPanel({ businessSpaceId, isMobile = false, onNavigate, portalActivityVersion, onPortalActivityChange, session, onSwitchBusinessSpace, onOpenCommunity }) {
   const [open, setOpen] = useState(false)
-  const [total, setTotal] = useState(0)
+  const [portalTotal, setPortalTotal] = useState(0)
+  // In-app notifications table (Community layer) — account-wide, unlike
+  // portal activity which is scoped to the active business.
+  const [communityItems, setCommunityItems] = useState([])
+  const [communityUnread, setCommunityUnread] = useState(0)
+  const total = portalTotal + communityUnread
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const containerRef = useRef(null)
@@ -62,10 +68,29 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
   function refresh() {
     if (!businessSpaceId) return
     fetchPortalActivity(businessSpaceId).then(({ total, items }) => {
-      setTotal(total)
+      setPortalTotal(total)
       setItems(items)
     })
+    refreshCommunity()
   }
+
+  function refreshCommunity() {
+    fetchNotifications().then(setCommunityItems).catch(() => {})
+    countUnreadNotifications().then(setCommunityUnread).catch(() => {})
+  }
+
+  // No realtime subscription for notifications yet — poll the unread count
+  // so the badge picks up new collab activity without a reload.
+  useEffect(() => {
+    const id = setInterval(() => countUnreadNotifications().then(setCommunityUnread).catch(() => {}), 60000)
+    // Lets other parts of the app (e.g. opening a message thread) ask for an
+    // immediate refresh instead of waiting for the next poll.
+    window.addEventListener('community-notifications-changed', refreshCommunity)
+    return () => {
+      clearInterval(id)
+      window.removeEventListener('community-notifications-changed', refreshCommunity)
+    }
+  }, [])
 
   useEffect(refresh, [businessSpaceId, portalActivityVersion])
 
@@ -142,6 +167,20 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
     onNavigate?.('client-portal-manager')
   }
 
+  async function handleCommunityClick(n) {
+    closeDropdown()
+    if (!n.read_at) {
+      await markNotificationRead(n.id)
+      refreshCommunity()
+    }
+    if (n.target_page) onOpenCommunity?.(n.target_page, n.target_id)
+  }
+
+  async function handleMarkAllRead() {
+    await markAllNotificationsRead()
+    refreshCommunity()
+  }
+
   async function handleOrbiAction(action) {
     closeDropdown()
     // An item can belong to a business space other than the one currently
@@ -153,7 +192,7 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
 
   const noPortalItems = !loading && items.length === 0
   const noOrbiItems = !orbiLoading && !orbiError && (orbiItems?.length || 0) === 0
-  const allEmpty = noPortalItems && noOrbiItems
+  const allEmpty = noPortalItems && noOrbiItems && communityItems.length === 0
 
   const dropdown = open && (
     <div style={{
@@ -183,6 +222,37 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
 
       {!allEmpty && (
         <>
+          {communityItems.length > 0 && (
+            <>
+              <div style={{ ...sectionLabelStyle(t), display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <span>Community</span>
+                {communityUnread > 0 && (
+                  <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', padding: 0, fontSize: t.fontSizes.xs, color: t.colors.primary, fontWeight: 600, fontFamily: t.fonts.sans, cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}>
+                    Mark all read
+                  </button>
+                )}
+              </div>
+              {communityItems.map(n => (
+                <div
+                  key={n.id}
+                  onClick={() => handleCommunityClick(n)}
+                  style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '10px 14px', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = t.colors.bg}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{ flexShrink: 0, marginTop: 6, width: 6, height: 6, borderRadius: '50%', backgroundColor: n.read_at ? 'transparent' : t.colors.primary }} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textPrimary, fontWeight: n.read_at ? 400 : 600 }}>{n.title}</div>
+                    {n.body && (
+                      <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.body}</div>
+                    )}
+                    <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: 2 }}>{timeAgo(n.created_at)}</div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
           <div style={sectionLabelStyle(t)}>Portal Activity</div>
 
           {noPortalItems && (

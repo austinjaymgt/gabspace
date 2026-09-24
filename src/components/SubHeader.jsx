@@ -37,6 +37,11 @@ const allPages = [
   { path: 'pro-dev',           label: 'Pro Dev',           icon: 'star' },
   { path: 'business-events',   label: 'Networking',  icon: 'events' },
 
+  // Community
+  { path: 'community-directory',   label: 'Directory',        icon: 'guests' },
+  { path: 'community-board',       label: 'The Board',        icon: 'post' },
+  { path: 'community-my-requests', label: 'My Collabs',       icon: 'post' },
+
 ]
 
 const validPaths = new Set(allPages.map(p => p.path))
@@ -84,6 +89,14 @@ const CATEGORY_CHILDREN = [
       { path: 'team-goals', label: 'Goals', icon: 'team-goals' },
       { path: 'pro-dev', label: 'Pro Dev', icon: 'star' },
       { path: 'business-events', label: 'Networking', icon: 'events' },
+    ],
+  },
+  {
+    label: 'Community',
+    children: [
+      { path: 'community-directory', label: 'Directory', icon: 'guests' },
+      { path: 'community-board', label: 'The Board', icon: 'post' },
+      { path: 'community-my-requests', label: 'My Collabs', icon: 'post' },
     ],
   },
 ]
