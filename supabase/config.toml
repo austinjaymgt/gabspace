@@ -28,3 +28,8 @@ entrypoint = "./functions/quick-add-parse/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/mcp/index.ts"
+
+[functions.orbi-agent]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/orbi-agent/index.ts"

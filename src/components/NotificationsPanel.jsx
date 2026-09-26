@@ -109,16 +109,17 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
       setOrbiLoading(true)
       setOrbiError('')
 
-      // Scoped to the active business only — RLS on the tables Orbi reads
-      // (invoices, events, projects, team_goals, etc.) checks against
-      // user_profiles.business_space_id, the single "currently active"
-      // pointer, not business_space_members' full membership list. So a
-      // cross-business query here would silently get filtered down to
-      // just this one space anyway; passing just the active id makes
-      // that explicit instead of pretending otherwise.
-      const { data: biz } = await supabase.from('business_spaces').select('id, name').eq('id', businessSpaceId).maybeSingle()
+      // Every non-archived business the user is staff on. Membership RLS
+      // (20260926020000) lets these reads span all of them; money rows only
+      // come back for businesses where they're an owner or co-owner.
+      const { data: memberships } = await supabase
+        .from('business_space_members')
+        .select('business_space_id, role, business_spaces(name, archived_at)')
+        .eq('user_id', session.user.id)
       if (requestId !== orbiRequestIdRef.current) return
-      const businesses = biz ? [{ id: biz.id, name: biz.name }] : []
+      const businesses = (memberships || [])
+        .filter(m => ['owner', 'co-owner', 'employee'].includes(m.role) && m.business_spaces && !m.business_spaces.archived_at)
+        .map(m => ({ id: m.business_space_id, name: m.business_spaces.name }))
 
       const rawItems = await fetchOrbiItems(businesses, days)
       if (requestId !== orbiRequestIdRef.current) return

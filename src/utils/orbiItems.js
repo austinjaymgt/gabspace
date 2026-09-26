@@ -24,13 +24,10 @@ function rankForDiff(daysDiff) {
 
 // Pulls the prioritized items (overdue invoices, upcoming projects,
 // networking events, content due dates, goals) and shapes them into the
-// flat item format Orbi's prompt expects. `businesses` is scoped to the
-// caller's active business space — RLS on these tables checks against
-// user_profiles.business_space_id (the single active pointer, not the
-// full business_space_members list), so a genuinely cross-business query
-// would silently collapse to just the active space regardless of what's
-// passed in here; the function still accepts an array for that reason,
-// but a caller can't get more than the active business back today. Tasks
+// flat item format Orbi's prompt expects. `businesses` can be every
+// business the caller is staff on - membership RLS on these tables
+// (20260926020000 / 20260926030000) lets the reads span them all, with
+// invoices only coming back where they're an owner or co-owner. Tasks
 // are deliberately excluded — they're the Dashboard's job; Orbi is for
 // the less-visible, more interesting stuff (projects wrapping up, events
 // coming up, content due).

@@ -14,14 +14,12 @@
 // tells the client where to sign in. Tokens are verified here instead.
 import { createMcpHandler, McpServer } from 'npm:@modelcontextprotocol/server@^2.1.0'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { loadToolContext, TOOLS, ToolError, type GabspaceTool, type ToolContext } from '../_shared/gabspace-tools/index.ts'
+import { loadToolContext, TOOLS, type GabspaceTool, type ToolContext } from '../_shared/gabspace-tools/index.ts'
+import { runTool } from '../_shared/gabspace-tools/run.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const RESOURCE_URL = `${SUPABASE_URL}/functions/v1/mcp`
 const METADATA_URL = `${RESOURCE_URL}/oauth-protected-resource`
-const TOOL_CALLS_PER_HOUR = 300
-const WRITE_CALLS_PER_HOUR = 60
-const WRITE_TOOL_NAMES = (TOOLS as GabspaceTool<any>[]).filter(t => !t.readOnly).map(t => t.name)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,49 +64,6 @@ function oauthClientId(token: string): string | null {
 
 const adminClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-type CallLog = {
-  user_id: string
-  oauth_client_id: string | null
-  tool_name: string
-  business_space_id: string | null
-  status: 'ok' | 'error' | 'denied' | 'rate_limited'
-  error_message?: string
-  duration_ms: number
-}
-
-async function logCall(entry: CallLog) {
-  const { error } = await adminClient.from('mcp_request_log').insert(entry)
-  if (error) console.error('mcp_request_log insert failed', error.message)
-}
-
-// Returns the message to show when a limit is hit, or null. Writes get a
-// tighter limit of their own on top of the overall one, counting only
-// successful writes so a burst of rejected attempts doesn't lock anyone out.
-async function rateLimitMessage(userId: string, isWrite: boolean): Promise<string | null> {
-  const windowStart = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-  const { count } = await adminClient
-    .from('mcp_request_log')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .gte('created_at', windowStart)
-  if ((count || 0) >= TOOL_CALLS_PER_HOUR) {
-    return `You've hit the limit of ${TOOL_CALLS_PER_HOUR} gabspace tool calls per hour. Try again a bit later.`
-  }
-  if (!isWrite) return null
-
-  const { count: writes } = await adminClient
-    .from('mcp_request_log')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('status', 'ok')
-    .in('tool_name', WRITE_TOOL_NAMES)
-    .gte('created_at', windowStart)
-  if ((writes || 0) >= WRITE_CALLS_PER_HOUR) {
-    return `You've hit the limit of ${WRITE_CALLS_PER_HOUR} changes to gabspace per hour. Try again a bit later.`
-  }
-  return null
-}
-
 function buildServer(ctx: ToolContext, clientId: string | null): McpServer {
   const server = new McpServer(
     { name: 'gabspace', version: '0.1.0' },
@@ -135,31 +90,8 @@ function buildServer(ctx: ToolContext, clientId: string | null): McpServer {
         annotations: { readOnlyHint: tool.readOnly, destructiveHint: false, openWorldHint: false },
       },
       async (args: any) => {
-        const started = Date.now()
-        const base = {
-          user_id: ctx.userId,
-          oauth_client_id: clientId,
-          tool_name: tool.name,
-          business_space_id: args?.business_space_id ?? ctx.activeBusinessId,
-        }
-
-        const limited = await rateLimitMessage(ctx.userId, !tool.readOnly)
-        if (limited) {
-          await logCall({ ...base, status: 'rate_limited', duration_ms: Date.now() - started })
-          return { isError: true, content: [{ type: 'text' as const, text: limited }] }
-        }
-
-        try {
-          const result = await tool.handler(ctx, args ?? {})
-          await logCall({ ...base, status: 'ok', duration_ms: Date.now() - started })
-          return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] }
-        } catch (err) {
-          const known = err instanceof ToolError
-          const message = err instanceof Error ? err.message : String(err)
-          await logCall({ ...base, status: known ? (err as ToolError).kind : 'error', error_message: message.slice(0, 500), duration_ms: Date.now() - started })
-          if (!known) console.error(`tool ${tool.name} failed`, message)
-          return { isError: true, content: [{ type: 'text' as const, text: known ? message : 'Something went wrong reading gabspace. Try again in a moment.' }] }
-        }
+        const { ok, text } = await runTool(ctx, tool, args, { adminClient, clientId })
+        return ok ? { content: [{ type: 'text' as const, text }] } : { isError: true, content: [{ type: 'text' as const, text }] }
       },
     )
   }
