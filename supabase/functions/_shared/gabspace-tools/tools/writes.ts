@@ -11,14 +11,47 @@ import { businessIdField, defineTool, isoDate } from '../types.ts'
 // before we attach something to it - RLS would allow a record from any of
 // the caller's businesses, but a project from a different business than
 // the task should be a clear error rather than a silently mismatched link.
-async function assertInBusiness(ctx: ToolContext, table: 'projects' | 'clients', id: string, business: Business) {
+const LINKED_LABELS = { projects: 'project', clients: 'client', vendors: 'vendor' } as const
+
+async function assertInBusiness(ctx: ToolContext, table: keyof typeof LINKED_LABELS, id: string, business: Business) {
+  const label = LINKED_LABELS[table]
   const row = check(
     await ctx.supabase.from(table).select('id, business_space_id').eq('id', id).maybeSingle(),
-    table === 'projects' ? 'the project' : 'the client',
+    `the ${label}`,
   ) as any
   if (!row?.id || row.business_space_id !== business.id) {
-    throw new ToolError(`That ${table === 'projects' ? 'project' : 'client'} isn't in ${business.name}.`, 'denied')
+    throw new ToolError(`That ${label} isn't in ${business.name}.`, 'denied')
   }
+}
+
+function requireManager(business: Business, what: string) {
+  if (!['owner', 'co-owner'].includes(business.role)) {
+    throw new ToolError(`${what} in ${business.name} can only be added by owners and co-owners.`, 'denied')
+  }
+}
+
+// Expense and income categories are per-business lists the user manages on
+// the Expenses / Income pages (budget_categories). Match the given name to
+// one of them so it groups correctly there; if the business has no list yet
+// (the page seeds defaults on first visit), keep what was given.
+async function matchCategory(ctx: ToolContext, business: Business, type: 'expense' | 'income', value: string | undefined) {
+  if (!value) return null
+  const rows = check(
+    await ctx.supabase.from('budget_categories').select('name').eq('business_space_id', business.id).eq('type', type).order('position'),
+    `${type} categories`,
+  ) as { name: string }[]
+  if (!rows.length) return value
+  const match = rows.find(r => r.name.toLowerCase() === value.toLowerCase())
+  if (!match) {
+    throw new ToolError(`"${value}" isn't one of ${business.name}'s ${type} categories: ${rows.map(r => r.name).join(', ')}. Use one of those, or leave category out.`)
+  }
+  return match.name
+}
+
+// Goals are grouped by quarter; matches periodFromDate in TeamGoals.jsx.
+function periodFromDate(date: string | undefined) {
+  const d = date ? new Date(`${date}T00:00:00Z`) : new Date()
+  return `Q${Math.ceil((d.getUTCMonth() + 1) / 3)} ${d.getUTCFullYear()}`
 }
 
 // The fields an update tool was actually given (undefined = leave alone,
@@ -114,6 +147,93 @@ export const updateTask = defineTool({
       before: { title: existing.title, status: existing.status, due_date: existing.due_date },
       updated: task,
     }
+  },
+})
+
+export const logExpense = defineTool({
+  name: 'log_expense',
+  title: 'Log expense',
+  description: 'Record an expense that was spent (shows under Actual on the Expenses page). Category must be one of the business\'s expense categories if it has any - an unknown one returns the list. Owners and co-owners only.',
+  input: z.object({
+    business_space_id: businessIdField,
+    title: z.string().trim().min(1).max(200),
+    amount: z.number().positive().max(100000000).describe('In dollars, no currency symbol.'),
+    date: isoDate.optional(),
+    category: z.string().trim().max(80).optional(),
+    project_id: z.string().uuid().optional(),
+    vendor_id: z.string().uuid().optional(),
+    notes: z.string().trim().max(2000).optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, args) => {
+    const business = resolveBusiness(ctx, args.business_space_id, 'money')
+    requireManager(business, 'Expenses')
+    if (args.project_id) await assertInBusiness(ctx, 'projects', args.project_id, business)
+    if (args.vendor_id) await assertInBusiness(ctx, 'vendors', args.vendor_id, business)
+    const category = await matchCategory(ctx, business, 'expense', args.category)
+
+    const expense = check(
+      await ctx.supabase
+        .from('expenses')
+        .insert({
+          business_space_id: business.id,
+          user_id: ctx.userId,
+          title: args.title,
+          amount: args.amount,
+          date: args.date ?? null,
+          category,
+          project_id: args.project_id ?? null,
+          vendor_id: args.vendor_id ?? null,
+          notes: args.notes || null,
+        })
+        .select('id, title, amount, date, category, project_id, vendor_id, notes')
+        .single(),
+      'the expense',
+    )
+    return { business: business.name, created: expense }
+  },
+})
+
+export const logIncome = defineTool({
+  name: 'log_income',
+  title: 'Log income',
+  description: 'Record income that isn\'t an invoice payment (e.g. a sponsorship, retainer, product sale) on the Income page. Status is received (default) or pending. Category must be one of the business\'s income categories if it has any - an unknown one returns the list. Owners and co-owners only.',
+  input: z.object({
+    business_space_id: businessIdField,
+    source: z.string().trim().min(1).max(200).describe('Where the money came from, e.g. "Bloom Events sponsorship".'),
+    amount: z.number().positive().max(100000000).describe('In dollars, no currency symbol.'),
+    date: isoDate.optional(),
+    status: z.enum(['received', 'pending']).default('received'),
+    category: z.string().trim().max(80).optional(),
+    project_id: z.string().uuid().optional(),
+    notes: z.string().trim().max(2000).optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, args) => {
+    const business = resolveBusiness(ctx, args.business_space_id, 'money')
+    requireManager(business, 'Income')
+    if (args.project_id) await assertInBusiness(ctx, 'projects', args.project_id, business)
+    const category = await matchCategory(ctx, business, 'income', args.category)
+
+    const income = check(
+      await ctx.supabase
+        .from('revenue')
+        .insert({
+          business_space_id: business.id,
+          user_id: ctx.userId,
+          income_stream: args.source,
+          amount: args.amount,
+          date: args.date ?? null,
+          status: args.status,
+          tax_category: category,
+          project_id: args.project_id ?? null,
+          notes: args.notes || null,
+        })
+        .select('id, income_stream, amount, date, status, tax_category, project_id, notes')
+        .single(),
+      'the income entry',
+    )
+    return { business: business.name, created: income }
   },
 })
 
@@ -480,5 +600,156 @@ export const addProjectMilestone = defineTool({
       'the milestone',
     )
     return { business: business.name, project: project.title, created: milestone }
+  },
+})
+
+const VENDOR_CATEGORIES = [
+  'Photography', 'Videography', 'Catering', 'Florals', 'Music & DJ',
+  'Hair & Makeup', 'Venue', 'Rentals', 'Transportation', 'Other',
+] as const
+
+export const createVendor = defineTool({
+  name: 'create_vendor',
+  title: 'Create vendor',
+  description: 'Add a vendor (photographer, caterer, venue, etc.) to a business\'s Vendors directory. Nothing is sent to the vendor.',
+  input: z.object({
+    business_space_id: businessIdField,
+    name: z.string().trim().min(1).max(200),
+    category: z.enum(VENDOR_CATEGORIES).optional(),
+    email: z.string().trim().email().max(320).optional(),
+    phone: z.string().trim().max(40).optional(),
+    rate: z.number().min(0).max(10000000).optional().describe('Typical rate in dollars, no currency symbol.'),
+    website: z.string().trim().max(300).optional(),
+    instagram: z.string().trim().max(100).optional(),
+    address: z.string().trim().max(300).optional(),
+    payment_terms: z.string().trim().max(200).optional().describe('e.g. "50% deposit, balance on delivery".'),
+    tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, { business_space_id, ...args }) => {
+    const business = resolveBusiness(ctx, business_space_id, 'operations')
+
+    const vendor = check(
+      await ctx.supabase
+        .from('vendors')
+        .insert({
+          business_space_id: business.id,
+          user_id: ctx.userId,
+          name: args.name,
+          category: args.category ?? null,
+          email: args.email || null,
+          phone: args.phone || null,
+          rate: args.rate ?? null,
+          website: args.website || null,
+          instagram: args.instagram || null,
+          address: args.address || null,
+          payment_terms: args.payment_terms || null,
+          tags: args.tags ?? [],
+        })
+        .select('id, name, category, email, phone, rate, website, instagram, address, payment_terms, tags')
+        .single(),
+      'the vendor',
+    )
+    return { business: business.name, created: vendor }
+  },
+})
+
+export const createGoal = defineTool({
+  name: 'create_goal',
+  title: 'Create goal',
+  description: 'Add a goal to a business\'s Team Goals page. It\'s filed under the quarter of its due date (or the current quarter). Category "other" needs a category_label. Owners and co-owners only.',
+  input: z.object({
+    business_space_id: businessIdField,
+    title: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(2000).optional(),
+    owner: z.string().trim().max(100).optional().describe('Free-text name of who owns the goal.'),
+    category: z.enum(['team', 'business', 'personal', 'financial', 'marketing', 'other']).default('team'),
+    category_label: z.string().trim().min(1).max(60).optional(),
+    status: z.enum(['not-started', 'on-track', 'at-risk', 'completed']).default('not-started'),
+    start_date: isoDate.optional(),
+    due_date: isoDate.optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, args) => {
+    const business = resolveBusiness(ctx, args.business_space_id, 'team')
+    requireManager(business, 'Goals')
+    if (args.category === 'other' && !args.category_label) throw new ToolError('Give a category_label for an "other" goal.')
+    if (args.start_date && args.due_date && args.due_date < args.start_date) throw new ToolError('due_date is before start_date.')
+
+    const goal = check(
+      await ctx.supabase
+        .from('team_goals')
+        .insert({
+          business_space_id: business.id,
+          title: args.title,
+          description: args.description || null,
+          owner: args.owner || null,
+          category: args.category,
+          category_label: args.category === 'other' ? args.category_label : null,
+          status: args.status,
+          start_date: args.start_date ?? null,
+          due_date: args.due_date ?? null,
+          period: periodFromDate(args.due_date),
+        })
+        .select('id, title, description, owner, category, category_label, status, period, start_date, due_date')
+        .single(),
+      'the goal',
+    )
+    return { business: business.name, created: goal }
+  },
+})
+
+const NETWORKING_EVENT_TYPES = [
+  'Networking mixer', 'Trade show', 'Pop-up', 'Workshop',
+  'Speaking gig', 'Styled shoot', 'Vendor fair', 'Conference', 'Other',
+] as const
+
+export const addNetworkingEvent = defineTool({
+  name: 'add_networking_event',
+  title: 'Add networking event',
+  description: 'Add a networking event, conference or meetup to a business\'s Networking page, optionally with goals for it. Status "upcoming" shows as Idea in the app.',
+  input: z.object({
+    business_space_id: businessIdField,
+    name: z.string().trim().min(1).max(200),
+    type: z.enum(NETWORKING_EVENT_TYPES).default('Other'),
+    date: isoDate.optional(),
+    location: z.string().trim().max(300).optional(),
+    cost: z.number().min(0).max(10000000).optional().describe('In dollars, no currency symbol.'),
+    status: z.enum(['upcoming', 'registered', 'attending', 'completed', 'cancelled']).default('upcoming'),
+    goal_connections: z.number().int().min(0).max(100000).optional(),
+    goal_leads: z.number().int().min(0).max(100000).optional(),
+    goal_revenue: z.number().min(0).max(100000000).optional(),
+    goal_notes: z.string().trim().max(2000).optional(),
+    notes: z.string().trim().max(2000).optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, { business_space_id, ...args }) => {
+    const business = resolveBusiness(ctx, business_space_id, 'team')
+
+    const event = check(
+      await ctx.supabase
+        .from('business_events')
+        .insert({
+          business_space_id: business.id,
+          user_id: ctx.userId,
+          name: args.name,
+          type: args.type,
+          event_type: 'attending',
+          date: args.date ?? null,
+          location: args.location || null,
+          cost: args.cost ?? null,
+          status: args.status,
+          goal_connections: args.goal_connections ?? null,
+          goal_leads: args.goal_leads ?? null,
+          goal_revenue: args.goal_revenue ?? null,
+          goal_notes: args.goal_notes || null,
+          notes: args.notes || null,
+          prep_checklist: [],
+        })
+        .select('id, name, type, date, location, cost, status, goal_connections, goal_leads, goal_revenue, goal_notes, notes')
+        .single(),
+      'the event',
+    )
+    return { business: business.name, created: event }
   },
 })

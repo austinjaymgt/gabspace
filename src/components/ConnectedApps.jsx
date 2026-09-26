@@ -3,8 +3,9 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 
 // The gabspace MCP server (supabase/functions/mcp) — what people paste into
-// Claude's "Add custom connector".
-export const MCP_SERVER_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mcp`
+// Claude's "Add custom connector". Served from our own domain via a Vercel
+// rewrite so Claude shows the gabspace icon (see the note in that function).
+export const MCP_SERVER_URL = 'https://app.gabspace.io/mcp'
 
 // Apps the user has approved on /oauth/consent (Supabase Auth OAuth grants),
 // with a way to disconnect them. Grants are per user, not per business.

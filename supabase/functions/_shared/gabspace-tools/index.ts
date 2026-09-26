@@ -10,12 +10,17 @@ import { listContentCalendar, listNetworkingEvents } from './tools/schedule.ts'
 import { searchBoard } from './tools/community.ts'
 import {
   addClientNote,
+  addNetworkingEvent,
   addProjectMilestone,
   createClient,
   createContentItem,
+  createGoal,
   createInvoiceDraft,
   createProject,
   createTask,
+  createVendor,
+  logExpense,
+  logIncome,
   updateClient,
   updateContentItem,
   updateProject,
@@ -45,6 +50,11 @@ export const TOOLS: GabspaceTool<any>[] = [
   createInvoiceDraft,
   createContentItem,
   updateContentItem,
+  logExpense,
+  logIncome,
+  createVendor,
+  createGoal,
+  addNetworkingEvent,
 ]
 
 export { loadToolContext, ToolError, type ToolContext } from './context.ts'

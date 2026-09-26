@@ -1,5 +1,8 @@
 {
   "rewrites": [
+    { "source": "/mcp", "destination": "https://dfgbjthfoffsrxwrcnlu.supabase.co/functions/v1/mcp?via=app" },
+    { "source": "/mcp/oauth-protected-resource", "destination": "https://dfgbjthfoffsrxwrcnlu.supabase.co/functions/v1/mcp/oauth-protected-resource?via=app" },
+    { "source": "/.well-known/oauth-protected-resource/mcp", "destination": "https://dfgbjthfoffsrxwrcnlu.supabase.co/functions/v1/mcp/oauth-protected-resource?via=app" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]

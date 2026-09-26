@@ -1,6 +1,7 @@
 -- Rollback for 20260926020000_membership_rls_for_tool_tables.sql,
--- 20260926030000_membership_rls_for_orbi_tables.sql and
--- 20260926040000_membership_rls_for_notes.sql
+-- 20260926030000_membership_rls_for_orbi_tables.sql,
+-- 20260926040000_membership_rls_for_notes.sql and
+-- 20260926050000_membership_rls_for_vendors_and_categories.sql
 --
 -- NOT a migration — run by hand only if the membership policies need to be
 -- removed. Drops only the policies that migration added; the original
@@ -26,9 +27,11 @@ DROP POLICY IF EXISTS "invoice_payments_manager_member" ON public.invoice_paymen
 DROP POLICY IF EXISTS "events_staff_member" ON public.events;
 DROP POLICY IF EXISTS "team_goals_staff_member" ON public.team_goals;
 DROP POLICY IF EXISTS "notes_staff_member" ON public.notes;
+DROP POLICY IF EXISTS "vendors_staff_member" ON public.vendors;
+DROP POLICY IF EXISTS "budget_categories_manager_member" ON public.budget_categories;
 
 DROP FUNCTION IF EXISTS public.is_business_staff(uuid);
 
-DELETE FROM supabase_migrations.schema_migrations WHERE version IN ('20260926020000', '20260926030000', '20260926040000');
+DELETE FROM supabase_migrations.schema_migrations WHERE version IN ('20260926020000', '20260926030000', '20260926040000', '20260926050000');
 
 COMMIT;
