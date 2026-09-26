@@ -35,6 +35,7 @@ import TeamGoals from './pages/TeamGoals'
 import ClientPortalManager from './pages/ClientPortalManager'
 import ClientPortalView from './pages/ClientPortalView'
 import { subscribeToPortalActivityChanges } from './utils/portalActivity'
+import { loadModules } from './utils/businessModules'
 import { theme as t } from './theme'
 import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
@@ -77,6 +78,7 @@ export default function App() {
   const [businessSpaceId, setBusinessSpaceId] = useState(null)
   const [businessIdentityVersion, setBusinessIdentityVersion] = useState(0)
   const [portalActivityVersion, setPortalActivityVersion] = useState(0)
+  const [, setModulesVersion] = useState(0)
   const [userRole, setUserRole] = useState(null)
 const [workspaceLoading, setWorkspaceLoading] = useState(true)
 const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
@@ -321,6 +323,19 @@ const WELCOME_SPLASH_MS = 2600
     if (!businessSpaceId) return
     return subscribeToPortalActivityChanges(businessSpaceId, () => setPortalActivityVersion(v => v + 1))
   }, [businessSpaceId])
+
+  // Refreshes the module cache that Sidebar/MobileTabBar/Dashboard read
+  // synchronously via getModules(). Also re-runs on identity bumps so a
+  // just-created business (whose modules AddBusinessFlow writes after the
+  // switch) and toggles from Settings are picked up.
+  useEffect(() => {
+    if (!businessSpaceId) return
+    let cancelled = false
+    loadModules(businessSpaceId).then(() => {
+      if (!cancelled) setModulesVersion(v => v + 1)
+    })
+    return () => { cancelled = true }
+  }, [businessSpaceId, businessIdentityVersion])
 
 
   async function handleLogin(e) {

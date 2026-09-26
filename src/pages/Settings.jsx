@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
 import Toggle from '../components/Toggle'
-import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, setModules as persistModules, toggleModuleState } from '../utils/businessModules'
+import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, loadModules, setModules as persistModules, toggleModuleState } from '../utils/businessModules'
 import RoleBadge from '../components/RoleBadge'
 import { cancelSubscription, resumeSubscription } from '../utils/checkout'
 import PasswordRequirements from '../components/PasswordRequirements'
@@ -161,14 +161,24 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   useEffect(() => {
     setModulesState(getModules(businessSpaceId))
     setModuleNote(null)
-    if (businessSpaceId) fetchModuleDataCounts()
+    if (!businessSpaceId) return
+    let cancelled = false
+    loadModules(businessSpaceId).then(m => { if (!cancelled) setModulesState(m) })
+    fetchModuleDataCounts()
+    return () => { cancelled = true }
   }, [businessSpaceId])
 
-  function handleToggleModule(key) {
+  async function handleToggleModule(key) {
     const wasOn = modules[key]
+    const previous = modules
     const { modules: next, note } = toggleModuleState(modules, key)
     setModulesState(next)
-    persistModules(businessSpaceId, next)
+    const { error } = await persistModules(businessSpaceId, next)
+    if (error) {
+      setModulesState(previous)
+      setModuleNote("Couldn't save that change — try again.")
+      return
+    }
     onBusinessIdentityChange?.()
 
     const dataCount = moduleDataCounts[key] || 0

@@ -1,7 +1,10 @@
-// Which feature modules a business space has turned on. There's no schema
-// for this yet, so it's mock/local state persisted per business in
-// localStorage — a business with no stored entry (e.g. AJ Management,
-// created before this existed) defaults to everything on, unchanged.
+import { supabase } from '../supabaseClient'
+
+// Which feature modules a business space has turned on. The source of
+// truth is business_spaces.enabled_modules (NULL = never configured =
+// everything on). localStorage is kept as a synchronous cache so the
+// sidebar/tab bar/dashboard can keep reading getModules() during render —
+// App calls loadModules() whenever the active business changes to refresh it.
 
 // One module per top-level sidebar section, so a toggle here always maps
 // to a whole nav group turning on/off together (see MODULE_NAV_PATHS).
@@ -44,18 +47,70 @@ const STORAGE_PREFIX = 'gabspace_modules_'
 
 export function getModules(businessSpaceId) {
   if (!businessSpaceId) return ALL_ON
+  const cached = readCache(businessSpaceId)
+  return cached ? { ...ALL_ON, ...cached } : ALL_ON
+}
+
+function writeCache(businessSpaceId, modules) {
+  try {
+    localStorage.setItem(STORAGE_PREFIX + businessSpaceId, JSON.stringify(modules))
+  } catch { /* storage unavailable — the DB is still the source of truth */ }
+}
+
+function readCache(businessSpaceId) {
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + businessSpaceId)
-    if (!raw) return ALL_ON
-    return { ...ALL_ON, ...JSON.parse(raw) }
+    return raw ? JSON.parse(raw) : null
   } catch {
-    return ALL_ON
+    return null
   }
 }
 
-export function setModules(businessSpaceId, modules) {
-  if (!businessSpaceId) return
-  localStorage.setItem(STORAGE_PREFIX + businessSpaceId, JSON.stringify(modules))
+// Pulls the business's modules from the DB into the cache. A business that
+// was configured back when this only lived in localStorage has a NULL
+// column but a cached entry — push that up once so the owner's earlier
+// choices aren't reset to all-on. Only owners/co-owners can write, so for
+// anyone else the push just fails and the DB default (all on) wins.
+export async function loadModules(businessSpaceId) {
+  if (!businessSpaceId) return ALL_ON
+  const { data, error } = await supabase
+    .from('business_spaces')
+    .select('enabled_modules')
+    .eq('id', businessSpaceId)
+    .maybeSingle()
+  if (error) return getModules(businessSpaceId)
+
+  if (data?.enabled_modules) {
+    const modules = { ...ALL_ON, ...data.enabled_modules }
+    writeCache(businessSpaceId, modules)
+    return modules
+  }
+
+  const legacy = readCache(businessSpaceId)
+  if (legacy) {
+    const modules = { ...ALL_ON, ...legacy }
+    const { error: pushError } = await supabase.rpc('set_business_modules', {
+      target_business_space_id: businessSpaceId,
+      new_modules: modules,
+    })
+    if (!pushError) return modules
+  }
+  writeCache(businessSpaceId, ALL_ON)
+  return ALL_ON
+}
+
+// Writes the cache first so a re-render picks the change up immediately,
+// then persists. On failure the cache is rolled back and the error returned.
+export async function setModules(businessSpaceId, modules) {
+  if (!businessSpaceId) return { error: null }
+  const previous = getModules(businessSpaceId)
+  writeCache(businessSpaceId, modules)
+  const { error } = await supabase.rpc('set_business_modules', {
+    target_business_space_id: businessSpaceId,
+    new_modules: modules,
+  })
+  if (error) writeCache(businessSpaceId, previous)
+  return { error }
 }
 
 // Flips one module and cascades its dependency relationship: turning a

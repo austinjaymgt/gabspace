@@ -86,7 +86,9 @@ export default function AddBusinessFlow({ onCreate, onDone, onClose, forced = fa
       setStep(skipped ? 'name' : 'proposal')
       return
     }
-    if (newId) persistModules(newId, modules)
+    // Awaited so the modules are in the DB before onDone bumps the business
+    // identity version, which is what makes App reload them.
+    if (newId) await persistModules(newId, modules)
     setStep('done')
   }
 
