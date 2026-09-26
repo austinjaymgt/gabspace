@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
@@ -95,6 +96,10 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   const modules = getModules(businessSpaceId)
   const [settings, setSettings] = useState(null)
   const headerSentinelRef = useRef(null)
+  const headerRef = useRef(null)
+  const headerSpacerRef = useRef(null)
+  const fullHeaderHeightRef = useRef(0)
+  const headerStuckRef = useRef(false)
   const [headerStuck, setHeaderStuck] = useState(false)
 
 
@@ -198,16 +203,41 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
 
   // Shrinks the header to one compact row once it's pinned under the top
   // bars: a 1px sentinel above it scrolls out of view exactly when it sticks.
+  //
+  // Compacting must never make the page shorter, even for an instant: on a
+  // page only slightly taller than the window, the browser clamps the scroll
+  // back up the moment it lays out a shorter page, which un-sticks the
+  // header, grows it again, and loops. So before the header shrinks, a
+  // spacer under it reserves the header's full height; after the shrink
+  // (layout effect, before paint) the spacer is trimmed to exactly the
+  // height the header gave up. The header has no size transitions, so that
+  // measurement is final.
   useEffect(() => {
     const el = headerSentinelRef.current
     if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => setHeaderStuck(!entry.isIntersecting),
-      { rootMargin: `-${STICKY_HEADER_TOP}px 0px 0px 0px`, threshold: 0 },
-    )
+    const observer = new IntersectionObserver(([entry]) => {
+      const stuck = !entry.isIntersecting
+      if (stuck && !headerStuckRef.current && headerRef.current && headerSpacerRef.current) {
+        fullHeaderHeightRef.current = headerRef.current.offsetHeight
+        headerSpacerRef.current.style.height = `${fullHeaderHeightRef.current}px`
+      }
+      headerStuckRef.current = stuck
+      // Synchronous, so the shrink and the spacer trim land in the same
+      // frame - no paint with the full-height reservation showing.
+      flushSync(() => setHeaderStuck(stuck))
+    }, { rootMargin: `-${STICKY_HEADER_TOP}px 0px 0px 0px`, threshold: 0 })
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
+
+  useLayoutEffect(() => {
+    const header = headerRef.current
+    const spacer = headerSpacerRef.current
+    if (!header || !spacer) return
+    spacer.style.height = headerStuck
+      ? `${Math.max(0, fullHeaderHeightRef.current - header.offsetHeight)}px`
+      : '0px'
+  }, [headerStuck])
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -231,7 +261,7 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
 
       {/* ── Header (sticky; compacts to one row once pinned) ── */}
       <div ref={headerSentinelRef} style={{ height: '1px', marginBottom: '-1px' }} />
-      <div style={{
+      <div ref={headerRef} style={{
         position: 'sticky', top: STICKY_HEADER_TOP, zIndex: 20,
         margin: '0 -32px 24px', padding: headerStuck ? '10px 32px' : '0 32px',
         display: 'flex', flexDirection: headerStuck ? 'row' : 'column', alignItems: 'center', justifyContent: 'center',
@@ -240,17 +270,17 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
         backdropFilter: headerStuck ? 'blur(10px)' : 'none',
         WebkitBackdropFilter: headerStuck ? 'blur(10px)' : 'none',
         borderBottom: `1px solid ${headerStuck ? t.colors.borderLight : 'transparent'}`,
-        transition: 'padding 0.2s ease, background-color 0.2s ease',
+        transition: 'background-color 0.2s ease',
       }}>
         {workspaceLogo ? (
-          <img src={workspaceLogo} alt="logo" style={{ width: headerStuck ? '32px' : '64px', height: headerStuck ? '32px' : '64px', borderRadius: t.radius.full, objectFit: 'cover', border: `1px solid ${t.colors.borderLight}`, flexShrink: 0, transition: 'width 0.2s ease, height 0.2s ease' }} />
+          <img src={workspaceLogo} alt="logo" style={{ width: headerStuck ? '32px' : '64px', height: headerStuck ? '32px' : '64px', borderRadius: t.radius.full, objectFit: 'cover', border: `1px solid ${t.colors.borderLight}`, flexShrink: 0 }} />
         ) : (
           <div style={{
             width: headerStuck ? '32px' : '64px', height: headerStuck ? '32px' : '64px', borderRadius: t.radius.full,
             backgroundColor: t.colors.primary, color: t.colors.textInverse,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: headerStuck ? '13px' : '22px', fontWeight: '700', fontFamily: t.fonts.sans,
-            flexShrink: 0, transition: 'width 0.2s ease, height 0.2s ease',
+            flexShrink: 0,
           }}>
             {initials}
           </div>
@@ -271,6 +301,8 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
           )}
         </div>
       </div>
+
+      <div ref={headerSpacerRef} aria-hidden="true" />
 
       {/* ── Orbi: ask questions or jot things down ── */}
       <OrbiCard session={session} onItemsAdded={() => { fetchProjectPulse(); fetchRevenueSnapshot(); fetchGoalsProgress() }} />
