@@ -5,7 +5,7 @@ import { businessIdField, defineTool, limitField } from '../types.ts'
 export const listClients = defineTool({
   name: 'list_clients',
   title: 'List clients',
-  description: 'List clients of the active business, optionally filtered by a name/company search or status.',
+  description: 'List clients of a business, optionally filtered by a name/company search or status.',
   input: z.object({
     business_space_id: businessIdField,
     search: z.string().max(100).optional().describe('Matches client name or company.'),

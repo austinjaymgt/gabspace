@@ -101,7 +101,7 @@ export default function OAuthConsent({ session }) {
             {isStaff ? (
               <>
                 <p style={s.body}>
-                  In the business you have active in gabspace, {clientName} will be able to <strong>see</strong>:
+                  In the businesses you're on the team for, {clientName} will be able to <strong>see</strong>:
                 </p>
                 <ul style={s.list}>
                   {READ_ITEMS.map(item => <li key={item} style={{ marginBottom: '6px' }}>{item}</li>)}

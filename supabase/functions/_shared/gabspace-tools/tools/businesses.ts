@@ -5,7 +5,7 @@ import { defineTool } from '../types.ts'
 export const listBusinesses = defineTool({
   name: 'list_businesses',
   title: 'List businesses',
-  description: 'List the gabspace businesses you are on the team for, your role in each, which modules each has turned on, and which one is currently active. Tools read from the active business.',
+  description: 'List the gabspace businesses you are on the team for, your role in each, which modules each has turned on, and which one is currently active in gabspace. Call this to find a business id when the user names one; other tools default to the active business.',
   input: z.object({}),
   readOnly: true,
   handler: async (ctx) => ({

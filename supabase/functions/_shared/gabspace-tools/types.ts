@@ -19,7 +19,7 @@ export function defineTool<S extends z.ZodObject>(tool: GabspaceTool<S>): Gabspa
 
 // Shared input fields.
 export const businessIdField = z.string().uuid().optional()
-  .describe('Business to read from. Defaults to your active business in gabspace, which is currently the only one supported.')
+  .describe('Which of your businesses to use (ids from list_businesses). Defaults to the business currently active in gabspace. Use the business the user names.')
 export const limitField = z.number().int().min(1).max(100).default(25)
   .describe('Maximum rows to return.')
 export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')

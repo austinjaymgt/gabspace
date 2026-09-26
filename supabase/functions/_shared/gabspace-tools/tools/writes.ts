@@ -7,9 +7,9 @@ import { businessForRecord, check, resolveBusiness, ToolError, type Business, ty
 import { businessIdField, defineTool, isoDate } from '../types.ts'
 
 // Confirms a linked record (project/client) belongs to the same business
-// before we attach something to it - RLS would allow any record in the
-// active business, but an id from a different business should be a clear
-// error rather than a silently broken link.
+// before we attach something to it - RLS would allow a record from any of
+// the caller's businesses, but a project from a different business than
+// the task should be a clear error rather than a silently mismatched link.
 async function assertInBusiness(ctx: ToolContext, table: 'projects' | 'clients', id: string, business: Business) {
   const row = check(
     await ctx.supabase.from(table).select('id, business_space_id').eq('id', id).maybeSingle(),
@@ -23,7 +23,7 @@ async function assertInBusiness(ctx: ToolContext, table: 'projects' | 'clients',
 export const createTask = defineTool({
   name: 'create_task',
   title: 'Create task',
-  description: 'Create a task in the active business. Optionally link it to a project or client (use list_projects / list_clients to find ids).',
+  description: 'Create a task in one of your businesses. Optionally link it to a project or client (use list_projects / list_clients to find ids).',
   input: z.object({
     business_space_id: businessIdField,
     title: z.string().trim().min(1).max(200),
@@ -64,7 +64,7 @@ export const createTask = defineTool({
 export const updateTask = defineTool({
   name: 'update_task',
   title: 'Update task',
-  description: 'Update a task in the active business: mark it done or in progress, rename it, or change its dates. Pass null for a date to clear it.',
+  description: 'Update a task: mark it done or in progress, rename it, or change its dates. Pass null for a date to clear it.',
   input: z.object({
     task_id: z.string().uuid(),
     title: z.string().trim().min(1).max(200).optional(),
@@ -105,7 +105,7 @@ export const updateTask = defineTool({
 export const createInvoiceDraft = defineTool({
   name: 'create_invoice_draft',
   title: 'Create invoice draft',
-  description: 'Create a DRAFT invoice in the active business with line items. It is not sent to anyone - the user reviews and sends it from the Invoices page. Owners and co-owners only.',
+  description: 'Create a DRAFT invoice in one of your businesses with line items. It is not sent to anyone - the user reviews and sends it from the Invoices page. Owners and co-owners only.',
   input: z.object({
     business_space_id: businessIdField,
     client_id: z.string().uuid(),
@@ -169,7 +169,7 @@ export const createInvoiceDraft = defineTool({
 export const scheduleContent = defineTool({
   name: 'schedule_content',
   title: 'Add to content calendar',
-  description: 'Add a post or content idea to the active business\'s content calendar. Statuses: idea, in-production, scheduled, published.',
+  description: 'Add a post or content idea to a business\'s content calendar. Statuses: idea, in-production, scheduled, published.',
   input: z.object({
     business_space_id: businessIdField,
     title: z.string().trim().min(1).max(200),

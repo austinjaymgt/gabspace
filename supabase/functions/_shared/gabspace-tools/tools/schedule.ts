@@ -5,7 +5,7 @@ import { businessIdField, defineTool, isoDate, limitField } from '../types.ts'
 export const listContentCalendar = defineTool({
   name: 'list_content_calendar',
   title: 'List content calendar',
-  description: 'List scheduled content/social posts for the active business. Defaults to upcoming items that are not yet published.',
+  description: 'List scheduled content/social posts for a business. Defaults to upcoming items that are not yet published.',
   input: z.object({
     business_space_id: businessIdField,
     from: isoDate.optional().describe('Defaults to today (UTC).'),
@@ -34,7 +34,7 @@ export const listContentCalendar = defineTool({
 export const listNetworkingEvents = defineTool({
   name: 'list_networking_events',
   title: 'List networking events',
-  description: 'List networking events, conferences and meetups the active business is tracking (the Team > Networking page), with goals and outcomes. Defaults to upcoming events.',
+  description: 'List networking events, conferences and meetups a business is tracking (the Team > Networking page), with goals and outcomes. Defaults to upcoming events.',
   input: z.object({
     business_space_id: businessIdField,
     from: isoDate.optional().describe('Defaults to today (UTC). Pass an earlier date to include past events.'),

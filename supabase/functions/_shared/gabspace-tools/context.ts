@@ -34,8 +34,8 @@ export type ToolContext = {
   supabase: SupabaseClient
   businesses: Business[]
   // The business the user is currently switched into in the web app
-  // (user_profiles.business_space_id). Most tables' RLS only exposes this
-  // one, so tools only operate on it - see resolveBusiness.
+  // (user_profiles.business_space_id) - the default when a tool call
+  // doesn't name one.
   activeBusinessId: string | null
 }
 
@@ -74,28 +74,29 @@ export async function loadToolContext(supabase: SupabaseClient, userId: string):
   return { userId, supabase, businesses, activeBusinessId: profileRes.data?.business_space_id ?? null }
 }
 
-// Picks the business a tool call is about. RLS on most business tables
-// (clients, projects, invoices, ...) only exposes the user's *active*
-// business, so querying any other one would silently come back empty -
-// instead, anything but the active business gets a clear "switch first"
-// answer. Once those policies move to membership-based access this can
-// accept any business the caller is staff on.
+// Picks the business a tool call is about: any business the caller is
+// staff on (the membership RLS policies from 20260926020000 let their
+// token read and write all of them). With no id it defaults to the active
+// business, then to their only business, and otherwise asks the model to
+// choose rather than guessing.
 export function resolveBusiness(ctx: ToolContext, businessSpaceId: string | undefined, module?: ModuleKey): Business {
-  const active = ctx.businesses.find(b => b.id === ctx.activeBusinessId)
-  if (!active) {
-    throw new ToolError('Your active business in gabspace isn\'t one you\'re on the team for (or it\'s archived). Switch to one of your businesses in gabspace, then try again.', 'denied')
+  let business: Business | undefined
+  if (businessSpaceId) {
+    business = ctx.businesses.find(b => b.id === businessSpaceId)
+    if (!business) throw new ToolError('That business either doesn\'t exist or you aren\'t on its team. Call list_businesses to see the ones you can use.', 'denied')
+  } else {
+    business = ctx.businesses.find(b => b.id === ctx.activeBusinessId)
+      ?? (ctx.businesses.length === 1 ? ctx.businesses[0] : undefined)
+    if (!business) {
+      const options = ctx.businesses.map(b => `${b.name} (${b.id})`).join(', ')
+      throw new ToolError(`Which business? Pass business_space_id - options: ${options}`)
+    }
   }
 
-  if (businessSpaceId && businessSpaceId !== active.id) {
-    const requested = ctx.businesses.find(b => b.id === businessSpaceId)
-    if (!requested) throw new ToolError('That business either doesn\'t exist or you aren\'t on its team. Call list_businesses to see the ones you can use.', 'denied')
-    throw new ToolError(`For now I can only read your active business, which is ${active.name}. To look at ${requested.name}, switch to it in gabspace and ask again.`, 'denied')
+  if (module && !business.modules[module]) {
+    throw new ToolError(`${business.name} has the ${MODULE_LABELS[module]} module turned off, so there's nothing to show here.`, 'denied')
   }
-
-  if (module && !active.modules[module]) {
-    throw new ToolError(`${active.name} has the ${MODULE_LABELS[module]} module turned off, so there's nothing to show here.`, 'denied')
-  }
-  return active
+  return business
 }
 
 // For tools that take a record id rather than a business id: confirms the

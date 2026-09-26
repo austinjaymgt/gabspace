@@ -5,7 +5,7 @@ import { businessIdField, defineTool, isoDate, limitField } from '../types.ts'
 export const listProjects = defineTool({
   name: 'list_projects',
   title: 'List projects',
-  description: 'List projects of the active business. Statuses used in gabspace include planning, active, on-hold, completed and cancelled.',
+  description: 'List projects of a business. Statuses used in gabspace include planning, active, on-hold, completed and cancelled.',
   input: z.object({
     business_space_id: businessIdField,
     status: z.string().max(40).optional(),
@@ -63,7 +63,7 @@ export const getProject = defineTool({
 export const listTasks = defineTool({
   name: 'list_tasks',
   title: 'List tasks',
-  description: `List tasks of the active business. By default hides finished tasks. Task statuses are todo, in-progress and done. Dates are YYYY-MM-DD; "today" is computed in UTC.`,
+  description: `List tasks of a business. By default hides finished tasks. Task statuses are todo, in-progress and done. Dates are YYYY-MM-DD; "today" is computed in UTC.`,
   input: z.object({
     business_space_id: businessIdField,
     status: z.enum(['todo', 'in-progress', 'done']).optional(),

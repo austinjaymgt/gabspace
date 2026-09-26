@@ -27,7 +27,7 @@ const round = (n: number) => Math.round(n * 100) / 100
 export const listInvoices = defineTool({
   name: 'list_invoices',
   title: 'List invoices',
-  description: 'List invoices of the active business with their current status (draft, sent, partial, paid, overdue) and outstanding balance. Owners and co-owners only. "Overdue" is computed against today in UTC.',
+  description: 'List invoices of a business with their current status (draft, sent, partial, paid, overdue) and outstanding balance. Owners and co-owners only. "Overdue" is computed against today in UTC.',
   input: z.object({
     business_space_id: businessIdField,
     status: z.enum(['draft', 'sent', 'partial', 'paid', 'overdue', 'unpaid']).optional()
@@ -72,7 +72,7 @@ function currentQuarter(today: string) {
 export const getMoneySnapshot = defineTool({
   name: 'get_money_snapshot',
   title: 'Money snapshot',
-  description: 'Summarize money for the active business over a date range (defaults to the current quarter, like the Snapshot page): invoice payments received, other income received/pending, expenses by category, and what is currently outstanding or overdue. Owners and co-owners only.',
+  description: 'Summarize money for a business over a date range (defaults to the current quarter, like the Snapshot page): invoice payments received, other income received/pending, expenses by category, and what is currently outstanding or overdue. Owners and co-owners only.',
   input: z.object({
     business_space_id: businessIdField,
     from: isoDate.optional(),
