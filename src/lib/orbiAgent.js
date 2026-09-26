@@ -41,6 +41,5 @@ export const TOOL_LABELS = {
   create_task: 'Created a task',
   update_task: 'Updated a task',
   create_invoice_draft: 'Drafted an invoice',
-  schedule_content: 'Added to the content calendar',
   draft_quick_add: 'Drafted items to add',
 }

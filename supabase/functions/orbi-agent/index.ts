@@ -29,11 +29,13 @@ const AUDIT_CLIENT_ID = 'orbi-in-app'
 
 const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
-// In the app, creating things goes through Quick Add drafts (which cover
-// every type, and let the user edit before saving) instead of the
-// connector's one-shot create tools.
-const REPLACED_BY_QUICK_ADD = new Set(['create_task', 'create_invoice_draft', 'schedule_content'])
-const REGISTRY_TOOLS = (TOOLS as GabspaceTool<any>[]).filter(t => !REPLACED_BY_QUICK_ADD.has(t.name))
+// Orbi gets every read tool but only the write tools listed here. Creating
+// things in the app goes through Quick Add drafts (which cover every type,
+// and let the user edit before saving) instead of the connector's one-shot
+// create tools, and the confirm line (describeTaskUpdate) only knows how to
+// describe task updates - teach it a tool's changes before adding it here.
+const ORBI_WRITE_TOOLS = new Set(['update_task'])
+const REGISTRY_TOOLS = (TOOLS as GabspaceTool<any>[]).filter(t => t.readOnly || ORBI_WRITE_TOOLS.has(t.name))
 const TOOL_BY_NAME = new Map(REGISTRY_TOOLS.map(t => [t.name, t]))
 
 // Same item types and fields the Quick Add box has always produced.

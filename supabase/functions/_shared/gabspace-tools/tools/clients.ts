@@ -34,7 +34,7 @@ export const listClients = defineTool({
 export const getClient = defineTool({
   name: 'get_client',
   title: 'Get client',
-  description: 'Get one client with their projects, open tasks, and (if your role can see money) invoices.',
+  description: 'Get one client with their projects, open tasks, recent notes, and (if your role can see money) invoices.',
   input: z.object({ client_id: z.string().uuid() }),
   readOnly: true,
   handler: async (ctx, { client_id }) => {
@@ -49,9 +49,10 @@ export const getClient = defineTool({
     if (!client?.id) throw new ToolError('Client not found.', 'denied')
     const business = businessForRecord(ctx, client.business_space_id, 'clientManagement')
 
-    const [projects, tasks] = await Promise.all([
+    const [projects, tasks, notes] = await Promise.all([
       ctx.supabase.from('projects').select('id, title, status, start_date, end_date, project_type').eq('client_id', client_id).order('start_date', { ascending: false }),
       ctx.supabase.from('tasks').select('id, title, status, due_date, project_id').eq('client_id', client_id).neq('status', 'done').order('due_date'),
+      ctx.supabase.from('notes').select('id, content, created_at').eq('client_id', client_id).order('created_at', { ascending: false }).limit(10),
     ])
 
     let invoices: unknown = 'Not available - the Money module is off or your role can\'t see invoices.'
@@ -68,6 +69,7 @@ export const getClient = defineTool({
       client: rest,
       projects: check(projects, 'projects'),
       open_tasks: check(tasks, 'tasks'),
+      recent_notes: check(notes, 'notes'),
       invoices,
     }
   },

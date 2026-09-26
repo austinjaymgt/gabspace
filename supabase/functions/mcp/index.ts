@@ -71,7 +71,8 @@ function buildServer(ctx: ToolContext, clientId: string | null): McpServer {
       instructions:
         'Gabspace is a business management app for creative entrepreneurs. These tools read the user\'s ' +
         'gabspace data (clients, projects, tasks, invoices, content calendar, networking events, and the ' +
-        'community Board) and can create/update tasks, draft invoices, and add content calendar items. ' +
+        'community Board). They can create and update clients, projects, tasks and content calendar items, ' +
+        'add client notes and project milestones, and draft invoices. Nothing is ever sent to a client or deleted. ' +
         'Users can have several businesses: when they name one, call list_businesses and pass its id as ' +
         'business_space_id; otherwise tools default to the business active in gabspace, and results always ' +
         'say which business they came from. Only make changes the user asked for, and look up ids with the list tools ' +

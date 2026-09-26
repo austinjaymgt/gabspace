@@ -1,6 +1,7 @@
 // Write tools. Deliberately limited to low-risk, easy-to-undo changes in
 // the user's own workspace: nothing here sends anything to a client (no
-// invoice sending, portal publishing, emails) and nothing deletes. They're
+// invoice sending, portal publishing, emails) and nothing deletes. Anything
+// that could surface in a client portal (milestones) is created hidden. They're
 // registered with readOnlyHint false so MCP clients ask before running them.
 import { z } from 'npm:zod@^4.3.6'
 import { businessForRecord, check, resolveBusiness, ToolError, type Business, type ToolContext } from '../context.ts'
@@ -19,6 +20,21 @@ async function assertInBusiness(ctx: ToolContext, table: 'projects' | 'clients',
     throw new ToolError(`That ${table === 'projects' ? 'project' : 'client'} isn't in ${business.name}.`, 'denied')
   }
 }
+
+// The fields an update tool was actually given (undefined = leave alone,
+// null = clear). Errors when there's nothing to change.
+function changesFrom(changes: Record<string, unknown>, fieldNames: string): Record<string, unknown> {
+  const update = Object.fromEntries(Object.entries(changes).filter(([, v]) => v !== undefined))
+  if (!Object.keys(update).length) throw new ToolError(`Nothing to change - pass at least one of ${fieldNames}.`)
+  return update
+}
+
+const CLIENT_STATUSES = ['lead', 'prospect', 'active', 'completed', 'inactive'] as const
+const PROJECT_STATUSES = ['planning', 'active', 'on-hold', 'completed', 'cancelled'] as const
+const CONTENT_STATUSES = ['idea', 'in-production', 'scheduled', 'published'] as const
+const CLIENT_FIELDS = 'id, name, company, email, phone, status'
+const PROJECT_FIELDS = 'id, title, status, project_type, start_date, end_date, budget, description, client_id, clients(name)'
+const CONTENT_FIELDS = 'id, title, platform, status, scheduled_date, notes, project_id'
 
 export const createTask = defineTool({
   name: 'create_task',
@@ -82,8 +98,7 @@ export const updateTask = defineTool({
     if (!existing?.id) throw new ToolError('Task not found.', 'denied')
     const business = businessForRecord(ctx, existing.business_space_id, 'clientManagement')
 
-    const update = Object.fromEntries(Object.entries(changes).filter(([, v]) => v !== undefined))
-    if (!Object.keys(update).length) throw new ToolError('Nothing to change - pass at least one of title, status, due_date, start_date or assigned_to.')
+    const update = changesFrom(changes, 'title, status, due_date, start_date or assigned_to')
 
     const task = check(
       await ctx.supabase
@@ -166,16 +181,16 @@ export const createInvoiceDraft = defineTool({
   },
 })
 
-export const scheduleContent = defineTool({
-  name: 'schedule_content',
-  title: 'Add to content calendar',
+export const createContentItem = defineTool({
+  name: 'create_content_item',
+  title: 'Create content item',
   description: 'Add a post or content idea to a business\'s content calendar. Statuses: idea, in-production, scheduled, published.',
   input: z.object({
     business_space_id: businessIdField,
     title: z.string().trim().min(1).max(200),
     platform: z.string().trim().max(40).optional().describe('e.g. Instagram, TikTok, Blog.'),
     scheduled_date: isoDate.optional(),
-    status: z.enum(['idea', 'in-production', 'scheduled', 'published']).default('idea'),
+    status: z.enum(CONTENT_STATUSES).default('idea'),
     notes: z.string().trim().max(2000).optional(),
     project_id: z.string().uuid().optional(),
   }),
@@ -197,10 +212,273 @@ export const scheduleContent = defineTool({
           notes: args.notes ?? null,
           project_id: args.project_id ?? null,
         })
-        .select('id, title, platform, status, scheduled_date, notes, project_id')
+        .select(CONTENT_FIELDS)
         .single(),
       'the content item',
     )
     return { business: business.name, created: item }
+  },
+})
+
+export const updateContentItem = defineTool({
+  name: 'update_content_item',
+  title: 'Update content item',
+  description: 'Update a content calendar item: change its status, date, platform, title or notes (ids from list_content_calendar). Pass null to clear a field.',
+  input: z.object({
+    content_item_id: z.string().uuid(),
+    title: z.string().trim().min(1).max(200).optional(),
+    platform: z.string().trim().max(40).nullable().optional(),
+    scheduled_date: isoDate.nullable().optional(),
+    status: z.enum(CONTENT_STATUSES).optional(),
+    notes: z.string().trim().max(2000).nullable().optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, { content_item_id, ...changes }) => {
+    const existing = check(
+      await ctx.supabase.from('content_calendar').select(`${CONTENT_FIELDS}, business_space_id`).eq('id', content_item_id).maybeSingle(),
+      'the content item',
+    ) as any
+    if (!existing?.id) throw new ToolError('Content item not found.', 'denied')
+    const business = businessForRecord(ctx, existing.business_space_id, 'creativeCollective')
+    const update = changesFrom(changes, 'title, platform, scheduled_date, status or notes')
+
+    const item = check(
+      await ctx.supabase.from('content_calendar').update(update).eq('id', content_item_id).select(CONTENT_FIELDS).single(),
+      'the content item',
+    )
+    const { business_space_id: _omit, ...before } = existing
+    return { business: business.name, before, updated: item }
+  },
+})
+
+export const createClient = defineTool({
+  name: 'create_client',
+  title: 'Create client',
+  description: 'Add a client to one of your businesses, optionally with a first note about them. Check list_clients first so you don\'t create a duplicate. Nothing is sent to the client.',
+  input: z.object({
+    business_space_id: businessIdField,
+    name: z.string().trim().min(1).max(200),
+    company: z.string().trim().max(200).optional(),
+    email: z.string().trim().email().max(320).optional(),
+    phone: z.string().trim().max(40).optional(),
+    status: z.enum(CLIENT_STATUSES).default('active'),
+    note: z.string().trim().min(1).max(5000).optional().describe('Saved as a note on the client, like the Notes section of their profile.'),
+  }),
+  readOnly: false,
+  handler: async (ctx, args) => {
+    const business = resolveBusiness(ctx, args.business_space_id, 'clientManagement')
+
+    const client = check(
+      await ctx.supabase
+        .from('clients')
+        .insert({
+          business_space_id: business.id,
+          user_id: ctx.userId,
+          name: args.name,
+          company: args.company || null,
+          email: args.email || null,
+          phone: args.phone || null,
+          status: args.status,
+        })
+        .select(CLIENT_FIELDS)
+        .single(),
+      'the new client',
+    ) as any
+
+    const result: Record<string, unknown> = { business: business.name, created: client }
+    if (args.note) {
+      // The client exists either way - report a failed note rather than
+      // failing the whole call and inviting a duplicate retry.
+      const { error } = await ctx.supabase.from('notes').insert({
+        business_space_id: business.id, user_id: ctx.userId, client_id: client.id, content: args.note,
+      })
+      result.note = error ? `The client was created, but the note couldn't be saved: ${error.message}` : 'Note saved.'
+    }
+    return result
+  },
+})
+
+export const updateClient = defineTool({
+  name: 'update_client',
+  title: 'Update client',
+  description: 'Update a client\'s name, company, contact details or status. Pass null to clear company, email or phone.',
+  input: z.object({
+    client_id: z.string().uuid(),
+    name: z.string().trim().min(1).max(200).optional(),
+    company: z.string().trim().max(200).nullable().optional(),
+    email: z.string().trim().email().max(320).nullable().optional(),
+    phone: z.string().trim().max(40).nullable().optional(),
+    status: z.enum(CLIENT_STATUSES).optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, { client_id, ...changes }) => {
+    const existing = check(
+      await ctx.supabase.from('clients').select(`${CLIENT_FIELDS}, business_space_id`).eq('id', client_id).maybeSingle(),
+      'the client',
+    ) as any
+    if (!existing?.id) throw new ToolError('Client not found.', 'denied')
+    const business = businessForRecord(ctx, existing.business_space_id, 'clientManagement')
+    const update = changesFrom(changes, 'name, company, email, phone or status')
+
+    const client = check(
+      await ctx.supabase.from('clients').update(update).eq('id', client_id).select(CLIENT_FIELDS).single(),
+      'the client',
+    )
+    const { business_space_id: _omit, ...before } = existing
+    return { business: business.name, before, updated: client }
+  },
+})
+
+export const addClientNote = defineTool({
+  name: 'add_note',
+  title: 'Add client note',
+  description: 'Add a note to a client\'s profile (meeting notes, preferences, follow-ups). Notes are internal - clients never see them.',
+  input: z.object({
+    client_id: z.string().uuid(),
+    content: z.string().trim().min(1).max(5000),
+  }),
+  readOnly: false,
+  handler: async (ctx, { client_id, content }) => {
+    const client = check(
+      await ctx.supabase.from('clients').select('id, name, business_space_id').eq('id', client_id).maybeSingle(),
+      'the client',
+    ) as any
+    if (!client?.id) throw new ToolError('Client not found.', 'denied')
+    const business = businessForRecord(ctx, client.business_space_id, 'clientManagement')
+
+    const note = check(
+      await ctx.supabase
+        .from('notes')
+        .insert({ business_space_id: business.id, user_id: ctx.userId, client_id, content })
+        .select('id, content, created_at')
+        .single(),
+      'the note',
+    )
+    return { business: business.name, client: client.name, created: note }
+  },
+})
+
+export const createProject = defineTool({
+  name: 'create_project',
+  title: 'Create project',
+  description: 'Create a project in one of your businesses, optionally for a client (ids from list_clients). Statuses: planning, active, on-hold, completed, cancelled. Nothing is shared with the client.',
+  input: z.object({
+    business_space_id: businessIdField,
+    title: z.string().trim().min(1).max(200),
+    client_id: z.string().uuid().optional(),
+    status: z.enum(PROJECT_STATUSES).default('planning'),
+    project_type: z.string().trim().max(60).optional().describe('Free-text category, e.g. Branding, Website, Photography.'),
+    start_date: isoDate.optional(),
+    end_date: isoDate.optional(),
+    budget: z.number().min(0).max(100000000).optional().describe('In dollars, no currency symbol.'),
+    description: z.string().trim().max(5000).optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, args) => {
+    const business = resolveBusiness(ctx, args.business_space_id, 'clientManagement')
+    if (args.client_id) await assertInBusiness(ctx, 'clients', args.client_id, business)
+    if (args.start_date && args.end_date && args.end_date < args.start_date) {
+      throw new ToolError('end_date is before start_date.')
+    }
+
+    const project = check(
+      await ctx.supabase
+        .from('projects')
+        .insert({
+          business_space_id: business.id,
+          user_id: ctx.userId,
+          type: 'project',
+          has_event_features: false,
+          title: args.title,
+          client_id: args.client_id ?? null,
+          status: args.status,
+          project_type: args.project_type || null,
+          start_date: args.start_date ?? null,
+          end_date: args.end_date ?? null,
+          budget: args.budget ?? null,
+          description: args.description || null,
+        })
+        .select(PROJECT_FIELDS)
+        .single(),
+      'the new project',
+    )
+    return { business: business.name, created: project }
+  },
+})
+
+export const updateProject = defineTool({
+  name: 'update_project',
+  title: 'Update project',
+  description: 'Update a project: change its status, title, client, type, dates, budget or description. Pass null to clear a field.',
+  input: z.object({
+    project_id: z.string().uuid(),
+    title: z.string().trim().min(1).max(200).optional(),
+    client_id: z.string().uuid().nullable().optional(),
+    status: z.enum(PROJECT_STATUSES).optional(),
+    project_type: z.string().trim().max(60).nullable().optional(),
+    start_date: isoDate.nullable().optional(),
+    end_date: isoDate.nullable().optional(),
+    budget: z.number().min(0).max(100000000).nullable().optional(),
+    description: z.string().trim().max(5000).nullable().optional(),
+  }),
+  readOnly: false,
+  handler: async (ctx, { project_id, ...changes }) => {
+    const existing = check(
+      await ctx.supabase.from('projects').select(`${PROJECT_FIELDS}, business_space_id`).eq('id', project_id).maybeSingle(),
+      'the project',
+    ) as any
+    if (!existing?.id) throw new ToolError('Project not found.', 'denied')
+    const business = businessForRecord(ctx, existing.business_space_id, 'clientManagement')
+    const update = changesFrom(changes, 'title, client_id, status, project_type, start_date, end_date, budget or description')
+    if (update.client_id) await assertInBusiness(ctx, 'clients', update.client_id as string, business)
+
+    const start = update.start_date !== undefined ? update.start_date : existing.start_date
+    const end = update.end_date !== undefined ? update.end_date : existing.end_date
+    if (start && end && end < start) throw new ToolError('end_date would be before start_date.')
+
+    const project = check(
+      await ctx.supabase.from('projects').update(update).eq('id', project_id).select(PROJECT_FIELDS).single(),
+      'the project',
+    )
+    const { business_space_id: _omit, ...before } = existing
+    return { business: business.name, before, updated: project }
+  },
+})
+
+export const addProjectMilestone = defineTool({
+  name: 'add_project_milestone',
+  title: 'Add project milestone',
+  description: 'Add a milestone to a project (ids from list_projects). It starts hidden from the client portal - the user can choose to show it from the project page.',
+  input: z.object({
+    project_id: z.string().uuid(),
+    title: z.string().trim().min(1).max(200),
+    target_date: isoDate.optional(),
+    status: z.enum(['upcoming', 'in_progress', 'done']).default('upcoming'),
+  }),
+  readOnly: false,
+  handler: async (ctx, args) => {
+    const project = check(
+      await ctx.supabase.from('projects').select('id, title, business_space_id').eq('id', args.project_id).maybeSingle(),
+      'the project',
+    ) as any
+    if (!project?.id) throw new ToolError('Project not found.', 'denied')
+    const business = businessForRecord(ctx, project.business_space_id, 'clientManagement')
+
+    const milestone = check(
+      await ctx.supabase
+        .from('project_milestones')
+        .insert({
+          business_space_id: business.id,
+          project_id: args.project_id,
+          title: args.title,
+          target_date: args.target_date ?? null,
+          status: args.status,
+          show_in_portal: false,
+        })
+        .select('id, title, status, target_date')
+        .single(),
+      'the milestone',
+    )
+    return { business: business.name, project: project.title, created: milestone }
   },
 })

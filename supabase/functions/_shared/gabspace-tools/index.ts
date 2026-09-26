@@ -8,7 +8,19 @@ import { getProject, listProjects, listTasks } from './tools/work.ts'
 import { getMoneySnapshot, listInvoices } from './tools/money.ts'
 import { listContentCalendar, listNetworkingEvents } from './tools/schedule.ts'
 import { searchBoard } from './tools/community.ts'
-import { createInvoiceDraft, createTask, scheduleContent, updateTask } from './tools/writes.ts'
+import {
+  addClientNote,
+  addProjectMilestone,
+  createClient,
+  createContentItem,
+  createInvoiceDraft,
+  createProject,
+  createTask,
+  updateClient,
+  updateContentItem,
+  updateProject,
+  updateTask,
+} from './tools/writes.ts'
 
 export const TOOLS: GabspaceTool<any>[] = [
   listBusinesses,
@@ -22,10 +34,17 @@ export const TOOLS: GabspaceTool<any>[] = [
   listContentCalendar,
   listNetworkingEvents,
   searchBoard,
+  createClient,
+  updateClient,
+  addClientNote,
+  createProject,
+  updateProject,
+  addProjectMilestone,
   createTask,
   updateTask,
   createInvoiceDraft,
-  scheduleContent,
+  createContentItem,
+  updateContentItem,
 ]
 
 export { loadToolContext, ToolError, type ToolContext } from './context.ts'
