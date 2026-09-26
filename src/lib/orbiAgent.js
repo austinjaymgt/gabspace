@@ -1,9 +1,9 @@
 import { supabase } from '../supabaseClient'
 
-// One turn of Orbi chat (supabase/functions/orbi-agent). `messages` is the
+// One turn of the Dashboard Orbi card (supabase/functions/orbi-agent). `messages` is the
 // full conversation in Anthropic message format, exactly as the previous
 // response returned it — the server owns its shape, the UI only reads it.
-// Pass `approval` ({ approved: true|false }) to answer a pending action.
+// Pass `approval` ({ approved, result? }) to answer pending drafts/actions.
 // Resolves { messages, reply, pending? }; throws with a readable message.
 export async function sendOrbiTurn(messages, approval) {
   const { data, error } = await supabase.functions.invoke('orbi-agent', {
@@ -25,7 +25,7 @@ export async function sendOrbiTurn(messages, approval) {
   return data
 }
 
-// Short labels for the "checked X" lines under Orbi's replies.
+// Short labels for the activity lines in the Orbi card.
 export const TOOL_LABELS = {
   list_businesses: 'Checked your businesses',
   list_clients: 'Looked at clients',
@@ -42,4 +42,5 @@ export const TOOL_LABELS = {
   update_task: 'Updated a task',
   create_invoice_draft: 'Drafted an invoice',
   schedule_content: 'Added to the content calendar',
+  draft_quick_add: 'Drafted items to add',
 }

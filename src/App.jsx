@@ -50,7 +50,6 @@ import CollabRequestDetail from './pages/CollabRequestDetail'
 import MyCollabRequests from './pages/MyCollabRequests'
 import AddBusinessFlow from './components/AddBusinessFlow'
 import OAuthConsent from './pages/OAuthConsent'
-import OrbiChat from './components/OrbiChat'
 import Pricing from './pages/Pricing'
 import GetStarted from './pages/GetStarted'
 import PasswordRequirements from './components/PasswordRequirements'
@@ -922,7 +921,6 @@ function renderPage() {
         </div>
       </div>
       {isMobile && <MobileTabBar currentPage={currentPage} onNavigate={setCurrentPage} onLogout={handleLogout} businessSpaceId={businessSpaceId} isPlatformAdmin={isPlatformAdmin} />}
-      {isStaff && <OrbiChat isMobile={isMobile} />}
     </div>
   )
 }

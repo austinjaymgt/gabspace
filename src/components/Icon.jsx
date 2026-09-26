@@ -36,7 +36,7 @@ import {
   AlertTriangle, XCircle, Info, Loader2, Inbox,
   // Actions
   Pencil, Trash2, Copy, Share2, Save, SlidersHorizontal,
-  ArrowUpDown, ArrowUp, RefreshCw,
+  ArrowUpDown, RefreshCw,
   // Community
   Hash, MessageSquareText, Heart, Trophy, Camera, Palette,
   // AI & Delight
@@ -147,7 +147,6 @@ const ICON_MAP = {
   'save': Save,
   'filter': SlidersHorizontal,
   'sort': ArrowUpDown,
-  'send': ArrowUp,
   'refresh': RefreshCw,
 
   // Community

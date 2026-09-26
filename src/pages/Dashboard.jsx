@@ -1,24 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
 import Orb from '../components/Orb'
-import { parseQuickAdd } from '../lib/quickAdd'
+import OrbiCard from '../components/OrbiCard'
 import { getModules } from '../utils/businessModules'
-
-const QUICK_ADD_TYPE_META = {
-  client: { label: 'Client', icon: 'client-add', color: '#534AB7', bg: '#EEEDF9' },
-  task: { label: 'Task', icon: 'task', color: '#6B8F71', bg: '#EAF2EA' },
-  business_event: { label: 'Event', icon: 'events', color: '#D4874E', bg: '#FBF0E6' },
-  spark_idea: { label: 'Idea', icon: 'idea', color: '#D4874E', bg: '#FBF0E6' },
-  project: { label: 'Project', icon: 'projects', color: '#3E6FB1', bg: '#E8EFF8' },
-  content_idea: { label: 'Content idea', icon: 'campaigns', color: '#A34FA0', bg: '#F6EAF5' },
-  vendor: { label: 'Vendor', icon: 'vendors', color: '#3E8F8A', bg: '#E7F3F2' },
-  goal: { label: 'Goal', icon: 'team-goals', color: '#B18A3E', bg: '#F8F1E4' },
-  income: { label: 'Income', icon: 'revenue', color: '#6B8F71', bg: '#EAF2EA' },
-  expense: { label: 'Expense', icon: 'expense', color: '#B3453D', bg: '#F8EAE9' },
-  invoice: { label: 'Invoice', icon: 'invoice', color: '#534AB7', bg: '#EEEDF9' },
-}
 
 // Month boundaries as plain YYYY-MM-DD, for comparing against `date` columns
 // (invoice_payments.paid_date, revenue.date) which have no time component.
@@ -39,17 +25,8 @@ function monthBoundaryISO(offsetMonths) {
   return d.toISOString()
 }
 
-const QUICK_ADD_MAX_LEN = 600
-
 function fmtCurrency(n) {
   return Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-}
-
-// Matches TeamGoals.jsx's periodFromDate — goals created here need the same "Q# YYYY" format.
-function periodFromDate(dateStr) {
-  const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date()
-  const q = Math.ceil((d.getMonth() + 1) / 3)
-  return `Q${q} ${d.getFullYear()}`
 }
 
 const PROJECT_STATUS_FILTERS = [
@@ -107,92 +84,12 @@ function StatPill({ label, count, color, bg }) {
   )
 }
 
-// ── Quick add preview card ──────────────────────────────────────────────────
-
-const QUICK_ADD_FIELD_LABELS = {
-  name: 'Name', company: 'Company', email: 'Email', phone: 'Phone', note: 'Note',
-  title: 'Title', due_date: 'Due date', client_name: 'Related client',
-  date: 'Date', location: 'Location', notes: 'Notes',
-  project_type: 'Project type', budget: 'Budget', start_date: 'Start date',
-  platform: 'Platform', scheduled_date: 'Scheduled date',
-  category: 'Category', owner: 'Owner',
-  income_stream: 'Source', amount: 'Amount', description: 'Description',
-}
-
-function fieldInputStyle(multiline) {
-  return {
-    width: '100%', boxSizing: 'border-box',
-    padding: '7px 10px', borderRadius: multiline ? t.radius.md : t.radius.full,
-    border: `1px solid ${t.colors.borderLight}`,
-    backgroundColor: t.colors.bg, color: t.colors.textPrimary,
-    fontSize: t.fontSizes.sm, fontFamily: t.fonts.sans, outline: 'none',
-  }
-}
-
-function QuickAddPreviewCard({ item, onChange, onRemove }) {
-  const meta = QUICK_ADD_TYPE_META[item.type] || QUICK_ADD_TYPE_META.spark_idea
-  const fieldKeys = Object.keys(item.fields)
-  return (
-    <div style={{ backgroundColor: t.colors.bg, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.md, padding: '14px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          fontSize: t.fontSizes.xs, fontWeight: '700', padding: '3px 10px',
-          borderRadius: t.radius.full, backgroundColor: meta.bg, color: meta.color,
-        }}>
-          <Icon name={meta.icon} size="sm" />
-          {meta.label}
-        </span>
-        <button
-          onClick={onRemove}
-          aria-label="Remove item"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.colors.textTertiary, display: 'flex', padding: '2px' }}
-        >
-          <Icon name="close" size="sm" />
-        </button>
-      </div>
-      <div style={{ display: 'grid', gap: '8px' }}>
-        {fieldKeys.map(key => (
-          <label key={key} style={{ display: 'block' }}>
-            <span style={{ fontSize: '10px', fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px', display: 'block' }}>
-              {QUICK_ADD_FIELD_LABELS[key] || key}
-            </span>
-            {key === 'note' || key === 'notes' ? (
-              <textarea
-                value={item.fields[key] || ''}
-                onChange={e => onChange(key, e.target.value)}
-                rows={2}
-                style={{ ...fieldInputStyle(true), resize: 'none' }}
-              />
-            ) : (
-              <input
-                type={key === 'due_date' || key === 'date' ? 'date' : key === 'amount' ? 'number' : 'text'}
-                value={item.fields[key] || ''}
-                onChange={e => onChange(key, e.target.value)}
-                style={fieldInputStyle(false)}
-              />
-            )}
-          </label>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function Dashboard({ session, businessSpaceId, userRole, onNavigate }) {
   const modules = getModules(businessSpaceId)
   const [settings, setSettings] = useState(null)
 
-  // Quick add
-  const [quickTask, setQuickTask] = useState('')
-  const quickTaskRef = useRef(null)
-  const [quickAddParsing, setQuickAddParsing] = useState(false)
-  const [quickAddError, setQuickAddError] = useState('')
-  const [quickAddItems, setQuickAddItems] = useState(null) // [{ type, fields }] or null when no preview
-  const [quickAddSaving, setQuickAddSaving] = useState(false)
-  const [showPulseInfo, setShowPulseInfo] = useState(false)
 
   // Project pulse
   const [projectPulse, setProjectPulse] = useState({ active: 0, overdue: 0, dueThisWeek: 0, statusCounts: { planning: 0, active: 0, 'on-hold': 0 } })
@@ -301,158 +198,6 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     })
   }, [businessSpaceId])
 
-  useEffect(() => {
-    const el = quickTaskRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 220)}px`
-    el.style.overflowY = el.scrollHeight > 220 ? 'auto' : 'hidden'
-  }, [quickTask])
-
-  async function handleQuickAddSubmit(e) {
-    if (e.key !== 'Enter' || e.shiftKey || !quickTask.trim() || !businessSpaceId || quickAddParsing) return
-    e.preventDefault()
-    const text = quickTask.trim()
-    setQuickAddParsing(true)
-    setQuickAddError('')
-    try {
-      const items = await parseQuickAdd(text)
-      if (!items.length) {
-        setQuickAddError("Couldn't find anything to add in that — try rephrasing.")
-      } else {
-        setQuickAddItems(items.map(item => ({ ...item, fields: { ...item.fields } })))
-        setQuickTask('')
-      }
-    } catch (err) {
-      setQuickAddError(err.message || 'Something went wrong parsing that.')
-    } finally {
-      setQuickAddParsing(false)
-    }
-  }
-
-  function updateQuickAddField(index, field, value) {
-    setQuickAddItems(prev => prev.map((item, i) => i === index ? { ...item, fields: { ...item.fields, [field]: value } } : item))
-  }
-
-  function removeQuickAddItem(index) {
-    setQuickAddItems(prev => {
-      const next = prev.filter((_, i) => i !== index)
-      return next.length ? next : null
-    })
-  }
-
-  function cancelQuickAdd() {
-    setQuickAddItems(null)
-    setQuickAddError('')
-  }
-
-  async function confirmQuickAdd() {
-    if (!quickAddItems?.length || !businessSpaceId) return
-    setQuickAddSaving(true)
-    setQuickAddError('')
-    try {
-      const clientItems = quickAddItems.filter(i => i.type === 'client')
-      const others = quickAddItems.filter(i => i.type !== 'client')
-
-      // Clients first so their ids are available for task linking below.
-      const nameToClientId = {}
-      for (const { fields } of clientItems) {
-        const { note, ...clientFields } = fields
-        const { data: client, error } = await supabase
-          .from('clients')
-          .insert({ ...clientFields, business_space_id: businessSpaceId, user_id: session.user.id })
-          .select('id, name')
-          .single()
-        if (error) throw error
-        nameToClientId[client.name.toLowerCase()] = client.id
-        if (note?.trim()) {
-          await supabase.from('notes').insert({
-            content: note.trim(), client_id: client.id,
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          })
-        }
-      }
-
-      for (const { type, fields } of others) {
-        if (type === 'task') {
-          const { client_name, ...taskFields } = fields
-          const client_id = client_name ? nameToClientId[client_name.toLowerCase()] || null : null
-          await supabase.from('tasks').insert({
-            ...taskFields, client_id, business_space_id: businessSpaceId, status: 'todo',
-          })
-        } else if (type === 'business_event') {
-          await supabase.from('business_events').insert({
-            ...fields, type: 'networking', event_type: 'attending', status: 'upcoming',
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          })
-        } else if (type === 'spark_idea') {
-          await supabase.from('projects').insert({
-            title: fields.title, business_space_id: businessSpaceId, user_id: session.user.id,
-            type: 'event', event_status: 'concept',
-          })
-        } else if (type === 'project') {
-          const { title, budget, ...rest } = fields
-          await supabase.from('projects').insert({
-            ...rest, title, budget: budget ? parseFloat(budget) : null,
-            type: 'project', status: 'planning', has_event_features: false,
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          })
-        } else if (type === 'content_idea') {
-          await supabase.from('content_calendar').insert({
-            ...fields, status: 'idea',
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          })
-        } else if (type === 'vendor') {
-          await supabase.from('vendors').insert({
-            ...fields, tags: [],
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          })
-        } else if (type === 'goal') {
-          const { due_date, ...rest } = fields
-          await supabase.from('team_goals').insert({
-            ...rest, due_date: due_date || null, period: periodFromDate(due_date),
-            status: 'not-started', category: 'team',
-            business_space_id: businessSpaceId,
-          })
-        } else if (type === 'income') {
-          const { amount, ...rest } = fields
-          await supabase.from('revenue').insert({
-            ...rest, amount: parseFloat(amount) || 0, status: 'received',
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          })
-        } else if (type === 'expense') {
-          const { amount, ...rest } = fields
-          await supabase.from('expenses').insert({
-            ...rest, amount: parseFloat(amount) || 0,
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          })
-        } else if (type === 'invoice') {
-          const { client_name, amount, description } = fields
-          const client_id = client_name ? nameToClientId[client_name.toLowerCase()] || null : null
-          const { data: invoice, error } = await supabase.from('invoices').insert({
-            client_id, due_date: fields.due_date || null, status: 'draft',
-            business_space_id: businessSpaceId, user_id: session.user.id,
-          }).select('id').single()
-          if (error) throw error
-          await supabase.from('line_items').insert({
-            invoice_id: invoice.id,
-            description: description || (client_name ? `Services for ${client_name}` : 'Services'),
-            quantity: 1, unit_price: parseFloat(amount) || 0,
-          })
-        }
-      }
-
-      setQuickAddItems(null)
-      fetchProjectPulse()
-      fetchRevenueSnapshot()
-      fetchGoalsProgress()
-    } catch (err) {
-      setQuickAddError(err.message || 'Something went wrong saving those.')
-    } finally {
-      setQuickAddSaving(false)
-    }
-  }
-
   const revenueDelta = revenueSnapshot.income - revenueSnapshot.incomeLastMonth
   const netThisMonth = revenueSnapshot.income - revenueSnapshot.expenses
 
@@ -493,110 +238,8 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
         </div>
       </div>
 
-      {/* ── Orbi (hero quick-add) ── */}
-      <div style={{ backgroundColor: t.colors.bgCard, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.card, padding: '28px 32px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Orb size={18} />
-            <span style={{ fontSize: t.fontSizes.sm, fontWeight: '700', letterSpacing: '0.04em', textTransform: 'uppercase', color: t.colors.textTertiary }}>
-              Orbi
-            </span>
-            <button
-              onClick={() => setShowPulseInfo(v => !v)}
-              aria-label="How Orbi works"
-              style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: t.colors.textTertiary }}
-            >
-              <Icon name="info" size="sm" />
-            </button>
-          </div>
-          {quickAddParsing && (
-            <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>
-              Thinking…
-            </span>
-          )}
-        </div>
-        {showPulseInfo && (
-          <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '14px', marginTop: '-6px' }}>
-            Jot it down naturally. Orbi will draft the right item - client, task, project, event, goal, income, expense or invoice - and you confirm before anything is created.
-          </div>
-        )}
-        <textarea
-          ref={quickTaskRef}
-          value={quickTask}
-          onChange={e => setQuickTask(e.target.value)}
-          onKeyDown={handleQuickAddSubmit}
-          disabled={quickAddParsing}
-          placeholder="Met Sarah from Bloom Events, need to send her a proposal by Friday…"
-          maxLength={QUICK_ADD_MAX_LEN}
-          rows={1}
-          style={{
-            width: '100%', boxSizing: 'border-box',
-            padding: '18px 24px', borderRadius: t.radius.xl,
-            border: `1px solid ${t.colors.border}`,
-            backgroundColor: t.colors.bg, color: t.colors.textPrimary,
-            fontSize: t.fontSizes.md, fontFamily: t.fonts.sans,
-            outline: 'none', opacity: quickAddParsing ? 0.6 : 1,
-            resize: 'none', overflow: 'hidden', maxHeight: '220px',
-            lineHeight: 1.5,
-          }}
-        />
-        {quickTask.length > QUICK_ADD_MAX_LEN * 0.8 && (
-          <div style={{
-            textAlign: 'right', marginTop: '4px', fontSize: t.fontSizes.xs,
-            color: quickTask.length >= QUICK_ADD_MAX_LEN ? '#B3453D' : t.colors.textTertiary,
-          }}>
-            {quickTask.length} / {QUICK_ADD_MAX_LEN}
-          </div>
-        )}
-
-        {quickAddError && (
-          <div style={{ marginTop: '10px', fontSize: t.fontSizes.sm, color: '#B3453D' }}>
-            {quickAddError}
-          </div>
-        )}
-
-        {quickAddItems && (
-          <div style={{ backgroundColor: t.colors.bg, border: `1px solid ${t.colors.borderLight}`, borderRadius: t.radius.lg, padding: '16px', marginTop: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-              {quickAddItems.map((item, i) => (
-                <QuickAddPreviewCard
-                  key={i}
-                  item={item}
-                  onChange={(field, value) => updateQuickAddField(i, field, value)}
-                  onRemove={() => removeQuickAddItem(i)}
-                />
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-              <button
-                onClick={confirmQuickAdd}
-                disabled={quickAddSaving}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '9px 18px', borderRadius: t.radius.full, border: 'none',
-                  backgroundColor: t.colors.primary, color: t.colors.textInverse,
-                  fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer',
-                  fontFamily: t.fonts.sans, opacity: quickAddSaving ? 0.6 : 1,
-                }}
-              >
-                {quickAddSaving ? 'Adding…' : `Add all (${quickAddItems.length})`}
-              </button>
-              <button
-                onClick={cancelQuickAdd}
-                disabled={quickAddSaving}
-                style={{
-                  padding: '9px 18px', borderRadius: t.radius.full,
-                  border: `1px solid ${t.colors.borderLight}`,
-                  backgroundColor: 'transparent', color: t.colors.textSecondary,
-                  fontSize: t.fontSizes.sm, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans,
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* ── Orbi: ask questions or jot things down ── */}
+      <OrbiCard session={session} onItemsAdded={() => { fetchProjectPulse(); fetchRevenueSnapshot(); fetchGoalsProgress() }} />
 
       {/* ── Revenue Snapshot — director only, styled like the Snapshot page's top stat cards ── */}
       {isDirector && modules.money && (
