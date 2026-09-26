@@ -6,8 +6,8 @@ export type GabspaceTool<S extends z.ZodObject = z.ZodObject> = {
   title: string
   description: string
   input: S
-  // Everything in phase 1 is read-only; write tools will set this false so
-  // clients (Claude) ask the user before running them.
+  // Write tools set this false so clients (Claude) ask the user before
+  // running them, and so the MCP server applies the tighter write limit.
   readOnly: boolean
   handler: (ctx: ToolContext, args: z.infer<S>) => Promise<unknown>
 }

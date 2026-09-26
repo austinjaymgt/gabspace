@@ -46,7 +46,7 @@ export default function ConnectedApps() {
       <div>
         <div style={{ fontSize: t.fontSizes.base, fontWeight: '500', color: t.colors.textPrimary, marginBottom: '4px' }}>Connect Claude</div>
         <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary, marginBottom: '10px', maxWidth: '520px' }}>
-          In Claude, go to Settings → Connectors → Add custom connector and paste this URL. Claude can then read your active business — clients, projects, tasks, invoices and more.
+          In Claude, go to Settings → Connectors → Add custom connector and paste this URL. Claude can then read your active business — clients, projects, tasks, invoices and more — and, when you ask, create tasks, draft invoices and add to your content calendar.
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <code style={{ padding: '8px 12px', borderRadius: t.radius.md, backgroundColor: t.colors.bg, border: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, color: t.colors.textSecondary, wordBreak: 'break-all', userSelect: 'all' }}>

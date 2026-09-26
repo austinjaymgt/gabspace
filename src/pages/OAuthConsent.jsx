@@ -13,12 +13,17 @@ const STAFF_ROLES = ['owner', 'co-owner', 'employee']
 
 // What the connector's tools can read today (supabase/functions/_shared/
 // gabspace-tools). Keep in sync when tools are added.
-const ACCESS_ITEMS = [
+const READ_ITEMS = [
   'Your businesses and your role in each',
   'Clients, projects, milestones and tasks',
   'Invoices and money summaries (owners and co-owners only)',
   'Content calendar and networking events',
   'Open requests on The Board',
+]
+const WRITE_ITEMS = [
+  'Create and update tasks',
+  'Draft invoices (never sent — you send them from gabspace)',
+  'Add items to your content calendar',
 ]
 
 export default function OAuthConsent({ session }) {
@@ -96,11 +101,16 @@ export default function OAuthConsent({ session }) {
             {isStaff ? (
               <>
                 <p style={s.body}>
-                  {clientName} will be able to <strong>read</strong> this from the business you have active in gabspace. It can't change anything yet.
+                  In the business you have active in gabspace, {clientName} will be able to <strong>see</strong>:
                 </p>
                 <ul style={s.list}>
-                  {ACCESS_ITEMS.map(item => <li key={item} style={{ marginBottom: '6px' }}>{item}</li>)}
+                  {READ_ITEMS.map(item => <li key={item} style={{ marginBottom: '6px' }}>{item}</li>)}
                 </ul>
+                <p style={s.body}>and, when you ask it to:</p>
+                <ul style={s.list}>
+                  {WRITE_ITEMS.map(item => <li key={item} style={{ marginBottom: '6px' }}>{item}</li>)}
+                </ul>
+                <p style={s.body}>It can't delete anything or send anything to your clients.</p>
                 <p style={s.fine}>
                   Signed in as {details.user?.email}.{redirectHost && <> You'll be sent back to <strong>{redirectHost}</strong>.</>} You can disconnect any time in Settings → Connected apps.
                 </p>
