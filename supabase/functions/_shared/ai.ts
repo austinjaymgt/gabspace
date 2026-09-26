@@ -1,5 +1,5 @@
-// Shared plumbing for the AI edge functions (orbi-brief, quick-add-parse)
-// and, later, the MCP server / Orbi agent. Each
+// Shared plumbing for the AI edge functions (orbi-brief, orbi-agent).
+// Each
 // function used to carry its own copy of this auth + rate-limit block.
 import { createClient, SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2'
 

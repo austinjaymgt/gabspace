@@ -15,12 +15,6 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/orbi-brief/index.ts"
 
-[functions.quick-add-parse]
-enabled = true
-verify_jwt = true
-import_map = "./functions/quick-add-parse/deno.json"
-entrypoint = "./functions/quick-add-parse/index.ts"
-
 # MCP server (Claude connector). The function verifies OAuth tokens itself -
 # the gateway check has to be off so the unauthenticated discovery request
 # can get the WWW-Authenticate challenge that points clients at Supabase Auth.
