@@ -49,6 +49,7 @@ import CollabBoard from './pages/CollabBoard'
 import CollabRequestDetail from './pages/CollabRequestDetail'
 import MyCollabRequests from './pages/MyCollabRequests'
 import AddBusinessFlow from './components/AddBusinessFlow'
+import OAuthConsent from './pages/OAuthConsent'
 import Pricing from './pages/Pricing'
 import GetStarted from './pages/GetStarted'
 import PasswordRequirements from './components/PasswordRequirements'
@@ -709,7 +710,7 @@ function renderPage() {
         <img src={gabspaceLockup} alt="gabspace" style={{ height: '44px', width: 'auto' }} />
         <div style={{ backgroundColor: t.colors.bgCard, borderRadius: t.radius.card, padding: '48px', width: '100%', maxWidth: '400px', boxShadow: t.shadows.lg, margin: '0 16px' }}>
           <p style={{ fontSize: t.fontSizes.md, color: t.colors.textTertiary, margin: '0 0 32px', fontStyle: 'italic' }}>
-            welcome back.
+            {window.location.pathname === '/oauth/consent' ? 'sign in to connect an app to gabspace.' : 'welcome back.'}
           </p>
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -804,6 +805,13 @@ function renderPage() {
 
   if (requiresCheckout) {
     return <Pricing session={session} mandatory onLogout={handleLogout} />
+  }
+
+  // OAuth consent for MCP clients (Claude connector). Sits after the login
+  // and checkout gates so an unpaid or signed-out user handles those first;
+  // nothing before this point rewrites the URL, so authorization_id survives.
+  if (window.location.pathname === '/oauth/consent') {
+    return <OAuthConsent session={session} />
   }
 
   // Temporary GABi visual test — visit /?gabi to see all moods

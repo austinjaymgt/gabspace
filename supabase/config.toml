@@ -20,3 +20,11 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/quick-add-parse/deno.json"
 entrypoint = "./functions/quick-add-parse/index.ts"
+
+# MCP server (Claude connector). The function verifies OAuth tokens itself -
+# the gateway check has to be off so the unauthenticated discovery request
+# can get the WWW-Authenticate challenge that points clients at Supabase Auth.
+[functions.mcp]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/mcp/index.ts"

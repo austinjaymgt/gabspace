@@ -8,6 +8,7 @@ import RoleBadge from '../components/RoleBadge'
 import { cancelSubscription, resumeSubscription } from '../utils/checkout'
 import PasswordRequirements from '../components/PasswordRequirements'
 import { DirectoryListingSettings, TagAlertsSettings } from '../components/community/CommunitySettings'
+import ConnectedApps from '../components/ConnectedApps'
 
 const PLAN_LABELS = {
   business: 'Business (1 business)',
@@ -568,6 +569,11 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       </SectionCard>
 
       {/* ── Account ── */}
+      {/* ── Connected apps (Claude connector / OAuth grants) ── */}
+      <SectionCard title="Connected apps" subtitle="Connect Claude to gabspace and manage apps you've approved">
+        <ConnectedApps />
+      </SectionCard>
+
       <SectionCard title="Account">
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
