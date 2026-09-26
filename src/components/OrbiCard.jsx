@@ -143,13 +143,15 @@ export default function OrbiCard({ session, onItemsAdded }) {
     runTurn(messages, { approved: false })
   }
 
-  function newChat() {
+  // Ends the conversation and returns the card to its empty state. Any
+  // unreviewed drafts are simply dropped - nothing is saved until "Add all".
+  function closeChat() {
     setMessages([])
     setPending(null)
     setDrafts({})
     setError(null)
     setInput('')
-    inputRef.current?.focus()
+    inputRef.current?.blur()
   }
 
   function updateDraft(pendingId, index, field, value) {
@@ -185,8 +187,15 @@ export default function OrbiCard({ session, onItemsAdded }) {
             <span style={{ fontSize: t.fontSizes.sm, color: t.colors.textTertiary }}>{saving ? 'Adding…' : 'Thinking…'}</span>
           )}
           {messages.length > 0 && !busy && !saving && (
-            <button onClick={newChat} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: t.fontSizes.sm, fontWeight: 600, color: t.colors.textSecondary, fontFamily: t.fonts.sans }}>
-              New chat
+            <button
+              onClick={closeChat}
+              aria-label="Close chat"
+              title="Close chat (Esc)"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: t.radius.full, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: t.colors.textTertiary }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = t.colors.bg}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <Icon name="close" size="sm" />
             </button>
           )}
         </div>
@@ -251,7 +260,10 @@ export default function OrbiCard({ session, onItemsAdded }) {
         ref={inputRef}
         value={input}
         onChange={e => setInput(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+        onKeyDown={e => {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+          else if (e.key === 'Escape' && messages.length && !busy && !saving) closeChat()
+        }}
         disabled={busy || !!pending}
         placeholder={pending ? 'Review the drafts above first…' : messages.length ? 'Reply to Orbi…' : "Ask me anything, or jot it down — met Sarah from Bloom Events, need to send her a proposal by Friday…"}
         maxLength={INPUT_MAX_LEN}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { theme as t } from '../theme'
 import { Icon } from '../components/Icon'
@@ -41,6 +41,11 @@ const GOAL_STATUS_FILTERS = [
   { statKey: 'completed', label: 'Completed',   color: '#3E6FB1', bg: '#E8EFF8' },
   { statKey: 'notStarted', label: 'Not started', color: t.colors.textTertiary, bg: t.colors.bg },
 ]
+
+// The Dashboard header sticks just below the app's own sticky bars
+// (TopBar 60px + SubHeader 44px) so the greeting and business name stay
+// visible while the Orbi conversation grows.
+const STICKY_HEADER_TOP = 104
 
 const cardStyle = { backgroundColor: t.colors.bgCard, borderRadius: t.radius.lg, padding: '20px 24px', border: `1px solid ${t.colors.borderLight}` }
 
@@ -89,6 +94,8 @@ function StatPill({ label, count, color, bg }) {
 export default function Dashboard({ session, businessSpaceId, userRole, onNavigate }) {
   const modules = getModules(businessSpaceId)
   const [settings, setSettings] = useState(null)
+  const headerSentinelRef = useRef(null)
+  const [headerStuck, setHeaderStuck] = useState(false)
 
 
   // Project pulse
@@ -189,6 +196,19 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
     })
   }
 
+  // Shrinks the header to one compact row once it's pinned under the top
+  // bars: a 1px sentinel above it scrolls out of view exactly when it sticks.
+  useEffect(() => {
+    const el = headerSentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeaderStuck(!entry.isIntersecting),
+      { rootMargin: `-${STICKY_HEADER_TOP}px 0px 0px 0px`, threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
     queueMicrotask(() => {
       fetchSettings()
@@ -209,32 +229,46 @@ export default function Dashboard({ session, businessSpaceId, userRole, onNaviga
   return (
     <div style={{ padding: '28px 32px', fontFamily: t.fonts.sans, maxWidth: '1200px' }}>
 
-      {/* ── Header ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px', gap: '10px' }}>
+      {/* ── Header (sticky; compacts to one row once pinned) ── */}
+      <div ref={headerSentinelRef} style={{ height: '1px', marginBottom: '-1px' }} />
+      <div style={{
+        position: 'sticky', top: STICKY_HEADER_TOP, zIndex: 20,
+        margin: '0 -32px 24px', padding: headerStuck ? '10px 32px' : '0 32px',
+        display: 'flex', flexDirection: headerStuck ? 'row' : 'column', alignItems: 'center', justifyContent: 'center',
+        gap: '10px',
+        backgroundColor: headerStuck ? 'color-mix(in srgb, var(--color-bg) 85%, transparent)' : 'transparent',
+        backdropFilter: headerStuck ? 'blur(10px)' : 'none',
+        WebkitBackdropFilter: headerStuck ? 'blur(10px)' : 'none',
+        borderBottom: `1px solid ${headerStuck ? t.colors.borderLight : 'transparent'}`,
+        transition: 'padding 0.2s ease, background-color 0.2s ease',
+      }}>
         {workspaceLogo ? (
-          <img src={workspaceLogo} alt="logo" style={{ width: '64px', height: '64px', borderRadius: t.radius.full, objectFit: 'cover', border: `1px solid ${t.colors.borderLight}` }} />
+          <img src={workspaceLogo} alt="logo" style={{ width: headerStuck ? '32px' : '64px', height: headerStuck ? '32px' : '64px', borderRadius: t.radius.full, objectFit: 'cover', border: `1px solid ${t.colors.borderLight}`, flexShrink: 0, transition: 'width 0.2s ease, height 0.2s ease' }} />
         ) : (
           <div style={{
-            width: '64px', height: '64px', borderRadius: t.radius.full,
+            width: headerStuck ? '32px' : '64px', height: headerStuck ? '32px' : '64px', borderRadius: t.radius.full,
             backgroundColor: t.colors.primary, color: t.colors.textInverse,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '22px', fontWeight: '700', fontFamily: t.fonts.sans,
+            fontSize: headerStuck ? '13px' : '22px', fontWeight: '700', fontFamily: t.fonts.sans,
+            flexShrink: 0, transition: 'width 0.2s ease, height 0.2s ease',
           }}>
             {initials}
           </div>
         )}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: t.fonts.heading, fontSize: '22px', fontWeight: '700', color: t.colors.textPrimary, letterSpacing: '-0.4px', lineHeight: 1.2 }}>
+        <div style={{ textAlign: headerStuck ? 'left' : 'center', minWidth: 0 }}>
+          <div style={{ fontFamily: t.fonts.heading, fontSize: headerStuck ? '16px' : '22px', fontWeight: '700', color: t.colors.textPrimary, letterSpacing: '-0.4px', lineHeight: 1.2, whiteSpace: headerStuck ? 'nowrap' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {getGreeting()}, {firstName} 👋
           </div>
           {workspaceName && (
-            <div style={{ fontSize: t.fontSizes.sm, color: t.colors.textSecondary, marginTop: '2px', fontWeight: '600' }}>
+            <div style={{ fontSize: headerStuck ? t.fontSizes.xs : t.fontSizes.sm, color: t.colors.textSecondary, marginTop: '2px', fontWeight: '600', whiteSpace: headerStuck ? 'nowrap' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {workspaceName}
             </div>
           )}
-          <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>
-            {getTodayLabel()}
-          </div>
+          {!headerStuck && (
+            <div style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary, marginTop: '2px' }}>
+              {getTodayLabel()}
+            </div>
+          )}
         </div>
       </div>
 
