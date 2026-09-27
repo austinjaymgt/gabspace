@@ -932,6 +932,12 @@ function EventDetail({ event, onBack, onDelete, clients, onRefresh, businessSpac
   setAddingTask(false)
 }
 
+  async function toggleTask(task) {
+    const status = task.status === 'done' ? 'todo' : 'done'
+    const { error } = await supabase.from('tasks').update({ status }).eq('id', task.id)
+    if (!error) setTasks(prev => prev.map(tk => tk.id === task.id ? { ...tk, status } : tk))
+  }
+
   async function deleteTask(id) {
     await supabase.from('tasks').delete().eq('id', id)
     setTasks(prev => prev.filter(tk => tk.id !== id))
