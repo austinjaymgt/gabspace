@@ -302,6 +302,18 @@ export default function AdminPanel() {
     setSavingPlanFor(null)
   }
 
+  async function handleCheckoutToggle(userId, nextRequiresCheckout) {
+    setSavingPlanFor(userId)
+    setError(null)
+    const { error: checkoutError } = await supabase.rpc('admin_set_requires_checkout', {
+      target_user_id: userId,
+      new_requires_checkout: nextRequiresCheckout,
+    })
+    if (checkoutError) setError(checkoutError.message)
+    else setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, requires_checkout: nextRequiresCheckout } : u))
+    setSavingPlanFor(null)
+  }
+
   function exportWaitlist() {
     downloadCsv(
       `waitlist-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -445,15 +457,16 @@ export default function AdminPanel() {
           <p style={descStyle}>Everyone with an account, across every business.</p>
         </div>
         <div style={{ padding: '8px 24px 20px', maxHeight: '420px', overflowY: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '8px', padding: '8px 0', fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', gap: '8px', padding: '8px 0', fontSize: t.fontSizes.xs, fontWeight: '600', color: t.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             <span>Email</span>
             <span>Signed up</span>
             <span>Confirmed</span>
             <span>Plan</span>
             <span>Founder</span>
+            <span>Skip billing</span>
           </div>
           {users.map(u => (
-            <div key={u.user_id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderTop: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, alignItems: 'center' }}>
+            <div key={u.user_id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderTop: `1px solid ${t.colors.borderLight}`, fontSize: t.fontSizes.sm, alignItems: 'center' }}>
               <span style={{ color: t.colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</span>
               <span style={{ color: t.colors.textTertiary }}>{new Date(u.created_at).toLocaleDateString()}</span>
               <span style={{ color: u.confirmed ? t.colors.success : t.colors.textTertiary }}>{u.confirmed ? 'Yes' : 'No'}</span>
@@ -468,6 +481,7 @@ export default function AdminPanel() {
                 ))}
               </select>
               <Toggle checked={!!u.is_founder} onChange={() => handleFounderToggle(u.user_id, !u.is_founder)} disabled={savingPlanFor === u.user_id} />
+              <Toggle checked={u.requires_checkout === false} onChange={() => handleCheckoutToggle(u.user_id, u.requires_checkout === false)} disabled={savingPlanFor === u.user_id} />
             </div>
           ))}
         </div>
