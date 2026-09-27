@@ -15,6 +15,84 @@ const TYPE_TAG = {
 
 const emptyLineItem = () => ({ description: '', quantity: '1', unit_price: '' })
 
+const NEW_CLIENT = '__new__'
+
+// Client picker with an inline "+ New client" option, so Money works on its
+// own — a business with Client Management off can still bill someone.
+function ClientSelect({ value, onChange, clients, onClientCreated, businessSpaceId, placeholder }) {
+  const [adding, setAdding] = useState(false)
+  const [name, setName] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  function cancel() {
+    setAdding(false)
+    setName('')
+    setError(null)
+  }
+
+  async function create() {
+    if (!name.trim()) return
+    setSaving(true)
+    setError(null)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data, error: insertError } = await supabase
+      .from('clients')
+      .insert({ name: name.trim(), user_id: user.id, business_space_id: businessSpaceId })
+      .select('id, name, company')
+      .single()
+    setSaving(false)
+    if (insertError) {
+      setError("Couldn't add that client — try again.")
+      return
+    }
+    onClientCreated(data)
+    onChange(data.id)
+    cancel()
+  }
+
+  if (adding) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input
+            autoFocus
+            style={{ ...styles.input, flex: 1, minWidth: 0 }}
+            placeholder="Client name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.preventDefault(); create() }
+              if (e.key === 'Escape') { e.stopPropagation(); cancel() }
+            }}
+          />
+          <button type="button" style={styles.saveBtn} onClick={create} disabled={saving || !name.trim()}>
+            {saving ? 'Adding…' : 'Add'}
+          </button>
+          <button type="button" style={styles.cancelBtn} onClick={cancel}>Cancel</button>
+        </div>
+        {error && <div style={{ fontSize: t.fontSizes.sm, color: t.colors.danger }}>{error}</div>}
+      </div>
+    )
+  }
+
+  return (
+    <select
+      style={styles.input}
+      value={value}
+      onChange={e => (e.target.value === NEW_CLIENT ? setAdding(true) : onChange(e.target.value))}
+    >
+      <option value="">{placeholder}</option>
+      {clients.map(c => (
+        <option key={c.id} value={c.id}>
+          {c.name}{c.company ? ` (${c.company})` : ''}
+        </option>
+      ))}
+      <option value={NEW_CLIENT}>+ New client…</option>
+    </select>
+  )
+}
+
 function lineItemsTotal(items) {
   return items.reduce((sum, li) => sum + ((parseFloat(li.quantity) || 0) * (parseFloat(li.unit_price) || 0)), 0)
 }
@@ -142,6 +220,10 @@ export default function Invoices({ businessSpaceId }) {
   async function fetchClients() {
     const { data } = await supabase.from('clients').select('id, name, company').eq('business_space_id', businessSpaceId)
     if (data) setClients(data)
+  }
+
+  function addClient(client) {
+    setClients(prev => [...prev, client])
   }
 
   async function fetchProjects() {
@@ -775,18 +857,14 @@ export default function Invoices({ businessSpaceId }) {
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Client</label>
-              <select
-                style={styles.input}
+              <ClientSelect
                 value={form.client_id}
-                onChange={e => setForm({ ...form, client_id: e.target.value })}
-              >
-                <option value="">No client</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}{c.company ? ` (${c.company})` : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={id => setForm(f => ({ ...f, client_id: id }))}
+                clients={clients}
+                onClientCreated={addClient}
+                businessSpaceId={businessSpaceId}
+                placeholder="No client"
+              />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Project</label>
@@ -875,18 +953,14 @@ export default function Invoices({ businessSpaceId }) {
           <div style={styles.formGrid}>
             <div style={styles.field}>
               <label style={styles.label}>Client</label>
-              <select
-                style={styles.input}
+              <ClientSelect
                 value={ruleForm.client_id}
-                onChange={e => setRuleForm({ ...ruleForm, client_id: e.target.value })}
-              >
-                <option value="">Choose a client</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}{c.company ? ` (${c.company})` : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={id => setRuleForm(f => ({ ...f, client_id: id }))}
+                clients={clients}
+                onClientCreated={addClient}
+                businessSpaceId={businessSpaceId}
+                placeholder="Choose a client"
+              />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Project</label>

@@ -358,7 +358,7 @@ export default function NotificationsPanel({ businessSpaceId, isMobile = false, 
   )
 
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef} data-tour="notifications" style={{ position: 'relative' }}>
       <button
         onClick={toggleDropdown}
         title="Notifications"

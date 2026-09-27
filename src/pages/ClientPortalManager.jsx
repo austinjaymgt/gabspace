@@ -291,10 +291,11 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
     <div style={{ padding: t.space.xl, fontFamily: t.fonts.sans, maxWidth: 860, margin: '0 auto' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: t.space.xl }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: t.fontSizes['2xl'], fontFamily: t.fonts.heading, color: t.colors.textPrimary }}>Client Portals</h1>
-          <p style={{ margin: '4px 0 0', fontSize: t.fontSizes.md, color: t.colors.textTertiary }}>{portals.length} active portal{portals.length !== 1 ? 's' : ''}</p>
+          <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Client Management</div>
+          <h2 style={{ fontSize: t.fontSizes['2xl'], fontWeight: '800', color: t.colors.textPrimary, margin: '0 0 4px', fontFamily: t.fonts.heading, letterSpacing: '0.01em' }}>Portals</h2>
+          <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>{portals.length} active portal{portals.length !== 1 ? 's' : ''}</p>
         </div>
         {!showNewPortal && (
           <button onClick={() => setShowNewPortal(true)} style={btnStyle}>+ New Portal</button>

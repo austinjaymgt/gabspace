@@ -14,7 +14,7 @@ const PRIMARY_TABS = [
 
 const MORE_ITEMS = [
   { label: 'Clients', icon: 'clients', path: 'allclients', activePaths: ['allclients', 'projects'], moduleKey: 'clientManagement' },
-  { label: 'Tasks', icon: 'checklist', path: 'tasks', moduleKey: 'clientManagement' },
+  { label: 'Tasks', icon: 'checklist', path: 'tasks', moduleKey: 'tasks' },
   { label: 'Creative', icon: 'creative', path: 'spark', activePaths: ['spark', 'creative-strategy', 'campaign-tracking', 'assets'], moduleKey: 'creativeCollective' },
   { label: 'Portals', icon: 'portal', path: 'client-portal-manager', moduleKey: 'portals' },
   { label: 'Money', icon: 'finance', path: 'income', moduleKey: 'money' },
@@ -87,7 +87,7 @@ export default function MobileTabBar({ currentPage, onNavigate, onLogout, busine
         </div>
       )}
 
-      <div style={{
+      <div data-tour="mobile-tabs" style={{
         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
         display: 'flex',
         backgroundColor: t.colors.bgCard,
@@ -113,6 +113,7 @@ export default function MobileTabBar({ currentPage, onNavigate, onLogout, busine
           )
         })}
         <button
+          data-tour="mobile-more"
           onClick={() => setMoreOpen(true)}
           style={{
             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

@@ -77,7 +77,7 @@ export const listTasks = defineTool({
   }),
   readOnly: true,
   handler: async (ctx, args) => {
-    const business = resolveBusiness(ctx, args.business_space_id, 'clientManagement')
+    const business = resolveBusiness(ctx, args.business_space_id, 'tasks')
     const today = todayISO()
     let query = ctx.supabase
       .from('tasks')

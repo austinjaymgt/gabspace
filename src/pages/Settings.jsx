@@ -550,8 +550,10 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       {isOwnerOrAdmin && (
         <SectionCard title="Modules" subtitle="Toggle feature on or off for this business">
           <div style={{ padding: '8px 24px 24px' }}>
-            {MODULE_DEFS.map(m => (
-              <div key={m.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 0', borderBottom: `1px solid ${t.colors.borderLight}` }}>
+            {MODULE_DEFS.map((m, i) => (
+              // A module that requires another (Portals) sits nested under it,
+              // mirroring the sidebar — no divider between parent and child.
+              <div key={m.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: m.requires ? '4px 0 14px 28px' : '14px 0', borderBottom: MODULE_DEFS[i + 1]?.requires ? 'none' : `1px solid ${t.colors.borderLight}` }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', minWidth: 0 }}>
                   <span style={{ color: t.colors.textTertiary, marginTop: '2px', flexShrink: 0 }}>
                     <Icon name={m.icon} size="sm" />

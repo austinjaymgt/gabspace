@@ -56,7 +56,7 @@ const CATEGORY_CHILDREN = [
     children: [
       { path: 'allclients', label: 'Clients', icon: 'clients' },
       { path: 'projects', label: 'Projects', icon: 'projects' },
-      { path: 'tasks', label: 'Tasks', icon: 'task-done' },
+      { path: 'client-portal-manager', label: 'Portals', icon: 'portal' },
     ],
   },
   {
@@ -166,7 +166,7 @@ const favorites = (settings?.favorites || ['dashboard', 'allclients', 'projects'
 const favoritePages = allPages.filter(p => favorites.includes(p.path))
 const displayPages = activeCategory ? activeCategory.children : favoritePages
   return (
-<div style={{
+<div data-tour="subheader" style={{
       backgroundColor: t.colors.bgCard,
       borderBottom: `1px solid ${t.colors.borderLight}`,
       padding: isMobile ? '0 12px' : '0 24px',

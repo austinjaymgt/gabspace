@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { theme as t, taskStatusConfig as statusConfig } from '../theme'
 import { formatDate } from '../utils/dates'
 import Modal from '../components/Modal'
+import { getModules } from '../utils/businessModules'
 
 const sortOptions = [
   { value: 'default',      label: 'Sort: manual' },
@@ -34,6 +35,9 @@ function compareTasks(a, b, sortBy) {
 }
 
 export default function Tasks({ businessSpaceId }) {
+  // Tasks is its own module; linking to a project only makes sense when
+  // Client Management (where projects live) is on.
+  const projectsOn = getModules(businessSpaceId).clientManagement
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -239,7 +243,6 @@ export default function Tasks({ businessSpaceId }) {
     <div style={styles.page}>
       <div style={styles.header}>
         <div>
-          <div style={{ fontSize: t.fontSizes.xs, fontWeight: '500', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.colors.primary, marginBottom: '6px' }}>Client Management</div>
           <h2 style={styles.title}>Tasks</h2>
           <p style={styles.subtitle}>{tasks.length} total task{tasks.length !== 1 ? 's' : ''}</p>
         </div>
@@ -305,6 +308,7 @@ export default function Tasks({ businessSpaceId }) {
                 onChange={e => setForm({ ...form, title: e.target.value })}
               />
             </div>
+            {projectsOn && (
             <div style={styles.field}>
               <label style={styles.label}>Project</label>
               <select
@@ -318,6 +322,7 @@ export default function Tasks({ businessSpaceId }) {
                 ))}
               </select>
             </div>
+            )}
             <div style={styles.field}>
               <label style={styles.label}>Status</label>
               <select

@@ -6,24 +6,29 @@ import { supabase } from '../supabaseClient'
 // sidebar/tab bar/dashboard can keep reading getModules() during render —
 // App calls loadModules() whenever the active business changes to refresh it.
 
-// One module per top-level sidebar section, so a toggle here always maps
-// to a whole nav group turning on/off together (see MODULE_NAV_PATHS).
+// Mostly one module per top-level sidebar section, so a toggle maps to a
+// whole nav group turning on/off together (see MODULE_NAV_PATHS). Portals
+// is the exception: it sits under Client Management in the sidebar but
+// keeps its own toggle, since it's the one part clients can see. A module
+// with `requires` is listed right after what it requires, and Settings
+// shows it nested under that module.
 export const MODULE_DEFS = [
-  { key: 'clientManagement', label: 'Client Management', icon: 'clients', description: 'Clients, projects, and tasks.' },
+  { key: 'tasks', label: 'Tasks', icon: 'checklist', description: 'A to-do list for you and your team.' },
+  { key: 'clientManagement', label: 'Client Management', icon: 'clients', description: 'Clients and projects.' },
   { key: 'portals', label: 'Portals', icon: 'portal', description: 'A shared space where clients can log in and see updates.', requires: 'clientManagement' },
-  { key: 'money', label: 'Money', icon: 'finance', description: 'Invoices, expenses, and financial snapshots.', requires: 'clientManagement' },
+  { key: 'money', label: 'Money', icon: 'finance', description: 'Invoices, expenses, and financial snapshots.' },
   { key: 'operations', label: 'Operations', icon: 'operations', description: 'Vendors and shared resources.' },
   { key: 'creativeCollective', label: 'Creative Collective', icon: 'creative', description: 'Spark, creative strategy, content calendar, and creative assets.' },
   { key: 'team', label: 'Team', icon: 'team', description: 'Team goals, professional development, and networking.' },
 ]
 
-// Sidebar nav paths gated by each module — one entry per top-level sidebar
-// section, listing every path under it (parent + children).
+// Sidebar nav paths gated by each module.
 // 'team-members' (invites/roster) is intentionally excluded here — it's
 // core account management, not an optional feature, so toggling the Team
 // module off must not also hide the ability to manage who's on the team.
 export const MODULE_NAV_PATHS = {
-  clientManagement: ['allclients', 'projects', 'tasks'],
+  tasks: ['tasks'],
+  clientManagement: ['allclients', 'projects'],
   portals: ['client-portal-manager'],
   money: ['snapshot', 'income', 'expenses'],
   operations: ['vendors', 'resources'],
@@ -35,6 +40,7 @@ export const MODULE_NAV_PATHS = {
 // hide it. One representative table per module; Portals has no dedicated
 // table of its own.
 export const MODULE_DATA_TABLES = {
+  tasks: 'tasks',
   clientManagement: 'clients',
   money: 'invoices',
   operations: 'vendors',

@@ -283,7 +283,7 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate, se
 
   if (isMobile) {
     return (
-      <div ref={containerRef} style={{ position: 'relative' }}>
+      <div ref={containerRef} data-tour="business-switcher" style={{ position: 'relative' }}>
         <button
           onClick={toggleDropdown}
           aria-label="Switch business"
@@ -306,7 +306,7 @@ export default function BusinessSpaceSwitcher({ isMobile = false, onNavigate, se
   }
 
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef} data-tour="business-switcher" style={{ position: 'relative' }}>
       <button
         onClick={toggleDropdown}
         aria-label="Switch business"

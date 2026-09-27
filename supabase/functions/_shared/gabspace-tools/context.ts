@@ -8,9 +8,10 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 const STAFF_ROLES = ['owner', 'co-owner', 'employee']
 
 // Mirrors MODULE_DEFS in src/utils/businessModules.js.
-export type ModuleKey = 'clientManagement' | 'portals' | 'money' | 'operations' | 'creativeCollective' | 'team'
+export type ModuleKey = 'tasks' | 'clientManagement' | 'portals' | 'money' | 'operations' | 'creativeCollective' | 'team'
 
 export const MODULE_LABELS: Record<ModuleKey, string> = {
+  tasks: 'Tasks',
   clientManagement: 'Client Management',
   portals: 'Portals',
   money: 'Money',

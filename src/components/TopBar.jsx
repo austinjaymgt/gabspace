@@ -7,7 +7,7 @@ import { useIsNotDesktop } from '../hooks/useMediaQuery'
 import BusinessSpaceSwitcher from './BusinessSpaceSwitcher'
 import NotificationsPanel from './NotificationsPanel'
 
-export default function TopBar({ session, onLogout, onMenuClick, onNavigate, businessSpaceId, onSwitchBusinessSpace, onOpenCreateBusinessFlow, onRestoreBusinessSpace, businessIdentityVersion, hideMenuButton, portalActivityVersion, onPortalActivityChange, isPlatformAdmin, onOpenCommunity }) {
+export default function TopBar({ session, onLogout, onMenuClick, onNavigate, businessSpaceId, onSwitchBusinessSpace, onOpenCreateBusinessFlow, onRestoreBusinessSpace, businessIdentityVersion, hideMenuButton, portalActivityVersion, onPortalActivityChange, isPlatformAdmin, onOpenCommunity, onStartTour }) {
   const isMobile = useIsNotDesktop()
   const isDesktop = !isMobile
   const [firstName, setFirstName] = useState('')
@@ -77,7 +77,7 @@ export default function TopBar({ session, onLogout, onMenuClick, onNavigate, bus
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '12px', flexShrink: 0 }}>
         <NotificationsPanel businessSpaceId={businessSpaceId} onNavigate={onNavigate} isMobile={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={onPortalActivityChange} session={session} onSwitchBusinessSpace={onSwitchBusinessSpace} onOpenCommunity={onOpenCommunity} />
 
-        <div ref={profileRef} style={{ position: 'relative', flexShrink: 0 }}>
+        <div ref={profileRef} data-tour="profile" style={{ position: 'relative', flexShrink: 0 }}>
           <div
             onClick={() => setProfileOpen(prev => !prev)}
             title={session?.user?.email}
@@ -115,6 +115,7 @@ export default function TopBar({ session, onLogout, onMenuClick, onNavigate, bus
             }}>
               <ProfileMenuItem icon="home" label="Home" onClick={() => { setProfileOpen(false); onNavigate('home') }} />
               <ProfileMenuItem icon="tutorials" label="Tutorials" onClick={() => { setProfileOpen(false); onNavigate('tutorials') }} />
+              <ProfileMenuItem icon="sparkles" label="Take the tour" onClick={() => { setProfileOpen(false); onStartTour() }} />
               <ProfileMenuItem icon={isDark ? 'sun' : 'moon'} label="Dark mode" active={isDark} onClick={() => { setProfileOpen(false); toggleDark() }} />
               <ProfileMenuItem icon="settings" label="Settings" onClick={() => { setProfileOpen(false); onNavigate('settings') }} />
               {isPlatformAdmin && (

@@ -18,10 +18,10 @@ function joinWithAnd(items) {
 function proposalSentence(soloOrClients, money) {
   const clients = soloOrClients === 'clients'
   const moneyOn = money === 'yes'
-  const picks = []
-  if (clients || moneyOn) picks.push('Clients')
+  const picks = ['Tasks']
+  if (clients) picks.push('Clients')
   if (moneyOn) picks.push('Money')
-  const base = picks.length ? `Sounds like ${joinWithAnd(picks)}` : "Sounds like you're keeping it simple"
+  const base = picks.length > 1 ? `Sounds like ${joinWithAnd(picks)}` : "Sounds like you're keeping it simple — just Tasks"
   return `${base} — want me to also turn on Goals?`
 }
 
@@ -66,7 +66,7 @@ export default function AddBusinessFlow({ onCreate, onDone, onClose, forced = fa
     setMoney(choice)
     const clients = soloOrClients === 'clients'
     const moneyOn = choice === 'yes'
-    setModules({ ...NO_MODULES, clientManagement: clients || moneyOn, money: moneyOn })
+    setModules({ ...NO_MODULES, tasks: true, clientManagement: clients, money: moneyOn })
     setStep('proposal')
   }
 

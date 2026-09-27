@@ -17,15 +17,15 @@ import gabspaceLockup from '../assets/gabspace-lockup-dark-bg.svg'
     ]
   },
 
+  { label: 'Tasks', icon: 'checklist', path: 'tasks', section: 'business' },
+
     {
     label: 'Client Management', icon: 'clients', path: 'allclients', section: 'business', children: [
       { label: 'Clients', path: 'allclients' },
       { label: 'Projects', icon: 'projects', path: 'projects' },
-      { label: 'Tasks', path: 'tasks' },
+      { label: 'Portals', path: 'client-portal-manager' },
   ]
   },
-
-  { label: 'Portals', icon: 'portal', path: 'client-portal-manager', accent: true, section: 'business' },
 
   /* Hidden for now — keeping for backup. Spark moved to Creative Collective.
   {
@@ -199,14 +199,18 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
       </div>
 
       {/* Nav */}
-      <nav style={{ padding: '8px 0', flex: 1 }}>
+      <nav data-tour="sidebar-nav" style={{ padding: '8px 0', flex: 1 }}>
         {items.map(item => {
+          // Portals is nested under Client Management, so its unread count
+          // also shows on the parent while the group is collapsed.
+          const hasPortal = item.path === 'client-portal-manager' || item.children?.some(c => c.path === 'client-portal-manager')
+          const showPortalBadge = hasPortal && portalUnread > 0 && !(item.children && expanded.includes(item.label))
           const isActive = currentPage === item.path ||
             (item.children && item.children.some(c => c.path === currentPage)) ||
             (item.activePaths && item.activePaths.includes(currentPage))
 
           return (
-            <div key={item.label}>
+            <div key={item.label} data-tour={`nav-${item.path}`}>
               {item === firstBusinessItem && (
                 <div style={{
                   padding: collapsed ? '14px 0 6px' : '14px 20px 6px',
@@ -262,14 +266,14 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
               >
                 <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, position: 'relative' }}>
                   <Icon name={item.icon} size="sm" />
-                  {collapsed && item.path === 'client-portal-manager' && portalUnread > 0 && (
+                  {collapsed && hasPortal && portalUnread > 0 && (
                     <span style={{ position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: t.radius.full, backgroundColor: t.colors.primary }} />
                   )}
                 </span>
                 {!collapsed && (
                   <>
                     <span style={{ flex: 1 }}>{item.label}</span>
-                    {item.path === 'client-portal-manager' && portalUnread > 0 && (
+                    {showPortalBadge && (
                       <span style={{ background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: 700, borderRadius: t.radius.full, minWidth: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>
                         {portalUnread}
                       </span>
@@ -310,6 +314,11 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
                       onClick={() => handleNav(child.path)}
                     >
                       {child.label}
+                      {child.path === 'client-portal-manager' && portalUnread > 0 && (
+                        <span style={{ marginLeft: 8, background: t.colors.primary, color: '#fff', fontSize: t.fontSizes.xs, fontWeight: 700, borderRadius: t.radius.full, minWidth: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>
+                          {portalUnread}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -349,7 +358,9 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, onLo
             <Icon name="search" size="sm" />
           </button>
         ) : (
-          <GlobalSearch businessSpaceId={businessSpaceId} onNavigate={handleNav} isMobile={false} variant="sidebar" />
+          <div data-tour="search">
+            <GlobalSearch businessSpaceId={businessSpaceId} onNavigate={handleNav} isMobile={false} variant="sidebar" />
+          </div>
         )}
         <button
           onClick={onLogout}

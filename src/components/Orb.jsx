@@ -3,6 +3,11 @@
 // (Home hero, corner badge, splash screens). Two gradient layers cross-fade
 // between calm (default) and urgent (overdue/attention-needed) states —
 // see brand guide section 5.
+// The blob shape normally comes from the orb-drift keyframes (index.css);
+// this is that animation's first frame, so a still orb (animate={false})
+// keeps its shape instead of rendering as a square.
+const RESTING_SHAPE = '42% 58% 65% 35% / 45% 40% 60% 55%'
+
 export default function Orb({ size = 80, urgent = false, halo = false, animate = true, onClick, style, className }) {
   const coreAnim = animate
     ? 'orb-enter 0.8s cubic-bezier(0.16,1,0.3,1) backwards, orb-drift 7s ease-in-out infinite'
@@ -40,6 +45,7 @@ export default function Orb({ size = 80, urgent = false, halo = false, animate =
       <div style={{
         position: 'absolute',
         inset: 0,
+        borderRadius: RESTING_SHAPE,
         background: 'radial-gradient(circle at 35% 30%, #7fd8ff 0%, #4fa8e8 55%, #6a5cd0 100%)',
         boxShadow: '0 0 60px rgba(79,168,232,0.5), 0 0 120px rgba(106,92,208,0.35)',
         animation: coreAnim,
@@ -48,6 +54,7 @@ export default function Orb({ size = 80, urgent = false, halo = false, animate =
       <div style={{
         position: 'absolute',
         inset: 0,
+        borderRadius: RESTING_SHAPE,
         background: 'radial-gradient(circle at 35% 30%, #f7c3cf 0%, #c0506e 55%, #7a2f45 100%)',
         boxShadow: '0 0 60px rgba(192,80,110,0.55), 0 0 120px rgba(122,47,69,0.35)',
         animation: overlayAnim,

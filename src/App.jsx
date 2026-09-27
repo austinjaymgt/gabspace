@@ -41,6 +41,7 @@ import SubHeader from './components/SubHeader'
 import Settings from './pages/Settings'
 import TeamMembers from './pages/TeamMembers'
 import OnboardingModal from './components/OnboardingModal'
+import OrbiTour from './components/OrbiTour'
 import Resources from './pages/Resources'
 import Tutorials from './pages/Tutorials'
 import Directory from './pages/Directory'
@@ -68,6 +69,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   // null = hidden; otherwise { startMinimized } for the checklist.
   const [onboarding, setOnboarding] = useState(null)
+  const [tourActive, setTourActive] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
@@ -161,26 +163,43 @@ const WELCOME_SPLASH_MS = 2600
     return () => clearTimeout(timer)
   }, [showWelcomeSplash])
 
-  // Getting Started checklist — driven by user_settings rather than the
-  // URL, since a new owner lands on /billing/success after paying, never
-  // /welcome. Owners and co-owners only: employees can't reach Money, so
-  // the Orbi tour covers them instead. Re-evaluated on business switch,
-  // since the role can differ per business.
+  // Orbi tour + Getting Started checklist — driven by user_settings rather
+  // than the URL, since a new owner lands on /billing/success after paying,
+  // never /welcome. Re-evaluated on business switch, since the role can
+  // differ per business.
+  //
+  // The tour auto-starts only for brand-new accounts (onboarding_intro_seen
+  // was backfilled true for everyone who predates it) and runs first; the
+  // checklist waits until it's done. The checklist is owners/co-owners
+  // only — employees can't reach Money, so the tour covers them instead.
   useEffect(() => {
     if (window.location.pathname === '/welcome') window.history.replaceState({}, '', '/')
-    if (!session || !businessSpaceId || requiresCheckout || !['owner', 'co-owner'].includes(userRole)) {
+    if (!session || !businessSpaceId || requiresCheckout || !userRole || userRole === 'client') {
       queueMicrotask(() => setOnboarding(null))
       return
     }
-    supabase
-      .from('user_settings')
-      .select('onboarding_completed, onboarding_intro_seen')
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setOnboarding(data && !data.onboarding_completed ? { startMinimized: !!data.onboarding_intro_seen } : null)
-      })
+    const isManager = ['owner', 'co-owner'].includes(userRole)
+    Promise.all([
+      supabase.from('user_settings').select('onboarding_completed, onboarding_intro_seen').eq('user_id', session.user.id).maybeSingle(),
+      // Separate query so a missing tour column can't take the checklist down with it.
+      supabase.from('user_settings').select('tour_completed').eq('user_id', session.user.id).maybeSingle(),
+    ]).then(([{ data }, { data: tour }]) => {
+      if (data && !data.onboarding_intro_seen && tour && !tour.tour_completed) setTourActive(true)
+      setOnboarding(isManager && data && !data.onboarding_completed ? { startMinimized: !!data.onboarding_intro_seen } : null)
+    })
   }, [session, businessSpaceId, userRole, requiresCheckout])
+
+  function finishTour() {
+    setTourActive(false)
+    supabase.from('user_settings').update({ tour_completed: true }).eq('user_id', session.user.id).then()
+  }
+
+  // Replay from the profile menu. The checklist has already been seen by
+  // then, so it comes back as the pill afterwards rather than full-size.
+  function startTour() {
+    setOnboarding(o => o && { ...o, startMinimized: true })
+    setTourActive(true)
+  }
 
   // Platform-admin flag — is_platform_admin() server-side is the real
   // boundary (RLS); this just mirrors it for UI-layer gating.
@@ -867,7 +886,17 @@ function renderPage() {
 
   const overlays = (
     <>
-      {onboarding && (
+      {tourActive && (
+  <OrbiTour
+    currentPage={currentPage}
+    businessSpaceId={businessSpaceId}
+    hasChecklist={!!onboarding}
+    onNavigate={setCurrentPage}
+    onFinish={finishTour}
+  />
+)}
+
+      {onboarding && !tourActive && (
   <OnboardingModal
     key={businessSpaceId}
     userId={session.user.id}
@@ -921,8 +950,8 @@ function renderPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: t.colors.bg, backgroundImage: 'var(--gradient-bg)', fontFamily: t.fonts.sans, display: 'flex' }}>
       {overlays}
-{!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} isPlatformAdmin={isPlatformAdmin} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? 'calc(60px + env(safe-area-inset-bottom))' : 0 }}>
-        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={bumpPortalActivity} isPlatformAdmin={isPlatformAdmin} onOpenCommunity={openCommunity} />
+{!isMobile && <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={userRole} onLogout={handleLogout} collapsed={sidebarCollapsed && !tourActive} onToggleCollapse={() => setSidebarCollapsed(p => !p)} businessSpaceId={businessSpaceId} portalActivityVersion={portalActivityVersion} isPlatformAdmin={isPlatformAdmin} />}      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', minWidth: 0, paddingBottom: isMobile ? 'calc(60px + env(safe-area-inset-bottom))' : 0 }}>
+        <TopBar session={session} onLogout={handleLogout} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} onNavigate={setCurrentPage} userRole={userRole} businessSpaceId={businessSpaceId} onSwitchBusinessSpace={handleBusinessSpaceSwitch} onOpenCreateBusinessFlow={() => setShowAddBusinessFlow(true)} onRestoreBusinessSpace={handleRestoreBusinessSpace} businessIdentityVersion={businessIdentityVersion} hideMenuButton={isMobile} portalActivityVersion={portalActivityVersion} onPortalActivityChange={bumpPortalActivity} isPlatformAdmin={isPlatformAdmin} onOpenCommunity={openCommunity} onStartTour={startTour} />
         <SubHeader currentPage={currentPage} onNavigate={setCurrentPage} session={session} businessSpaceId={businessSpaceId} />
         <div style={{ flex: 1 }}>
           {renderPage()}

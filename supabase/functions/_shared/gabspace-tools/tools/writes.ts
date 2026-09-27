@@ -85,7 +85,7 @@ export const createTask = defineTool({
   }),
   readOnly: false,
   handler: async (ctx, args) => {
-    const business = resolveBusiness(ctx, args.business_space_id, 'clientManagement')
+    const business = resolveBusiness(ctx, args.business_space_id, 'tasks')
     if (args.project_id) await assertInBusiness(ctx, 'projects', args.project_id, business)
     if (args.client_id) await assertInBusiness(ctx, 'clients', args.client_id, business)
 
@@ -129,7 +129,7 @@ export const updateTask = defineTool({
       'the task',
     ) as any
     if (!existing?.id) throw new ToolError('Task not found.', 'denied')
-    const business = businessForRecord(ctx, existing.business_space_id, 'clientManagement')
+    const business = businessForRecord(ctx, existing.business_space_id, 'tasks')
 
     const update = changesFrom(changes, 'title, status, due_date, start_date or assigned_to')
 
