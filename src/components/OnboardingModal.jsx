@@ -1,66 +1,70 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { theme as t } from "../theme";
+import { getModules } from "../utils/businessModules";
+import { useIsMobile } from "../hooks/useMediaQuery";
 
-const steps = [
-  { id: "user_settings", label: "Update business information", table: "user_settings", page: "settings" },
-  { id: "client", label: "Add your first client", table: "clients", page: "allclients" },
-  { id: "project", label: "Create a project", table: "projects", page: "projects" },
-  { id: "expense", label: "Log an expense", table: "expenses", page: "expenses" },
-  { id: "invoice", label: "Create an invoice", table: "invoices", page: "income" },
+// Each step is ticked only by real data in the active business — never by
+// hand — so the checklist can't drift from what's actually been done.
+const ALL_STEPS = [
+  { id: "logo", label: "Add your logo", page: "settings" },
+  { id: "client", label: "Add your first client", table: "clients", page: "allclients", module: "clientManagement" },
+  { id: "project", label: "Create a project", table: "projects", page: "projects", module: "clientManagement" },
+  { id: "expense", label: "Log an expense", table: "expenses", page: "expenses", module: "money" },
+  { id: "invoice", label: "Create an invoice", table: "invoices", page: "income", module: "money" },
 ];
 
-export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate }) {
+async function isStepDone(step, businessSpaceId) {
+  if (step.id === "logo") {
+    const { data } = await supabase
+      .from("business_spaces")
+      .select("logo_url")
+      .eq("id", businessSpaceId)
+      .maybeSingle();
+    return !!data?.logo_url;
+  }
+  const { count } = await supabase
+    .from(step.table)
+    .select("id", { count: "exact", head: true })
+    .eq("business_space_id", businessSpaceId);
+  return count > 0;
+}
+
+export default function OnboardingModal({ userId, businessSpaceId, startMinimized, refreshKey, onComplete, onSkip, onNavigate }) {
   const [completed, setCompleted] = useState([]);
   const [checking, setChecking] = useState(true);
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(startMinimized);
+  const isMobile = useIsMobile();
 
+  const modules = getModules(businessSpaceId);
+  const steps = ALL_STEPS.filter((s) => !s.module || modules[s.module]);
+
+  // The full checklist is shown once; from then on it opens as the pill.
   useEffect(() => {
-    async function checkExisting() {
-      // Check if user already completed or skipped onboarding
-      const { data: settings } = await supabase
-        .from("user_settings")
-        .select("onboarding_completed")
-        .eq("user_id", userId)
-        .maybeSingle();
+    if (startMinimized) return;
+    supabase.from("user_settings").update({ onboarding_intro_seen: true }).eq("user_id", userId);
+  }, [userId, startMinimized]);
 
-      if (settings?.onboarding_completed) {
-        onComplete();
-        return;
-      }
+  // Re-checked on navigation and business-identity changes (e.g. a logo
+  // upload in Settings), so returning from a step shows it ticked.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(ALL_STEPS.map(async (step) => ((await isStepDone(step, businessSpaceId)) ? step.id : null)))
+      .then((results) => {
+        if (cancelled) return;
+        setCompleted(results.filter(Boolean));
+        setChecking(false);
+      });
+    return () => { cancelled = true; };
+  }, [businessSpaceId, refreshKey]);
 
-      const results = await Promise.all(
-        steps.map(async (step) => {
-          const { count } = await supabase
-            .from(step.table)
-            .select("*", { count: "exact", head: true })
-            .eq("user_id", userId);
-          return count > 0 ? step.id : null;
-        })
-      );
-      setCompleted(results.filter(Boolean));
-      setChecking(false);
-    }
-    checkExisting();
-  }, [userId]);
-
-  const toggleStep = (id) => {
-    setCompleted((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
-  };
+  const allDone = !checking && steps.every((s) => completed.includes(s.id));
 
   const handleStepClick = (step) => {
-    const done = completed.includes(step.id);
-    if (done) {
-      toggleStep(step.id);
-    } else {
-      onNavigate(step.page);
-      setMinimized(true);
-    }
+    if (completed.includes(step.id)) return;
+    setMinimized(true);
+    onNavigate(step.page);
   };
-
-  const allDone = steps.every((s) => completed.includes(s.id));
 
   const markCompleted = async () => {
     await supabase
@@ -81,13 +85,15 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
 
   const completedCount = steps.filter((s) => completed.includes(s.id)).length;
 
-  // Minimized pill
-  if (minimized) {
+  // Minimized pill — finishing the last step opens the "you're set" view on its own.
+  if (minimized && !allDone) {
     return (
       <div
         onClick={() => setMinimized(false)}
         style={{
-          position: "fixed", bottom: "24px", right: "24px",
+          position: "fixed", right: isMobile ? "16px" : "24px",
+          // Clear the mobile tab bar (60px + safe area).
+          bottom: isMobile ? "calc(76px + env(safe-area-inset-bottom))" : "24px",
           background: t.colors.primary, color: "#fff",
           borderRadius: t.radius.full, padding: "12px 20px",
           display: "flex", alignItems: "center", gap: "10px",
@@ -139,14 +145,16 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
               letterSpacing: "-0.02em",
               lineHeight: 1.2,
             }}>
-              Welcome to gabspace
+              {allDone ? "You're all set" : "Welcome to gabspace"}
             </h2>
             <p style={{
               color: t.colors.textSecondary, margin: 0,
               fontSize: t.fontSizes.md,
               lineHeight: 1.5,
             }}>
-              Complete these steps to get your workspace set up.
+              {allDone
+                ? "Your space is set up. Time to get to work."
+                : "Complete these steps to get your workspace set up."}
             </p>
           </div>
           <button
@@ -182,7 +190,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
                     padding: "12px",
                     borderRadius: t.radius.full,
                     marginBottom: "8px",
-                    cursor: "pointer",
+                    cursor: done ? "default" : "pointer",
                     background: done ? t.colors.successLight : t.colors.bg,
                     border: `1px solid ${done ? t.colors.success : t.colors.border}`,
                     transition: "all 0.15s",
@@ -238,7 +246,7 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
           Get started
         </button>
 
-        <p
+        {!allDone && <p
           onClick={handleSkip}
           style={{
             textAlign: "center", marginTop: "16px", marginBottom: 0,
@@ -247,8 +255,8 @@ export default function OnboardingModal({ userId, onComplete, onSkip, onNavigate
             fontFamily: t.fonts.sans,
           }}
         >
-          Skip for now
-        </p>
+          Hide checklist
+        </p>}
       </div>
     </div>
   );

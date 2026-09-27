@@ -66,7 +66,8 @@ export default function App() {
   const [error, setError] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  // null = hidden; otherwise { startMinimized } for the checklist.
+  const [onboarding, setOnboarding] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
@@ -160,22 +161,26 @@ const WELCOME_SPLASH_MS = 2600
     return () => clearTimeout(timer)
   }, [showWelcomeSplash])
 
-  // Post-confirmation landing spot (emailRedirectTo points signup
-  // confirmations here). Shows the onboarding checklist once, gated on
-  // user_settings.onboarding_completed rather than the path itself, so
-  // revisiting /welcome after finishing doesn't show it again.
+  // Getting Started checklist — driven by user_settings rather than the
+  // URL, since a new owner lands on /billing/success after paying, never
+  // /welcome. Owners and co-owners only: employees can't reach Money, so
+  // the Orbi tour covers them instead. Re-evaluated on business switch,
+  // since the role can differ per business.
   useEffect(() => {
-    if (!session || window.location.pathname !== '/welcome') return
+    if (window.location.pathname === '/welcome') window.history.replaceState({}, '', '/')
+    if (!session || !businessSpaceId || requiresCheckout || !['owner', 'co-owner'].includes(userRole)) {
+      queueMicrotask(() => setOnboarding(null))
+      return
+    }
     supabase
       .from('user_settings')
-      .select('onboarding_completed')
+      .select('onboarding_completed, onboarding_intro_seen')
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data && !data.onboarding_completed) setShowOnboarding(true)
-        else window.history.replaceState({}, '', '/')
+        setOnboarding(data && !data.onboarding_completed ? { startMinimized: !!data.onboarding_intro_seen } : null)
       })
-  }, [session])
+  }, [session, businessSpaceId, userRole, requiresCheckout])
 
   // Platform-admin flag — is_platform_admin() server-side is the real
   // boundary (RLS); this just mirrors it for UI-layer gating.
@@ -862,19 +867,22 @@ function renderPage() {
 
   const overlays = (
     <>
-      {showOnboarding && (
+      {onboarding && (
   <OnboardingModal
+    key={businessSpaceId}
     userId={session.user.id}
+    businessSpaceId={businessSpaceId}
+    startMinimized={onboarding.startMinimized}
+    refreshKey={`${currentPage}-${businessIdentityVersion}`}
     onComplete={() => {
-      setShowOnboarding(false)
-      window.history.replaceState({}, '', '/')
+      setOnboarding(null)
       // Onboarding just finished — this is a once-per-user "you've arrived" moment,
       // not the daily splash, so mark today as seen to avoid showing both back to back.
       localStorage.setItem(DAILY_SPLASH_KEY, new Date().toDateString())
       setShowWelcomeSplash(true)
     }}
-    onSkip={() => { setShowOnboarding(false); window.history.replaceState({}, '', '/') }}
-    onNavigate={(page) => { setShowOnboarding(false); window.history.replaceState({}, '', '/'); setCurrentPage(page) }}
+    onSkip={() => setOnboarding(null)}
+    onNavigate={setCurrentPage}
   />
 )}
 
