@@ -304,7 +304,7 @@ export default function Expenses({ businessSpaceId, userRole }) {
             onEndChange={setDateFilterEnd}
           />
           <button onClick={() => setShowCategoryManager(v => !v)} style={styles.cancelBtn}>Manage Categories</button>
-          <button onClick={() => { setFormError(''); setShowExpenseForm(true) }} style={styles.addBtn}>+ Log expense</button>
+          <button data-tour="page-action" onClick={() => { setFormError(''); setShowExpenseForm(true) }} style={styles.addBtn}>+ Log expense</button>
         </div>
       </div>
 

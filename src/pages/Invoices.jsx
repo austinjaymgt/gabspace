@@ -795,6 +795,7 @@ export default function Invoices({ businessSpaceId }) {
         </div>
         <div style={{ position: 'relative' }}>
           <button
+            data-tour="page-action"
             onClick={() => setShowAddMenu(v => !v)}
             onBlur={() => setTimeout(() => setShowAddMenu(false), 120)}
             style={styles.addBtn}

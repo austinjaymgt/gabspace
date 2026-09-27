@@ -252,7 +252,7 @@ function normalizeUrl(url) {
           <h2 style={styles.title}>Resources</h2>
           <p style={styles.subtitle}>Files and links your team can reference</p>
         </div>
-        <button onClick={openAddForm} style={styles.addBtn}>
+        <button data-tour="page-action" onClick={openAddForm} style={styles.addBtn}>
           <Icon name="add" size="sm" />
           Add resource
         </button>

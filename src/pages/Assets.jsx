@@ -118,7 +118,7 @@ export default function Assets({ businessSpaceId }) {
           <h2 style={styles.title}>Creative Assets</h2>
           <p style={styles.subtitle}>{assets.length} total assets</p>
         </div>
-        <button onClick={() => setShowForm(true)} style={styles.addBtn}>
+        <button data-tour="page-action" onClick={() => setShowForm(true)} style={styles.addBtn}>
           + Add Asset
         </button>
       </div>

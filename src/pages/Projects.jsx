@@ -272,7 +272,7 @@ export default function Projects({ businessSpaceId }) {
             {records.filter(r => r.status !== 'completed' && r.status !== 'cancelled').length} active · {records.length} total
           </p>
         </div>
-        <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Project</button>
+        <button data-tour="page-action" onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Project</button>
       </div>
 
       {/* Status stat cards */}

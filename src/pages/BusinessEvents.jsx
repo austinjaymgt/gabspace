@@ -130,7 +130,7 @@ export default function BusinessEvents({ businessSpaceId }) {
             Networking
           </h1>
         </div>
-        <button onClick={() => setShowForm(true)} style={styles.addBtn}>
+        <button data-tour="page-action" onClick={() => setShowForm(true)} style={styles.addBtn}>
           + Add Event
         </button>
       </div>

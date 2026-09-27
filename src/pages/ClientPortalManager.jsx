@@ -298,7 +298,7 @@ export default function ClientPortalManager({ businessSpaceId, session, onPortal
           <p style={{ fontSize: t.fontSizes.base, color: t.colors.textTertiary, margin: 0 }}>{portals.length} active portal{portals.length !== 1 ? 's' : ''}</p>
         </div>
         {!showNewPortal && (
-          <button onClick={() => setShowNewPortal(true)} style={btnStyle}>+ New Portal</button>
+          <button data-tour="page-action" onClick={() => setShowNewPortal(true)} style={btnStyle}>+ New Portal</button>
         )}
       </div>
 

@@ -179,7 +179,7 @@ export default function ContentCalendar({ businessSpaceId }) {
             <button onClick={() => setView('list')} style={{ ...styles.viewBtn, ...(view === 'list' ? styles.viewBtnActive : {}) }}>List</button>
             <button onClick={() => setView('kanban')} style={{ ...styles.viewBtn, ...(view === 'kanban' ? styles.viewBtnActive : {}) }}>Kanban</button>
           </div>
-          <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Content</button>
+          <button data-tour="page-action" onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add Content</button>
         </div>
       </div>
 

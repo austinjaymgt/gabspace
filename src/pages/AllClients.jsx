@@ -159,7 +159,7 @@ export default function Clients({ businessSpaceId }) {
             {displayedClients.length} of {clients.length} clients
           </p>
         </div>
-        <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add client</button>
+        <button data-tour="page-action" onClick={() => setShowForm(true)} style={styles.addBtn}>+ Add client</button>
       </div>
 
       {/* Search + filters + sort */}

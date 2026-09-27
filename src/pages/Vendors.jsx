@@ -147,7 +147,7 @@ const visibleVendors = vendors
           <h2 style={styles.title}>Vendors</h2>
           <p style={styles.subtitle}>{vendors.length} total vendors</p>
         </div>
-        <button onClick={openAddForm} style={styles.addBtn}>
+        <button data-tour="page-action" onClick={openAddForm} style={styles.addBtn}>
           + Add Vendor
         </button>
       </div>

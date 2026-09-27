@@ -42,6 +42,8 @@ import Settings from './pages/Settings'
 import TeamMembers from './pages/TeamMembers'
 import OnboardingModal from './components/OnboardingModal'
 import OrbiTour from './components/OrbiTour'
+import OrbiHint from './components/OrbiHint'
+import { PAGE_HINTS } from './lib/pageHints'
 import Resources from './pages/Resources'
 import Tutorials from './pages/Tutorials'
 import Directory from './pages/Directory'
@@ -70,6 +72,8 @@ export default function App() {
   // null = hidden; otherwise { startMinimized } for the checklist.
   const [onboarding, setOnboarding] = useState(null)
   const [tourActive, setTourActive] = useState(false)
+  // Pages whose first-visit tip has been seen; null = tips off.
+  const [hintsSeen, setHintsSeen] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [passwordRecovery, setPasswordRecovery] = useState(false)
@@ -183,7 +187,9 @@ const WELCOME_SPLASH_MS = 2600
       supabase.from('user_settings').select('onboarding_completed, onboarding_intro_seen').eq('user_id', session.user.id).maybeSingle(),
       // Separate query so a missing tour column can't take the checklist down with it.
       supabase.from('user_settings').select('tour_completed').eq('user_id', session.user.id).maybeSingle(),
-    ]).then(([{ data }, { data: tour }]) => {
+      supabase.from('user_settings').select('page_hints_seen').eq('user_id', session.user.id).maybeSingle(),
+    ]).then(([{ data }, { data: tour }, { data: hints }]) => {
+      setHintsSeen(hints?.page_hints_seen ?? null)
       if (data && !data.onboarding_intro_seen && tour && !tour.tour_completed) setTourActive(true)
       setOnboarding(isManager && data && !data.onboarding_completed ? { startMinimized: !!data.onboarding_intro_seen } : null)
     })
@@ -192,6 +198,17 @@ const WELCOME_SPLASH_MS = 2600
   function finishTour() {
     setTourActive(false)
     supabase.from('user_settings').update({ tour_completed: true }).eq('user_id', session.user.id).then()
+  }
+
+  function dismissHint(page) {
+    const next = [...(hintsSeen || []), page]
+    setHintsSeen(next)
+    supabase.from('user_settings').update({ page_hints_seen: next }).eq('user_id', session.user.id).then()
+  }
+
+  function turnOffHints() {
+    setHintsSeen(null)
+    supabase.from('user_settings').update({ page_hints_seen: null }).eq('user_id', session.user.id).then()
   }
 
   // Replay from the profile menu. The checklist has already been seen by
@@ -504,6 +521,13 @@ const pageProps = { businessSpaceId, userRole, session, onBusinessIdentityChange
   const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const isStaff = ['owner', 'co-owner', 'employee'].includes(userRole)
   const isClientOnly = userRole === 'client'
+  // Money pages are owner/co-owner only — don't explain a page someone
+  // will just see Access Denied on.
+  const OWNER_ONLY_HINTS = ['snapshot', 'income', 'expenses']
+  const hintPage = hintsSeen && isStaff && !tourActive && PAGE_HINTS[currentPage]
+    && !hintsSeen.includes(currentPage)
+    && (isOwnerOrAdmin || !OWNER_ONLY_HINTS.includes(currentPage))
+    ? currentPage : null
 
   function AccessDenied() {
     return (
@@ -886,7 +910,8 @@ function renderPage() {
 
   const overlays = (
     <>
-      {tourActive && (
+      {/* Waits until they've picked a business on Home and entered the workspace. */}
+      {tourActive && currentPage !== 'home' && (
   <OrbiTour
     currentPage={currentPage}
     businessSpaceId={businessSpaceId}
@@ -894,6 +919,10 @@ function renderPage() {
     onNavigate={setCurrentPage}
     onFinish={finishTour}
   />
+)}
+
+      {hintPage && (
+  <OrbiHint key={hintPage} page={hintPage} onDismiss={() => dismissHint(hintPage)} onTurnOff={turnOffHints} />
 )}
 
       {onboarding && !tourActive && (

@@ -388,7 +388,7 @@ export default function TeamGoals({ businessSpaceId, userRole }) {
             {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p === 'all' ? 'All Quarters' : p}</option>)}
           </select>
           {isOwnerOrAdmin && (
-            <button onClick={openNew} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
+            <button data-tour="page-action" onClick={openNew} style={{ padding: '9px 18px', borderRadius: t.radius.full, border: 'none', background: t.colors.primary, color: '#FFFFFF', fontSize: t.fontSizes.base, fontWeight: '600', fontFamily: t.fonts.sans, cursor: 'pointer' }}>
               + Add Goal
             </button>
           )}
