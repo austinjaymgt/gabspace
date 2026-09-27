@@ -6,7 +6,7 @@ import Toggle from '../components/Toggle'
 import { MODULE_DEFS, MODULE_DATA_TABLES, getModules, loadModules, setModules as persistModules, toggleModuleState } from '../utils/businessModules'
 import RoleBadge from '../components/RoleBadge'
 import { cancelSubscription, resumeSubscription } from '../utils/checkout'
-import PasswordRequirements from '../components/PasswordRequirements'
+import PasswordRequirements, { unmetPasswordRequirement } from '../components/PasswordRequirements'
 import { DirectoryListingSettings, TagAlertsSettings } from '../components/community/CommunitySettings'
 import ConnectedApps from '../components/ConnectedApps'
 
@@ -49,7 +49,60 @@ function SectionCard({ title, subtitle, titleColor, borderColor, defaultOpen = f
   )
 }
 
+async function fetchUserSettings(userId) {
+  const { data } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+  return data
+}
+
+async function fetchSubscription(userId) {
+  const { data } = await supabase
+    .from('subscriptions')
+    .select('status, cancel_at_period_end, current_period_end')
+    .eq('owner_id', userId)
+    .maybeSingle()
+  return data || null
+}
+
+async function fetchBusinessIdentity(businessSpaceId, userId) {
+  const [{ data: business }, { data: membership }] = await Promise.all([
+    supabase
+      .from('business_spaces')
+      .select('name, logo_url')
+      .eq('id', businessSpaceId)
+      .maybeSingle(),
+    supabase
+      .from('business_space_members')
+      .select('display_name, job_title')
+      .eq('business_space_id', businessSpaceId)
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ])
+  return {
+    business_name: business?.name || '',
+    logo_url: business?.logo_url || '',
+    display_name: membership?.display_name || '',
+    job_title: membership?.job_title || '',
+  }
+}
+
+async function fetchModuleDataCounts(businessSpaceId) {
+  const counts = {}
+  await Promise.all(Object.entries(MODULE_DATA_TABLES).map(async ([key, table]) => {
+    const { count } = await supabase
+      .from(table)
+      .select('id', { count: 'exact', head: true })
+      .eq('business_space_id', businessSpaceId)
+    counts[key] = count || 0
+  }))
+  return counts
+}
+
 export default function Settings({ session, businessSpaceId, userRole, onBusinessIdentityChange, onArchiveBusiness, onNavigate }) {
+  const userId = session.user.id
   const [settings, setSettings] = useState(null)
   const [form, setForm] = useState({
     first_name: '',
@@ -60,9 +113,13 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     plan: 'business',
     orbi_window_days: 3,
   })
+  // Business name as last saved — logo changes save this, not whatever is
+  // currently typed in the (unsaved) name field.
+  const [savedBusinessName, setSavedBusinessName] = useState('')
   const [isFounder, setIsFounder] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -73,8 +130,12 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
   const [deleteError, setDeleteError] = useState(null)
   const [blockedWorkspaces, setBlockedWorkspaces] = useState(null)
 
+  // Settings is open to every role; business-level sections are limited to
+  // owners/co-owners, and community sections to staff (clients don't see
+  // Community).
   const isOwnerOrAdmin = ['owner', 'co-owner'].includes(userRole)
   const isOwner = userRole === 'owner'
+  const isStaff = ['owner', 'co-owner', 'employee'].includes(userRole)
 
   // Archive business
   const [archiving, setArchiving] = useState(false)
@@ -105,7 +166,8 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     e.preventDefault()
     setChangePasswordError(null)
     if (!currentPassword) return setChangePasswordError('Enter your current password.')
-    if (changeNewPassword.length < 8) return setChangePasswordError('New password must be at least 8 characters.')
+    const unmet = unmetPasswordRequirement(changeNewPassword)
+    if (unmet) return setChangePasswordError(`New password needs: ${unmet.toLowerCase()}.`)
     if (changeNewPassword !== changeConfirmPassword) return setChangePasswordError("New passwords don't match.")
 
     setChangePasswordLoading(true)
@@ -137,6 +199,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     setCurrentPassword('')
     setChangeNewPassword('')
     setChangeConfirmPassword('')
+    setShowChangePasswordFields(false)
     setChangePasswordSuccess(true)
     setTimeout(() => {
       setChangePasswordSuccess(false)
@@ -144,30 +207,39 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     }, 2000)
   }
 
-  async function fetchModuleDataCounts() {
-    const counts = {}
-    await Promise.all(Object.entries(MODULE_DATA_TABLES).map(async ([key, table]) => {
-      const { count } = await supabase
-        .from(table)
-        .select('id', { count: 'exact', head: true })
-        .eq('business_space_id', businessSpaceId)
-      counts[key] = count || 0
-    }))
-    setModuleDataCounts(counts)
+  function applySettings(data) {
+    if (!data) return
+    setSettings(data)
+    setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'business', orbi_window_days: data.orbi_window_days || 3 }))
+    setIsFounder(!!data.is_founder)
   }
 
-  useEffect(() => { fetchSettings() }, [])
-  useEffect(() => { fetchSubscription() }, [])
-  useEffect(() => { if (businessSpaceId) fetchBusinessIdentity() }, [businessSpaceId])
+  function applyBusinessIdentity(identity) {
+    setForm(prev => ({ ...prev, ...identity }))
+    setSavedBusinessName(identity.business_name)
+  }
+
+  const refreshSettings = () => fetchUserSettings(userId).then(applySettings)
+  const refreshSubscription = () => fetchSubscription(userId).then(setSubscription)
+  const refreshBusinessIdentity = () => fetchBusinessIdentity(businessSpaceId, userId).then(applyBusinessIdentity)
+
   useEffect(() => {
-    setModulesState(getModules(businessSpaceId))
-    setModuleNote(null)
+    let cancelled = false
+    fetchUserSettings(userId).then(data => { if (!cancelled) applySettings(data) })
+    fetchSubscription(userId).then(data => { if (!cancelled) setSubscription(data) })
+    return () => { cancelled = true }
+  }, [userId])
+
+  // App remounts Settings per business (key={businessSpaceId}), so state
+  // starts fresh on a switch; the cancel flag drops late responses.
+  useEffect(() => {
     if (!businessSpaceId) return
     let cancelled = false
+    fetchBusinessIdentity(businessSpaceId, userId).then(identity => { if (!cancelled) applyBusinessIdentity(identity) })
     loadModules(businessSpaceId).then(m => { if (!cancelled) setModulesState(m) })
-    fetchModuleDataCounts()
+    fetchModuleDataCounts(businessSpaceId).then(counts => { if (!cancelled) setModuleDataCounts(counts) })
     return () => { cancelled = true }
-  }, [businessSpaceId])
+  }, [businessSpaceId, userId])
 
   async function handleToggleModule(key) {
     const wasOn = modules[key]
@@ -191,35 +263,13 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     }
   }
 
-  async function fetchSettings() {
-    const { data } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-    if (data) {
-      setSettings(data)
-      setForm(prev => ({ ...prev, first_name: data.first_name || '', plan: data.plan || 'business', orbi_window_days: data.orbi_window_days || 3 }))
-      setIsFounder(!!data.is_founder)
-    }
-  }
-
-  async function fetchSubscription() {
-    const { data } = await supabase
-      .from('subscriptions')
-      .select('status, cancel_at_period_end, current_period_end')
-      .eq('owner_id', session.user.id)
-      .maybeSingle()
-    setSubscription(data || null)
-  }
-
   async function handleCancelSubscription() {
     if (!window.confirm("Cancel your subscription? You'll keep access through the end of your current billing period, then it stops — nothing is deleted.")) return
     setCanceling(true)
     setSubscriptionError(null)
     try {
-      await cancelSubscription({ userId: session.user.id })
-      await fetchSubscription()
+      await cancelSubscription({ userId })
+      await refreshSubscription()
     } catch (err) {
       setSubscriptionError(err.message)
     }
@@ -230,79 +280,85 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
     setResuming(true)
     setSubscriptionError(null)
     try {
-      await resumeSubscription({ userId: session.user.id })
-      await fetchSubscription()
+      await resumeSubscription({ userId })
+      await refreshSubscription()
     } catch (err) {
       setSubscriptionError(err.message)
     }
     setResuming(false)
   }
 
-  async function fetchBusinessIdentity() {
-    const { data: business } = await supabase
-      .from('business_spaces')
-      .select('name, logo_url')
-      .eq('id', businessSpaceId)
-      .single()
-
-    const { data: membership } = await supabase
-      .from('business_space_members')
-      .select('display_name, job_title')
-      .eq('business_space_id', businessSpaceId)
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-
-    setForm(prev => ({
-      ...prev,
-      business_name: business?.name || '',
-      logo_url: business?.logo_url || '',
-      display_name: membership?.display_name || '',
-      job_title: membership?.job_title || '',
-    }))
-  }
-
   async function handleSave() {
     setSaving(true)
-    setError(null)
+    setSaved(false)
+    setSaveError(null)
+    const errors = []
 
     const personalPayload = { first_name: form.first_name, orbi_window_days: form.orbi_window_days }
-    if (settings) {
-      await supabase.from('user_settings').update(personalPayload).eq('user_id', session.user.id)
-    } else {
-      await supabase.from('user_settings').insert({ user_id: session.user.id, ...personalPayload })
+    const { error: settingsError } = settings
+      ? await supabase.from('user_settings').update(personalPayload).eq('user_id', userId)
+      : await supabase.from('user_settings').insert({ user_id: userId, ...personalPayload })
+    if (settingsError) errors.push(`Personal settings: ${settingsError.message}`)
+
+    if (businessSpaceId) {
+      const { error: profileError } = await supabase.rpc('update_my_business_profile', {
+        target_business_space_id: businessSpaceId,
+        new_display_name: form.display_name,
+        new_job_title: form.job_title,
+      })
+      if (profileError) errors.push(`Display name / job title: ${profileError.message}`)
     }
 
-    await supabase.rpc('update_my_business_profile', {
-      target_business_space_id: businessSpaceId,
-      new_display_name: form.display_name,
-      new_job_title: form.job_title,
-    })
-
-    if (isOwnerOrAdmin) {
+    if (isOwnerOrAdmin && businessSpaceId) {
       const { error: identityError } = await supabase.rpc('update_business_identity', {
         target_business_space_id: businessSpaceId,
         new_name: form.business_name,
         new_logo_url: form.logo_url,
       })
-      if (identityError) setError(identityError.message)
+      if (identityError) errors.push(`Business name: ${identityError.message}`)
       else onBusinessIdentityChange?.()
     }
 
     setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-    fetchSettings()
-    fetchBusinessIdentity()
+    if (errors.length) {
+      setSaveError(`Some changes didn't save — ${errors.join(' · ')}`)
+    } else {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
+    refreshSettings()
+    if (businessSpaceId) refreshBusinessIdentity()
+  }
+
+  // Saves a logo change with the business name as last saved, so an
+  // in-progress name edit isn't committed by a logo upload/removal.
+  async function saveLogo(newLogoUrl) {
+    const previousLogoUrl = form.logo_url
+    setForm(prev => ({ ...prev, logo_url: newLogoUrl }))
+    const { error: identityError } = await supabase.rpc('update_business_identity', {
+      target_business_space_id: businessSpaceId,
+      new_name: savedBusinessName,
+      new_logo_url: newLogoUrl,
+    })
+    if (identityError) {
+      setForm(prev => ({ ...prev, logo_url: previousLogoUrl }))
+      setError(identityError.message)
+    } else {
+      onBusinessIdentityChange?.()
+    }
   }
 
   async function handleLogoUpload(e) {
     const file = e.target.files[0]
+    e.target.value = ''
     if (!file) return
     if (file.size > 2 * 1024 * 1024) { setError('Logo must be under 2MB.'); return }
     setUploading(true)
     setError(null)
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${session.user.id}.${fileExt}`
+    // One file per business (not per user), so owners of several businesses
+    // don't overwrite one business's logo when uploading another's.
+    const fileExt = file.name.split('.').pop().toLowerCase()
+    const fileName = `${businessSpaceId}/logo.${fileExt}`
     const { error: uploadError } = await supabase.storage
       .from('logos')
       .upload(fileName, file, { upsert: true })
@@ -312,15 +368,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       return
     }
     const { data: urlData } = supabase.storage.from('logos').getPublicUrl(fileName)
-    const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`
-    setForm(prev => ({ ...prev, logo_url: newLogoUrl }))
-    const { error: identityError } = await supabase.rpc('update_business_identity', {
-      target_business_space_id: businessSpaceId,
-      new_name: form.business_name,
-      new_logo_url: newLogoUrl,
-    })
-    if (identityError) setError(identityError.message)
-    else onBusinessIdentityChange?.()
+    await saveLogo(`${urlData.publicUrl}?t=${Date.now()}`)
     setUploading(false)
   }
 
@@ -429,7 +477,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
               disabled={!isOwnerOrAdmin}
             />
             {!isOwnerOrAdmin && (
-              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Only owners and admins can change the business name</span>
+              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Only owners and co-owners can change the business name</span>
             )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
@@ -461,22 +509,13 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
                     </label>
                     <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>PNG, JPG up to 2MB</span>
                     {form.logo_url && (
-                      <button onClick={async () => {
-                        setForm(prev => ({ ...prev, logo_url: '' }))
-                        const { error: identityError } = await supabase.rpc('update_business_identity', {
-                          target_business_space_id: businessSpaceId,
-                          new_name: form.business_name,
-                          new_logo_url: '',
-                        })
-                        if (identityError) setError(identityError.message)
-                        else onBusinessIdentityChange?.()
-                      }} style={{ fontSize: t.fontSizes.xs, color: t.colors.danger, background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, textAlign: 'left', padding: 0 }}>
+                      <button onClick={() => { setError(null); saveLogo('') }} style={{ fontSize: t.fontSizes.xs, color: t.colors.danger, background: 'none', border: 'none', cursor: 'pointer', fontFamily: t.fonts.sans, textAlign: 'left', padding: 0 }}>
                         Remove logo
                       </button>
                     )}
                   </>
                 ) : (
-                  <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Only owners and admins can change the business logo</span>
+                  <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>Only owners and co-owners can change the business logo</span>
                 )}
               </div>
             </div>
@@ -545,34 +584,41 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
         </SectionCard>
       )}
 
-      <SectionCard title="Board alerts" subtitle="Get notified when a request is posted to The Board in categories or skills you follow">
-        <TagAlertsSettings />
-      </SectionCard>
+      {isStaff && (
+        <SectionCard title="Board alerts" subtitle="Get notified when a request is posted to The Board in categories or skills you follow">
+          <TagAlertsSettings />
+        </SectionCard>
+      )}
 
       {/* ── Orbi ── */}
-      <SectionCard title="Orbi" subtitle="Your assistant for upcoming deadlines, projects and events across all business profiles">
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Look-ahead window</label>
-            <select
-              style={{ ...inputStyle, maxWidth: '160px' }}
-              value={form.orbi_window_days}
-              onChange={e => setForm({ ...form, orbi_window_days: Number(e.target.value) })}
-            >
-              {[1, 2, 3, 4, 5, 6, 7].map(n => (
-                <option key={n} value={n}>{n} {n === 1 ? 'day' : 'days'}</option>
-              ))}
-            </select>
-            <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>How far ahead Orbi looks for upcoming items</span>
+      {isStaff && (
+        <SectionCard title="Orbi" subtitle="Your assistant for upcoming deadlines, projects and events across all business profiles">
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Look-ahead window</label>
+              <select
+                style={{ ...inputStyle, maxWidth: '160px' }}
+                value={form.orbi_window_days}
+                onChange={e => setForm({ ...form, orbi_window_days: Number(e.target.value) })}
+              >
+                {[1, 2, 3, 4, 5, 6, 7].map(n => (
+                  <option key={n} value={n}>{n} {n === 1 ? 'day' : 'days'}</option>
+                ))}
+              </select>
+              <span style={{ fontSize: t.fontSizes.xs, color: t.colors.textTertiary }}>How far ahead Orbi looks for upcoming items</span>
+            </div>
           </div>
-        </div>
-      </SectionCard>
+        </SectionCard>
+      )}
+
+      {/* ── Connected apps (Claude connector / OAuth grants) ── */}
+      {isStaff && (
+        <SectionCard title="Connected apps" subtitle="Connect Claude to gabspace and manage apps you've approved">
+          <ConnectedApps />
+        </SectionCard>
+      )}
 
       {/* ── Account ── */}
-      {/* ── Connected apps (Claude connector / OAuth grants) ── */}
-      <SectionCard title="Connected apps" subtitle="Connect Claude to gabspace and manage apps you've approved">
-        <ConnectedApps />
-      </SectionCard>
 
       <SectionCard title="Account">
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -684,6 +730,9 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
               )
             )}
           </div>
+          {/* The subscription belongs to the signed-in user, not the active
+              business — show it whenever they have one, whatever their role here. */}
+          {(isOwnerOrAdmin || subscription) && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', padding: '14px 16px', backgroundColor: t.colors.bg, borderRadius: t.radius.md }}>
             <div>
               <div style={{ fontSize: t.fontSizes.sm, fontWeight: '500', color: t.colors.textSecondary, marginBottom: '4px' }}>Plan</div>
@@ -702,7 +751,9 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
               </span>
               {subscription?.cancel_at_period_end && (
                 <div style={{ fontSize: t.fontSizes.xs, color: t.colors.danger, marginTop: '6px', fontWeight: '500' }}>
-                  Cancels on {new Date(subscription.current_period_end).toLocaleDateString()}
+                  {subscription.current_period_end
+                    ? `Cancels on ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                    : 'Cancels at the end of the billing period'}
                 </div>
               )}
             </div>
@@ -722,7 +773,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
                   {resuming ? 'Resuming…' : 'Resume subscription'}
                 </button>
               )}
-              {onNavigate && (
+              {onNavigate && isOwnerOrAdmin && (
                 <button
                   onClick={() => onNavigate('pricing')}
                   style={{
@@ -736,6 +787,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
               )}
             </div>
           </div>
+          )}
           {subscriptionError && (
             <div style={{ padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
               {subscriptionError}
@@ -777,7 +829,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
             )}
           </div>
         )}
-        {isOwner && subscription && !subscription.cancel_at_period_end && (
+        {subscription && !subscription.cancel_at_period_end && (
           <div style={{ padding: '24px', borderBottom: `1px solid ${t.colors.borderLight}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               <div>
@@ -826,6 +878,11 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
       </SectionCard>
 
       {/* ── Actions ── */}
+      {saveError && (
+        <div style={{ marginBottom: '12px', padding: '10px 14px', borderRadius: t.radius.md, backgroundColor: t.colors.dangerLight, color: t.colors.danger, fontSize: t.fontSizes.sm }}>
+          {saveError}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '12px' }}>
         <button
           onClick={async () => { await supabase.auth.signOut(); window.location.reload() }}
@@ -836,7 +893,7 @@ export default function Settings({ session, businessSpaceId, userRole, onBusines
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ padding: '12px 24px', borderRadius: t.radius.full, border: 'none', backgroundColor: saved ? t.colors.success : t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.md, fontWeight: '600', cursor: 'pointer', fontFamily: t.fonts.sans, transition: 'background 0.2s' }}
+          style={{ padding: '12px 24px', borderRadius: t.radius.full, border: 'none', backgroundColor: saved ? t.colors.success : t.colors.primary, color: t.colors.textInverse, fontSize: t.fontSizes.md, fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: t.fonts.sans, transition: 'background 0.2s' }}
         >
           {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save settings'}
         </button>

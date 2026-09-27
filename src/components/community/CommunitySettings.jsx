@@ -41,7 +41,7 @@ export function DirectoryListingSettings({ businessSpaceId }) {
         // Always follow the business's current logo.
         logo_url: business?.logo_url || null,
       })
-    }).catch(err => setError(err.message))
+    }).catch(err => { if (!cancelled) setError(err.message) })
     // Suggest cities other listings already use, nudging toward one spelling
     // per city (still free-typed — any value is allowed).
     fetchDirectory().then(rows => { if (!cancelled) setKnownCities(citySuggestions(rows)) }).catch(() => {})

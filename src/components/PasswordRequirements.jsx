@@ -10,6 +10,13 @@ const RULES = [
   { key: 'digit', label: 'One number', test: pw => /[0-9]/.test(pw) },
 ]
 
+// First unmet rule's label (e.g. "One uppercase letter"), or null when the
+// password meets the policy.
+// eslint-disable-next-line react-refresh/only-export-components
+export function unmetPasswordRequirement(password) {
+  return RULES.find(rule => !rule.test(password || ''))?.label || null
+}
+
 export default function PasswordRequirements({ password }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

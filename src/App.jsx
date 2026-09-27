@@ -568,7 +568,7 @@ function renderPage() {
 
       case 'settings':
         if (workspaceLoading) return null
-        return isOwnerOrAdmin ? <Settings {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
+        return <Settings key={businessSpaceId} {...pageProps} onNavigate={setCurrentPage} />
 
       case 'pricing':
         return isOwnerOrAdmin ? <Pricing {...pageProps} onNavigate={setCurrentPage} /> : <AccessDenied />
